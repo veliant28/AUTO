@@ -155,45 +155,72 @@
       "p3": "Our mission is to make auto parts search and purchase fast, convenient and reliable."
     },
     "terms": {
-      "admin_panel": "Admin Panel",
-      "title": "Terms of Use",
-      "meta_title": "Terms of Use",
-      "meta_desc": "AutoParts website terms",
-      "p1": "By using AutoParts, you agree to these terms.",
-      "p2": "All site materials are protected by copyright.",
-      "p3": "We reserve the right to change terms at any time."
+      "h2_1": "General Provisions",
+      "p2_1": "By using the site, you agree to the terms. We reserve the right to change them.",
+      "h2_2": "Copyright",
+      "p2_2": "All materials are protected. Copying without permission is prohibited.",
+      "h2_3": "Personal Data",
+      "p2_3": "We process data in accordance with personal data protection legislation.",
+      "h2_4": "Liability",
+      "p2_4": "We are not liable for damages related to the use of the site."
     },
     "contacts": {
-      "title": "Contacts",
-      "meta_title": "Contacts",
-      "meta_desc": "Contact AutoParts",
-      "p1": "Email: info@autoparts.local",
-      "p2": "Phone: +380 (44) 123-45-67",
-      "p3": "Address: Ukraine, Kyiv"
+      "phone_title": "Phone",
+      "phone": "+380 (44) 123-45-67",
+      "email_title": "Email",
+      "email": "info@autoparts.local",
+      "address_title": "Address",
+      "address": "Ukraine, Kyiv, Avtozavodska str., 1"
     },
     "delivery": {
-      "title": "Delivery",
-      "meta_title": "Delivery",
-      "meta_desc": "AutoParts delivery terms",
-      "p1": "Delivery across Ukraine.",
-      "p2": "Pickup from collection points.",
-      "p3": "Free delivery on orders over 3000 ₴."
+      "courier_title": "Courier Delivery",
+      "courier_desc": "Courier delivery in Kyiv — from 1 day. Across Ukraine — from 2 days.",
+      "pickup_title": "Pickup",
+      "pickup_desc": "Pickup points in your city. Free for orders over 3000 ₴."
     },
     "faq": {
-      "title": "Frequently Asked Questions",
-      "meta_title": "FAQ",
-      "meta_desc": "Answers to common questions",
-      "p1": "How to find a part? Use the article search or TecDoc catalog.",
-      "p2": "How to place an order? Add parts to cart and fill out the form.",
-      "p3": "How to track an order? See My Orders section after logging in."
+      "q1": "How to find a part?",
+      "a1": "Use article search or TecDoc catalog for precise matching.",
+      "q2": "How to place an order?",
+      "a2": "Add parts to cart and fill out the checkout form.",
+      "q3": "How to track an order?",
+      "a3": "After logging in, check My Orders section for status of each order.",
+      "q4": "What payment methods are available?",
+      "a4": "Cash and cashless payment. Card online or upon receipt.",
+      "q5": "How to return an item?",
+      "a5": "Returns accepted within 14 days with original packaging and condition."
     },
     "support": {
-      "title": "Support",
-      "meta_title": "Support",
-      "meta_desc": "AutoParts support team",
-      "p1": "Our support team is ready to help you.",
-      "p2": "Working hours: Mon-Fri 9:00-18:00.",
-      "p3": "Average response time — 2 hours."
+      "desc": "Our support team is ready to help you with any questions.",
+      "chat_title": "Online Chat",
+      "chat_desc": "Operators available Mon-Fri 9:00-18:00. Average response time — 2 min.",
+      "email_title": "Email",
+      "email": "support@autoparts.local",
+      "phone_title": "Phone",
+      "phone": "+380 (44) 123-45-67",
+      "work_title": "Working Hours",
+      "work_desc": "Mon-Fri 9:00-18:00, Sat 10:00-15:00"
     }
+  },
+  "home": {
+    "badge": "Online Auto Parts Store",
+    "title_line1": "All Auto Parts",
+    "title_line2": "in One Place",
+    "subtitle": "Original parts and quality alternatives from top manufacturers. Instant selection by car make and part number.",
+    "cta": "Find by Car",
+    "why_title": "Why Choose Us",
+    "why_desc": "We combined trusted suppliers and modern technology for fast search",
+    "feature_parts": "235,000+ Parts",
+    "feature_parts_desc": "Huge catalog of OEM and aftermarket parts",
+    "feature_search": "Instant Search",
+    "feature_search_desc": "Find parts by article number or TecDoc catalog",
+    "feature_delivery": "Fast Delivery",
+    "feature_delivery_desc": "Delivery across Ukraine. Pickup points available",
+    "feature_quality": "Quality Guarantee",
+    "feature_quality_desc": "Only verified suppliers with up to 2-year warranty",
+    "b2b_title": "Running an Auto Service?",
+    "b2b_desc": "Register for priority support and fast order processing for your business.",
+    "b2b_cta": "Register",
+    "not_found_cta": "Didn't find a part? Contact us — we'll help!"
   }
 }
