@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +17,14 @@ interface ImageGalleryProps {
 }
 
 export default function ImageGallery({ images, article }: ImageGalleryProps) {
+  const t = useTranslations('common');
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!images || images.length === 0) {
     return (
       <p className="col-span-3 text-center text-sm text-muted-foreground py-8">
-        Изображения отсутствуют
+        {t('no_images')}
       </p>
     );
   }

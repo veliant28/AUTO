@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -52,7 +51,7 @@ export default function SearchPage() {
 
         {query && (
           <p className="text-muted-foreground mb-6">
-            Результаты поиска: <span className="font-medium text-foreground">{query}</span>
+            {t('results_for')} <span className="font-medium text-foreground">{query}</span>
           </p>
         )}
 
@@ -61,8 +60,8 @@ export default function SearchPage() {
         ) : results?.length === 0 && query ? (
           <div className="text-center py-20 space-y-4">
             <Package className="w-16 h-16 mx-auto text-muted-foreground/40" />
-            <p className="text-lg font-medium">Ничего не найдено</p>
-            <p className="text-muted-foreground text-sm">Попробуйте изменить запрос или проверьте артикул</p>
+            <p className="text-lg font-medium">{t('no_results')}</p>
+            <p className="text-muted-foreground text-sm">{t('no_results_desc')}</p>
           </div>
         ) : (
         <div className="space-y-3">
@@ -81,7 +80,7 @@ export default function SearchPage() {
                 {part.price && (
                   <span className="font-semibold text-sm whitespace-nowrap">{part.price.toLocaleString()} ₴</span>
                 )}
-                <Button variant="outline" size="sm">Подробнее</Button>
+                <Button variant="outline" size="sm">{t('details')}</Button>
               </div>
             </div>
           ))}

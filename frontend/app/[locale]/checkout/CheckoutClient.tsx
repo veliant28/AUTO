@@ -49,17 +49,17 @@ export default function CheckoutPage() {
       clearCart();
       router.push(`/order-confirmed?id=${data.order_id}`);
     },
-    onError: () => toast.error('Ошибка при оформлении заказа'),
+    onError: () => toast.error(t('checkout_error')),
   });
 
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto py-20 px-4 max-w-md text-center space-y-6">
         <ShoppingCart className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-3xl font-bold">Авторизуйтесь</h1>
-        <p className="text-muted-foreground">Для оформления заказа необходимо войти в аккаунт</p>
+        <h1 className="text-3xl font-bold">{t('login_required')}</h1>
+        <p className="text-muted-foreground">{t('login_for_checkout')}</p>
         <Link href="/auth/login">
-          <Button>Войти</Button>
+          <Button>{t('login')}</Button>
         </Link>
       </div>
     );
@@ -69,10 +69,10 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto py-20 px-4 max-w-md text-center space-y-6">
         <ShoppingCart className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-3xl font-bold">Корзина пуста</h1>
+        <h1 className="text-3xl font-bold">{t('cart_empty')}</h1>
         <Link href="/catalog">
           <Button variant="outline" className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> В каталог
+            <ArrowLeft className="w-4 h-4" /> {t('go_to_catalog')}
           </Button>
         </Link>
       </div>
@@ -83,24 +83,24 @@ export default function CheckoutPage() {
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="flex items-center gap-3 mb-8">
         <CreditCard className="w-7 h-7 text-primary" />
-        <h1 className="text-3xl font-bold">Оформление заказа</h1>
+        <h1 className="text-3xl font-bold">{t('checkout_title')}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 space-y-6">
           <div className="rounded-lg border bg-card p-6 space-y-5">
             <h2 className="font-semibold flex items-center gap-2">
-              <User className="w-4 h-4" /> Личные данные
+              <User className="w-4 h-4" /> {t('personal_data')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm">ФИО</label>
+                <label className="text-sm">{t('full_name')}</label>
                 <Input {...register('full_name')} placeholder={t('name_placeholder')} />
                 {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
               </div>
               <div className="space-y-2">
-                <label className="text-sm">Телефон</label>
-                <Input {...register('phone')} placeholder="+7 (999) 123-45-67" />
+                <label className="text-sm">{t('phone')}</label>
+                <Input {...register('phone')} placeholder="+380 (99) 123-45-67" />
                 {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
               </div>
             </div>
@@ -108,10 +108,10 @@ export default function CheckoutPage() {
 
           <div className="rounded-lg border bg-card p-6 space-y-5">
             <h2 className="font-semibold flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Адрес доставки
+              <MapPin className="w-4 h-4" /> {t('delivery_address')}
             </h2>
             <div className="space-y-2">
-              <label className="text-sm">Адрес</label>
+              <label className="text-sm">{t('address')}</label>
               <Input {...register('address')} placeholder={t('address_placeholder')} />
               {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
             </div>
@@ -119,7 +119,7 @@ export default function CheckoutPage() {
 
           <div className="rounded-lg border bg-card p-6 space-y-4">
             <h2 className="font-semibold flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4" /> Состав заказа
+              <ShoppingCart className="w-4 h-4" /> {t('order_contents')}
             </h2>
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm py-1">
@@ -138,11 +138,11 @@ export default function CheckoutPage() {
 
         <div className="lg:col-span-2">
           <div className="rounded-lg border bg-card p-6 space-y-4 sticky top-24">
-            <h3 className="font-semibold">Ваш заказ</h3>
+            <h3 className="font-semibold">{t('your_order')}</h3>
             <Separator />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Итого:</span>
+                <span className="text-muted-foreground">{t('total_label')}:</span>
                 <span className="font-bold text-lg">{totalPrice().toLocaleString()} ₴</span>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
               disabled={!formValues.full_name || checkoutMutation.isPending}
             >
               <Truck className="w-4 h-4" />
-              {checkoutMutation.isPending ? 'Оформление...' : 'Оформить заказ'}
+              {checkoutMutation.isPending ? t('processing') : t('checkout')}
             </Button>
           </div>
         </div>

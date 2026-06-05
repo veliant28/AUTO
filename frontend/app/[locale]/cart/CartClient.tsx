@@ -21,14 +21,14 @@ export default function CartPage() {
           <div className="bg-muted rounded-full p-6">
             <ShoppingCart className="w-16 h-16 text-muted-foreground" />
           </div>
-          <h1 className="text-3xl font-bold">Корзина пуста</h1>
+          <h1 className="text-3xl font-bold">{t('cart_empty')}</h1>
           <p className="text-muted-foreground max-w-md">
-            Добавьте запчасти в корзину из каталога или найдите их по артикулу
+            {t('cart_empty_desc')}
           </p>
           <Link href="/catalog">
             <Button size="lg">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Перейти в каталог
+              {t('go_to_catalog')}
             </Button>
           </Link>
         </div>
@@ -41,11 +41,11 @@ export default function CartPage() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <ShoppingCart className="w-7 h-7 text-primary" />
-          <h1 className="text-3xl font-bold">Корзина</h1>
-          <Badge variant="secondary">{totalItems()} товара</Badge>
+          <h1 className="text-3xl font-bold">{t('cart')}</h1>
+          <Badge variant="secondary">{totalItems()} {t('items_count')}</Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={() => { clearCart(); toast.info('Корзина очищена'); }}>
-          Очистить корзину
+        <Button variant="outline" size="sm" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
+          {t('clear_cart')}
         </Button>
       </div>
 
@@ -100,25 +100,25 @@ export default function CartPage() {
 
         <div className="lg:col-span-1">
           <div className="rounded-lg border bg-card p-6 space-y-4 sticky top-24">
-            <h3 className="font-semibold text-lg">Ваш заказ</h3>
+            <h3 className="font-semibold text-lg">{t('your_order')}</h3>
             <Separator />
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Товаров:</span>
-                <span>{totalItems()} шт.</span>
+                <span className="text-muted-foreground">{t('items_label')}:</span>
+                <span>{totalItems()} {t('pcs')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Сумма:</span>
+                <span className="text-muted-foreground">{t('total_label')}:</span>
                 <span className="font-semibold text-lg">{totalPrice().toLocaleString()} ₴</span>
               </div>
             </div>
             <Separator />
-            <Button className="w-full" size="lg">
-              Оформить заказ
+            <Button className="w-full" size="lg" asChild>
+              <Link href="/checkout">{t('checkout')}</Link>
             </Button>
             <Link href="/catalog" className="block">
               <Button variant="outline" className="w-full" size="sm">
-                Продолжить покупки
+                {t('continue_shopping')}
               </Button>
             </Link>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Sheet,
   SheetContent,
@@ -33,6 +34,7 @@ interface PartDetailProps {
 }
 
 function ApplicabilitySection({ article }: { article: string }) {
+  const t = useTranslations('common');
   const [showAll, setShowAll] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -65,7 +67,7 @@ function ApplicabilitySection({ article }: { article: string }) {
   return (
     <div className="space-y-2">
       <h4 className="font-semibold text-sm flex items-center gap-2">
-        <Car className="w-3.5 h-3.5" /> Применимость ({total})
+        <Car className="w-3.5 h-3.5" /> {t('applicability')} ({total})
       </h4>
       <div className="rounded-md border divide-y text-sm">
         {displayVehicles.map((v: any, idx: number) => (
@@ -84,9 +86,9 @@ function ApplicabilitySection({ article }: { article: string }) {
           onClick={() => setShowAll(!showAll)}
         >
           {showAll ? (
-            <>Свернуть <ChevronUp className="w-3 h-3" /></>
+            <>{t('collapse')} <ChevronUp className="w-3 h-3" /></>
           ) : (
-            <>Показать все ({total}) <ChevronDown className="w-3 h-3" /></>
+            <>{t('show_all')} ({total}) <ChevronDown className="w-3 h-3" /></>
           )}
         </Button>
       )}
@@ -95,6 +97,7 @@ function ApplicabilitySection({ article }: { article: string }) {
 }
 
 export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading }: PartDetailProps) {
+  const t = useTranslations('common');
   const addItem = useCartStore((s) => s.addItem);
 
   if (!part) return null;
@@ -109,7 +112,7 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
       price: null,
       supplier_name: data?.info?.brand || null,
     });
-    toast.success('Добавлено в корзину');
+    toast.success(t('added_to_cart'));
     onClose();
   };
 
@@ -118,12 +121,12 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
       <SheetContent className="sm:max-w-xl overflow-y-auto">
         <SheetHeader className="space-y-2">
           <div className="flex justify-between items-center">
-            <Badge variant="outline">{data?.info?.brand || 'Загрузка...'}</Badge>
+            <Badge variant="outline">{data?.info?.brand || t('loading')}</Badge>
             <span className="text-xs text-muted-foreground font-mono">{part.article}</span>
           </div>
-          <SheetTitle className="text-2xl">{data?.info?.name || 'Загрузка информации...'}</SheetTitle>
+          <SheetTitle className="text-2xl">{data?.info?.name || t('loading_info')}</SheetTitle>
           <SheetDescription>
-            {data?.info?.description || 'Описание детали отсутствует'}
+            {data?.info?.description || t('no_description')}
           </SheetDescription>
         </SheetHeader>
 
@@ -143,7 +146,7 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
 
             {data?.info?.attributes?.length > 0 && (
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm">Характеристики</h4>
+                <h4 className="font-semibold text-sm">{t('attributes')}</h4>
                 <div className="rounded-md border divide-y text-sm">
                   {data.info.attributes.map((attr: any, idx: number) => (
                     <div key={idx} className="flex justify-between px-3 py-1.5">
@@ -156,7 +159,7 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
             )}
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-sm">Аналоги и кросс-номера</h4>
+              <h4 className="font-semibold text-sm">{t('cross_references')}</h4>
               <div className="rounded-md border divide-y">
                 {data?.crosses?.length > 0 ? (
                   data.crosses.map((cross: any, idx: number) => (
@@ -169,7 +172,7 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
                     </div>
                   ))
                 ) : (
-                  <p className="p-2 text-sm text-muted-foreground">Аналоги не найдены</p>
+                  <p className="p-2 text-sm text-muted-foreground">{t('no_crosses')}</p>
                 )}
               </div>
             </div>
@@ -178,7 +181,7 @@ export default function PartDetailSheet({ isOpen, onClose, part, data, isLoading
 
             <div className="flex gap-3 pt-4">
               <Button onClick={handleAddToCart} className="flex-1 gap-2">
-                <ShoppingCart className="w-4 h-4" /> Добавить в корзину
+                <ShoppingCart className="w-4 h-4" /> {t('add_to_cart')}
               </Button>
               <Button variant="outline" size="icon">
                 <ExternalLink className="w-4 h-4" />

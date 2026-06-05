@@ -3,6 +3,7 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
 import { ArrowLeft, Package, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -14,6 +15,8 @@ import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
 
 export default function OrderDetailPage() {
+  const t = useTranslations('common');
+  const locale = useLocale();
   const params = useParams();
   const orderId = params.id;
   const { isAuthenticated } = useAuthStore();
@@ -30,8 +33,8 @@ export default function OrderDetailPage() {
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
-        <h1 className="text-2xl font-bold">Авторизуйтесь</h1>
-        <Link href="/auth/login"><Button className="mt-4">Войти</Button></Link>
+        <h1 className="text-2xl font-bold">{t('login_required')}</h1>
+        <Link href="/auth/login"><Button className="mt-4">{t('login')}</Button></Link>
       </div>
     );
   }
@@ -49,8 +52,8 @@ export default function OrderDetailPage() {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
         <Package className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-2xl font-bold mt-4">Заказ не найден</h1>
-        <Link href="/orders"><Button variant="outline" className="mt-4 gap-2"><ArrowLeft className="w-4 h-4" /> Назад</Button></Link>
+        <h1 className="text-2xl font-bold mt-4">{t('order_not_found')}</h1>
+        <Link href="/orders"><Button variant="outline" className="mt-4 gap-2"><ArrowLeft className="w-4 h-4" /> {t('back')}</Button></Link>
       </div>
     );
   }
@@ -60,7 +63,7 @@ export default function OrderDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <Link href="/orders" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="w-4 h-4" /> Все заказы
+        <ArrowLeft className="w-4 h-4" /> {t('all_orders')}
       </Link>
 
       <div className="rounded-lg border bg-card p-6 space-y-6">
@@ -73,13 +76,13 @@ export default function OrderDetailPage() {
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              от {new Date(order.created_at).toLocaleString('ru-RU')}
+              {t('from_date')} {new Date(order.created_at).toLocaleString(locale === 'ua' ? 'uk-UA' : locale)}
             </p>
           </div>
           {order.status === 'delivered' && (
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Доставлен</span>
+              <span className="font-medium">{t('status_delivered')}</span>
             </div>
           )}
         </div>
@@ -88,15 +91,15 @@ export default function OrderDetailPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground">Получатель</p>
+            <p className="text-muted-foreground">{t('recipient')}</p>
             <p className="font-medium">{order.full_name}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Телефон</p>
+            <p className="text-muted-foreground">{t('phone')}</p>
             <p className="font-medium">{order.phone || '—'}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Адрес доставки</p>
+            <p className="text-muted-foreground">{t('delivery_address')}</p>
             <p className="font-medium">{order.address || '—'}</p>
           </div>
         </div>
@@ -104,14 +107,14 @@ export default function OrderDetailPage() {
         <Separator />
 
         <div>
-          <h3 className="font-semibold mb-4">Состав заказа</h3>
+          <h3 className="font-semibold mb-4">{t('order_contents')}</h3>
           <div className="divide-y">
             {order.items?.map((item: any) => (
               <div key={item.id} className="flex justify-between items-center py-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-muted-foreground">{item.article}</span>
-                    <Badge variant="outline" className="text-[10px]">{item.quantity} шт.</Badge>
+                    <Badge variant="outline" className="text-[10px]">{item.quantity} {t('pcs')}</Badge>
                   </div>
                   <p className="font-medium">{item.part_name}</p>
                 </div>
@@ -124,7 +127,7 @@ export default function OrderDetailPage() {
         <Separator />
 
         <div className="flex justify-between items-center">
-          <span className="font-semibold">Итого</span>
+          <span className="font-semibold">{t('total_label')}</span>
           <span className="text-2xl font-bold">{Number(order.total).toLocaleString()} ₴</span>
         </div>
       </div>

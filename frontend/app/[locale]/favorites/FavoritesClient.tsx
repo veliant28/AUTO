@@ -31,7 +31,7 @@ export default function FavoritesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
-      toast.success('Удалено из избранного');
+      toast.success(t('removed_from_favorites'));
     },
   });
 
@@ -39,10 +39,10 @@ export default function FavoritesPage() {
     return (
       <div className="container mx-auto py-20 px-4 max-w-md text-center space-y-6">
         <Heart className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-3xl font-bold">Избранное</h1>
-        <p className="text-muted-foreground">Авторизуйтесь, чтобы сохранять и просматривать избранные запчасти</p>
+        <h1 className="text-3xl font-bold">{t('favorites')}</h1>
+        <p className="text-muted-foreground">{t('favorites_login_desc')}</p>
         <Link href="/auth/login">
-          <Button>Войти</Button>
+          <Button>{t('login')}</Button>
         </Link>
       </div>
     );
@@ -52,7 +52,7 @@ export default function FavoritesPage() {
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="flex items-center gap-3 mb-8">
         <Heart className="w-7 h-7 text-primary" />
-        <h1 className="text-3xl font-bold">Избранное</h1>
+        <h1 className="text-3xl font-bold">{t('favorites')}</h1>
         <Badge variant="secondary">{favorites?.length || 0}</Badge>
       </div>
 
@@ -65,10 +65,10 @@ export default function FavoritesPage() {
       ) : favorites?.length === 0 ? (
         <div className="text-center py-20 space-y-4">
           <Heart className="w-16 h-16 mx-auto text-muted-foreground/40" />
-          <p className="text-lg font-medium">В избранном пока пусто</p>
-          <p className="text-muted-foreground text-sm">Добавляйте запчасти в избранное из каталога</p>
+          <p className="text-lg font-medium">{t('favorites_empty_title')}</p>
+          <p className="text-muted-foreground text-sm">{t('favorites_empty_title_desc')}</p>
           <Link href="/catalog">
-            <Button variant="outline">Перейти в каталог</Button>
+            <Button variant="outline">{t('go_to_catalog')}</Button>
           </Link>
         </div>
       ) : (
@@ -83,7 +83,7 @@ export default function FavoritesPage() {
                 <p className="font-medium">{fav.part_name}</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">В корзину</Button>
+                <Button variant="outline" size="sm">{t('add_to_cart_short')}</Button>
                 <Button 
                   variant="ghost" 
                   size="icon" 

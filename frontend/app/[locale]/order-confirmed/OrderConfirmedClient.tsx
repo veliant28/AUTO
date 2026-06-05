@@ -3,10 +3,12 @@
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function OrderConfirmedPage() {
+  const t = useTranslations('common');
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
 
@@ -17,28 +19,28 @@ export default function OrderConfirmedPage() {
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Заказ оформлен!</h1>
+        <h1 className="text-3xl font-bold">{t('order_success')}</h1>
         <p className="text-muted-foreground">
-          Спасибо за ваш заказ. Мы свяжемся с вами для подтверждения.
+          {t('order_success_desc')}
         </p>
       </div>
 
       {orderId && (
         <div className="inline-flex items-center gap-2 px-6 py-3 bg-muted rounded-full">
           <Package className="w-5 h-5 text-primary" />
-          <span className="font-medium">Номер заказа: #{orderId}</span>
+          <span className="font-medium">{t('order_number')}: #{orderId}</span>
         </div>
       )}
 
       <div className="space-y-3 pt-4">
         <Link href="/orders">
           <Button className="w-full gap-2" size="lg">
-            Мои заказы <ArrowRight className="w-4 h-4" />
+            {t('my_orders')} <ArrowRight className="w-4 h-4" />
           </Button>
         </Link>
         <Link href="/catalog">
           <Button variant="outline" className="w-full">
-            Продолжить покупки
+            {t('continue_shopping')}
           </Button>
         </Link>
       </div>

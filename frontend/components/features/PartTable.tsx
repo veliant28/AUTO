@@ -62,7 +62,7 @@ function MobileCard({ part, onDetail, index, t, tc }: { part: Part; onDetail: (p
         </div>
         <div className="text-right shrink-0">
           {part.price ? (
-            <p className="font-bold text-base">{part.price.toLocaleString()} ₴</p>
+            <p className="font-bold text-base">{part.price.toLocaleString()} {tc('currency')}</p>
           ) : (
             <p className="text-xs text-muted-foreground">{tc('no_price')}</p>
           )}
@@ -90,7 +90,7 @@ function MobileCard({ part, onDetail, index, t, tc }: { part: Part; onDetail: (p
               price: part.price,
               supplier_name: part.supplier_name,
             });
-            toast.success('Добавлено в корзину');
+            toast.success(tc('added_to_cart'));
           }}>
             <ShoppingCart className="w-3.5 h-3.5" />
           </Button>
@@ -125,7 +125,7 @@ export default function PartTable({ data }: { data: Part[] }) {
         return (
           <div className="text-right">
             {price ? (
-              <span className="font-semibold">{price.toLocaleString()} ₴</span>
+              <span className="font-semibold">{price.toLocaleString()} {tc('currency')}</span>
             ) : (
               <span className="text-muted-foreground text-xs">—</span>
             )}
@@ -219,7 +219,7 @@ export default function PartTable({ data }: { data: Part[] }) {
             return (
               <div key={cell.id} className="flex items-center justify-end gap-1" style={{ width: ACTION, minWidth: ACTION }}>
                 <Button variant="outline" size="sm" className="text-xs h-8 px-2" onClick={() => setSelectedPart(part)}>
-                  Подробнее
+                  {tc('details')}
                 </Button>
                 <Button size="sm" className="h-8 w-8 p-0" onClick={() => {
                   useCartStore.getState().addItem({

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { User, Car, ShoppingCart, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,25 +10,26 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
 
-const menuItems = [
-  { icon: Car, label: 'Мой гараж', href: '/garage' },
-  { icon: ShoppingCart, label: 'Корзина', href: '/cart' },
-  { icon: User, label: 'Личные данные', href: '#' },
-  { icon: Settings, label: 'Настройки', href: '#' },
-];
-
 export default function ProfilePage() {
+  const t = useTranslations('common');
   const { user, isAuthenticated, logout } = useAuthStore();
+
+  const menuItems = [
+    { icon: Car, label: t('my_garage'), href: '/garage' },
+    { icon: ShoppingCart, label: t('cart'), href: '/cart' },
+    { icon: User, label: t('personal_data'), href: '#' },
+    { icon: Settings, label: t('settings'), href: '/profile/settings' },
+  ];
 
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto py-20 px-4 max-w-md text-center space-y-6">
         <User className="w-16 h-16 mx-auto text-muted-foreground" />
-        <h1 className="text-3xl font-bold">Войдите в аккаунт</h1>
-        <p className="text-muted-foreground">Авторизуйтесь, чтобы просматривать профиль и управлять гаражом</p>
+        <h1 className="text-3xl font-bold">{t('login_title')}</h1>
+        <p className="text-muted-foreground">{t('login_desc')}</p>
         <div className="flex gap-4 justify-center">
-          <Button>Войти</Button>
-          <Button variant="outline">Регистрация</Button>
+          <Link href="/auth/login"><Button>{t('login')}</Button></Link>
+          <Link href="/auth/register"><Button variant="outline">{t('register')}</Button></Link>
         </div>
       </div>
     );
@@ -42,7 +44,7 @@ export default function ProfilePage() {
               <div className="bg-muted w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <User className="w-8 h-8 text-muted-foreground" />
               </div>
-              <CardTitle>{user?.full_name || 'Пользователь'}</CardTitle>
+              <CardTitle>{user?.full_name || t('user')}</CardTitle>
               <Badge variant="outline">{user?.role || 'retail'}</Badge>
             </CardHeader>
           </Card>
@@ -60,7 +62,7 @@ export default function ProfilePage() {
               <Separator />
               <Button variant="ghost" className="w-full justify-start gap-3 text-destructive" onClick={logout}>
                 <LogOut className="w-4 h-4" />
-                Выйти
+                {t('logout')}
               </Button>
             </CardContent>
           </Card>
@@ -69,16 +71,16 @@ export default function ProfilePage() {
         <div className="flex-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Личные данные</CardTitle>
+              <CardTitle className="text-lg">{t('personal_data')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-muted-foreground">Email</p>
+                  <p className="text-muted-foreground">{t('email_label')}</p>
                   <p className="font-medium">{user?.email || '—'}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Роль</p>
+                  <p className="text-muted-foreground">{t('role_label')}</p>
                   <p className="font-medium capitalize">{user?.role || '—'}</p>
                 </div>
               </div>
@@ -87,13 +89,13 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Мой гараж</CardTitle>
+              <CardTitle className="text-lg">{t('my_garage')}</CardTitle>
             </CardHeader>
             <CardContent>
               <Link href="/garage">
                 <Button variant="outline" className="gap-2">
                   <Car className="w-4 h-4" />
-                  Управлять гаражом
+                  {t('manage_garage')}
                 </Button>
               </Link>
             </CardContent>
