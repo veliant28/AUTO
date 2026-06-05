@@ -61,7 +61,8 @@
     "order_success": "Замовлення успішно оформлено!",
     "name_placeholder": "Іванов Іван",
     "address_placeholder": "Місто, вулиця, будинок, квартира",
-    "loading_garage": "Завантаження вашого гаражу..."
+    "loading_garage": "Завантаження вашого гаражу...",
+    "garage": "Гараж"
   },
   "header": {
     "catalog": "Каталог",
