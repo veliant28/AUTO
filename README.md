@@ -7,7 +7,7 @@ Full-stack auto parts e-commerce platform with TecDoc catalog integration, admin
 | Layer | Technology |
 |-------|-----------|
 | **Frontend** | Next.js 16, TypeScript, Tailwind CSS, shadcn/ui |
-| **Backend** | FastAPI (Python 3.13), SQLAlchemy, Alembic |
+| **Backend** | FastAPI (Python 3.14), SQLAlchemy, Alembic |
 | **Database** | PostgreSQL |
 | **Cache** | Redis |
 | **Charts** | Apache ECharts |
@@ -33,8 +33,8 @@ Full-stack auto parts e-commerce platform with TecDoc catalog integration, admin
 ### Prerequisites
 
 - Docker & Docker Compose
-- Node.js 20+ (for local frontend dev)
-- Python 3.13+ (for local backend dev)
+- Node.js 26+ (for local frontend dev)
+- Python 3.14+ (for local backend dev)
 
 ### Run with Docker
 
