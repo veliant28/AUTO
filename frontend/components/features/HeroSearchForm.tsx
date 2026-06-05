@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function HeroSearchForm() {
+  const t = useTranslations('home');
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -23,7 +25,7 @@ export default function HeroSearchForm() {
       <Input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Введите артикул или название детали..."
+        placeholder={t('search_placeholder')}
         className="pl-12 pr-4 h-14 text-lg shadow-lg"
       />
     </form>
