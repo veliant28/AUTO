@@ -1,0 +1,190 @@
+{
+  "common": {
+    "search": "Search",
+    "cart": "Cart",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "profile": "Profile",
+    "logout": "Log out",
+    "login": "Log in",
+    "register": "Register",
+    "details": "Details",
+    "currency": "₴",
+    "user": "User",
+    "select_brand": "Select Brand",
+    "select_model": "Select Model",
+    "select_mod": "Select Modification",
+    "select_section": "Select Category",
+    "back": "Back",
+    "back_to_profile": "Back to Profile",
+    "add_to_cart": "Add to Cart",
+    "added_to_cart": "Added to Cart",
+    "in_stock": "In Stock",
+    "on_order": "On Order",
+    "loading": "Загрузка...",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "header": {
+    "catalog": "Catalog",
+    "garage": "Garage",
+    "favorites": "Favorites",
+    "orders": "Orders",
+    "profile_link": "Profile",
+    "my_garage": "My Garage",
+    "my_account": "Account",
+    "admin_panel": "Admin Panel"
+  },
+  "footer": {
+    "description": "Крупнейший интернет-магазин автозапчастей",
+    "company_title": "Company",
+    "about": "About",
+    "contacts": "Contacts",
+    "delivery": "Delivery",
+    "help_title": "Help",
+    "faq": "FAQ",
+    "support": "Support",
+    "terms": "Terms",
+    "copyright": "© 2026 AutoParts Store"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "access_denied": "Access Denied",
+    "access_denied_desc": "Admin access only",
+    "go_home": "Go Home",
+    "sync_catalog": "Синхронизировать каталог",
+    "sync_started": "Sync started",
+    "orders_count": "Заказов",
+    "users_count": "Пользователей",
+    "parts_count": "Деталей",
+    "total_revenue": "Revenue",
+    "recent_orders": "Recent Orders",
+    "no_orders": "No orders",
+    "dashboard_title": "Dashboard",
+    "orders_by_day": "Orders by Day",
+    "revenue_by_day": "Revenue by Day",
+    "orders_by_status": "Orders by Status",
+    "parts_by_category": "Parts by Category",
+    "users_title": "Users",
+    "orders_title": "Orders",
+    "create_user": "Create",
+    "edit_user": "Edit",
+    "delete_user": "Delete",
+    "confirm_delete_user": "Delete user?",
+    "user_created": "Created",
+    "user_deleted": "Deleted",
+    "search_users": "Поиск...",
+    "filter_status": "Status",
+    "actions": "Actions",
+    "role_label": "Role",
+    "is_active_label": "Active",
+    "status_updated": "Status updated"
+  },
+  "catalog": {
+    "title": "Catalog",
+    "no_results": "Ничего не найдено",
+    "loading": "Загрузка...",
+    "article": "Article",
+    "name": "Name",
+    "price": "Price",
+    "brand": "Brand",
+    "price_from": "Price from",
+    "price_to": "Price to",
+    "in_stock_only": "In stock only",
+    "sort_by": "Sort",
+    "sort_price_asc": "Цена ↑",
+    "sort_price_desc": "Цена ↓",
+    "sort_name_asc": "Название А-Я"
+  },
+  "orders": {
+    "my_orders": "My Orders",
+    "order": "Order",
+    "total": "Total",
+    "status": "Status",
+    "items": "items",
+    "back": "Back",
+    "order_not_found": "Order not found"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Корзина пуста",
+    "your_order": "Ваш заказ",
+    "summary_items": "Товаров",
+    "summary_total": "Total",
+    "items_count": "pcs",
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "your_order": "Order",
+    "full_name": "Full Name",
+    "phone": "Phone",
+    "address": "Address",
+    "place_order": "Place Order",
+    "total": "Total"
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Settings",
+    "back_to_profile": "To Profile"
+  },
+  "telegram": {
+    "title": "Telegram",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "check_after_send": "После отправки нажмите «Проверить»"
+  },
+  "pages": {
+    "about": {
+      "title": "About Us",
+      "meta_title": "About Us",
+      "meta_desc": "Information about AutoParts",
+      "p1": "AutoParts is a leading online auto parts store with TecDoc catalog integration.",
+      "p2": "We offer over 235,000 OEM and aftermarket parts from verified suppliers.",
+      "p3": "Our mission is to make auto parts search and purchase fast, convenient and reliable."
+    },
+    "terms": {
+      "title": "Terms of Use",
+      "meta_title": "Terms of Use",
+      "meta_desc": "AutoParts website terms",
+      "p1": "By using AutoParts, you agree to these terms.",
+      "p2": "All site materials are protected by copyright.",
+      "p3": "We reserve the right to change terms at any time."
+    },
+    "contacts": {
+      "title": "Contacts",
+      "meta_title": "Contacts",
+      "meta_desc": "Contact AutoParts",
+      "p1": "Email: info@autoparts.local",
+      "p2": "Phone: +380 (44) 123-45-67",
+      "p3": "Address: Ukraine, Kyiv"
+    },
+    "delivery": {
+      "title": "Delivery",
+      "meta_title": "Delivery",
+      "meta_desc": "AutoParts delivery terms",
+      "p1": "Delivery across Ukraine.",
+      "p2": "Pickup from collection points.",
+      "p3": "Free delivery on orders over 3000 ₴."
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "meta_title": "FAQ",
+      "meta_desc": "Answers to common questions",
+      "p1": "How to find a part? Use the article search or TecDoc catalog.",
+      "p2": "How to place an order? Add parts to cart and fill out the form.",
+      "p3": "How to track an order? See My Orders section after logging in."
+    },
+    "support": {
+      "title": "Support",
+      "meta_title": "Support",
+      "meta_desc": "AutoParts support team",
+      "p1": "Our support team is ready to help you.",
+      "p2": "Working hours: Mon-Fri 9:00-18:00.",
+      "p3": "Average response time — 2 hours."
+    }
+  }
+}

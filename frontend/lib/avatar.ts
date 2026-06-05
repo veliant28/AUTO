@@ -1,0 +1,17 @@
+const DICEBEAR_BASE = 'https://api.dicebear.com/9.x';
+
+export type AvatarStyle = 'initials' | 'identicon' | 'avataaars' | 'bottts' | 'lorelei' | 'thumbs';
+
+export function getAvatarUrl(name: string, style: AvatarStyle = 'initials'): string {
+  const seed = encodeURIComponent(name || 'user');
+  return `${DICEBEAR_BASE}/${style}/svg?seed=${seed}`;
+}
+
+export function getInitials(name: string, email?: string): string {
+  const str = name || email || '?';
+  const parts = str.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return str.slice(0, 2).toUpperCase();
+}
