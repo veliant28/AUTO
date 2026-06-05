@@ -23,12 +23,12 @@ export default function VehicleSelector() {
   const handleSaveToGarage = () => {
     if (!modId) return;
     addToGarage(parseInt(modId));
-    toast.success('Автомобиль сохранен в гараж!');
+    toast.success(t('saved_to_garage'));
   };
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-card text-card-foreground rounded-lg border shadow-sm max-w-md mx-auto">
-      <h3 className="text-lg font-semibold mb-2">Поиск запчасти</h3>
+      <h3 className="text-lg font-semibold mb-2">{t('search_by_car')}</h3>
       
       <div className="space-y-2">
         <label className="text-sm font-medium">{t('select_brand')}</label>
@@ -75,12 +75,12 @@ export default function VehicleSelector() {
       {modId && (
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs">Выбран автомобиль</Badge>
+            <Badge variant="outline" className="text-xs">{t('selected_car')}</Badge>
             <button 
               onClick={() => useVehicleStore.getState().clearVehicle()}
               className="text-xs text-destructive hover:underline"
             >
-              Сбросить
+              {t('reset')}
             </button>
           </div>
           <Button 
@@ -90,7 +90,7 @@ export default function VehicleSelector() {
             disabled={isAdding}
           >
             <Heart className="w-4 h-4" />
-            Сохранить в гараж
+            {t('save_to_garage')}
           </Button>
         </div>
       )}

@@ -37,91 +37,7 @@ const columnHelper = createColumnHelper<Part>();
 
 const { ARTICLE, NAME, PRICE, BRAND, STATUS, ACTION } = COLUMN_WIDTHS;
 
-const desktopColumns = [
-  columnHelper.accessor('article', {
-    header: 'Артикул',
-    size: ARTICLE,
-    cell: (info) => <span className="font-mono font-medium text-xs">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor('name', {
-    header: 'Наименование',
-    size: NAME,
-    cell: (info) => <span className="text-sm truncate block max-w-[280px]">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor('price', {
-    header: () => <div className="text-right">Цена</div>,
-    size: PRICE,
-    cell: (info) => {
-      const price = info.getValue();
-      return (
-        <div className="text-right">
-          {price ? (
-            <span className="font-semibold">{price.toLocaleString()} ₴</span>
-          ) : (
-            <span className="text-muted-foreground text-xs">—</span>
-          )}
-        </div>
-      );
-    },
-  }),
-  columnHelper.accessor('supplier_name', {
-    header: 'Бренд',
-    size: BRAND,
-    cell: (info) => {
-      const name = info.getValue();
-      return name ? (
-        <Badge variant="outline" className="text-[10px]">{name}</Badge>
-      ) : (
-        <span className="text-muted-foreground text-xs">—</span>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'status',
-    header: 'Статус',
-    size: STATUS,
-    cell: ({ row }) => {
-      const qty = row.original.quantity;
-      return qty !== null && qty > 0 ? (
-        <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100 text-[10px]">
-          В наличии
-        </Badge>
-      ) : (
-        <Badge variant="secondary" className="text-[10px]">Под заказ</Badge>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'action',
-    header: '',
-    size: 100,
-    cell: ({ row }) => {
-      const part = row.original;
-      const addItem = useCartStore.getState().addItem;
-      return (
-        <div className="flex gap-1">
-          <Button variant="outline" size="sm" className="text-xs h-8 px-2">Подробнее</Button>
-          <Button size="sm" className="h-8 w-8 p-0" onClick={() => {
-            addItem({
-              id: `cart-${part.id}-${Date.now()}`,
-              part_id: part.id,
-              article: part.article,
-              part_name: part.name,
-              quantity: 1,
-              price: part.price,
-              supplier_name: part.supplier_name,
-            });
-            toast.success('Добавлено в корзину');
-          }}>
-            <ShoppingCart className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      );
-    },
-  }),
-];
-
-function MobileCard({ part, onDetail, index }: { part: Part; onDetail: (p: Part) => void; index: number }) {
+function MobileCard({ part, onDetail, index, t, tc }: { part: Part; onDetail: (p: Part) => void; index: number; t: any; tc: any }) {
   const addItem = useCartStore((s) => s.addItem);
   return (
     <motion.div
@@ -148,7 +64,7 @@ function MobileCard({ part, onDetail, index }: { part: Part; onDetail: (p: Part)
           {part.price ? (
             <p className="font-bold text-base">{part.price.toLocaleString()} ₴</p>
           ) : (
-            <p className="text-xs text-muted-foreground">Цена не указана</p>
+            <p className="text-xs text-muted-foreground">{tc('no_price')}</p>
           )}
         </div>
       </div>
@@ -156,14 +72,14 @@ function MobileCard({ part, onDetail, index }: { part: Part; onDetail: (p: Part)
         <div>
           {part.quantity !== null && part.quantity > 0 ? (
             <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100 text-[10px] h-5">
-              В наличии
+              {tc('in_stock')}
             </Badge>
           ) : (
-            <Badge variant="secondary" className="text-[10px] h-5">Под заказ</Badge>
+            <Badge variant="secondary" className="text-[10px] h-5">{tc('on_order')}</Badge>
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onDetail(part)}>Подробнее</Button>
+          <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onDetail(part)}>{tc('details')}</Button>
           <Button size="sm" className="h-8 w-8 p-0" onClick={() => {
             addItem({
               id: `cart-${part.id}-${Date.now()}`,
@@ -185,8 +101,94 @@ function MobileCard({ part, onDetail, index }: { part: Part; onDetail: (p: Part)
 }
 
 export default function PartTable({ data }: { data: Part[] }) {
+  const t = useTranslations('catalog');
+  const tc = useTranslations('common');
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
   const { data: detailData, isLoading: detailLoading } = usePartDetail(selectedPart?.article || null);
+
+  const desktopColumns = useMemo(() => [
+    columnHelper.accessor('article', {
+      header: t('article'),
+      size: ARTICLE,
+      cell: (info) => <span className="font-mono font-medium text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('name', {
+      header: t('name'),
+      size: NAME,
+      cell: (info) => <span className="text-sm truncate block max-w-[280px]">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('price', {
+      header: () => <div className="text-right">{t('price')}</div>,
+      size: PRICE,
+      cell: (info) => {
+        const price = info.getValue();
+        return (
+          <div className="text-right">
+            {price ? (
+              <span className="font-semibold">{price.toLocaleString()} ₴</span>
+            ) : (
+              <span className="text-muted-foreground text-xs">—</span>
+            )}
+          </div>
+        );
+      },
+    }),
+    columnHelper.accessor('supplier_name', {
+      header: t('brand'),
+      size: BRAND,
+      cell: (info) => {
+        const name = info.getValue();
+        return name ? (
+          <Badge variant="outline" className="text-[10px]">{name}</Badge>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: 'status',
+      header: t('status'),
+      size: STATUS,
+      cell: ({ row }) => {
+        const qty = row.original.quantity;
+        return qty !== null && qty > 0 ? (
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100 text-[10px]">
+            {tc('in_stock')}
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="text-[10px]">{tc('on_order')}</Badge>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: 'action',
+      header: '',
+      size: 100,
+      cell: ({ row }) => {
+        const part = row.original;
+        const addItem = useCartStore.getState().addItem;
+        return (
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" className="text-xs h-8 px-2">{tc('details')}</Button>
+            <Button size="sm" className="h-8 w-8 p-0" onClick={() => {
+              addItem({
+                id: `cart-${part.id}-${Date.now()}`,
+                part_id: part.id,
+                article: part.article,
+                part_name: part.name,
+                quantity: 1,
+                price: part.price,
+                supplier_name: part.supplier_name,
+              });
+              toast.success(tc('added_to_cart'));
+            }}>
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    }),
+  ], [t, tc]);
 
   const table = useReactTable({
     data,
@@ -229,7 +231,7 @@ export default function PartTable({ data }: { data: Part[] }) {
                     price: part.price,
                     supplier_name: part.supplier_name,
                   });
-                  toast.success('Добавлено в корзину');
+            toast.success(tc('added_to_cart'));
                 }}>
                   <ShoppingCart className="w-3.5 h-3.5" />
                 </Button>
@@ -277,7 +279,7 @@ export default function PartTable({ data }: { data: Part[] }) {
       {/* Mobile Cards */}
       <div className="md:hidden space-y-3">
         {data.map((part, idx) => (
-          <MobileCard key={part.id} part={part} onDetail={setSelectedPart} index={idx} />
+          <MobileCard key={part.id} part={part} onDetail={setSelectedPart} index={idx} t={t} tc={tc} />
         ))}
       </div>
 

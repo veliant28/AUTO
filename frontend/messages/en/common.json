@@ -26,7 +26,12 @@
     "on_order": "On Order",
     "loading": "Загрузка...",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "search_by_car": "Search Parts",
+    "selected_car": "Car Selected",
+    "reset": "Reset",
+    "save_to_garage": "Save to Garage",
+    "saved_to_garage": "Car saved to garage!"
   },
   "header": {
     "catalog": "Catalog",
@@ -48,6 +53,7 @@
     "faq": "FAQ",
     "support": "Support",
     "terms": "Terms",
+    "admin_panel": "Admin Panel",
     "copyright": "© 2026 AutoParts Store"
   },
   "admin": {
@@ -95,9 +101,11 @@
     "price_to": "Price to",
     "in_stock_only": "In stock only",
     "sort_by": "Sort",
-    "sort_price_asc": "Цена ↑",
-    "sort_price_desc": "Цена ↓",
-    "sort_name_asc": "Название А-Я"
+    "sort_price_asc": "Price ↑",
+    "sort_price_desc": "Price ↓",
+    "sort_name_asc": "Name A-Z",
+    "status": "Status",
+    "no_price": "No price"
   },
   "orders": {
     "my_orders": "My Orders",
@@ -147,6 +155,7 @@
       "p3": "Our mission is to make auto parts search and purchase fast, convenient and reliable."
     },
     "terms": {
+      "admin_panel": "Admin Panel",
       "title": "Terms of Use",
       "meta_title": "Terms of Use",
       "meta_desc": "AutoParts website terms",
