@@ -80,7 +80,7 @@ export default function CatalogPage() {
                     {/* Desktop filter toggle */}
                     <Button variant="outline" size="sm" className="hidden md:inline-flex gap-2" onClick={() => setShowDesktopFilters(!showDesktopFilters)}>
                       <SlidersHorizontal className="w-4 h-4" />
-                      Фильтры
+                      {t('filters')}
                       {activeFilterCount > 0 && (
                         <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-xs">{activeFilterCount}</Badge>
                       )}
@@ -92,9 +92,9 @@ export default function CatalogPage() {
               {selectedSecId && showDesktopFilters && (
                 <div className="hidden md:block p-4 rounded-lg border bg-card space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-sm">Фильтры и сортировка</h4>
+                    <h4 className="font-semibold text-sm">{t('filters_sort')}</h4>
                     <Button variant="ghost" size="sm" onClick={() => { clearFilters(); setShowDesktopFilters(false); }} className="text-xs gap-1">
-                      <X className="w-3 h-3" /> Закрыть
+                      <X className="w-3 h-3" /> {t('close')}
                     </Button>
                   </div>
                   <Separator />
@@ -110,15 +110,15 @@ export default function CatalogPage() {
                 )
               ) : (
                 <div className="bg-muted/30 border-2 border-dashed rounded-lg h-64 flex items-center justify-center text-muted-foreground">
-                  Выберите категорию для отображения запчастей
+                  {t('select_category')}
                 </div>
               )}
             </>
           ) : (
             <div className="bg-muted/30 border-2 border-dashed rounded-lg h-96 flex items-center justify-center text-center p-8 text-muted-foreground">
               <div>
-                <p className="text-lg font-medium">Сначала выберите автомобиль</p>
-                <p className="text-sm">Используйте селектор слева, чтобы найти запчасти для вашего авто</p>
+                <p className="text-lg font-medium">{t('select_car_first')}</p>
+                <p className="text-sm">{t('select_car_desc')}</p>
               </div>
             </div>
           )}
