@@ -11,3 +11,4 @@ celery==5.5.*
 polars==1.18.*
 python-multipart==0.0.*
 email-validator==2.2.*
+bcrypt==4.*
