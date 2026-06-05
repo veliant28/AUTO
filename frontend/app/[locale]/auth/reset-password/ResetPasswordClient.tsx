@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Lock, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const t = useTranslations('auth');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,53 +27,29 @@ export default function ResetPasswordPage() {
   return (
     <div className="container mx-auto py-12 px-4 max-w-md">
       <div className="text-center mb-8 space-y-2">
-        <h1 className="text-3xl font-bold">Новый пароль</h1>
-        <p className="text-muted-foreground">Придумайте новый пароль для вашего аккаунта</p>
+        <h1 className="text-3xl font-bold">{t('reset_title')}</h1>
+        <p className="text-muted-foreground">{t('reset_desc')}</p>
       </div>
-
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Новый пароль</label>
+          <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                type={showPassword ? 'text' : 'password'} 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Минимум 6 символов" 
-                className="pl-10 pr-10" 
-                required 
-                minLength={PASSWORD_MIN_LENGTH}
-              />
-            <button 
-              type="button" 
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
+            <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password_placeholder')} className="pl-10 pr-10" required minLength={PASSWORD_MIN_LENGTH} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
         </div>
-
         <div className="space-y-2">
-          <label className="text-sm font-medium">Подтвердите пароль</label>
+          <label className="text-sm font-medium">{t('confirm_password')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                type={showPassword ? 'text' : 'password'} 
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Повторите пароль" 
-                className="pl-10" 
-                required 
-                minLength={PASSWORD_MIN_LENGTH}
-              />
+            <Input type={showPassword ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={t('password_placeholder')} className="pl-10" required minLength={PASSWORD_MIN_LENGTH} />
           </div>
         </div>
-
         <Button type="submit" className="w-full gap-2" size="lg" disabled={resetLoading || password !== confirm}>
-          <KeyRound className="w-4 h-4" />
-          {resetLoading ? 'Сохранение...' : 'Сохранить пароль'}
+          <KeyRound className="w-4 h-4" />{resetLoading ? '...' : t('reset_btn')}
         </Button>
       </form>
     </div>

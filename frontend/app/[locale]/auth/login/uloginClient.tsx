@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
@@ -15,36 +16,30 @@ import { loginSchema, LoginFormData } from '@/lib/validations/authSchemas';
 export default function LoginPage() {
   const { login, loginLoading, googleAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const t = useTranslations('auth');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
   const onSubmit = (data: LoginFormData) => login(data);
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-md">
       <div className="text-center mb-8 space-y-2">
-        <h1 className="text-3xl font-bold">Вход</h1>
-        <p className="text-muted-foreground">Войдите в аккаунт для управления профилем и заказами</p>
+        <h1 className="text-3xl font-bold">{t('login_title')}</h1>
+        <p className="text-muted-foreground">{t('login_desc')}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Email</label>
+          <label className="text-sm font-medium">{t('email_label')}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input {...register('email')} type="email" placeholder="your@email.com" className="pl-10" />
+            <Input {...register('email')} type="email" placeholder={t('email_placeholder')} className="pl-10" />
           </div>
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Пароль</label>
+          <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="pl-10 pr-10" />
@@ -56,21 +51,21 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-end">
-          <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">Забыли пароль?</Link>
+          <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">{t('forgot_password')}</Link>
         </div>
 
         <Button type="submit" className="w-full gap-2" size="lg" disabled={loginLoading}>
-          <LogIn className="w-4 h-4" /> {loginLoading ? 'Вход...' : 'Войти'}
+          <LogIn className="w-4 h-4" /> {loginLoading ? '...' : t('login_btn')}
         </Button>
       </form>
 
       <div className="my-8 flex items-center gap-4">
         <Separator className="flex-1" />
-        <span className="text-sm text-muted-foreground">или</span>
+        <span className="text-sm text-muted-foreground">{t('or')}</span>
         <Separator className="flex-1" />
       </div>
 
-      <Button variant="outline" className="w-full gap-2" size="lg" onClick={() => toast.info('Google OAuth будет настроен позже')}>
+      <Button variant="outline" className="w-full gap-2" size="lg" onClick={() => toast.info('Google OAuth coming soon')}>
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -81,8 +76,8 @@ export default function LoginPage() {
       </Button>
 
       <p className="text-center text-sm text-muted-foreground mt-8">
-        Нет аккаунта?{' '}
-        <Link href="/auth/register" className="text-primary font-medium hover:underline">Зарегистрироваться</Link>
+        {t('no_account')}{' '}
+        <Link href="/auth/register" className="text-primary font-medium hover:underline">{t('register_btn')}</Link>
       </p>
     </div>
   );
