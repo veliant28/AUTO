@@ -8,7 +8,7 @@ import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export default function CartPage() {
   const t = useTranslations('common');

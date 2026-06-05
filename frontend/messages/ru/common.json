@@ -119,7 +119,13 @@
     "no_description": "Описание детали отсутствует",
     "attributes": "Характеристики",
     "cross_references": "Аналоги и кросс-номера",
-    "no_crosses": "Аналоги не найдены"
+    "no_crosses": "Аналоги не найдены",
+    "car_removed": "Автомобиль удален из гаража",
+    "email_invalid": "Введите корректный email",
+    "password_min_length": "Минимум {min} символов",
+    "name_min_length": "Введите имя (минимум {min} символа)",
+    "confirm_password_required": "Подтвердите пароль",
+    "passwords_mismatch": "Пароли не совпадают"
   },
   "header": {
     "catalog": "Каталог",
@@ -175,7 +181,8 @@
     "actions": "Действия",
     "role_label": "Роль",
     "is_active_label": "Активен",
-    "status_updated": "Статус обновлён"
+    "status_updated": "Статус обновлён",
+    "user_updated": "Пользователь обновлён"
   },
   "catalog": {
     "title": "Каталог",
@@ -375,6 +382,16 @@
     "no_account": "Нет аккаунта?",
     "back_to_login": "Вернуться ко входу",
     "forgot_password": "Забыли пароль?",
-    "or": "или"
+    "or": "или",
+    "login_success": "Вход выполнен",
+    "login_error": "Неверный email или пароль",
+    "register_success": "Регистрация успешна",
+    "register_error": "Ошибка регистрации",
+    "email_exists": "Email уже зарегистрирован",
+    "forgot_success": "Ссылка для восстановления отправлена",
+    "forgot_error": "Ошибка",
+    "reset_success": "Пароль изменен",
+    "reset_error": "Неверный или просроченный токен",
+    "google_success": "Вход через Google выполнен"
   }
 }

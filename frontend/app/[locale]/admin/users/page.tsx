@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { USER_ROLES } from '@/lib/constants';
@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User updated');
+      toast.success(t('user_updated'));
       setEditUser(null);
     },
   });

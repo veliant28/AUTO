@@ -13,7 +13,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import type { AvatarStyle } from '@/lib/avatar';
 import api from '@/lib/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {

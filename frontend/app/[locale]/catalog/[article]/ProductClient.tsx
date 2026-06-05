@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useCartStore } from '@/store/cartStore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import ImageGallery from '@/components/features/ImageGallery';
 import { APPLICABILITY_LIMIT, APPLICABILITY_PREVIEW } from '@/lib/constants';
 

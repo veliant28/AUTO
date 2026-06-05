@@ -17,7 +17,7 @@ import { ShoppingCart, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react'
 import PartDetailSheet from './PartDetailSheet';
 import { usePartDetail } from '@/hooks/usePartDetail';
 import { useCartStore } from '@/store/cartStore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { COLUMN_WIDTHS, VIRTUAL_LIST_HEIGHT, VIRTUAL_ROW_HEIGHT } from '@/lib/constants';
 
 export interface Part {

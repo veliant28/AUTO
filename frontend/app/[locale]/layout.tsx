@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NotificationProvider from '@/components/NotificationProvider';
 import { NextIntlClientProvider } from 'next-intl';
+import { Toaster } from 'sonner';
 import Providers from '@/components/Providers';
 import { use } from 'react';
 import type { Metadata } from 'next';
@@ -49,7 +50,8 @@ export default function RootLayout(props: any) {
             disableTransitionOnChange
           >
             <Providers>
-            <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
+              <Toaster position="bottom-right" offset={{ right: '48px' }} />
+              <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
               <Header />
               <main className="flex-1 pb-16 lg:pb-0">
                 <NotificationProvider>

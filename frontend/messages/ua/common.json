@@ -119,7 +119,13 @@
     "no_description": "Опис деталі відсутній",
     "attributes": "Характеристики",
     "cross_references": "Аналоги та крос-номери",
-    "no_crosses": "Аналоги не знайдені"
+    "no_crosses": "Аналоги не знайдені",
+    "car_removed": "Автомобіль видалено з гаража",
+    "email_invalid": "Введіть коректний email",
+    "password_min_length": "Мінімум {min} символів",
+    "name_min_length": "Введіть ім'я (мінімум {min} символи)",
+    "confirm_password_required": "Підтвердіть пароль",
+    "passwords_mismatch": "Паролі не співпадають"
   },
   "header": {
     "catalog": "Каталог",
@@ -175,7 +181,8 @@
     "actions": "Действия",
     "role_label": "Роль",
     "is_active_label": "Активен",
-    "status_updated": "Статус обновлён"
+    "status_updated": "Статус оновлено",
+    "user_updated": "Користувача оновлено"
   },
   "catalog": {
     "title": "Каталог",
@@ -360,6 +367,16 @@
     "no_account": "Немає акаунту?",
     "back_to_login": "Повернутися до входу",
     "forgot_password": "Забули пароль?",
-    "or": "або"
+    "or": "або",
+    "login_success": "Вхід виконано",
+    "login_error": "Невірний email або пароль",
+    "register_success": "Реєстрація успішна",
+    "register_error": "Помилка реєстрації",
+    "email_exists": "Email вже зареєстровано",
+    "forgot_success": "Посилання для відновлення надіслано",
+    "forgot_error": "Помилка",
+    "reset_success": "Пароль змінено",
+    "reset_error": "Невірний або прострочений токен",
+    "google_success": "Вхід через Google виконано"
   }
 }

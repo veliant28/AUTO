@@ -9,7 +9,7 @@ import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { loginSchema, LoginFormData } from '@/lib/validations/authSchemas';
 
@@ -17,8 +17,9 @@ export default function LoginPage() {
   const { login, loginLoading, googleAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const t = useTranslations('auth');
+  const tc = useTranslations('common');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema(tc)) });
   const onSubmit = (data: LoginFormData) => login(data);
 
   return (

@@ -60,3 +60,8 @@ body {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+[data-sonner-toaster] [data-sonner-toast] {
+  width: 384px !important;
+  max-width: 384px !important;
+}

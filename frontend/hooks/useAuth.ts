@@ -2,11 +2,20 @@ import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
+import { useTranslations } from 'next-intl';
 
 export function useAuth() {
   const router = useRouter();
   const { setUser } = useAuthStore();
+  const t = useTranslations('auth');
+
+  const getError = (err: any, key: string) => {
+    const detail = err?.response?.data?.detail;
+    if (detail?.toLowerCase().includes('already registered')) return t('email_exists');
+    if (detail?.toLowerCase().includes('invalid credentials')) return t('login_error');
+    return t(key);
+  };
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
@@ -16,10 +25,10 @@ export function useAuth() {
     onSuccess: (res) => {
       setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
       localStorage.setItem('token', res.access_token);
-      toast.success('Вход выполнен');
+      toast.success(t('login_success'));
       router.push('/');
     },
-    onError: () => toast.error('Неверный email или пароль'),
+    onError: (err: any) => toast.error(getError(err, 'login_error')),
   });
 
   const registerMutation = useMutation({
@@ -30,10 +39,10 @@ export function useAuth() {
     onSuccess: (res) => {
       setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
       localStorage.setItem('token', res.access_token);
-      toast.success('Регистрация успешна');
+      toast.success(t('register_success'));
       router.push('/');
     },
-    onError: () => toast.error('Ошибка регистрации'),
+    onError: (err: any) => toast.error(getError(err, 'register_error')),
   });
 
   const forgotMutation = useMutation({
@@ -42,9 +51,9 @@ export function useAuth() {
       return res.data;
     },
     onSuccess: (res) => {
-      toast.success('Ссылка для восстановления отправлена');
+      toast.success(t('forgot_success'));
     },
-    onError: () => toast.error('Ошибка'),
+    onError: (err: any) => toast.error(getError(err, 'forgot_error')),
   });
 
   const resetMutation = useMutation({
@@ -53,10 +62,10 @@ export function useAuth() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Пароль изменен');
+      toast.success(t('reset_success'));
       router.push('/auth/login');
     },
-    onError: () => toast.error('Неверный или просроченный токен'),
+    onError: (err: any) => toast.error(getError(err, 'reset_error')),
   });
 
   const googleMutation = useMutation({
@@ -67,7 +76,7 @@ export function useAuth() {
     onSuccess: (res) => {
       setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
       localStorage.setItem('token', res.access_token);
-      toast.success('Вход через Google выполнен');
+      toast.success(t('google_success'));
       router.push('/');
     },
   });

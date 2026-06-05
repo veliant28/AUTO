@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { STORAGE_KEYS, ORDER_POLL_INTERVAL } from '@/lib/constants';
 
 export function useOrderNotifications() {

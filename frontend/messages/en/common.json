@@ -119,7 +119,13 @@
     "no_description": "No description available",
     "attributes": "Attributes",
     "cross_references": "Cross references",
-    "no_crosses": "No cross references found"
+    "no_crosses": "No cross references found",
+    "car_removed": "Car removed from garage",
+    "email_invalid": "Enter a valid email",
+    "password_min_length": "Minimum {min} characters",
+    "name_min_length": "Enter a name (minimum {min} characters)",
+    "confirm_password_required": "Confirm your password",
+    "passwords_mismatch": "Passwords do not match"
   },
   "header": {
     "catalog": "Catalog",
@@ -175,7 +181,8 @@
     "actions": "Actions",
     "role_label": "Role",
     "is_active_label": "Active",
-    "status_updated": "Status updated"
+    "status_updated": "Status updated",
+    "user_updated": "User updated"
   },
   "catalog": {
     "title": "Catalog",
@@ -360,6 +367,16 @@
     "no_account": "Don't have an account?",
     "back_to_login": "Back to Login",
     "forgot_password": "Forgot Password?",
-    "or": "or"
+    "or": "or",
+    "login_success": "Login successful",
+    "login_error": "Invalid email or password",
+    "register_success": "Registration successful",
+    "register_error": "Registration error",
+    "email_exists": "Email already registered",
+    "forgot_success": "Reset link sent",
+    "forgot_error": "Error",
+    "reset_success": "Password changed",
+    "reset_error": "Invalid or expired token",
+    "google_success": "Google login successful"
   }
 }

@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useAuthStore } from '@/store/authStore';
 import { checkoutSchema, CheckoutFormData } from '@/lib/validations/authSchemas';
 
@@ -30,7 +30,7 @@ export default function CheckoutPage() {
     formState: { errors },
     watch,
   } = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(checkoutSchema(t)),
   });
 
   const formValues = watch();

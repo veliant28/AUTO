@@ -16,7 +16,7 @@ import { ShoppingCart, ExternalLink, ChevronDown, ChevronUp, Car } from 'lucide-
 import { useCartStore } from '@/store/cartStore';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import ImageGallery from '@/components/features/ImageGallery';
 import { APPLICABILITY_LIMIT, APPLICABILITY_PREVIEW } from '@/lib/constants';
 

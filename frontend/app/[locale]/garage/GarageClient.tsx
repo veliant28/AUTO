@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Car } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { GarageSkeleton } from '@/components/ui/Skeletons';
 import PageTransition from '@/components/ui/PageTransition';
 
@@ -56,7 +56,7 @@ export default function GaragePage() {
                     className="text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       removeFromGarage(vehicle.id);
-                      toast.success('Автомобиль удален из гаража');
+                      toast.success(t('car_removed'));
                     }}
                     disabled={isRemoving}
                   >
