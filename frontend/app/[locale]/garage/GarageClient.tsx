@@ -35,13 +35,13 @@ export default function GaragePage() {
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <p className="animate-pulse text-muted-foreground">Загрузка вашего гаража...</p>
+          <p className="animate-pulse text-muted-foreground">{t('loading_garage')}</p>
         </div>
       ) : garage.length === 0 ? (
         <div className="bg-muted/30 border-2 border-dashed rounded-xl h-64 flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
           <Car className="w-12 h-12 mb-4 opacity-20" />
-          <p className="text-lg font-medium">Ваш гараж пока пуст</p>
-          <p className="text-sm">Добавьте автомобиль в каталоге, чтобы быстро находить запчасти</p>
+          <p className="text-lg font-medium">{t('garage_empty')}</p>
+          <p className="text-sm">{t('garage_empty_desc')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

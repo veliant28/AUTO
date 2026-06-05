@@ -60,7 +60,8 @@
     "checkout_error": "Ошибка при оформлении заказа",
     "order_success": "Заказ успешно оформлен!",
     "name_placeholder": "Иванов Иван",
-    "address_placeholder": "Город, улица, дом, квартира"
+    "address_placeholder": "Город, улица, дом, квартира",
+    "loading_garage": "Загрузка вашего гаража..."
   },
   "header": {
     "catalog": "Каталог",

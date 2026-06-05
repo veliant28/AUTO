@@ -60,7 +60,8 @@
     "checkout_error": "Помилка при оформленні замовлення",
     "order_success": "Замовлення успішно оформлено!",
     "name_placeholder": "Іванов Іван",
-    "address_placeholder": "Місто, вулиця, будинок, квартира"
+    "address_placeholder": "Місто, вулиця, будинок, квартира",
+    "loading_garage": "Завантаження вашого гаражу..."
   },
   "header": {
     "catalog": "Каталог",
