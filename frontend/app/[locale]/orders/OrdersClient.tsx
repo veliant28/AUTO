@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Package, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ import PageTransition from '@/components/ui/PageTransition';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
 
 export default function OrdersPage() {
+  const t = useTranslations('common');
   const { isAuthenticated } = useAuthStore();
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders'],

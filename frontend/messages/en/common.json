@@ -31,7 +31,36 @@
     "selected_car": "Car Selected",
     "reset": "Reset",
     "save_to_garage": "Save to Garage",
-    "saved_to_garage": "Car saved to garage!"
+    "saved_to_garage": "Car saved to garage!",
+    "search_placeholder": "Search by article or name...",
+    "results_for": "Search results:",
+    "no_results": "No results found",
+    "no_results_desc": "Try a different query or check the part number",
+    "cart_empty": "Cart is empty",
+    "cart_empty_desc": "Add parts to cart from catalog or find them by article number",
+    "go_to_catalog": "To Catalog",
+    "garage_empty": "Your garage is empty",
+    "garage_empty_desc": "Add a vehicle in the catalog to quickly find parts",
+    "favorites_empty": "Favorites",
+    "favorites_empty_desc": "Log in to save and view favorite parts",
+    "orders_empty": "My Orders",
+    "orders_empty_desc": "Log in to view order history",
+    "select_car_first": "First select a vehicle",
+    "select_car_desc": "Use the selector on the left to find parts for your car",
+    "select_category": "Select a category to display parts",
+    "filters": "Filters",
+    "filters_sort": "Filters & Sorting",
+    "close": "Close",
+    "login_required": "Log In Required",
+    "login_for_checkout": "You need to log in to place an order",
+    "full_name": "Full Name",
+    "phone": "Phone",
+    "address": "Address",
+    "checkout": "Place Order",
+    "checkout_error": "Checkout error",
+    "order_success": "Order placed successfully!",
+    "name_placeholder": "John Doe",
+    "address_placeholder": "City, street, building, apartment"
   },
   "header": {
     "catalog": "Catalog",
@@ -44,7 +73,7 @@
     "admin_panel": "Admin Panel"
   },
   "footer": {
-    "description": "Крупнейший интернет-магазин автозапчастей",
+    "description": "The largest online auto parts store with TecDoc integration. Instant search and precise applicability.",
     "company_title": "Company",
     "about": "About",
     "contacts": "Contacts",
@@ -217,7 +246,9 @@
       "work_desc": "Mon-Fri 9:00-18:00, Sat 10:00-15:00",
       "title": "Support",
       "meta_title": "Support",
-      "meta_desc": "AutoParts support"
+      "meta_desc": "AutoParts support",
+      "email_desc": "Email us",
+      "phone_desc": "Call us"
     }
   },
   "home": {

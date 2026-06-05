@@ -1,6 +1,8 @@
 'use client';
 
+import React from 'react';
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Package } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +14,7 @@ import { SearchSkeleton } from '@/components/ui/Skeletons';
 import PageTransition from '@/components/ui/PageTransition';
 
 export default function SearchPage() {
+  const t = useTranslations('common');
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = searchParams.get('q') || '';
@@ -42,7 +45,7 @@ export default function SearchPage() {
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Поиск по артикулу или названию..."
+            placeholder={t('search_placeholder')}
             className="pl-12 h-14 text-lg"
           />
         </form>

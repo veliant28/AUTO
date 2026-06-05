@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ShoppingCart, ArrowLeft, CreditCard, Truck, User, MapPin } from 'lucide-react';
@@ -18,6 +19,7 @@ import { useAuthStore } from '@/store/authStore';
 import { checkoutSchema, CheckoutFormData } from '@/lib/validations/authSchemas';
 
 export default function CheckoutPage() {
+  const t = useTranslations('common');
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
@@ -93,7 +95,7 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm">ФИО</label>
-                <Input {...register('full_name')} placeholder="Иванов Иван" />
+                <Input {...register('full_name')} placeholder={t('name_placeholder')} />
                 {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
               </div>
               <div className="space-y-2">
@@ -110,7 +112,7 @@ export default function CheckoutPage() {
             </h2>
             <div className="space-y-2">
               <label className="text-sm">Адрес</label>
-              <Input {...register('address')} placeholder="Город, улица, дом, квартира" />
+              <Input {...register('address')} placeholder={t('address_placeholder')} />
               {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
             </div>
           </div>

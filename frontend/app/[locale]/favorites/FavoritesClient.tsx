@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Heart, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
 
 export default function FavoritesPage() {
+  const t = useTranslations('common');
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
@@ -10,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
 export default function CartPage() {
+  const t = useTranslations('common');
   const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCartStore();
 
   if (items.length === 0) {
