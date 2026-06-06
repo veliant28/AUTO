@@ -3,12 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Package, Shield, Phone, Mail, MapPin } from 'lucide-react';
+import { Package, Shield } from 'lucide-react';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
-import { formatPhone } from '@/components/ui/PhoneInput';
 import api from '@/lib/api';
 
 export default function Footer() {
@@ -41,26 +40,26 @@ export default function Footer() {
               </div>
               <span>Auto<span className="text-primary">Parts</span></span>
             </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">{ft('description')}</p>
-            <p className="text-xs text-muted-foreground">{ft('copyright')}</p>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              {ft('description')}
+            </p>
           </div>
           
           <div className="space-y-4">
             <h4 className="font-semibold">{t('company_title')}</h4>
             <ul className="text-sm text-muted-foreground space-y-2">
-              <li><Link href="/about" className="hover:text-primary transition-colors">{t('about')}</Link></li>
-              <li className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{formatPhone(ft('contact_phone')) || t('contact_phone')}</li>
-              <li className="flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" />{ft('contact_email') || t('contact_email')}</li>
-              <li className="flex items-center gap-1.5"><MapPin className="w-3 h-3 shrink-0" />{ft('contact_address') || t('contact_address')}</li>
+              <li><Link href="/about" className="hover:text-primary transition-colors">{ft('about')}</Link></li>
+              <li><Link href="/contacts" className="hover:text-primary transition-colors">{ft('contacts')}</Link></li>
+              <li><Link href="/delivery" className="hover:text-primary transition-colors">{ft('delivery')}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="font-semibold">{t('help_title')}</h4>
             <ul className="text-sm text-muted-foreground space-y-2">
-              <li><Link href="/faq" className="hover:text-primary transition-colors">{t('faq')}</Link></li>
-              <li><Link href="/support" className="hover:text-primary transition-colors">{t('support')}</Link></li>
-              <li><Link href="/terms" className="hover:text-primary transition-colors">{t('terms')}</Link></li>
+              <li><Link href="/faq" className="hover:text-primary transition-colors">{ft('faq')}</Link></li>
+              <li><Link href="/support" className="hover:text-primary transition-colors">{ft('support')}</Link></li>
+              <li><Link href="/terms" className="hover:text-primary transition-colors">{ft('terms')}</Link></li>
               {adminRoles.includes(user?.role ?? '') && (
                 <li><Link href="/admin" className="hover:text-primary transition-colors font-medium flex items-center gap-1"><Shield className="w-3 h-3" /> {t('admin_panel')}</Link></li>
               )}
@@ -68,8 +67,11 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="mt-8 pt-6 border-t flex justify-center text-sm text-muted-foreground">
-          <LanguageSwitcher />
+        <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+          <p>{ft('copyright')}</p>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
     </footer>
