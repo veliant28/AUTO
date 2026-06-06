@@ -19,7 +19,7 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    register({ email, password, full_name: name });
+    register({ email, password, first_name: name });
   };
 
   return (

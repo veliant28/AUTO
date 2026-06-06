@@ -194,7 +194,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                       <span className="font-mono font-medium">#{order.id}</span>
                       <span className="text-muted-foreground">{order.full_name}</span>
-                      <Badge variant={variant}>{order.status}</Badge>
+                      <Badge variant={variant}>{t('order_' + order.status)}</Badge>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-medium">{Number(order.total).toLocaleString()} ₴</span>

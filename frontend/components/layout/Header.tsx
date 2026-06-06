@@ -32,6 +32,7 @@ export default function Header() {
   const cartCount = totalItems();
   const t = useTranslations('header');
   const tc = useTranslations('common');
+  const ta = useTranslations('admin');
 
   const navItems = [
     { name: tc('search'), href: '/catalog/search', icon: Search },
@@ -109,7 +110,7 @@ export default function Header() {
                         </Avatar>
                         <div>
                           <p className="font-medium">{user?.full_name || tc('user')}</p>
-                          <p className="text-xs text-muted-foreground font-normal capitalize">{user?.role}</p>
+                          <p className="text-xs text-muted-foreground font-normal">{ta(user?.role || 'retail')}</p>
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />

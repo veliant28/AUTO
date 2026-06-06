@@ -31,9 +31,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/lib/toast';
+import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { USER_ROLES } from '@/lib/constants';
+
+const roleBadgeColors: Record<string, string> = {
+  admin: 'bg-red-500 text-white',
+  manager: 'bg-blue-500 text-white',
+  operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
+};
 
 interface AdminUser {
   id: number;
@@ -50,6 +59,7 @@ const columnHelper = createColumnHelper<AdminUser>();
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
   const t = useTranslations('admin');
+  const tc = useTranslations('common');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -124,7 +134,7 @@ export default function AdminUsersPage() {
       size: 60,
     }),
     columnHelper.accessor('full_name', {
-      header: 'Name',
+      header: tc('name_label'),
       cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor('email', {
@@ -133,8 +143,8 @@ export default function AdminUsersPage() {
     columnHelper.accessor('role', {
       header: t('role_label'),
       cell: (info) => (
-        <Badge variant={info.getValue() === 'admin' ? 'default' : 'secondary'} className="capitalize">
-          {info.getValue()}
+        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0`}>
+          {t(info.getValue())}
         </Badge>
       ),
     }),
@@ -149,7 +159,7 @@ export default function AdminUsersPage() {
     }),
     columnHelper.accessor('phone', {
       header: t('phone_label'),
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => info.getValue() ? formatPhone(info.getValue()) : '—',
     }),
     columnHelper.display({
       id: 'actions',
@@ -206,22 +216,22 @@ export default function AdminUsersPage() {
           <Users className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">{t('users_title')}</h1>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2"><Plus className="w-4 h-4" /> {t('create_user')}</Button>
           </DialogTrigger>
           <DialogContent>
             <h2 className="text-lg font-semibold mb-4">{t('create_user')}</h2>
             <div className="space-y-4">
-              <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <Input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              <Input placeholder="Full Name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-              <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input placeholder={tc('password_label')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <Input placeholder={tc('name_label')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+              <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {USER_ROLES.map((r) => (
-                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                    <SelectItem key={r} value={r}>{t(r)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -292,20 +302,20 @@ export default function AdminUsersPage() {
           <DialogContent>
             <h2 className="text-lg font-semibold mb-4">{t('edit_user')}</h2>
             <div className="space-y-4">
-              <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <Input placeholder="Full Name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-              <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input placeholder={tc('name_label')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+              <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {USER_ROLES.map((r) => (
-                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                    <SelectItem key={r} value={r}>{t(r)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="is_active" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-                <label htmlFor="is_active">{t('is_active_label')}</label>
+                <input type="checkbox" id="is_active" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="cursor-pointer" />
+                <label htmlFor="is_active" className="cursor-pointer">{t('is_active_label')}</label>
               </div>
               <Button className="w-full" onClick={() => updateMutation.mutate({ id: editUser.id, payload: form })} disabled={updateMutation.isPending}>
                 {t('edit_user')}

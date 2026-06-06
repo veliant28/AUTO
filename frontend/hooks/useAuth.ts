@@ -22,8 +22,8 @@ export function useAuth() {
       const res = await api.post('/auth/login', data);
       return res.data;
     },
-    onSuccess: (res) => {
-      setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
+    onSuccess: (res, variables) => {
+      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '' });
       localStorage.setItem('token', res.access_token);
       toast.success(t('login_success'));
       router.push('/');
@@ -32,12 +32,12 @@ export function useAuth() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string; full_name?: string }) => {
+    mutationFn: async (data: { email: string; password: string; first_name?: string }) => {
       const res = await api.post('/auth/register', data);
       return res.data;
     },
-    onSuccess: (res) => {
-      setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
+    onSuccess: (res, variables) => {
+      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '', first_name: res.first_name || '' });
       localStorage.setItem('token', res.access_token);
       toast.success(t('register_success'));
       router.push('/');

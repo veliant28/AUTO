@@ -76,30 +76,29 @@ export default function AdminOrdersPage() {
 
   const columns = useMemo(() => [
     columnHelper.accessor('id', {
-      header: 'ID',
-      size: 60,
+      header: t('order_id'),
       cell: (info) => <span className="font-mono">#{info.getValue()}</span>,
     }),
     columnHelper.accessor('full_name', {
-      header: 'Customer',
+      header: t('order_customer'),
     }),
     columnHelper.accessor('status', {
       header: t('filter_status'),
       cell: (info) => {
         const variant = ORDER_STATUS_LABELS[info.getValue()]?.variant || 'secondary';
-        return <Badge variant={variant}>{info.getValue()}</Badge>;
+        return <Badge variant={variant}>{t('order_' + info.getValue())}</Badge>;
       },
     }),
     columnHelper.accessor('total', {
-      header: 'Total',
+      header: t('order_total'),
       cell: (info) => `${Number(info.getValue()).toLocaleString()} ₴`,
     }),
     columnHelper.accessor('items_count', {
-      header: 'Items',
+      header: t('order_items'),
       size: 60,
     }),
     columnHelper.accessor('created_at', {
-      header: 'Date',
+      header: t('order_date'),
       cell: (info) => new Date(info.getValue()).toLocaleDateString(),
     }),
     columnHelper.display({
@@ -117,7 +116,7 @@ export default function AdminOrdersPage() {
             </SelectTrigger>
             <SelectContent>
               {statusKeys.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>{t('order_' + s)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -163,7 +162,7 @@ export default function AdminOrdersPage() {
             <SelectContent>
               <SelectItem value="all">{t('filter_status')}</SelectItem>
               {statusKeys.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
+                <SelectItem key={s} value={s}>{t('order_' + s)}</SelectItem>
               ))}
             </SelectContent>
           </Select>

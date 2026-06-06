@@ -21,13 +21,13 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 def create_token(user_id: int, role: str) -> str:
-    payload = f"{user_id}:{role}:{datetime.utcnow().timestamp()}"
+    payload = f"{user_id}:{role}:{int(datetime.utcnow().timestamp())}"
     sig = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}.{sig}"
 
 def verify_token(token: str) -> dict:
     try:
-        payload, sig = token.split(".")
+        payload, sig = token.rsplit(".", 1)
         expected = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, expected):
             raise HTTPException(401, "Invalid token")
@@ -58,7 +58,7 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
     user = User(
         email=data.email, 
         password_hash=hashed, 
-        full_name=data.full_name, 
+        first_name=data.first_name, 
         role=UserRole.RETAIL
     )
     db.add(user)

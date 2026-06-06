@@ -21,9 +21,28 @@ class UserSchema(UserBase):
     role: UserRole
     is_active: bool = True
     phone: Optional[str] = None
+    last_name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    delivery_type: Optional[str] = None
+    delivery_city: Optional[str] = None
+    delivery_warehouse: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class ProfileUpdate(BaseModel):
+    last_name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    phone: Optional[str] = None
+    delivery_type: Optional[str] = None
+    delivery_city: Optional[str] = None
+    delivery_warehouse: Optional[str] = None
+
+class ChangePasswordSchema(BaseModel):
+    current_password: str
+    new_password: str
 
 class AdminUserCreate(BaseModel):
     email: EmailStr
@@ -43,9 +62,9 @@ class AdminUserUpdate(BaseModel):
 class GarageVehicleSchema(BaseModel):
     id: int
     mod_id: int
-    name: str # Modification name
-    brand_name: str # Brand name
-    model_name: str # Model name
+    name: str
+    brand_name: str
+    model_name: str
 
     class Config:
         from_attributes = True

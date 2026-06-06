@@ -5,7 +5,7 @@ from datetime import datetime
 class RegisterSchema(BaseModel):
     email: EmailStr
     password: str
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
 
 class LoginSchema(BaseModel):
     email: EmailStr

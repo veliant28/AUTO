@@ -9,6 +9,7 @@ interface UserState {
     email: string;
     role: 'retail' | 'b2b' | 'operator' | 'manager' | 'admin';
     full_name: string | null;
+    first_name: string | null;
   } | null;
   isAuthenticated: boolean;
   avatarStyle: AvatarStyle;
