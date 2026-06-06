@@ -29,7 +29,7 @@ export default function ContactsClient() {
           <Phone className="w-5 h-5 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium text-foreground">{t('phone_title')}</p>
-            <p>{formatPhone(f?.contact_phone) || t('phone')}</p>
+            <p>{f?.contact_phone ? formatPhone(f.contact_phone) : t('phone')}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
