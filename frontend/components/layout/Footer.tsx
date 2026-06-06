@@ -48,18 +48,18 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="font-semibold">{t('company_title')}</h4>
             <ul className="text-sm text-muted-foreground space-y-2">
-              <li><Link href="/about" className="hover:text-primary transition-colors">{ft('about')}</Link></li>
-              <li><Link href="/contacts" className="hover:text-primary transition-colors">{ft('contacts')}</Link></li>
-              <li><Link href="/delivery" className="hover:text-primary transition-colors">{ft('delivery')}</Link></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors">{t('about')}</Link></li>
+              <li><Link href="/contacts" className="hover:text-primary transition-colors">{t('contacts')}</Link></li>
+              <li><Link href="/delivery" className="hover:text-primary transition-colors">{t('delivery')}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="font-semibold">{t('help_title')}</h4>
             <ul className="text-sm text-muted-foreground space-y-2">
-              <li><Link href="/faq" className="hover:text-primary transition-colors">{ft('faq')}</Link></li>
-              <li><Link href="/support" className="hover:text-primary transition-colors">{ft('support')}</Link></li>
-              <li><Link href="/terms" className="hover:text-primary transition-colors">{ft('terms')}</Link></li>
+              <li><Link href="/faq" className="hover:text-primary transition-colors">{t('faq')}</Link></li>
+              <li><Link href="/support" className="hover:text-primary transition-colors">{t('support')}</Link></li>
+              <li><Link href="/terms" className="hover:text-primary transition-colors">{t('terms')}</Link></li>
               {adminRoles.includes(user?.role ?? '') && (
                 <li><Link href="/admin" className="hover:text-primary transition-colors font-medium flex items-center gap-1"><Shield className="w-3 h-3" /> {t('admin_panel')}</Link></li>
               )}
