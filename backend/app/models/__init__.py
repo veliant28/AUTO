@@ -7,6 +7,7 @@ from .cart import CartItem
 from .auth import PasswordReset, OAuthAccount
 from .favorites import Favorite
 from .orders import Order, OrderItem, OrderStatus
+from .footer import FooterContent
 
 __all__ = [
     "Base", 
@@ -19,4 +20,5 @@ __all__ = [
     "PasswordReset", "OAuthAccount",
     "Favorite",
     "Order", "OrderItem", "OrderStatus",
+    "FooterContent",
 ]

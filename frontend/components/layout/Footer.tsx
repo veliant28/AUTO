@@ -2,15 +2,31 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Package, Shield } from 'lucide-react';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/store/authStore';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 
 export default function Footer() {
   const t = useTranslations('footer');
   const { user } = useAuthStore();
+  const params = useParams();
+  const locale = params?.locale as string || 'ru';
   const adminRoles = ['admin', 'manager', 'operator'];
+
+  const { data: footerData } = useQuery({
+    queryKey: ['footer', locale],
+    queryFn: async () => {
+      const { data } = await api.get(`/footer?locale=${locale}`);
+      return data?.data || {};
+    },
+  });
+
+  const ft = (key: string) => footerData?.[key] || t(key);
+
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto px-4 py-12">
@@ -23,7 +39,7 @@ export default function Footer() {
               <span>Auto<span className="text-primary">Parts</span></span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
-              {t('description')}
+              {ft('description')}
             </p>
           </div>
           
@@ -50,7 +66,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>{t('copyright')}</p>
+          <p>{ft('copyright')}</p>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
           </div>

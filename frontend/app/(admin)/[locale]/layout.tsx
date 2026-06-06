@@ -15,7 +15,7 @@ export default function AdminRootLayout(props: any) {
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <Providers>
-              <Toaster position="bottom-right" />
+              <Toaster position="bottom-right" offset={{ right: '48px' }} />
               {children}
             </Providers>
           </ThemeProvider>
