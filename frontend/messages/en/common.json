@@ -206,7 +206,9 @@
     "order_customer": "Customer",
     "order_total": "Total",
     "order_items": "Items",
-    "order_date": "Date"
+    "order_date": "Date",
+    "yes": "Yes",
+    "no": "No"
   },
   "catalog": {
     "title": "Catalog",

@@ -206,7 +206,9 @@
     "order_customer": "Клієнт",
     "order_total": "Сума",
     "order_items": "Товарів",
-    "order_date": "Дата"
+    "order_date": "Дата",
+    "yes": "Так",
+    "no": "Ні"
   },
   "catalog": {
     "title": "Каталог",

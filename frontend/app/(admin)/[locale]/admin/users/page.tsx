@@ -153,7 +153,7 @@ export default function AdminUsersPage() {
       size: 80,
       cell: (info) => (
         <Badge variant={info.getValue() ? 'outline' : 'destructive'}>
-          {info.getValue() ? 'Yes' : 'No'}
+          {info.getValue() ? t('yes') : t('no')}
         </Badge>
       ),
     }),
