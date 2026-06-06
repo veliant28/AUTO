@@ -1,3 +1,0 @@
-module.exports=[52375,a=>{"use strict";var b=a.i(87170),c=a.i(68890),d=a.i(93358),e=a.i(31481),f=a.i(5522);a.s(["default",0,function(){let a=(0,d.useRouter)(),[g,h]=(0,c.useState)("");return(0,b.jsxs)("form",{onSubmit:b=>{b.preventDefault(),g.trim()&&a.push(`/catalog/search?q=${encodeURIComponent(g.trim())}`)},className:"relative max-w-xl mx-auto",children:[(0,b.jsx)(e.Search,{className:"absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"}),(0,b.jsx)(f.Input,{value:g,onChange:a=>h(a.target.value),placeholder:"Введите артикул или название детали...",className:"pl-12 pr-4 h-14 text-lg shadow-lg"})]})}])}];
-
-//# sourceMappingURL=components_features_HeroSearchForm_tsx_1g-ykke._.js.map

@@ -3,11 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Package, Shield } from 'lucide-react';
+import { Package, Shield, Phone, Mail, MapPin } from 'lucide-react';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
+import { formatPhone } from '@/components/ui/PhoneInput';
 import api from '@/lib/api';
 
 export default function Footer() {
@@ -17,15 +18,17 @@ export default function Footer() {
   const locale = params?.locale as string || 'ru';
   const adminRoles = ['admin', 'manager', 'operator'];
 
-  const { data: footerData } = useQuery({
+  const { data: f } = useQuery({
     queryKey: ['footer', locale],
     queryFn: async () => {
       const { data } = await api.get(`/footer?locale=${locale}`);
       return data?.data || {};
     },
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
-  const ft = (key: string) => footerData?.[key] || t(key);
+  const ft = (key: string) => f?.[key] || t(key);
 
   return (
     <footer className="border-t bg-muted/30">
@@ -38,17 +41,17 @@ export default function Footer() {
               </div>
               <span>Auto<span className="text-primary">Parts</span></span>
             </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              {ft('description')}
-            </p>
+            <p className="text-sm text-muted-foreground max-w-xs">{ft('description')}</p>
+            <p className="text-xs text-muted-foreground">{ft('copyright')}</p>
           </div>
           
           <div className="space-y-4">
             <h4 className="font-semibold">{t('company_title')}</h4>
             <ul className="text-sm text-muted-foreground space-y-2">
               <li><Link href="/about" className="hover:text-primary transition-colors">{t('about')}</Link></li>
-              <li><Link href="/contacts" className="hover:text-primary transition-colors">{t('contacts')}</Link></li>
-              <li><Link href="/delivery" className="hover:text-primary transition-colors">{t('delivery')}</Link></li>
+              <li className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{formatPhone(ft('contact_phone')) || t('contact_phone')}</li>
+              <li className="flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" />{ft('contact_email') || t('contact_email')}</li>
+              <li className="flex items-center gap-1.5"><MapPin className="w-3 h-3 shrink-0" />{ft('contact_address') || t('contact_address')}</li>
             </ul>
           </div>
 
@@ -65,11 +68,8 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>{ft('copyright')}</p>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-          </div>
+        <div className="mt-8 pt-6 border-t flex justify-center text-sm text-muted-foreground">
+          <LanguageSwitcher />
         </div>
       </div>
     </footer>
