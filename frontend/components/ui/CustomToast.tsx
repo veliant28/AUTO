@@ -51,7 +51,7 @@ export function CustomToast({ id, type, title, description, action }: CustomToas
   const s = styles[type];
   return (
     <div
-      className={`relative flex items-start gap-3 py-4 pl-4 pr-6 rounded-lg shadow-xl w-full ${s.bg} text-white`}
+      className={`relative flex items-start gap-3 py-4 pl-4 pr-6 rounded-lg border border-white/20 shadow-xl w-full ${s.bg} text-white`}
       style={{
         translate: 'var(--x, 0) var(--y, 0)',
         scale: 'var(--scale, 1)',
