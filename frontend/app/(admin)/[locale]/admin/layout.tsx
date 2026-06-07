@@ -105,10 +105,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: '/admin', icon: LayoutDashboard, label: t('dashboard_title'), roles: ['admin', 'manager', 'operator'] },
-    { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
-    { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
+    { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
+    { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
 
   return (
