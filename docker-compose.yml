@@ -23,6 +23,7 @@ services:
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
+      REDIS_PORT: 6379
     volumes:
       - ./backend:/app
     depends_on:
@@ -33,6 +34,11 @@ services:
   celery_worker:
     build: ./backend
     command: celery -A app.workers worker --loglevel=info
+    environment:
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - redis
       - postgres

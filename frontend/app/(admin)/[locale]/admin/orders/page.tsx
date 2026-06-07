@@ -11,9 +11,10 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { ShoppingCart, ExternalLink } from 'lucide-react';
+import { ShoppingCart, ExternalLink, Search } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -49,16 +50,18 @@ export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
 
   if (!user || !['admin', 'manager', 'operator'].includes(user.role)) {
     return null;
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-orders', statusFilter, page],
+    queryKey: ['admin-orders', statusFilter, page, search],
     queryFn: async () => {
       const params: any = { page: page + 1, page_size: 20 };
       if (statusFilter) params.status = statusFilter;
+      if (search) params.search = search;
       const { data } = await api.get('/admin/orders', { params });
       return data as { items: AdminOrder[]; total: number; page: number; page_size: number };
     },
@@ -149,27 +152,26 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <ShoppingCart className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('orders_title')}</h1>
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder={t('search_users')} value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={statusFilter || 'all'} onValueChange={(v) => { setStatusFilter(v === 'all' ? '' : v); setPage(0); }}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder={t('filter_status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filter_status')}</SelectItem>
-              {statusKeys.map((s) => (
-                <SelectItem key={s} value={s}>{t('order_' + s)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={statusFilter || 'all'} onValueChange={(v) => { setStatusFilter(v === 'all' ? '' : v); setPage(0); }}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder={t('filter_status')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('filter_status')}</SelectItem>
+            {statusKeys.map((s) => (
+              <SelectItem key={s} value={s}>{t('order_' + s)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

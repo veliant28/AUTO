@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -71,6 +71,11 @@ export default function AdminRolesPage() {
   if (!hasRole(user, 'admin')) {
     return null;
   }
+
+  useEffect(() => {
+    (window as any).__openCreateRole = () => setCreateOpen(true);
+    return () => { delete (window as any).__openCreateRole; };
+  }, []);
 
   const { data: roles, isLoading: rolesLoading } = useQuery({
     queryKey: ['admin-roles'],
@@ -227,15 +232,7 @@ export default function AdminRolesPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Shield className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('roles_title')}</h1>
-        </div>
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2"><Plus className="w-4 h-4" /> {t('roles_create')}</Button>
-          </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">{t('roles_create')}</h2>
             <div className="space-y-4">
@@ -279,14 +276,13 @@ export default function AdminRolesPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
 
       {rolesLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> {t('loading')}
         </div>
       ) : (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

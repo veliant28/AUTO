@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -92,6 +92,11 @@ export default function AdminUsersPage() {
       return data as RoleOption[];
     },
   });
+
+  useEffect(() => {
+    (window as any).__openCreateUser = () => setCreateOpen(true);
+    return () => { delete (window as any).__openCreateUser; };
+  }, []);
 
   if (!hasRole(user, 'admin')) {
     return null;
@@ -231,15 +236,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('users_title')}</h1>
-        </div>
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2"><Plus className="w-4 h-4" /> {t('create_user')}</Button>
-          </DialogTrigger>
           <DialogContent>
             <h2 className="text-lg font-semibold mb-4">{t('create_user')}</h2>
             <div className="space-y-4">
@@ -266,7 +263,6 @@ export default function AdminUsersPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
 
       <div className="flex items-center gap-4 mb-4">
         <div className="relative flex-1 max-w-sm">
@@ -280,7 +276,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

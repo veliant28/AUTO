@@ -15,6 +15,7 @@ from app.schemas.tecdoc_schemas import (
 )
 from app.services.rate_limiter import rate_limiter, TECDOC_HOURLY_LIMIT
 from app.services.tecdoc_gateway import get_gateway
+from app.services.tecdoc_batch import batch_manager
 
 router = APIRouter()
 
@@ -133,15 +134,12 @@ async def list_articles(
 
 # ─── Batch ─────────────────────────────────────────────────────────────────
 
-_batch_state = {"running": False, "task_id": None, "size": 25, "processed": 0, "total": 0}
-
-
 @router.get("/batch/status", response_model=BatchStatusResponse)
 async def batch_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    return BatchStatusResponse(**_batch_state)
+    return batch_manager.status()
 
 
 @router.post("/batch/size")
@@ -150,7 +148,6 @@ async def set_batch_size(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    _batch_state["size"] = data.size
     return {"size": data.size}
 
 
@@ -160,39 +157,10 @@ async def start_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    size = data.size or _batch_state["size"]
     gateway = get_gateway(db)
-
     if gateway.remaining() <= 0:
         raise HTTPException(429, "TecDoc hourly limit reached")
-
-    articles = db.query(SupplierPrice).filter(
-        SupplierPrice.match_status.in_(["pending", "unmatched"])
-    ).order_by(func.random()).limit(min(size, gateway.remaining())).all()
-
-    _batch_state["running"] = True
-    _batch_state["processed"] = 0
-    _batch_state["total"] = len(articles)
-
-    for sp in articles:
-        try:
-            result = await gateway.search(sp.article)
-            if result and isinstance(result, list) and len(result) > 0:
-                first = result[0]
-                sp.tecdoc_article = first.get("number", sp.article)
-                sp.tecdoc_brand_id = first.get("brand", None)
-                sp.match_status = "matched"
-            else:
-                sp.match_status = "unmatched"
-        except Exception:
-            sp.match_status = "unmatched"
-        sp.attempts = (sp.attempts or 0) + 1
-        sp.last_attempt_at = datetime.utcnow()
-        _batch_state["processed"] += 1
-        db.commit()
-
-    _batch_state["running"] = False
-    return {"ok": True, "processed": _batch_state["processed"], "total": _batch_state["total"]}
+    return batch_manager.start(batch_size=data.size or 25)
 
 
 @router.post("/batch/start-selected")
@@ -202,37 +170,9 @@ async def start_selected_batch(
     current_user: User = Depends(require_role("admin")),
 ):
     gateway = get_gateway(db)
-
     if gateway.remaining() <= 0:
         raise HTTPException(429, "TecDoc hourly limit reached")
-
-    articles = db.query(SupplierPrice).filter(
-        SupplierPrice.id.in_(data.ids)
-    ).order_by(SupplierPrice.id).all()
-
-    _batch_state["running"] = True
-    _batch_state["processed"] = 0
-    _batch_state["total"] = len(articles)
-
-    for sp in articles:
-        try:
-            result = await gateway.search(sp.article)
-            if result and isinstance(result, list) and len(result) > 0:
-                first = result[0]
-                sp.tecdoc_article = first.get("number", sp.article)
-                sp.tecdoc_brand_id = first.get("brand", None)
-                sp.match_status = "matched"
-            else:
-                sp.match_status = "unmatched"
-        except Exception:
-            sp.match_status = "unmatched"
-        sp.attempts = (sp.attempts or 0) + 1
-        sp.last_attempt_at = datetime.utcnow()
-        _batch_state["processed"] += 1
-        db.commit()
-
-    _batch_state["running"] = False
-    return {"ok": True, "processed": _batch_state["processed"], "total": _batch_state["total"]}
+    return batch_manager.start(article_ids=data.ids)
 
 
 @router.post("/batch/stop")
@@ -240,5 +180,4 @@ async def stop_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    _batch_state["running"] = False
-    return {"ok": True}
+    return batch_manager.stop()

@@ -424,4 +424,6 @@ async def list_permissions(
 
 
 from app.api.v1.endpoints.admin_tecdoc import router as tecdoc_router
+from app.api.v1.endpoints.admin_products import router as products_router
 router.include_router(tecdoc_router, prefix="/tecdoc", tags=["TecDoc"])
+router.include_router(products_router, prefix="", tags=["Products"])

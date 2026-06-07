@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/store/authStore';
+import api from '@/lib/api';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +35,19 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isTecDoc = pathname.includes('/admin/tecdoc');
   const isFooter = pathname.includes('/admin/footer');
 
+  const pageMeta: Record<string, { icon: any; titleKey: string }> = {
+    '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
+    '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
+    '/admin/users': { icon: Users, titleKey: 'users_title' },
+    '/admin/products': { icon: Package, titleKey: 'products_title' },
+    '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
+    '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
+    '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
+  };
+
+  const currentMeta = Object.entries(pageMeta).find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || Object.entries(pageMeta).find(([route]) => pathname.includes(route));
+  const meta = currentMeta?.[1];
+
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
     { key: 'batch', label: ta('tecdoc_batch') },
@@ -41,10 +56,16 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-card flex items-center justify-between px-4 lg:px-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
           <Menu className="w-5 h-5" />
         </Button>
+        {meta && (
+          <div className="flex items-center gap-2 shrink-0">
+            <meta.icon className="w-5 h-5 text-primary" />
+            <h1 className="text-lg font-bold truncate hidden sm:block">{ta(meta.titleKey)}</h1>
+          </div>
+        )}
         {isTecDoc && tecdocTabs.map((t) => {
           const active = (searchParams.get('tab') || 'dashboard') === t.key;
           return (
@@ -78,7 +99,55 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight mr-2">
+        {pathname.endsWith('/admin') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => api.post('/catalog/sync/vehicles').then(() => alert(ta('sync_started')))}>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('sync_catalog')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {pathname.includes('/admin/users') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__openCreateUser?.()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('create_user')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {pathname.includes('/admin/roles') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__openCreateRole?.()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('roles_create')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {isFooter && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__saveFooter?.()}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('save_footer', { locale: activeLocale.toUpperCase() })}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <div className="bg-primary text-primary-foreground p-1 rounded">
             <Package className="w-5 h-5" />
           </div>
@@ -138,6 +207,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin', icon: LayoutDashboard, label: t('dashboard_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
+    { href: '/admin/products', icon: Package, label: t('products_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Database, Play, Square, Minus, Plus, CheckSquare, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock, Save, Plug, Copy } from 'lucide-react';
+import { Database, Play, Square, Minus, Plus, CheckSquare, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock, Save, Plug, Copy, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -301,7 +301,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
   const [batchSize, setBatchSize] = useState(25);
 
   const statuses = [
-    { value: '', label: t('tecdoc_filter_all') },
+    { value: 'all', label: t('tecdoc_filter_all') },
     { value: 'matched', label: t('tecdoc_matched') },
     { value: 'unmatched', label: t('tecdoc_unmatched') },
     { value: 'not_found', label: t('tecdoc_not_found') },
@@ -326,14 +326,30 @@ function BatchTab({ t }: { t: (k: string) => string }) {
     },
   });
 
+  const { data: batchState } = useQuery({
+    queryKey: ['tecdoc-batch-status'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/tecdoc/batch/status');
+      return data as { running: boolean; task_id: string | null; processed: number; total: number; size: number };
+    },
+    refetchInterval: (query) => query.state.data?.running ? 3000 : false,
+  });
+
+  const refreshAfterBatch = () => {
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['tecdoc-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['tecdoc-batch-status'] });
+    }, 1000);
+  };
+
   const batchStart = useMutation({
     mutationFn: async () => {
       const { data } = await api.post('/admin/tecdoc/batch/start', { size: batchSize });
       return data;
     },
     onSuccess: (res: any) => {
-      toast.success(`${t('tecdoc_batch_completed')}: ${res.processed}/${res.total}`);
-      queryClient.invalidateQueries({ queryKey: ['tecdoc-articles'] });
+      toast.success(`${t('tecdoc_batch_started')}`);
+      refreshAfterBatch();
     },
     onError: (err: any) => toast.error(err?.response?.data?.detail || t('save_error')),
   });
@@ -344,9 +360,9 @@ function BatchTab({ t }: { t: (k: string) => string }) {
       return data;
     },
     onSuccess: (res: any) => {
-      toast.success(`${t('tecdoc_batch_completed')}: ${res.processed}/${res.total}`);
-      queryClient.invalidateQueries({ queryKey: ['tecdoc-articles'] });
+      toast.success(`${t('tecdoc_batch_started')}`);
       setSelected(new Set());
+      refreshAfterBatch();
     },
     onError: (err: any) => toast.error(err?.response?.data?.detail || t('save_error')),
   });
@@ -367,8 +383,19 @@ function BatchTab({ t }: { t: (k: string) => string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder={t('search_users')} value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        </div>
+
+        <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
+          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+          <SelectContent>{statuses.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 ml-auto">
           <Tooltip><TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => batchStart.mutate()} disabled={batchStart.isPending}>
               {batchStart.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
@@ -393,54 +420,65 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             </Button>
           </TooltipTrigger><TooltipContent>{t('tecdoc_batch_start_selected')}</TooltipContent></Tooltip>
         </div>
-
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>{statuses.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-        </Select>
-
-        <Input className="w-[200px] h-8 text-xs" placeholder={t('tecdoc_search_placeholder')} value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
       </div>
 
-      <Card>
+      {batchState?.running && (
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+            <span className="text-blue-600 font-medium">{t('tecdoc_batch_progress')}: {batchState.processed} / {batchState.total}</span>
+            {batchState.total > 0 && (
+              <span className="text-muted-foreground">({Math.round((batchState.processed / batchState.total) * 100)}%)</span>
+            )}
+            {batchState.task_id && <span className="text-xs text-muted-foreground font-mono">ID: {batchState.task_id.slice(0, 8)}...</span>}
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500 rounded-full"
+              style={{ width: batchState.total ? `${(batchState.processed / batchState.total) * 100}%` : '0%' }}
+            />
+          </div>
+        </div>
+      )}
+
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="p-2 w-10">
+                  <th className="p-3 w-10">
                     <input type="checkbox" className="cursor-pointer"
                       checked={data?.items && data.items.length > 0 && selected.size === data.items.length}
                       onChange={toggleAll} />
                   </th>
-                  <th className="text-left p-2">{t('tecdoc_col_article')}</th>
-                  <th className="text-left p-2">{t('tecdoc_col_name')}</th>
-                  <th className="text-left p-2">{t('tecdoc_col_brand')}</th>
-                  <th className="text-left p-2">{t('tecdoc_col_status')}</th>
-                  <th className="text-center p-2 w-16">{t('tecdoc_col_attempts')}</th>
-                  <th className="text-left p-2 w-32">{t('tecdoc_col_last')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_article')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_name')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_brand')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_status')}</th>
+                  <th className="text-center p-3 font-medium text-muted-foreground w-16">{t('tecdoc_col_attempts')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-32">{t('tecdoc_col_last')}</th>
                 </tr>
               </thead>
               <tbody>
                 {data?.items?.map((a) => (
                   <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-2"><input type="checkbox" className="cursor-pointer" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></td>
-                    <td className="p-2 font-mono text-xs">{a.article}</td>
-                    <td className="p-2 text-xs max-w-[200px] truncate">{a.name || '—'}</td>
-                    <td className="p-2 text-xs">{a.brand || '—'}</td>
-                    <td className="p-2">
+                    <td className="p-3"><input type="checkbox" className="cursor-pointer" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></td>
+                    <td className="p-3 font-mono text-xs">{a.article}</td>
+                    <td className="p-3 text-xs max-w-[200px] truncate">{a.name || '—'}</td>
+                    <td className="p-3 text-xs">{a.brand || '—'}</td>
+                    <td className="p-3">
                       <span className="flex items-center gap-1 text-xs">
                         {statusIcons[a.match_status]}
                         {t('tecdoc_' + a.match_status) || a.match_status}
                       </span>
                     </td>
-                    <td className="p-2 text-center text-xs">{a.attempts}</td>
-                    <td className="p-2 text-xs text-muted-foreground">{a.last_attempt_at ? new Date(a.last_attempt_at).toLocaleString() : '—'}</td>
+                    <td className="p-3 text-center text-xs">{a.attempts}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{a.last_attempt_at ? new Date(a.last_attempt_at).toLocaleString() : '—'}</td>
                   </tr>
                 ))}
                 {(!data?.items || data.items.length === 0) && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground text-sm">{t('roles_empty')}</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground text-sm">{t('tecdoc_articles_empty')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -587,11 +625,6 @@ function TecDocPageInner() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Database className="w-6 h-6 text-primary" />
-        <h1 className="text-2xl font-bold">{t('tecdoc_title')}</h1>
-      </div>
-
       {tab === 'dashboard' && <DashboardTab t={t} />}
       {tab === 'batch' && <BatchTab t={t} />}
       {tab === 'settings' && <SettingsTab t={t} />}
@@ -600,9 +633,5 @@ function TecDocPageInner() {
 }
 
 export default function TecDocPage() {
-  return (
-    <Suspense fallback={null}>
-      <TecDocPageInner />
-    </Suspense>
-  );
+  return <TecDocPageInner />;
 }

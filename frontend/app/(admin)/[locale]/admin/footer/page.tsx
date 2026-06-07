@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Save, Loader2 } from 'lucide-react';
@@ -79,6 +79,11 @@ export default function FooterPage() {
 
   if (!user || user.role !== 'admin') return null;
 
+  useEffect(() => {
+    (window as any).__saveFooter = () => saveMutation.mutate(activeLocale);
+    return () => { delete (window as any).__saveFooter; };
+  }, [activeLocale]);
+
   const form = getForm(activeLocale);
 
   const ta = (field: keyof FooterData) => (
@@ -96,16 +101,6 @@ export default function FooterPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <FileText className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('footer_title')}</h1>
-        </div>
-        <Button onClick={() => saveMutation.mutate(activeLocale)} disabled={saveMutation.isPending} className="gap-2">
-          {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {t('save_footer', { locale: activeLocale.toUpperCase() })}
-        </Button>
-      </div>
 
       {isLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground">

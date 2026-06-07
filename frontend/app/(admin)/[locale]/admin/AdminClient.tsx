@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Package, ShoppingCart, Users, TrendingUp, RefreshCw, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
@@ -125,16 +126,6 @@ export default function AdminPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Package className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('title')}</h1>
-        </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => api.post('/catalog/sync/vehicles').then(() => alert(t('sync_started')))}>
-          <RefreshCw className="w-4 h-4" /> {t('sync_catalog')}
-        </Button>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((stat) => (
           <Card key={stat.label}>
