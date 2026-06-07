@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
@@ -17,7 +17,11 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import { AdminLocaleProvider, useAdminLocale } from './components/AdminLocaleContext';
 
 const LOCALES = ['ru', 'en', 'ua'];
-const adminRoles = ['admin', 'manager', 'operator'];
+
+function hasRole(user: { role: string } | null, ...roles: string[]) {
+  if (!user) return false;
+  return roles.includes(user.role);
+}
 
 function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { activeLocale, setActiveLocale } = useAdminLocale();
@@ -80,7 +84,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user || !adminRoles.includes(user.role)) {
+  if (!hasRole(user, 'admin', 'manager', 'operator')) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/10 p-6">
         <Card className="max-w-md w-full">
@@ -104,6 +108,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
+    { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
   ];
 
   return (
@@ -129,7 +134,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
         <nav className="flex flex-col gap-1 p-4">
           {navItems
-            .filter((item) => item.roles.includes(user.role))
+            .filter((item) => hasRole(user, ...item.roles))
             .map((item) => {
               const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
               return (

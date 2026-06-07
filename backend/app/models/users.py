@@ -1,14 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-import enum
 from .vehicles import Base
-
-class UserRole(enum.Enum):
-    RETAIL = "retail"
-    B2B = "b2b"
-    OPERATOR = "operator"
-    MANAGER = "manager"
-    ADMIN = "admin"
 
 class User(Base):
     __tablename__ = "users"
@@ -20,15 +12,16 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     middle_name = Column(String, nullable=True)
-    role = Column(Enum(UserRole), default=UserRole.RETAIL, nullable=False)
     is_active = Column(Boolean, default=True)
     phone = Column(String, nullable=True)
     delivery_type = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     delivery_warehouse = Column(String, nullable=True)
     created_at = Column(String, nullable=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     
     garage = relationship("UserGarage", back_populates="user")
+    role = relationship("Role", back_populates="users")
 
 class UserGarage(Base):
     __tablename__ = "user_garage"

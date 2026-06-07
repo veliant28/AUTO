@@ -3,14 +3,16 @@ import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '@/lib/constants';
 import type { AvatarStyle } from '@/lib/avatar';
 
+export interface AuthUser {
+  id: number;
+  email: string;
+  role: string;
+  full_name: string | null;
+  first_name: string | null;
+}
+
 interface UserState {
-  user: {
-    id: number;
-    email: string;
-    role: 'retail' | 'b2b' | 'operator' | 'manager' | 'admin';
-    full_name: string | null;
-    first_name: string | null;
-  } | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   avatarStyle: AvatarStyle;
   
@@ -28,7 +30,16 @@ export const useAuthStore = create<UserState>()(
       avatarStyle: 'initials' as AvatarStyle,
       
       setUser: (user) => {
-        set({ user, isAuthenticated: !!user });
+        set({
+          user: user ? {
+            id: user.id,
+            email: user.email,
+            role: user.role || 'retail',
+            full_name: user.full_name || null,
+            first_name: user.first_name || null,
+          } : null,
+          isAuthenticated: !!user,
+        });
       },
       
       logout: () => {
@@ -47,6 +58,17 @@ export const useAuthStore = create<UserState>()(
     }),
     {
       name: STORAGE_KEYS.AUTH,
+      version: 2,
+      migrate: (persisted: any, version: number) => {
+        let state = persisted?.state || persisted;
+        if (version < 2 && state?.user) {
+          if (Array.isArray(state.user.roles)) {
+            state.user.role = state.user.roles[0] || 'retail';
+            delete state.user.roles;
+          }
+        }
+        return persisted;
+      },
     }
   )
 );

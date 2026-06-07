@@ -250,7 +250,22 @@
     "order_items": "Items",
     "order_date": "Date",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "roles_title": "Role Management",
+    "roles_create": "Create Role",
+    "roles_edit": "Edit Role",
+    "roles_name": "Name",
+    "roles_description": "Description",
+    "roles_permissions": "Permissions",
+    "roles_permissions_count": "Permissions",
+    "roles_system": "System",
+    "roles_custom": "Custom",
+    "roles_type": "Type",
+    "roles_confirm_delete": "Delete role?",
+    "roles_empty": "No roles found",
+    "roles_created": "Role created",
+    "roles_updated": "Role updated",
+    "roles_deleted": "Role deleted"
   },
   "catalog": {
     "title": "Catalog",

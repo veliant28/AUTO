@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -34,7 +34,6 @@ import { toast } from '@/lib/toast';
 import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { USER_ROLES } from '@/lib/constants';
 
 const roleBadgeColors: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -54,7 +53,18 @@ interface AdminUser {
   created_at: string | null;
 }
 
+interface RoleOption {
+  id: number;
+  name: string;
+  description: string | null;
+}
+
 const columnHelper = createColumnHelper<AdminUser>();
+
+function hasRole(user: { role: string } | null, ...roles: string[]) {
+  if (!user) return false;
+  return roles.includes(user.role);
+}
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
@@ -70,12 +80,20 @@ export default function AdminUsersPage() {
     email: '',
     password: '',
     full_name: '',
-    role: 'retail',
+    role_id: 1,
     is_active: true,
     phone: '',
   });
 
-  if (!user || user.role !== 'admin') {
+  const { data: rolesData } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/roles');
+      return data as RoleOption[];
+    },
+  });
+
+  if (!hasRole(user, 'admin')) {
     return null;
   }
 
@@ -125,10 +143,10 @@ export default function AdminUsersPage() {
   });
 
   const resetForm = () => {
-    setForm({ email: '', password: '', full_name: '', role: 'retail', is_active: true, phone: '' });
+    setForm({ email: '', password: '', full_name: '', role_id: 1, is_active: true, phone: '' });
   };
 
-  const columns = useMemo(() => [
+  const columns = [
     columnHelper.accessor('id', {
       header: 'ID',
       size: 60,
@@ -143,7 +161,7 @@ export default function AdminUsersPage() {
     columnHelper.accessor('role', {
       header: t('role_label'),
       cell: (info) => (
-        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0`}>
+        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-xs`}>
           {t(info.getValue())}
         </Badge>
       ),
@@ -159,7 +177,7 @@ export default function AdminUsersPage() {
     }),
     columnHelper.accessor('phone', {
       header: t('phone_label'),
-      cell: (info) => info.getValue() ? formatPhone(info.getValue()) : '—',
+      cell: (info) => info.getValue() ? formatPhone(info.getValue()!) : '—',
     }),
     columnHelper.display({
       id: 'actions',
@@ -168,14 +186,16 @@ export default function AdminUsersPage() {
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-            setEditUser(row.original);
+            const u = row.original;
+            setEditUser(u);
+            const roleId = (rolesData || []).find((r) => r.name === u.role)?.id || 1;
             setForm({
-              email: row.original.email,
+              email: u.email,
               password: '',
-              full_name: row.original.full_name || '',
-              role: row.original.role,
-              is_active: row.original.is_active,
-              phone: row.original.phone || '',
+              full_name: u.full_name || '',
+              role_id: roleId,
+              is_active: u.is_active,
+              phone: u.phone || '',
             });
           }}>
             <Pencil className="w-4 h-4" />
@@ -190,7 +210,7 @@ export default function AdminUsersPage() {
         </div>
       ),
     }),
-  ], [t]);
+  ];
 
   const table = useReactTable({
     data: data?.items || [],
@@ -227,14 +247,19 @@ export default function AdminUsersPage() {
               <Input placeholder={tc('password_label')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
               <Input placeholder={tc('name_label')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {USER_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>{t(r)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">{t('role_label')}</label>
+                <Select value={String(form.role_id)} onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('role_label')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(rolesData || []).map((r) => (
+                      <SelectItem key={r.id} value={String(r.id)}>{t(r.name)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button className="w-full" onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>
                 {t('create_user')}
               </Button>
@@ -305,14 +330,19 @@ export default function AdminUsersPage() {
               <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <Input placeholder={tc('name_label')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {USER_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>{t(r)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">{t('role_label')}</label>
+                <Select value={String(form.role_id)} onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('role_label')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(rolesData || []).map((r) => (
+                      <SelectItem key={r.id} value={String(r.id)}>{t(r.name)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="is_active" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="cursor-pointer" />
                 <label htmlFor="is_active" className="cursor-pointer">{t('is_active_label')}</label>

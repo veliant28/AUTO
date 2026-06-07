@@ -60,3 +60,29 @@ class AdminUserListResponse(BaseModel):
 
 class UpdateOrderStatusSchema(BaseModel):
     status: str
+
+# Role schemas
+class PermissionResponse(BaseModel):
+    id: int
+    codename: str
+    description: Optional[str] = None
+    group_name: Optional[str] = None
+
+class RoleResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    is_system: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    permissions: List[PermissionResponse] = []
+
+class RoleCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    permission_ids: List[int] = []
+
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    permission_ids: Optional[List[int]] = None

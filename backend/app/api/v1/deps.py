@@ -9,7 +9,7 @@ def require_role(*roles: str):
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(404, "User not found")
-        if user.role.value not in roles:
+        if user.role.name not in roles:
             raise HTTPException(403, "Insufficient permissions")
         if not user.is_active:
             raise HTTPException(403, "Account is deactivated")

@@ -10,12 +10,31 @@ from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
 
+
+def _user_to_schema(user: User) -> UserSchema:
+    return UserSchema(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role.name,
+        is_active=user.is_active,
+        phone=user.phone,
+        last_name=user.last_name,
+        first_name=user.first_name,
+        middle_name=user.middle_name,
+        delivery_type=user.delivery_type,
+        delivery_city=user.delivery_city,
+        delivery_warehouse=user.delivery_warehouse,
+    )
+
+
 @router.get("/me", response_model=UserSchema)
 async def get_me(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
     user = user_service.get_user_profile(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return _user_to_schema(user)
+
 
 @router.put("/me", response_model=UserSchema)
 async def update_me(data: ProfileUpdate, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -27,7 +46,8 @@ async def update_me(data: ProfileUpdate, user_id: int = Depends(get_current_user
         setattr(user, key, value)
     db.commit()
     db.refresh(user)
-    return user
+    return _user_to_schema(user)
+
 
 @router.post("/change-password")
 async def change_password(data: ChangePasswordSchema, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -40,6 +60,7 @@ async def change_password(data: ChangePasswordSchema, user_id: int = Depends(get
     user.password_hash = hashlib.sha256(data.new_password.encode()).hexdigest()
     db.commit()
     return {"message": "Password changed"}
+
 
 @router.get("/garage", response_model=List[GarageVehicleSchema])
 async def get_garage(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -60,10 +81,12 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
         })
     return result
 
+
 @router.post("/garage/add")
 async def add_to_garage(data: GarageAddSchema, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
     user_service.add_to_garage(db, user_id, data)
     return {"message": "Vehicle added to garage"}
+
 
 @router.delete("/garage/{entry_id}")
 async def remove_from_garage(entry_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):

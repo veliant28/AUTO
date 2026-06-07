@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import User, UserGarage, VehicleModification, VehicleModel, VehicleBrand
+from app.models import User, UserGarage, VehicleModification
 from app.schemas.user_schemas import GarageAddSchema
 
 class UserService:
@@ -9,7 +9,6 @@ class UserService:
 
     @staticmethod
     def add_to_garage(db: Session, user_id: int, garage_data: GarageAddSchema):
-        # Check if already exists
         exists = db.query(UserGarage).filter(
             UserGarage.user_id == user_id, 
             UserGarage.mod_id == garage_data.mod_id
@@ -38,7 +37,6 @@ class UserService:
 
     @staticmethod
     def get_user_garage(db: Session, user_id: int):
-        # Join to get full vehicle details
         return db.query(UserGarage).join(VehicleModification).filter(UserGarage.user_id == user_id).all()
 
 user_service = UserService()

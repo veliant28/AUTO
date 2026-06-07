@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.api.v1.endpoints.auth import get_current_user
@@ -9,13 +10,17 @@ from app.schemas.admin_schemas import (
     AdminOrderItem, AdminAdminOrderListResponse,
     AdminUserResponse, AdminUserListResponse,
     UpdateOrderStatusSchema,
+    RoleResponse, RoleCreate, RoleUpdate, PermissionResponse,
 )
-from app.schemas.user_schemas import AdminUserCreate, AdminUserUpdate, UserRole
-from app.models import User, Order, OrderItem, OrderStatus, Part, PartCategory
+from app.schemas.user_schemas import AdminUserCreate, AdminUserUpdate
+from app.models import User, Role, Permission, RolePermission, Order, OrderItem, OrderStatus, Part, PartCategory
 import bcrypt
 from datetime import datetime, timedelta
 
 router = APIRouter()
+
+
+# ─── Dashboard ────────────────────────────────────────────────────────────
 
 @router.get("/dashboard", response_model=DashboardResponse)
 async def get_dashboard(
@@ -79,6 +84,8 @@ async def get_dashboard(
     )
 
 
+# ─── Users ────────────────────────────────────────────────────────────────
+
 @router.get("/users", response_model=AdminUserListResponse)
 async def list_users(
     page: int = Query(1, ge=1),
@@ -101,7 +108,7 @@ async def list_users(
                 id=u.id,
                 email=u.email,
                 full_name=u.full_name,
-                role=u.role.value,
+                role=u.role.name,
                 is_active=u.is_active,
                 phone=u.phone,
                 created_at=u.created_at,
@@ -123,24 +130,30 @@ async def create_user(
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(400, "Email already registered")
+    
+    role = db.query(Role).filter(Role.id == data.role_id).first()
+    if not role:
+        raise HTTPException(400, "Invalid role ID")
+    
     hashed = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
     user = User(
         email=data.email,
         password_hash=hashed,
         full_name=data.full_name,
-        role=UserRole(data.role.value) if isinstance(data.role, UserRole) else data.role,
         is_active=data.is_active,
         phone=data.phone,
+        role_id=data.role_id,
         created_at=datetime.utcnow().isoformat(),
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+
     return AdminUserResponse(
         id=user.id,
         email=user.email,
         full_name=user.full_name,
-        role=user.role.value,
+        role=user.role.name,
         is_active=user.is_active,
         phone=user.phone,
         created_at=user.created_at,
@@ -164,19 +177,23 @@ async def update_user(
         user.email = data.email
     if data.full_name is not None:
         user.full_name = data.full_name
-    if data.role is not None:
-        user.role = UserRole(data.role.value) if isinstance(data.role, UserRole) else data.role
+    if data.role_id is not None:
+        role = db.query(Role).filter(Role.id == data.role_id).first()
+        if not role:
+            raise HTTPException(400, "Invalid role ID")
+        user.role_id = data.role_id
     if data.is_active is not None:
         user.is_active = data.is_active
     if data.phone is not None:
         user.phone = data.phone
     db.commit()
     db.refresh(user)
+
     return AdminUserResponse(
         id=user.id,
         email=user.email,
         full_name=user.full_name,
-        role=user.role.value,
+        role=user.role.name,
         is_active=user.is_active,
         phone=user.phone,
         created_at=user.created_at,
@@ -198,6 +215,8 @@ async def delete_user(
     db.commit()
     return {"message": "User deleted"}
 
+
+# ─── Orders ───────────────────────────────────────────────────────────────
 
 @router.get("/orders", response_model=AdminAdminOrderListResponse)
 async def list_orders(
@@ -249,3 +268,156 @@ async def update_order_status(
     order.status = data.status
     db.commit()
     return {"message": "Status updated", "status": data.status}
+
+
+# ─── Roles ────────────────────────────────────────────────────────────────
+
+@router.get("/roles", response_model=list[RoleResponse])
+async def list_roles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    roles = db.query(Role).options(joinedload(Role.permissions)).order_by(Role.id).all()
+    return [
+        RoleResponse(
+            id=r.id,
+            name=r.name,
+            description=r.description,
+            is_system=r.is_system,
+            created_at=r.created_at,
+            updated_at=r.updated_at,
+            permissions=[
+                PermissionResponse(
+                    id=p.id,
+                    codename=p.codename,
+                    description=p.description,
+                    group_name=p.group_name,
+                )
+                for p in r.permissions
+            ],
+        )
+        for r in roles
+    ]
+
+
+@router.post("/roles", response_model=RoleResponse)
+async def create_role(
+    data: RoleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    existing = db.query(Role).filter(Role.name == data.name).first()
+    if existing:
+        raise HTTPException(400, "Role already exists")
+    
+    role = Role(name=data.name, description=data.description, is_system=False)
+    db.add(role)
+    db.flush()
+
+    if data.permission_ids:
+        permissions = db.query(Permission).filter(Permission.id.in_(data.permission_ids)).all()
+        for perm in permissions:
+            db.add(RolePermission(role_id=role.id, permission_id=perm.id))
+    
+    db.commit()
+    db.refresh(role)
+    role = db.query(Role).options(joinedload(Role.permissions)).filter(Role.id == role.id).first()
+
+    return RoleResponse(
+        id=role.id,
+        name=role.name,
+        description=role.description,
+        is_system=role.is_system,
+        created_at=role.created_at,
+        updated_at=role.updated_at,
+        permissions=[
+            PermissionResponse(
+                id=p.id,
+                codename=p.codename,
+                description=p.description,
+                group_name=p.group_name,
+            )
+            for p in role.permissions
+        ],
+    )
+
+
+@router.put("/roles/{role_id}", response_model=RoleResponse)
+async def update_role(
+    role_id: int,
+    data: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    role = db.query(Role).options(joinedload(Role.permissions)).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(404, "Role not found")
+    
+    if data.name is not None:
+        existing = db.query(Role).filter(Role.name == data.name, Role.id != role_id).first()
+        if existing:
+            raise HTTPException(400, "Role name already in use")
+        role.name = data.name
+    if data.description is not None:
+        role.description = data.description
+    if data.permission_ids is not None:
+        db.query(RolePermission).filter(RolePermission.role_id == role_id).delete()
+        permissions = db.query(Permission).filter(Permission.id.in_(data.permission_ids)).all()
+        for perm in permissions:
+            db.add(RolePermission(role_id=role_id, permission_id=perm.id))
+    
+    role.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(role)
+    role = db.query(Role).options(joinedload(Role.permissions)).filter(Role.id == role.id).first()
+
+    return RoleResponse(
+        id=role.id,
+        name=role.name,
+        description=role.description,
+        is_system=role.is_system,
+        created_at=role.created_at,
+        updated_at=role.updated_at,
+        permissions=[
+            PermissionResponse(
+                id=p.id,
+                codename=p.codename,
+                description=p.description,
+                group_name=p.group_name,
+            )
+            for p in role.permissions
+        ],
+    )
+
+
+@router.delete("/roles/{role_id}")
+async def delete_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(404, "Role not found")
+    if role.is_system:
+        raise HTTPException(400, "Cannot delete system role")
+    db.delete(role)
+    db.commit()
+    return {"message": "Role deleted"}
+
+
+@router.get("/permissions", response_model=list[PermissionResponse])
+async def list_permissions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    permissions = db.query(Permission).order_by(Permission.group_name, Permission.id).all()
+    return [
+        PermissionResponse(
+            id=p.id,
+            codename=p.codename,
+            description=p.description,
+            group_name=p.group_name,
+        )
+        for p in permissions
+    ]

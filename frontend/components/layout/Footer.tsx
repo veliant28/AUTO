@@ -15,8 +15,6 @@ export default function Footer() {
   const { user } = useAuthStore();
   const params = useParams();
   const locale = params?.locale as string || 'ru';
-  const adminRoles = ['admin', 'manager', 'operator'];
-
   const { data: f } = useQuery({
     queryKey: ['footer', locale],
     queryFn: async () => {
@@ -26,6 +24,8 @@ export default function Footer() {
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+  const hasAdminAccess = !!(user?.role && ['admin', 'manager', 'operator'].includes(user.role));
 
   const ft = (key: string) => f?.[key] || t(key);
 
@@ -60,7 +60,7 @@ export default function Footer() {
               <li><Link href="/faq" className="hover:text-primary transition-colors">{t('faq')}</Link></li>
               <li><Link href="/support" className="hover:text-primary transition-colors">{t('support')}</Link></li>
               <li><Link href="/terms" className="hover:text-primary transition-colors">{t('terms')}</Link></li>
-              {adminRoles.includes(user?.role ?? '') && (
+              {hasAdminAccess && (
                 <li><Link href="/admin" className="hover:text-primary transition-colors font-medium flex items-center gap-1"><Shield className="w-3 h-3" /> {t('admin_panel')}</Link></li>
               )}
             </ul>

@@ -11,7 +11,7 @@ from app.schemas.auth_schemas import (
     RegisterSchema, LoginSchema, TokenResponse, 
     ForgotPasswordSchema, ResetPasswordSchema, GoogleAuthSchema
 )
-from app.models import User, UserRole, PasswordReset, OAuthAccount
+from app.models import User, Role, PasswordReset, OAuthAccount
 
 router = APIRouter()
 
@@ -20,8 +20,8 @@ oauth2_scheme = OAuth2PasswordBearer(
     auto_error=False
 )
 
-def create_token(user_id: int, role: str) -> str:
-    payload = f"{user_id}:{role}:{int(datetime.utcnow().timestamp())}"
+def create_token(user_id: int) -> str:
+    payload = f"{user_id}:{int(datetime.utcnow().timestamp())}"
     sig = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}.{sig}"
 
@@ -31,8 +31,8 @@ def verify_token(token: str) -> dict:
         expected = hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, expected):
             raise HTTPException(401, "Invalid token")
-        user_id_str, role, _ = payload.split(":")
-        return {"user_id": int(user_id_str), "role": role}
+        user_id_str, _ = payload.split(":")
+        return {"user_id": int(user_id_str)}
     except Exception:
         raise HTTPException(401, "Invalid token")
 
@@ -48,25 +48,32 @@ def get_optional_user(token: str = Depends(oauth2_scheme), db: Session = Depends
     except:
         return None
 
+def get_user_role(user: User) -> str:
+    return user.role.name
+
 @router.post("/register", response_model=TokenResponse)
 async def register(data: RegisterSchema, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(400, "Email already registered")
     
+    retail_role = db.query(Role).filter(Role.name == "retail").first()
+    if not retail_role:
+        raise HTTPException(500, "Default role not found")
+    
     hashed = hashlib.sha256(data.password.encode()).hexdigest()
     user = User(
         email=data.email, 
         password_hash=hashed, 
-        first_name=data.first_name, 
-        role=UserRole.RETAIL
+        first_name=data.first_name,
+        role_id=retail_role.id,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     
-    access_token = create_token(user.id, user.role.value)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=user.role.value)
+    access_token = create_token(user.id)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginSchema, db: Session = Depends(get_db)):
@@ -78,14 +85,13 @@ async def login(data: LoginSchema, db: Session = Depends(get_db)):
     if user.password_hash != hashed:
         raise HTTPException(401, "Invalid credentials")
     
-    access_token = create_token(user.id, user.role.value)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=user.role.value)
+    access_token = create_token(user.id)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))
 
 @router.post("/forgot-password")
 async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
-        # Don't reveal if email exists or not
         return {"message": "If the email exists, a recovery link has been sent"}
     
     token = secrets.token_urlsafe(32)
@@ -117,16 +123,17 @@ async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db
 
 @router.post("/google", response_model=TokenResponse)
 async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
-    # In production: verify Google ID token with google.oauth2
-    # For demo, we treat the token as an email
     email = f"{data.token}@gmail.com"
     
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        user = User(email=email, full_name="Google User", password_hash="", role=UserRole.RETAIL)
+        retail_role = db.query(Role).filter(Role.name == "retail").first()
+        if not retail_role:
+            raise HTTPException(500, "Default role not found")
+        user = User(email=email, full_name="Google User", password_hash="", role_id=retail_role.id)
         db.add(user)
         db.commit()
         db.refresh(user)
     
-    access_token = create_token(user.id, user.role.value)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=user.role.value)
+    access_token = create_token(user.id)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))

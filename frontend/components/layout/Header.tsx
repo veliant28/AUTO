@@ -126,7 +126,7 @@ export default function Header() {
                       <DropdownMenuItem asChild>
                         <Link href="/orders"><ClipboardList className="mr-2 h-4 w-4" /> {t('orders')}</Link>
                       </DropdownMenuItem>
-                      {['admin','manager','operator'].includes(user?.role ?? '') && (
+                      {user?.role && ['admin','manager','operator'].includes(user.role) && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild className="text-primary font-medium">

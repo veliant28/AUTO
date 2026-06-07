@@ -25,4 +25,4 @@ class ResetPasswordSchema(BaseModel):
     password: str
 
 class GoogleAuthSchema(BaseModel):
-    token: str  # Google ID token
+    token: str

@@ -250,7 +250,22 @@
     "order_items": "Товаров",
     "order_date": "Дата",
     "yes": "Да",
-    "no": "Нет"
+    "no": "Нет",
+    "roles_title": "Управление ролями",
+    "roles_create": "Создать роль",
+    "roles_edit": "Изменить роль",
+    "roles_name": "Название",
+    "roles_description": "Описание",
+    "roles_permissions": "Разрешения",
+    "roles_permissions_count": "Разрешений",
+    "roles_system": "Системная",
+    "roles_custom": "Пользовательская",
+    "roles_type": "Тип",
+    "roles_confirm_delete": "Удалить роль?",
+    "roles_empty": "Роли не найдены",
+    "roles_created": "Роль создана",
+    "roles_updated": "Роль обновлена",
+    "roles_deleted": "Роль удалена"
   },
   "catalog": {
     "title": "Каталог",
