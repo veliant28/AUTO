@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
@@ -24,15 +24,46 @@ function hasRole(user: { role: string } | null, ...roles: string[]) {
 }
 
 function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
-  const { activeLocale, setActiveLocale } = useAdminLocale();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, avatarStyle } = useAuthStore();
+  const { activeLocale, setActiveLocale } = useAdminLocale();
+  const ta = useTranslations('admin');
+  const isTecDoc = pathname.includes('/admin/tecdoc');
+  const isFooter = pathname.includes('/admin/footer');
+
+  const tecdocTabs = [
+    { key: 'dashboard', label: ta('tecdoc_dashboard') },
+    { key: 'batch', label: ta('tecdoc_batch') },
+    { key: 'settings', label: ta('tecdoc_settings') },
+  ];
+
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-card flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
           <Menu className="w-5 h-5" />
         </Button>
-        {LOCALES.map((loc) => (
+        {isTecDoc && tecdocTabs.map((t) => {
+          const active = (searchParams.get('tab') || 'dashboard') === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('tab', t.key);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {t.label.toUpperCase()}
+            </button>
+          );
+        })}
+        {isFooter && LOCALES.map((loc) => (
           <button
             key={loc}
             onClick={() => setActiveLocale(loc)}
@@ -108,6 +139,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
+    { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
 
@@ -157,7 +189,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        <Suspense fallback={null}><TopBar onMenuClick={() => setSidebarOpen(true)} /></Suspense>
         <main className="flex-1 w-full">
           {children}
         </main>

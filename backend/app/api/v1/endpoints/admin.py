@@ -421,3 +421,7 @@ async def list_permissions(
         )
         for p in permissions
     ]
+
+
+from app.api.v1.endpoints.admin_tecdoc import router as tecdoc_router
+router.include_router(tecdoc_router, prefix="/tecdoc", tags=["TecDoc"])

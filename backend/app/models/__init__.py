@@ -9,6 +9,7 @@ from .favorites import Favorite
 from .orders import Order, OrderItem, OrderStatus
 from .footer import FooterContent
 from .role import Role, Permission, RolePermission
+from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
 
 __all__ = [
     "Base", 
@@ -23,4 +24,5 @@ __all__ = [
     "Order", "OrderItem", "OrderStatus",
     "FooterContent",
     "Role", "Permission", "RolePermission",
+    "TecDocConfig", "TecDocRateLog", "SupplierPrice",
 ]
