@@ -352,7 +352,17 @@
     "tecdoc_unmatched": "Не знайдено",
     "tecdoc_not_found": "Не розпізнано",
     "tecdoc_pending": "Очікує",
-    "loading": "Завантаження..."
+    "loading": "Завантаження...",
+    "catalog_title": "Автокаталог",
+    "catalog_year": "Рік",
+    "catalog_make": "Марка",
+    "catalog_model": "Модель",
+    "catalog_modification": "Модифікація",
+    "catalog_volume": "Об'єм",
+    "catalog_engine": "Двигун",
+    "catalog_power": "Потужність",
+    "catalog_search": "Пошук по каталогу...",
+    "catalog_empty": "Автомобілі не знайдено"
   },
   "catalog": {
     "title": "Каталог",

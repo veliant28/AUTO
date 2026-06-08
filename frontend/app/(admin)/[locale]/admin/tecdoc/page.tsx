@@ -30,6 +30,15 @@ interface DashboardData {
   hourly: { hour: string; count: number }[];
 }
 
+interface BrandItem {
+  id: number;
+  name: string;
+  total: number;
+  matched: number;
+  unmatched: number;
+  with_applicability: number;
+}
+
 interface ArticleItem {
   id: number;
   supplier: string;
@@ -193,6 +202,14 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
     refetchInterval: 10000,
   });
 
+  const { data: brandData } = useQuery({
+    queryKey: ['tecdoc-brands-coverage'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/brands', { params: { page: 1, page_size: 30 } });
+      return data as { items: BrandItem[]; total: number };
+    },
+  });
+
   if (isLoading || !data) {
     return <div className="flex items-center gap-2 text-muted-foreground p-6"><Loader2 className="w-4 h-4 animate-spin" /> {t('loading')}</div>;
   }
@@ -269,20 +286,34 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
     grid: { top: 20, right: 20, bottom: 40, left: 50 },
   };
 
+  const brandBarOption = brandData?.items ? (() => {
+    const sorted = [...brandData.items].sort((a, b) => b.with_applicability - a.with_applicability);
+    return {
+      backgroundColor: chartBg,
+      tooltip: { trigger: 'axis' as const, axisPointer: { type: 'none' as const } },
+      xAxis: {
+        type: 'category' as const,
+        data: sorted.map((b) => b.name),
+        axisLabel: { color: axisTextColor, rotate: 45, fontSize: 10, interval: 0 },
+        axisLine: { lineStyle: { color: borderColor } },
+      },
+      yAxis: {
+        type: 'value' as const,
+        axisLabel: { color: axisTextColor },
+        splitLine: { lineStyle: { color: borderColor } },
+      },
+      series: [{
+        name: t('brands_matched'),
+        type: 'bar' as const,
+        data: sorted.map((b) => b.with_applicability),
+        itemStyle: { color: '#22c55e', borderRadius: [4, 4, 0, 0] },
+      }],
+      grid: { top: 20, right: 20, bottom: 100, left: 50 },
+    };
+  })() : {};
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <Badge variant={data.exhausted ? 'destructive' : 'outline'} className={data.exhausted ? 'text-base px-3' : data.remaining > 600 ? 'text-base px-3 border-green-500 text-green-600' : 'text-base px-3 border-yellow-500 text-yellow-600'}>
-          {data.exhausted ? (
-            <><AlertTriangle className="w-4 h-4 mr-1" /> {t('tecdoc_limit_exceeded')}</>
-          ) : (
-            <>{data.used} / {data.limit}</>
-          )}
-        </Badge>
-        <span className="text-sm text-muted-foreground">
-          {t('tecdoc_remaining')}: {data.remaining}
-        </span>
-      </div>
       <div className="grid md:grid-cols-3 gap-4">
         <Card className="md:col-span-1">
           <CardContent className="p-2">
@@ -299,6 +330,14 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
           </CardContent>
         </Card>
       </div>
+      {brandData?.items && brandData.items.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
+          <CardContent className="p-2">
+            <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -465,8 +504,16 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               {batchStartSelected.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
             </Button>
           </TooltipTrigger><TooltipContent>{t('tecdoc_batch_start_selected')}</TooltipContent></Tooltip>
-        </div>
       </div>
+      {brandData?.items && brandData.items.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
+          <CardContent className="p-2">
+            <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
 
       {batchState?.running && (
         <div className="space-y-2 mb-4">
@@ -483,8 +530,16 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500 rounded-full"
               style={{ width: batchState.total ? `${(batchState.processed / batchState.total) * 100}%` : '0%' }}
             />
-          </div>
-        </div>
+      </div>
+      {brandData?.items && brandData.items.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
+          <CardContent className="p-2">
+            <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
+          </CardContent>
+        </Card>
+      )}
+    </div>
       )}
 
       <Card className="overflow-hidden">

@@ -352,7 +352,17 @@
     "tecdoc_unmatched": "Not found",
     "tecdoc_not_found": "Unknown",
     "tecdoc_pending": "Pending",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "catalog_title": "Auto Catalog",
+    "catalog_year": "Year",
+    "catalog_make": "Make",
+    "catalog_model": "Model",
+    "catalog_modification": "Modification",
+    "catalog_volume": "Capacity",
+    "catalog_engine": "Engine",
+    "catalog_power": "Power",
+    "catalog_search": "Search catalog...",
+    "catalog_empty": "No vehicles found"
   },
   "catalog": {
     "title": "Catalog",

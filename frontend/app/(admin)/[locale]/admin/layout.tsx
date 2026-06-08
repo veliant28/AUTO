@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -43,10 +43,12 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
+    '/admin/catalog': { icon: Car, titleKey: 'catalog_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
   };
 
-  const currentMeta = Object.entries(pageMeta).find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || Object.entries(pageMeta).find(([route]) => pathname.includes(route));
+  const pageMetaEntries = Object.entries(pageMeta).sort((a, b) => b[0].length - a[0].length);
+  const currentMeta = pageMetaEntries.find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || pageMetaEntries.find(([route]) => pathname.includes(route));
   const meta = currentMeta?.[1];
 
   const tecdocTabs = [
@@ -213,6 +215,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/brands', icon: Tag, label: t('brands_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
+    { href: '/admin/catalog', icon: Car, label: t('catalog_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
 

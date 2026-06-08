@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { Tag, Loader2, CheckCircle2, AlertTriangle, Zap, XCircle, Search } from 'lucide-react';
+import { Tag, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -22,26 +21,19 @@ interface BrandItem {
   with_applicability: number;
 }
 
-function CoverageBadge({ matched, total }: { matched: number; total: number }) {
+function CoverageCell({ matched, total }: { matched: number; total: number }) {
   const pct = total > 0 ? Math.round((matched / total) * 100) : 0;
-  let color: string, Icon: any;
-  if (pct >= 70) { color = 'bg-green-500'; Icon = CheckCircle2; }
-  else if (pct >= 30) { color = 'bg-yellow-500'; Icon = AlertTriangle; }
-  else if (pct >= 1) { color = 'bg-orange-500'; Icon = Zap; }
-  else { color = 'bg-red-500'; Icon = XCircle; }
+  let barColor: string;
+  if (pct >= 70) barColor = 'bg-green-500';
+  else if (pct >= 30) barColor = 'bg-yellow-500';
+  else if (pct >= 1) barColor = 'bg-orange-500';
+  else barColor = 'bg-red-500';
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge className={`${color} border-0 gap-1 cursor-pointer`}>
-          <Icon className="w-3.5 h-3.5 text-white" />
-          <span className="text-white text-xs font-semibold">{pct}%</span>
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent>
-        {pct}% ({matched}/{total})
-      </TooltipContent>
-    </Tooltip>
+    <div className="flex items-center gap-3 justify-center px-2">
+      <Progress value={pct} className="h-2.5 flex-1 max-w-[140px]" indicatorClassName={barColor} />
+      <span className={`text-xs font-semibold w-8 text-right ${barColor.replace('bg-', 'text-')}`}>{pct}%</span>
+    </div>
   );
 }
 
@@ -103,7 +95,7 @@ export default function AdminBrandsPage() {
                   <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">{t('brands_matched')}</th>
                   <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">{t('brands_with_app')}</th>
                   <th className="text-center p-3 font-medium text-muted-foreground w-[110px]">{t('brands_unmatched')}</th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[110px]">{t('brands_coverage')}</th>
+                  <th className="text-center p-3 font-medium text-muted-foreground w-[250px]">{t('brands_coverage')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,7 +107,7 @@ export default function AdminBrandsPage() {
                     <td className="p-3 text-center text-xs text-green-600">{item.matched}</td>
                     <td className="p-3 text-center text-xs text-blue-600 font-semibold">{item.with_applicability}</td>
                     <td className="p-3 text-center text-xs text-red-500">{item.unmatched}</td>
-                    <td className="p-3 text-center"><CoverageBadge matched={item.with_applicability} total={item.total} /></td>
+                    <td className="p-3"><CoverageCell matched={item.with_applicability} total={item.total} /></td>
                   </tr>
                 ))}
                 {(!data?.items || data.items.length === 0) && (
