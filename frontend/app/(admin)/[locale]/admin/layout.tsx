@@ -38,12 +38,12 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
-    '/admin/users': { icon: Users, titleKey: 'users_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
+    '/admin/catalog': { icon: Car, titleKey: 'catalog_title' },
+    '/admin/users': { icon: Users, titleKey: 'users_title' },
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
-    '/admin/catalog': { icon: Car, titleKey: 'catalog_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
   };
 
@@ -210,12 +210,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: '/admin', icon: LayoutDashboard, label: t('dashboard_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
-    { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/products', icon: Package, label: t('products_title'), roles: ['admin'] },
     { href: '/admin/brands', icon: Tag, label: t('brands_title'), roles: ['admin'] },
+    { href: '/admin/catalog', icon: Car, label: t('catalog_title'), roles: ['admin'] },
+    { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
-    { href: '/admin/catalog', icon: Car, label: t('catalog_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
 
