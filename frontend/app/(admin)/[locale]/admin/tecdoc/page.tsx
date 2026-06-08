@@ -504,16 +504,8 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               {batchStartSelected.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
             </Button>
           </TooltipTrigger><TooltipContent>{t('tecdoc_batch_start_selected')}</TooltipContent></Tooltip>
+        </div>
       </div>
-      {brandData?.items && brandData.items.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
-          <CardContent className="p-2">
-            <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
-          </CardContent>
-        </Card>
-      )}
-    </div>
 
       {batchState?.running && (
         <div className="space-y-2 mb-4">
@@ -530,16 +522,8 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500 rounded-full"
               style={{ width: batchState.total ? `${(batchState.processed / batchState.total) * 100}%` : '0%' }}
             />
-      </div>
-      {brandData?.items && brandData.items.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
-          <CardContent className="p-2">
-            <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+        </div>
       )}
 
       <Card className="overflow-hidden">
