@@ -12,7 +12,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table';
 import {
-  Users, Plus, Search, Pencil, Trash2,
+  Users, Plus, Search, Pencil, Trash2, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -75,6 +78,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
 
   const [form, setForm] = useState({
     email: '',
@@ -144,6 +148,10 @@ export default function AdminUsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       toast.success(t('user_deleted'));
+      setDeleteTarget(null);
+    },
+    onError: () => {
+      toast.error(t('users_delete_error'));
     },
   });
 
@@ -205,11 +213,7 @@ export default function AdminUsersPage() {
           }}>
             <Pencil className="w-4 h-4" />
           </Button>
-          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => {
-            if (confirm(t('confirm_delete_user'))) {
-              deleteMutation.mutate(row.original.id);
-            }
-          }}>
+          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(row.original)}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -351,6 +355,38 @@ export default function AdminUsersPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('users_delete_confirm_title')}</DialogTitle>
+                <DialogDescription>{t('users_delete_confirm_message')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm min-w-0 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium truncate min-w-0">{deleteTarget.email}</span>
+                <Badge className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-xs shrink-0`}>{t(deleteTarget.role)}</Badge>
+              </div>
+              <p className="text-muted-foreground truncate">{deleteTarget.full_name || '—'}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate(deleteTarget!.id)} disabled={deleteMutation.isPending} className="gap-2">
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

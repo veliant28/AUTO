@@ -9,7 +9,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { Shield, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Shield, Plus, Pencil, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from '@/lib/toast';
@@ -61,6 +65,7 @@ export default function AdminRolesPage() {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [editRole, setEditRole] = useState<Role | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -135,8 +140,9 @@ export default function AdminRolesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
       toast.success(t('roles_deleted'));
+      setDeleteTarget(null);
     },
-    onError: (err: any) => toast.error(err?.response?.data?.detail || t('delete_error')),
+    onError: (err: any) => toast.error(err?.response?.data?.detail || t('roles_delete_error')),
   });
 
   const resetForm = () => {
@@ -211,11 +217,7 @@ export default function AdminRolesPage() {
             size="icon"
             className="h-8 w-8"
             disabled={row.original.is_system}
-            onClick={() => {
-              if (confirm(t('roles_confirm_delete'))) {
-                deleteMutation.mutate(row.original.id);
-              }
-            }}
+            onClick={() => setDeleteTarget(row.original)}
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -365,6 +367,42 @@ export default function AdminRolesPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('roles_delete_confirm_title')}</DialogTitle>
+                <DialogDescription>{t('roles_delete_confirm_message')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm min-w-0 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium truncate min-w-0">{deleteTarget.name}</span>
+                <Badge variant="outline" className="border-0 text-xs shrink-0">
+                  {deleteTarget.is_system ? t('roles_system') : t('roles_custom')}
+                </Badge>
+              </div>
+              {deleteTarget.description && (
+                <p className="text-muted-foreground truncate">{deleteTarget.description}</p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate(deleteTarget!.id)} disabled={deleteMutation.isPending || (deleteTarget?.is_system ?? false)} className="gap-2">
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
