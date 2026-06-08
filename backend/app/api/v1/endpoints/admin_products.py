@@ -54,3 +54,13 @@ async def delete_product(
     db.delete(product)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/products/generate-skus")
+async def generate_skus(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    from app.services.sku_generator import bulk_generate_skus
+    count = bulk_generate_skus(db)
+    return {"generated": count}

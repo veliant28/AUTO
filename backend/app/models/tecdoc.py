@@ -33,6 +33,7 @@ class SupplierPrice(Base):
     __tablename__ = "supplier_prices"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    sku = Column(String, unique=True, nullable=True, index=True)
     supplier = Column(String, nullable=False)
     article = Column(String, nullable=False)
     brand = Column(String, nullable=True)

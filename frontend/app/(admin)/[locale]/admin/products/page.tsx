@@ -146,22 +146,24 @@ export default function AdminProductsPage() {
             <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[130px]">{t('products_article')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">{t('products_name')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('products_brand')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">{t('products_supplier')}</th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[80px]">{t('products_status')}</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground w-[130px]">{t('products_price')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">{t('products_stock')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">{t('actions')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('products_sku')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">{t('products_article')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('products_name')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('products_brand')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('products_supplier')}</th>
+                  <th className="text-center p-3 font-medium text-muted-foreground w-[70px]">{t('products_status')}</th>
+                  <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">{t('products_price')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('products_stock')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {data?.items?.map((item: any) => (
                   <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="p-3 font-mono text-xs truncate">{item.sku || '—'}</td>
                     <td className="p-3 font-mono text-xs">{item.article}</td>
-                    <td className="p-3 text-xs max-w-[200px] truncate">{item.name || '—'}</td>
-                    <td className="p-3 text-xs font-semibold">{item.brand || '—'}</td>
+                    <td className="p-3 text-xs truncate">{item.name || '—'}</td>
+                    <td className="p-3 text-xs font-semibold truncate">{item.brand || '—'}</td>
                     <td className="p-3"><Badge className={`${supplierColors[item.supplier] || 'bg-gray-500 text-white'} border-0 text-xs`}>{item.supplier}</Badge></td>
                     <td className="p-3 text-center">
                       <Tooltip>
@@ -190,7 +192,7 @@ export default function AdminProductsPage() {
                   </tr>
                 ))}
                 {(!data?.items || data.items.length === 0) && (
-                  <tr><td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">{t('products_empty') || t('roles_empty')}</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground text-sm">{t('products_empty') || t('roles_empty')}</td></tr>
                 )}
               </tbody>
             </table>

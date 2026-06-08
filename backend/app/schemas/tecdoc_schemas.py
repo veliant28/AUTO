@@ -46,6 +46,7 @@ class HourlyUsageItem(BaseModel):
 
 class SupplierPriceItem(BaseModel):
     id: int
+    sku: Optional[str] = None
     supplier: str
     article: str
     brand: Optional[str] = None
