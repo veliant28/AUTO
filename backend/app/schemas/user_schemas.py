@@ -50,6 +50,7 @@ class AdminUserUpdate(BaseModel):
     role_id: Optional[int] = None
     is_active: Optional[bool] = None
     phone: Optional[str] = None
+    password: Optional[str] = None
 
 class GarageVehicleSchema(BaseModel):
     id: int

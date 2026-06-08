@@ -147,13 +147,13 @@ export default function AdminProductsPage() {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('products_sku')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">{t('products_article')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('products_name')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('products_brand')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">{t('products_article')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[220px]">{t('products_name')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">{t('products_brand')}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('products_supplier')}</th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[70px]">{t('products_status')}</th>
+                  <th className="text-center p-3 font-medium text-muted-foreground w-[20px]">{t('products_status')}</th>
                   <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">{t('products_price')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('products_stock')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('products_stock')}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('actions')}</th>
                 </tr>
               </thead>
@@ -182,10 +182,10 @@ export default function AdminProductsPage() {
                     <td className="p-3">
                       <div className="flex gap-1">
                         <Tooltip><TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
+                          <Button variant="outline" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
                         </TooltipTrigger><TooltipContent>{t('edit')}</TooltipContent></Tooltip>
                         <Tooltip><TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteTarget(item)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(item)}><Trash2 className="w-3.5 h-3.5" /></Button>
                         </TooltipTrigger><TooltipContent>{t('delete')}</TooltipContent></Tooltip>
                       </div>
                     </td>

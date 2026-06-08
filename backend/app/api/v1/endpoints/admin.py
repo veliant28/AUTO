@@ -186,6 +186,8 @@ async def update_user(
         user.is_active = data.is_active
     if data.phone is not None:
         user.phone = data.phone
+    if data.password:
+        user.password_hash = bcrypt.hashpw(data.password.encode(), bcrypt.gensalt()).decode()
     db.commit()
     db.refresh(user)
 
