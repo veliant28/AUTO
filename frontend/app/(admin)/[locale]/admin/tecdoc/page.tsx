@@ -20,7 +20,7 @@ import api from '@/lib/api';
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
-type Tab = 'dashboard' | 'batch' | 'settings';
+type Tab = 'dashboard' | 'batch' | 'manual' | 'settings';
 
 interface DashboardData {
   used: number;
@@ -143,7 +143,7 @@ function shiftPieLabelAlongArcNearEdge(params: PieLabelLayoutParams, sliceValues
   };
 }
 
-function CountdownBadge({ exhausted, t }: { exhausted: boolean; t: (k: string) => string }) {
+function ResetTimer({ exhausted }: { exhausted: boolean }) {
   const [ms, setMs] = useState(0);
 
   useEffect(() => {
@@ -157,16 +157,25 @@ function CountdownBadge({ exhausted, t }: { exhausted: boolean; t: (k: string) =
     return () => clearInterval(id);
   }, [exhausted]);
 
-  if (!exhausted) return null;
-  const h = Math.floor(ms / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  const s = Math.floor((ms % 60000) / 1000);
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
   const pad = (n: number) => String(n).padStart(2, '0');
 
+  if (exhausted) {
+    return (
+      <Badge className="bg-red-500 text-white animate-pulse gap-1.5 hover:bg-red-500 border-0">
+        <Clock className="w-3 h-3" />
+        {pad(h)}:{pad(m)}:{pad(s)}
+      </Badge>
+    );
+  }
+
   return (
-    <Badge className="bg-red-600 text-white text-sm px-3 py-1 gap-2 animate-pulse">
-      <Clock className="w-4 h-4" />
-      {pad(h)}:{pad(m)}:{pad(s)} {t('tecdoc_until_reset')}
+    <Badge className="bg-blue-500 text-white gap-1.5 hover:bg-blue-500 border-0">
+      <Clock className="w-3 h-3" />
+      00:00:00
     </Badge>
   );
 }
@@ -270,7 +279,6 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
             <>{data.used} / {data.limit}</>
           )}
         </Badge>
-        <CountdownBadge exhausted={data.exhausted} t={t} />
         <span className="text-sm text-muted-foreground">
           {t('tecdoc_remaining')}: {data.remaining}
         </span>
@@ -282,7 +290,10 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
           </CardContent>
         </Card>
         <Card className="md:col-span-2">
-          <CardHeader className="pb-0"><CardTitle className="text-sm">{t('tecdoc_hourly_usage')}</CardTitle></CardHeader>
+          <CardHeader className="pb-0 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm">{t('tecdoc_hourly_usage')}</CardTitle>
+            <ResetTimer exhausted={data.exhausted} />
+          </CardHeader>
           <CardContent className="p-2">
             <ReactECharts option={lineOption} style={{ height: 310 }} />
           </CardContent>
@@ -295,13 +306,16 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
 function BatchTab({ t }: { t: (k: string) => string }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
+  const [brand, setBrand] = useState('');
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [batchSize, setBatchSize] = useState(25);
 
   const statuses = [
     { value: 'all', label: t('tecdoc_filter_all') },
+    { value: 'matched_app', label: t('tecdoc_matched_app') },
     { value: 'matched', label: t('tecdoc_matched') },
     { value: 'unmatched', label: t('tecdoc_unmatched') },
     { value: 'not_found', label: t('tecdoc_not_found') },
@@ -309,21 +323,32 @@ function BatchTab({ t }: { t: (k: string) => string }) {
   ];
 
   const statusIcons: Record<string, React.ReactNode> = {
-    matched: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-    unmatched: <AlertTriangle className="w-4 h-4 text-yellow-500" />,
-    not_found: <XCircle className="w-4 h-4 text-red-500" />,
-    pending: <Clock className="w-4 h-4 text-muted-foreground" />,
+    matched_app: <CheckCircle2 className="w-3.5 h-3.5 text-white" />,
+    matched: <CheckCircle2 className="w-3.5 h-3.5 text-white" />,
+    unmatched: <AlertTriangle className="w-3.5 h-3.5 text-white" />,
+    not_found: <XCircle className="w-3.5 h-3.5 text-white" />,
+    pending: <Clock className="w-3.5 h-3.5 text-white" />,
   };
 
   const { data } = useQuery({
-    queryKey: ['tecdoc-articles', page, status, search],
+    queryKey: ['tecdoc-articles', page, pageSize, status, search, brand],
     queryFn: async () => {
-      const params: any = { page, page_size: 25 };
+      const params: any = { page, page_size: pageSize };
       if (status) params.status = status;
       if (search) params.search = search;
+      if (brand) params.brand = brand;
       const { data } = await api.get('/admin/tecdoc/articles', { params });
       return data as { items: ArticleItem[]; total: number };
     },
+  });
+
+  const { data: brandsList } = useQuery({
+    queryKey: ['tecdoc-brand-names'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/tecdoc/brands');
+      return data || [];
+    },
+    staleTime: 300000,
   });
 
   const { data: batchState } = useQuery({
@@ -381,6 +406,8 @@ function BatchTab({ t }: { t: (k: string) => string }) {
     setSelected((prev) => (prev.size === allIds.length ? new Set() : new Set(allIds)));
   };
 
+  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4 flex-wrap">
@@ -389,6 +416,25 @@ function BatchTab({ t }: { t: (k: string) => string }) {
           <Input className="pl-9" placeholder={t('search_users')} value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         </div>
+
+        <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+          <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={brand || 'all'} onValueChange={(v) => setBrand(v === 'all' ? '' : v)}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder={t('products_brand')} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('tecdoc_filter_all')}</SelectItem>
+            {(brandsList || []).map((b: any) => (
+              <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
@@ -446,7 +492,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
+                <tr className="border-b bg-muted/50 whitespace-nowrap">
                   <th className="p-3 w-10">
                     <input type="checkbox" className="cursor-pointer"
                       checked={data?.items && data.items.length > 0 && selected.size === data.items.length}
@@ -456,8 +502,8 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                   <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_name')}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_brand')}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_status')}</th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-16">{t('tecdoc_col_attempts')}</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-32">{t('tecdoc_col_last')}</th>
+                  <th className="text-center p-3 font-medium text-muted-foreground">{t('tecdoc_col_attempts')}</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_last')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -466,12 +512,21 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                     <td className="p-3"><input type="checkbox" className="cursor-pointer" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></td>
                     <td className="p-3 font-mono text-xs">{a.article}</td>
                     <td className="p-3 text-xs max-w-[200px] truncate">{a.name || '—'}</td>
-                    <td className="p-3 text-xs">{a.brand || '—'}</td>
+                    <td className="p-3 text-xs font-semibold">{a.brand || '—'}</td>
                     <td className="p-3">
-                      <span className="flex items-center gap-1 text-xs">
-                        {statusIcons[a.match_status]}
-                        {t('tecdoc_' + a.match_status) || a.match_status}
-                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge className={`border-0 h-6 w-6 p-0 flex items-center justify-center cursor-pointer ${
+                            a.match_status === 'matched_app' ? 'bg-green-500' :
+                            a.match_status === 'matched' ? 'bg-blue-500' :
+                            a.match_status === 'unmatched' ? 'bg-yellow-500' :
+                            a.match_status === 'not_found' ? 'bg-red-500' : 'bg-gray-400'
+                          }`}>
+                            {statusIcons[a.match_status]}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>{t('tecdoc_' + a.match_status) || a.match_status}</TooltipContent>
+                      </Tooltip>
                     </td>
                     <td className="p-3 text-center text-xs">{a.attempts}</td>
                     <td className="p-3 text-xs text-muted-foreground">{a.last_attempt_at ? new Date(a.last_attempt_at).toLocaleString() : '—'}</td>
@@ -483,17 +538,279 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               </tbody>
             </table>
           </div>
-          {data && data.total > 25 && (
+          {totalPages > 1 && (
             <div className="flex items-center justify-between p-3 border-t">
-              <span className="text-sm text-muted-foreground">{(page - 1) * 25 + 1}–{Math.min(page * 25, data.total)} of {data.total}</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page * 25 >= data.total} onClick={() => setPage(page + 1)}>Next</Button>
+              <span className="text-sm text-muted-foreground">{(page - 1) * pageSize + 1}–{Math.min(page * pageSize, data?.total || 0)} of {data?.total || 0}</span>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>{t('prev_page')}</Button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let p: number;
+                  if (totalPages <= 7) { p = i + 1; }
+                  else if (page <= 4) { p = i + 1; }
+                  else if (page >= totalPages - 3) { p = totalPages - 6 + i; }
+                  else { p = page - 3 + i; }
+                  return <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}>{p}</Button>;
+                })}
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>{t('next_page')}</Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ManualTab({ t }: { t: (k: string) => string }) {
+  const [article, setArticle] = useState('');
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [details, setDetails] = useState<any>(null);
+  const [sku, setSku] = useState('');
+  const [skuResults, setSkuResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [binding, setBinding] = useState(false);
+  const [searchMode, setSearchMode] = useState<'local' | 'remote' | 'both'>('local');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [modelFilter, setModelFilter] = useState('');
+
+  const doSearch = async () => {
+    if (!article.trim()) return;
+    setSearching(true);
+    try {
+      const localPromise = (searchMode === 'local' || searchMode === 'both')
+        ? api.post('/admin/tecdoc/manual/search', { article: article.trim() }).then(r => r.data || [])
+        : Promise.resolve([]);
+
+      const remotePromise = (searchMode === 'remote' || searchMode === 'both')
+        ? api.post('/admin/tecdoc/manual/search-remote', { article: article.trim() }).then(r => r.data || [])
+        : Promise.resolve([]);
+
+      const [localRes, remoteRes] = await Promise.all([localPromise, remotePromise]);
+
+      if (searchMode === 'both') {
+        const seen = new Set<string>();
+        const merged: any[] = [];
+        for (const c of [...localRes, ...remoteRes]) {
+          const key = `${c.brand || ''}|${c.article}`;
+          if (!seen.has(key)) { seen.add(key); merged.push(c); }
+        }
+        setCandidates(merged);
+      } else {
+        setCandidates(searchMode === 'local' ? localRes : remoteRes);
+      }
+      setSelectedCandidate(null);
+      setDetails(null);
+    } catch { toast.error(t('save_error')); }
+    finally { setSearching(false); }
+  };
+
+  const loadDetails = async (cand: any) => {
+    setSelectedCandidate(cand);
+    try {
+      const { data } = await api.post('/admin/tecdoc/manual/details', { article: cand.article });
+      setDetails(data);
+    } catch { setDetails(null); }
+  };
+
+  const doBind = async (spId: number) => {
+    if (!selectedCandidate) return;
+    setBinding(true);
+    try {
+      await api.post('/admin/tecdoc/manual/bind', {
+        supplier_price_id: spId,
+        tecdoc_article: selectedCandidate.article,
+        tecdoc_brand_id: selectedCandidate.brand_id,
+        supplier_name: selectedCandidate.brand,
+      });
+      toast.success(t('tecdoc_bind_ok'));
+    } catch { toast.error(t('save_error')); }
+    finally { setBinding(false); }
+  };
+
+  const searchSku = async (q: string) => {
+    setSku(q);
+    if (q.length < 2) { setSkuResults([]); return; }
+    try {
+      const { data } = await api.get('/admin/tecdoc/articles', { params: { search: q, page_size: 10 } });
+      setSkuResults(data?.items || []);
+    } catch { setSkuResults([]); }
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-4 h-[calc(100vh-140px)]">
+      <div className="space-y-4 flex flex-col h-full min-h-0">
+        <div className="flex gap-2 items-center flex-shrink-0">
+          <Button
+            variant={searchMode === 'local' ? 'default' : 'outline'}
+            size="default"
+            onClick={() => { setSearchMode('local'); setCandidates([]); setDetails(null); }}
+            className={searchMode === 'local' ? 'bg-green-500 hover:bg-green-600' : ''}
+          >Л</Button>
+          <Button
+            variant={searchMode === 'remote' ? 'default' : 'outline'}
+            size="default"
+            onClick={() => { setSearchMode('remote'); setCandidates([]); setDetails(null); }}
+            className={searchMode === 'remote' ? 'bg-red-500 hover:bg-red-600' : ''}
+          >У</Button>
+          <Button
+            variant={searchMode === 'both' ? 'default' : 'outline'}
+            size="default"
+            onClick={() => { setSearchMode('both'); setCandidates([]); setDetails(null); }}
+            className={searchMode === 'both' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+          >2</Button>
+          <Input
+            placeholder={t('tecdoc_manual_placeholder')}
+            value={article}
+            onChange={(e) => setArticle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+          />
+          <Button onClick={doSearch} disabled={searching || !article.trim()}>
+            {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        <Card className="overflow-hidden flex-1 min-h-0">
+          <CardContent className="p-0 h-full overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-2 font-medium text-muted-foreground">{t('products_brand')}</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">{t('products_article')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.length > 0 ? (
+                  candidates.map((c, i) => (
+                    <tr key={i} className={`border-b last:border-0 hover:bg-muted/30 cursor-pointer ${selectedCandidate?.brand === c.brand && selectedCandidate?.article === c.article ? 'bg-muted' : ''}`}
+                      onClick={() => loadDetails(c)}>
+                      <td className="p-2 text-xs font-semibold">{c.brand}</td>
+                      <td className="p-2 font-mono text-xs">{c.article}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={2} className="p-6 text-center text-muted-foreground text-xs">{t('tecdoc_manual_hint')}</td></tr>
+                )}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4 flex flex-col h-full min-h-0">
+        {selectedCandidate ? (
+          <Card className="flex-1 min-h-0 overflow-y-auto">
+            <CardContent className="pt-6 space-y-3">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('tecdoc_manual_bind_title')}</p>
+                <div className="flex gap-2">
+                  <Input placeholder={t('products_search')} value={sku} onChange={(e) => searchSku(e.target.value)} className="text-xs" />
+                </div>
+                {skuResults.length > 0 && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border rounded-lg">
+                    {skuResults.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-2 hover:bg-muted/30 border-b last:border-0 text-xs cursor-pointer"
+                        onClick={() => doBind(item.id)}>
+                        <span>{item.article} · {item.brand || '—'} · {item.name || ''}</span>
+                        <Button size="sm" variant="outline" disabled={binding}>
+                          {binding ? <Loader2 className="w-3 h-3 animate-spin" /> : t('tecdoc_manual_bind')}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <hr />
+              <div className="text-lg font-bold">{selectedCandidate.brand} · {selectedCandidate.article}</div>
+
+              {details?.info?.text && (
+                <div className="text-sm text-muted-foreground">{details.info.text.substring(0, 300)}</div>
+              )}
+
+              {details?.images?.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t('tecdoc_manual_images')}</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {details.images.map((img: any, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs">{img.name}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+               {details?.crosses?.length > 0 && (
+                 <div>
+                   <p className="text-xs font-medium text-muted-foreground mb-1">{t('tecdoc_manual_crosses')} ({details.crosses.length})</p>
+                   <div className="flex gap-1 flex-wrap max-h-24 overflow-y-auto">
+                     {details.crosses.map((c: any, i: number) => (
+                       <Badge key={i} variant="secondary" className="text-xs">{c.oem || c.article}</Badge>
+                     ))}
+                   </div>
+                 </div>
+               )}
+
+               {details?.vehicles?.length > 0 && (() => {
+                 const vehicles = details.vehicles as any[];
+                 const brands = [...new Set(vehicles.map((v: any) => v.brand).filter(Boolean))].sort();
+                 const models = [...new Set(vehicles.filter((v: any) => !brandFilter || v.brand === brandFilter).map((v: any) => v.model).filter(Boolean))].sort();
+                 const filtered = vehicles.filter((v: any) =>
+                   (!brandFilter || v.brand === brandFilter) &&
+                   (!modelFilter || v.model === modelFilter)
+                 );
+                 return (
+                 <div className="flex-1 flex flex-col min-h-0">
+                   <p className="text-xs font-medium text-muted-foreground mb-1 flex-shrink-0">{t('tecdoc_manual_vehicles')} ({filtered.length})</p>
+                   <div className="flex gap-2 mb-2 flex-shrink-0">
+                     <Select value={brandFilter} onValueChange={(v) => { setBrandFilter(v === 'all' ? '' : v); setModelFilter(''); }}>
+                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Марка" /></SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">Все</SelectItem>
+                         {brands.map((b: string) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                     <Select value={modelFilter} onValueChange={(v) => setModelFilter(v === 'all' ? '' : v)}>
+                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Модель" /></SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">Все</SelectItem>
+                         {models.map((m: string) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="min-h-0 flex-1 overflow-y-auto border rounded-lg">
+                     <table className="w-full text-xs">
+                       <thead>
+                         <tr className="border-b bg-muted/50 sticky top-0">
+                            <th className="text-left p-1.5 font-medium text-muted-foreground w-[150px]">Марка</th>
+                            <th className="text-left p-1.5 font-medium text-muted-foreground">Модель</th>
+                            <th className="text-left p-1.5 font-medium text-muted-foreground w-[150px]">Модификация</th>
+                            <th className="text-left p-1.5 font-medium text-muted-foreground w-[150px]">Годы</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {filtered.map((v: any, i: number) => (
+                           <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
+                             <td className="p-1.5 font-semibold">{v.brand || '—'}</td>
+                             <td className="p-1.5 text-muted-foreground">{v.model || '—'}</td>
+                             <td className="p-1.5">{v.mod || '—'}</td>
+                             <td className="p-1.5 text-muted-foreground text-xs">{v.years || '—'}</td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+                 </div>
+               ); })()}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed flex-1 min-h-0">
+            <CardContent className="pt-6 flex items-center justify-center h-full">
+              <p className="text-sm text-muted-foreground">{t('tecdoc_manual_hint')}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
@@ -627,6 +944,7 @@ function TecDocPageInner() {
     <div className="p-6">
       {tab === 'dashboard' && <DashboardTab t={t} />}
       {tab === 'batch' && <BatchTab t={t} />}
+      {tab === 'manual' && <ManualTab t={t} />}
       {tab === 'settings' && <SettingsTab t={t} />}
     </div>
   );

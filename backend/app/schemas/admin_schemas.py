@@ -86,3 +86,22 @@ class RoleUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     permission_ids: Optional[List[int]] = None
+
+
+class BrandListItem(BaseModel):
+    id: int
+    name: str
+    total: int
+    matched: int
+    unmatched: int
+    with_applicability: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class BrandListResponse(BaseModel):
+    items: List[BrandListItem]
+    total: int
+    page: int
+    page_size: int

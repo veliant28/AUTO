@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text as sa_text
 from typing import Optional
 from datetime import datetime
 
@@ -111,6 +111,7 @@ async def list_articles(
     page_size: int = Query(25, ge=1, le=100),
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
+    brand: str = Query("", max_length=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
@@ -122,6 +123,8 @@ async def list_articles(
         query = query.filter(
             SupplierPrice.article.ilike(like) | SupplierPrice.name.ilike(like)
         )
+    if brand:
+        query = query.filter(SupplierPrice.brand.ilike(f"%{brand}%"))
     total = query.count()
     items = query.order_by(SupplierPrice.id).offset((page - 1) * page_size).limit(page_size).all()
     return SupplierPriceListResponse(
@@ -181,3 +184,146 @@ async def stop_batch(
     current_user: User = Depends(require_role("admin")),
 ):
     return batch_manager.stop()
+
+
+@router.get("/brands")
+async def list_brand_names(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    rows = db.query(SupplierPrice.brand).filter(SupplierPrice.brand.isnot(None), SupplierPrice.brand != "").distinct().order_by(SupplierPrice.brand).all()
+    return [{"value": r[0], "label": r[0]} for r in rows]
+
+
+# ─── Manual Search ─────────────────────────────────────────────────────────
+
+from pydantic import BaseModel
+from app.core.db import get_tecdoc_db
+
+class ManualSearchRequest(BaseModel):
+    article: str
+
+class ManualBindRequest(BaseModel):
+    supplier_price_id: int
+    tecdoc_article: str
+    tecdoc_brand_id: int
+    supplier_name: str
+
+
+@router.post("/manual/search")
+async def manual_search(
+    data: ManualSearchRequest,
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    t = sa_text("""
+        SELECT s.name, a.article_number, a.supplier_id, a.normalized_article
+        FROM autodb_articles a
+        JOIN autodb_suppliers s ON s.id = a.supplier_id
+        WHERE LOWER(a.article_number) LIKE :q
+        ORDER BY a.article_number
+        LIMIT 50
+    """)
+    rows = tecdoc_db.execute(t, {"q": f"%{data.article.lower()}%"}).fetchall()
+    return [{"brand": r[0], "article": r[1], "brand_id": r[2], "normalized": r[3]} for r in rows]
+
+
+@router.post("/manual/details")
+async def manual_details(
+    data: ManualSearchRequest,
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    art = data.article.lower()
+
+    info = tecdoc_db.execute(
+        sa_text("""SELECT s.name, a.info_text FROM autodb_article_infos a
+                   JOIN autodb_suppliers s ON s.id = a.supplier_id
+                   WHERE LOWER(a.article_number) = :art LIMIT 1"""),
+        {"art": art},
+    ).fetchone()
+
+    crosses = tecdoc_db.execute(
+        sa_text("""SELECT "PartsDataSupplierArticleNumber", "SupplierId", "OENbr", "manufacturerId" FROM article_cross
+                   WHERE LOWER("PartsDataSupplierArticleNumber") = :art OR LOWER("OENbr") = :art LIMIT 20"""),
+        {"art": art},
+    ).fetchall()
+
+    oems = tecdoc_db.execute(
+        sa_text("""SELECT "OENbr", "manufacturerId" FROM article_oe
+                   WHERE LOWER("OENbr") = :art LIMIT 20"""),
+        {"art": art},
+    ).fetchall()
+
+    images = tecdoc_db.execute(
+        sa_text("""SELECT "PictureName" FROM article_images
+                   WHERE LOWER("DataSupplierArticleNumber") = :art LIMIT 10"""),
+        {"art": art},
+    ).fetchall()
+
+    vehicles = tecdoc_db.execute(
+        sa_text("""SELECT DISTINCT man."description" as brand, m."description" as model, pc."description" as mod_name,
+                          pc."constructioninterval" as years
+                   FROM article_li li
+                   JOIN passanger_cars pc ON pc.id = li."linkageId"
+                   JOIN models m ON m.id = pc.modelid
+                   JOIN manufacturers man ON man.id = m.manufacturerid
+                   WHERE LOWER(li."DataSupplierArticleNumber") = :art
+                   ORDER BY man."description", m."description"
+                   LIMIT 30"""),
+        {"art": art},
+    ).fetchall()
+
+    return {
+        "info": {"supplier_name": info[0] if info else "", "text": info[1] if info else ""},
+        "crosses": [{"article": r[0], "supplier_id": r[1], "oem": r[2], "manufacturer_id": r[3]} for r in crosses],
+        "oem": [{"number": r[0], "manufacturer_id": r[1]} for r in oems],
+        "images": [{"name": r[0]} for r in images],
+        "vehicles": [{"brand": r[0], "model": r[1], "mod": r[2], "years": r[3] or ""} for r in vehicles],
+    }
+
+
+@router.post("/manual/bind")
+async def manual_bind(
+    data: ManualBindRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    sp = db.query(SupplierPrice).filter(SupplierPrice.id == data.supplier_price_id).first()
+    if not sp:
+        raise HTTPException(404, "Product not found")
+
+    sp.tecdoc_article = data.tecdoc_article
+    sp.tecdoc_brand_id = data.tecdoc_brand_id
+    sp.match_status = "matched_app"
+    db.commit()
+
+    # Try Celery task for enrichment
+    try:
+        from app.workers.tasks.tecdoc_tasks import process_tecdoc_batch
+        process_tecdoc_batch.delay(article_ids=[sp.id], batch_size=1)
+        return {"ok": True, "task_dispatched": True}
+    except Exception:
+        return {"ok": True, "task_dispatched": False}
+
+
+@router.post("/manual/search-remote")
+async def manual_search_remote(
+    data: ManualSearchRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    gateway = get_gateway(db)
+    try:
+        result = await gateway.search(data.article)
+        items = []
+        if result and isinstance(result, list):
+            for r in result[:50]:
+                items.append({
+                    "brand": r.get("brand_name") or r.get("brand") or str(r.get("brand_id", "")),
+                    "article": r.get("number") or r.get("article") or "",
+                    "brand_id": r.get("brand") or r.get("brand_id") or 0,
+                })
+        return items
+    except Exception as e:
+        raise HTTPException(503, f"Remote search failed: {str(e)}")

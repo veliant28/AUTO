@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -40,6 +40,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
     '/admin/users': { icon: Users, titleKey: 'users_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
+    '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
@@ -51,6 +52,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
     { key: 'batch', label: ta('tecdoc_batch') },
+    { key: 'manual', label: ta('tecdoc_manual') },
     { key: 'settings', label: ta('tecdoc_settings') },
   ];
 
@@ -208,6 +210,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/products', icon: Package, label: t('products_title'), roles: ['admin'] },
+    { href: '/admin/brands', icon: Tag, label: t('brands_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
