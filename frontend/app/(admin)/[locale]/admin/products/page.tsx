@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
-import { Package, Loader2, CheckCircle2, XCircle, Pencil, Trash2, Search } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Package, Loader2, CheckCircle2, XCircle, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { toast } from '@/lib/toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -65,13 +67,29 @@ function StockSnake({ regions, supplier }: { regions: Record<string, number> | n
 export default function AdminProductsPage() {
   const { user } = useAuthStore();
   const t = useTranslations('admin');
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [search, setSearch] = useState('');
   const [supplier, setSupplier] = useState('');
   const [status, setStatus] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   useEffect(() => { setHydrated(true); }, []);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/admin/products/${id}`);
+    },
+    onSuccess: () => {
+      toast.success(t('products_delete_success'));
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      setDeleteTarget(null);
+    },
+    onError: () => {
+      toast.error(t('products_delete_error'));
+    },
+  });
 
   const { data } = useQuery({
     queryKey: ['admin-products', page, pageSize, search, supplier, status],
@@ -165,7 +183,7 @@ export default function AdminProductsPage() {
                           <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
                         </TooltipTrigger><TooltipContent>{t('edit')}</TooltipContent></Tooltip>
                         <Tooltip><TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteTarget(item)}><Trash2 className="w-3.5 h-3.5" /></Button>
                         </TooltipTrigger><TooltipContent>{t('delete')}</TooltipContent></Tooltip>
                       </div>
                     </td>
@@ -207,6 +225,38 @@ export default function AdminProductsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('products_delete_confirm_title')}</DialogTitle>
+                <DialogDescription>{t('products_delete_confirm_message')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-medium">{deleteTarget.article}</span>
+                <Badge className={`${supplierColors[deleteTarget.supplier] || 'bg-gray-500 text-white'} border-0 text-xs`}>{deleteTarget.supplier}</Badge>
+              </div>
+              {deleteTarget.name && <p className="mt-1 text-muted-foreground truncate">{deleteTarget.name}</p>}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" onClick={() => deleteMutation.mutate(deleteTarget.id)} disabled={deleteMutation.isPending} className="gap-2">
+              {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

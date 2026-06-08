@@ -1,0 +1,3 @@
+{
+  "/(store)/[locale]/order-confirmed/page": "app/(store)/[locale]/order-confirmed/page.js"
+}

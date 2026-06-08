@@ -40,3 +40,17 @@ async def list_products(
         page=page,
         page_size=page_size,
     )
+
+
+@router.delete("/products/{product_id}")
+async def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    product = db.query(SupplierPrice).filter(SupplierPrice.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db.delete(product)
+    db.commit()
+    return {"ok": True}

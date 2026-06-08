@@ -1,0 +1,3 @@
+{
+  "/(admin)/[locale]/admin/catalog/page": "app/(admin)/[locale]/admin/catalog/page.js"
+}
