@@ -240,10 +240,13 @@ export default function AdminProductsPage() {
             </div>
           </DialogHeader>
           {deleteTarget && (
-            <div className="rounded-lg bg-muted p-3 text-sm">
+            <div className="rounded-lg bg-muted p-3 text-sm min-w-0">
               <div className="flex items-center justify-between">
-                <span className="font-mono font-medium">{deleteTarget.article}</span>
-                <Badge className={`${supplierColors[deleteTarget.supplier] || 'bg-gray-500 text-white'} border-0 text-xs`}>{deleteTarget.supplier}</Badge>
+                <span className="font-medium truncate min-w-0">
+                  <span className="font-semibold">{deleteTarget.brand}</span>{' '}
+                  <span className="font-mono">{deleteTarget.article}</span>
+                </span>
+                <Badge className={`${supplierColors[deleteTarget.supplier] || 'bg-gray-500 text-white'} border-0 text-xs shrink-0 ml-2`}>{deleteTarget.supplier}</Badge>
               </div>
               {deleteTarget.name && <p className="mt-1 text-muted-foreground truncate">{deleteTarget.name}</p>}
             </div>
