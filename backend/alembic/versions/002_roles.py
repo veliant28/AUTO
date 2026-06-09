@@ -93,7 +93,7 @@ def upgrade() -> None:
         {'id': 9, 'codename': 'catalog.view', 'description': 'Просмотр каталога', 'group_name': 'Catalog'},
         {'id': 10, 'codename': 'catalog.edit', 'description': 'Редактирование каталога', 'group_name': 'Catalog'},
         {'id': 11, 'codename': 'catalog.sync', 'description': 'Синхронизация каталога', 'group_name': 'Catalog'},
-        {'id': 12, 'codename': 'footer.edit', 'description': 'Редактирование футера', 'group_name': 'Content'},
+        {'id': 12, 'codename': 'footer.edit', 'description': 'Редактирование футера', 'group_name': 'Footer'},
         {'id': 13, 'codename': 'roles.view', 'description': 'Просмотр ролей', 'group_name': 'Roles'},
         {'id': 14, 'codename': 'roles.create', 'description': 'Создание ролей', 'group_name': 'Roles'},
         {'id': 15, 'codename': 'roles.edit', 'description': 'Редактирование ролей', 'group_name': 'Roles'},
