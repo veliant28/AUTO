@@ -8,16 +8,26 @@ import Providers from '@/components/Providers';
 import { use } from 'react';
 import type { Metadata } from 'next';
 
-export async function generateMetadata(params: any): Promise<Metadata> {
+export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = await params;
+  const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://backend:8080/api/v1';
+  let brandName = 'AutoParts';
+  try {
+    const res = await fetch(`${API}/settings`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.brand_name) brandName = data.brand_name;
+    }
+  } catch {}
+
   const meta: Record<string, any> = {
-    ru: { title: 'AutoParts — интернет-магазин автозапчастей', desc: 'Более 235 000 запчастей. Мгновенный поиск по каталогу TecDoc. Оригинальные детали и качественные аналоги.' },
-    en: { title: 'AutoParts — online auto parts store', desc: 'Over 235,000 parts. Instant search via TecDoc catalog. Original parts and quality alternatives.' },
-    ua: { title: 'AutoParts — інтернет-магазин автозапчастин', desc: 'Понад 235 000 запчастин. Миттєвий пошук за каталогом TecDoc. Оригінальні деталі та якісні аналоги.' },
+    ru: { title: `${brandName} — интернет-магазин автозапчастей`, desc: 'Более 235 000 запчастей. Мгновенный поиск по каталогу TecDoc. Оригинальные детали и качественные аналоги.' },
+    en: { title: `${brandName} — online auto parts store`, desc: 'Over 235,000 parts. Instant search via TecDoc catalog. Original parts and quality alternatives.' },
+    ua: { title: `${brandName} — інтернет-магазин автозапчастин`, desc: 'Понад 235 000 запчастин. Миттєвий пошук за каталогом TecDoc. Оригінальні деталі та якісні аналоги.' },
   };
   const m = meta[locale] || meta.ru;
   return {
-    title: { default: m.title, template: `%s | ${m.title.split('—')[0].trim()}` },
+    title: { default: m.title, template: `%s | ${brandName}` },
     description: m.desc,
     alternates: {
       languages: {
