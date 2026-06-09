@@ -3,8 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings, Save, Loader2, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Settings, Loader2, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/lib/toast';
@@ -42,6 +41,11 @@ export default function SettingsPage() {
     onError: () => toast.error(t('save_error')),
   });
 
+  React.useEffect(() => {
+    (window as any).__saveSettings = () => saveMutation.mutate();
+    return () => { delete (window as any).__saveSettings; };
+  }, [saveMutation.mutate]);
+
   return (
     <div className="p-6">
       <Card>
@@ -74,11 +78,6 @@ export default function SettingsPage() {
                   <span>{brandName || 'AutoParts'}</span>
                 </div>
               </div>
-
-              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="gap-2">
-                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {t('save') || t('save_footer')}
-              </Button>
             </>
           )}
         </CardContent>

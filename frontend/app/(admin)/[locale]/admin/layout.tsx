@@ -35,6 +35,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const ta = useTranslations('admin');
   const isTecDoc = pathname.includes('/admin/tecdoc');
   const isFooter = pathname.includes('/admin/footer');
+  const isSettings = pathname.includes('/admin/settings');
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
@@ -142,11 +143,14 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
-        {isFooter && (
+        {(isFooter || isSettings) && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__saveFooter?.()}>
+                <Button size="icon" onClick={() => {
+                  if (isFooter) (window as any).__saveFooter?.();
+                  if (isSettings) (window as any).__saveSettings?.();
+                }}>
                   <Save className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
