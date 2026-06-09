@@ -182,6 +182,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
   const t = useTranslations('admin');
   const tc = useTranslations('common');
+  const brandName = useBrandName();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -241,7 +242,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             <div className="bg-primary text-primary-foreground p-1 rounded">
               <LayoutDashboard className="w-5 h-5" />
             </div>
-            <span>{t('sidebar_title')}</span>
+            <span>{brandName}</span>
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />
