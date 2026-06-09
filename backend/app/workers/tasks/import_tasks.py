@@ -17,7 +17,37 @@ def _get_client(supplier: str, db) -> tuple:
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
         return None, None
+
+    now = datetime.utcnow()
     token = config.token
+    token_valid = token and config.token_expires_at and config.token_expires_at > now
+
+    if not token_valid:
+        if supplier.upper() == "GPL":
+            client = GPLAPIClient(config)
+            if token:
+                result = client.refresh(token)
+            else:
+                result = client.auth()
+        elif supplier.upper() == "UTR":
+            client = UTRAPIClient(config)
+            if config.refresh_token:
+                result = client.refresh(config.refresh_token)
+            else:
+                result = client.auth()
+        else:
+            return None, None
+
+        if result.success:
+            config.token = result.token
+            config.token_expires_at = result.expires_at
+            if result.refresh_token:
+                config.refresh_token = result.refresh_token
+            db.commit()
+            token = result.token
+        else:
+            return None, result.message
+
     if supplier.upper() == "GPL":
         return GPLAPIClient(config), token
     elif supplier.upper() == "UTR":
@@ -40,7 +70,7 @@ def process_price_import(self, import_id: int):
         client, token = _get_client(pi.supplier, db)
         if not client or not token:
             pi.status = "failed"
-            pi.error_message = "No valid token for supplier"
+            pi.error_message = str(token) if token else "No valid token for supplier"
             db.commit()
             return {"error": pi.error_message}
 
