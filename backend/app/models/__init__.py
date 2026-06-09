@@ -11,6 +11,7 @@ from .footer import FooterContent
 from .role import Role, Permission, RolePermission
 from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
 from .settings import SiteSettings
+from .imports import SupplierConfig, PriceImport, ImportSchedule
 
 __all__ = [
     "Base", 
@@ -27,4 +28,5 @@ __all__ = [
     "Role", "Permission", "RolePermission",
     "TecDocConfig", "TecDocRateLog", "SupplierPrice",
     "SiteSettings",
+    "SupplierConfig", "PriceImport", "ImportSchedule",
 ]

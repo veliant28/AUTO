@@ -32,7 +32,7 @@ function CoverageCell({ matched, total }: { matched: number; total: number }) {
   return (
     <div className="flex items-center gap-3 justify-center px-2">
       <Progress value={pct} className="h-2.5 flex-1 max-w-[140px]" indicatorClassName={barColor} />
-      <span className={`text-xs font-semibold w-8 text-right ${barColor.replace('bg-', 'text-')}`}>{pct}%</span>
+      <span className={`text-sm font-semibold w-8 text-right ${barColor.replace('bg-', 'text-')}`}>{pct}%</span>
     </div>
   );
 }
@@ -79,7 +79,7 @@ export default function AdminBrandsPage() {
         <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
           <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem>
+            <SelectItem value="25">25</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem><SelectItem value="500">500</SelectItem><SelectItem value="1000">1000</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -101,12 +101,12 @@ export default function AdminBrandsPage() {
               <tbody>
                 {data?.items?.map((item) => (
                   <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 font-semibold text-xs">{item.name}</td>
-                    <td className="p-3 text-center text-xs text-muted-foreground">{item.id}</td>
-                    <td className="p-3 text-center text-xs">{item.total}</td>
-                    <td className="p-3 text-center text-xs text-green-600">{item.matched}</td>
-                    <td className="p-3 text-center text-xs text-blue-600 font-semibold">{item.with_applicability}</td>
-                    <td className="p-3 text-center text-xs text-red-500">{item.unmatched}</td>
+                    <td className="p-3 font-semibold text-sm">{item.name}</td>
+                    <td className="p-3 text-center text-sm text-muted-foreground">{item.id}</td>
+                    <td className="p-3 text-center text-sm">{item.total}</td>
+                    <td className="p-3 text-center text-sm text-green-600">{item.matched}</td>
+                    <td className="p-3 text-center text-sm text-blue-600 font-semibold">{item.with_applicability}</td>
+                    <td className="p-3 text-center text-sm text-red-500">{item.unmatched}</td>
                     <td className="p-3"><CoverageCell matched={item.with_applicability} total={item.total} /></td>
                   </tr>
                 ))}

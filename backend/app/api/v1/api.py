@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, admin, footer, settings
+from app.api.v1.endpoints import admin_suppliers, admin_imports, admin_schedules
 
 api_router = APIRouter()
 
@@ -14,3 +15,6 @@ api_router.include_router(telegram.router, prefix="/telegram", tags=["Telegram"]
 api_router.include_router(footer.router, prefix="", tags=["Footer"])
 api_router.include_router(settings.router, prefix="", tags=["Settings"])
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
+api_router.include_router(admin_suppliers.router, prefix="/admin", tags=["Admin Suppliers"])
+api_router.include_router(admin_imports.router, prefix="/admin", tags=["Admin Imports"])
+api_router.include_router(admin_schedules.router, prefix="/admin", tags=["Admin Schedules"])

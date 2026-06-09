@@ -1,2 +1,19 @@
 # opencode config (contains API keys)
 opencode.json
+
+# dependencies
+node_modules
+__pycache__
+*.pyc
+.venv
+
+# build
+.next
+dist
+build
+*.egg-info
+
+# secrets
+.env
+.fernet_key
+backend/.fernet_key

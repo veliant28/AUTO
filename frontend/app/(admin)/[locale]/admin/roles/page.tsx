@@ -182,7 +182,7 @@ export default function AdminRolesPage() {
     columnHelper.accessor('name', {
       header: t('roles_name'),
       cell: (info) => (
-        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-xs`}>
+        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}>
           {t(info.getValue())}
         </Badge>
       ),
@@ -191,7 +191,7 @@ export default function AdminRolesPage() {
       header: t('roles_type'),
       size: 120,
       cell: (info) => info.getValue()
-        ? <Badge variant="outline" className="text-xs border-primary text-primary">{t('roles_system')}</Badge>
+        ? <Badge variant="outline" className="text-sm border-primary text-primary">{t('roles_system')}</Badge>
         : <span className="text-xs text-muted-foreground">{t('roles_custom')}</span>,
     }),
     columnHelper.accessor('description', {
@@ -385,7 +385,7 @@ export default function AdminRolesPage() {
             <div className="rounded-lg bg-muted p-3 text-sm min-w-0 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium truncate min-w-0">{deleteTarget.name}</span>
-                <Badge variant="outline" className="border-0 text-xs shrink-0">
+                <Badge variant="outline" className="border-0 text-sm shrink-0">
                   {deleteTarget.is_system ? t('roles_system') : t('roles_custom')}
                 </Badge>
               </div>

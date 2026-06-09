@@ -174,16 +174,16 @@ function ResetTimer({ exhausted }: { exhausted: boolean }) {
 
   if (exhausted) {
     return (
-      <Badge className="bg-red-500 text-white animate-pulse gap-1.5 hover:bg-red-500 border-0">
-        <Clock className="w-3 h-3" />
+      <Badge className="bg-red-500 text-white animate-pulse gap-1.5 hover:bg-red-500 border-0 text-sm font-mono min-w-[85px] justify-center">
+        <Clock className="w-3.5 h-3.5" />
         {pad(h)}:{pad(m)}:{pad(s)}
       </Badge>
     );
   }
 
   return (
-    <Badge className="bg-blue-500 text-white gap-1.5 hover:bg-blue-500 border-0">
-      <Clock className="w-3 h-3" />
+    <Badge className="bg-blue-500 text-white gap-1.5 hover:bg-blue-500 border-0 text-sm font-mono min-w-[85px] justify-center">
+      <Clock className="w-3.5 h-3.5" />
       00:00:00
     </Badge>
   );
@@ -549,9 +549,9 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                 {data?.items?.map((a) => (
                   <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="p-3"><input type="checkbox" className="cursor-pointer" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></td>
-                    <td className="p-3 font-mono text-xs">{a.article}</td>
-                    <td className="p-3 text-xs max-w-[200px] truncate">{a.name || '—'}</td>
-                    <td className="p-3 text-xs font-semibold">{a.brand || '—'}</td>
+                    <td className="p-3 font-mono text-sm">{a.article}</td>
+                    <td className="p-3 text-sm max-w-[200px] truncate">{a.name || '—'}</td>
+                    <td className="p-3 text-sm font-semibold">{a.brand || '—'}</td>
                     <td className="p-3">
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -567,8 +567,8 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                         <TooltipContent>{t('tecdoc_' + a.match_status) || a.match_status}</TooltipContent>
                       </Tooltip>
                     </td>
-                    <td className="p-3 text-center text-xs">{a.attempts}</td>
-                    <td className="p-3 text-xs text-muted-foreground">{a.last_attempt_at ? new Date(a.last_attempt_at).toLocaleString() : '—'}</td>
+                    <td className="p-3 text-center text-sm">{a.attempts}</td>
+                    <td className="p-3 text-sm text-muted-foreground">{a.last_attempt_at ? new Date(a.last_attempt_at + 'Z').toLocaleString() : '—'}</td>
                   </tr>
                 ))}
                 {(!data?.items || data.items.length === 0) && (
@@ -723,12 +723,12 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                   candidates.map((c, i) => (
                     <tr key={i} className={`border-b last:border-0 hover:bg-muted/30 cursor-pointer ${selectedCandidate?.brand === c.brand && selectedCandidate?.article === c.article ? 'bg-muted' : ''}`}
                       onClick={() => loadDetails(c)}>
-                      <td className="p-2 text-xs font-semibold">{c.brand}</td>
-                      <td className="p-2 font-mono text-xs">{c.article}</td>
+                      <td className="p-2 text-sm font-semibold">{c.brand}</td>
+                      <td className="p-2 font-mono text-sm">{c.article}</td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={2} className="p-6 text-center text-muted-foreground text-xs">{t('tecdoc_manual_hint')}</td></tr>
+                  <tr><td colSpan={2} className="p-6 text-center text-muted-foreground text-sm">{t('tecdoc_manual_hint')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -772,7 +772,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                   <p className="text-xs font-medium text-muted-foreground mb-1">{t('tecdoc_manual_images')}</p>
                   <div className="flex gap-1 flex-wrap">
                     {details.images.map((img: any, i: number) => (
-                      <Badge key={i} variant="outline" className="text-xs">{img.name}</Badge>
+                      <Badge key={i} variant="outline" className="text-sm">{img.name}</Badge>
                     ))}
                   </div>
                 </div>
@@ -783,7 +783,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('tecdoc_manual_crosses')} ({details.crosses.length})</p>
                    <div className="flex gap-1 flex-wrap max-h-24 overflow-y-auto">
                      {details.crosses.map((c: any, i: number) => (
-                       <Badge key={i} variant="secondary" className="text-xs">{c.oem || c.article}</Badge>
+                       <Badge key={i} variant="secondary" className="text-sm">{c.oem || c.article}</Badge>
                      ))}
                    </div>
                  </div>
@@ -817,7 +817,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                      </Select>
                    </div>
                    <div className="min-h-0 flex-1 overflow-y-auto border rounded-lg">
-                     <table className="w-full text-xs">
+                      <table className="w-full text-sm">
                        <thead>
                          <tr className="border-b bg-muted/50 sticky top-0">
                             <th className="text-left p-1.5 font-medium text-muted-foreground w-[150px]">Марка</th>
@@ -832,7 +832,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                              <td className="p-1.5 font-semibold">{v.brand || '—'}</td>
                              <td className="p-1.5 text-muted-foreground">{v.model || '—'}</td>
                              <td className="p-1.5">{v.mod || '—'}</td>
-                             <td className="p-1.5 text-muted-foreground text-xs">{v.years || '—'}</td>
+                             <td className="p-1.5 text-muted-foreground text-sm">{v.years || '—'}</td>
                            </tr>
                          ))}
                        </tbody>

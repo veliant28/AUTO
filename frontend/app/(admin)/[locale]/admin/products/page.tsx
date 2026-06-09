@@ -135,6 +135,8 @@ export default function AdminProductsPage() {
             <SelectItem value="25">25</SelectItem>
             <SelectItem value="50">50</SelectItem>
             <SelectItem value="100">100</SelectItem>
+            <SelectItem value="500">500</SelectItem>
+            <SelectItem value="1000">1000</SelectItem>
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
@@ -142,7 +144,7 @@ export default function AdminProductsPage() {
           <SelectContent><SelectItem value="all">{t('products_filter_all')}</SelectItem><SelectItem value="active">{t('products_active')}</SelectItem><SelectItem value="inactive">{t('products_inactive')}</SelectItem></SelectContent>
         </Select>
         <Select value={supplier} onValueChange={(v) => setSupplier(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[120px]"><SelectValue placeholder={t('products_supplier')} /></SelectTrigger>
+          <SelectTrigger className="w-[140px]"><SelectValue placeholder={t('products_supplier')} /></SelectTrigger>
           <SelectContent><SelectItem value="all">{t('products_filter_all')}</SelectItem><SelectItem value="UTR">UTR</SelectItem><SelectItem value="GPL">GPL</SelectItem></SelectContent>
         </Select>
       </div>
@@ -166,16 +168,16 @@ export default function AdminProductsPage() {
               <tbody>
                 {data?.items?.map((item: any) => (
                   <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 font-mono text-xs truncate">{item.sku || '—'}</td>
-                    <td className="p-3 font-mono text-xs">{item.article}</td>
-                    <td className="p-3 text-xs truncate">{item.name || '—'}</td>
-                    <td className="p-3 text-xs font-semibold truncate">{item.brand || '—'}</td>
+                    <td className="p-3 font-mono text-sm truncate">{item.sku || '—'}</td>
+                    <td className="p-3 font-mono text-sm">{item.article}</td>
+                    <td className="p-3 text-sm truncate">{item.name || '—'}</td>
+                    <td className="p-3 text-sm font-semibold truncate">{item.brand || '—'}</td>
                     <td className="p-3">
                       <div className="flex gap-1 flex-wrap">
                         {item.offers?.map((o: any) => (
-                          <Badge key={o.supplier_name} className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-xs`}>{o.supplier_name}</Badge>
+                          <Badge key={o.supplier_name} className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}>{o.supplier_name}</Badge>
                         ))}
-                        {(!item.offers || item.offers.length === 0) && <span className="text-xs text-muted-foreground">—</span>}
+                        {(!item.offers || item.offers.length === 0) && <span className="text-sm text-muted-foreground">—</span>}
                       </div>
                     </td>
                     <td className="p-3 text-center">
@@ -190,11 +192,11 @@ export default function AdminProductsPage() {
                         <TooltipContent>{item.total_stock > 0 ? t('products_active') : t('products_inactive')}</TooltipContent>
                       </Tooltip>
                     </td>
-                    <td className="p-3 text-right text-xs">
+                    <td className="p-3 text-right text-sm">
                       {item.min_price != null ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge className="bg-blue-500 text-white border-0 text-xs font-semibold cursor-pointer">
+                            <Badge className="bg-blue-500 text-white border-0 text-sm font-semibold cursor-pointer">
                               {Number(item.min_price).toFixed(2)} UAH
                             </Badge>
                           </TooltipTrigger>
@@ -206,8 +208,8 @@ export default function AdminProductsPage() {
                                     <span className="font-semibold">{o.supplier_name}:</span>
                                     <span>{Number(o.price).toFixed(2)} {o.currency || 'UAH'}</span>
                                   </div>
-                                  <div className="text-[10px] leading-tight">
-                                    {o.updated_at ? new Date(o.updated_at).toLocaleString() : '—'}
+                                    <div className="leading-tight">
+                                    {o.updated_at ? new Date(o.updated_at + 'Z').toLocaleString() : '—'}
                                   </div>
                                 </div>
                               ))}
@@ -288,7 +290,7 @@ export default function AdminProductsPage() {
                 </span>
                 <div className="flex gap-1 shrink-0 ml-2">
                   {deleteTarget.offers?.map((o: any) => (
-                    <Badge key={o.supplier_name} className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-xs`}>{o.supplier_name}</Badge>
+                    <Badge key={o.supplier_name} className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}>{o.supplier_name}</Badge>
                   ))}
                 </div>
               </div>

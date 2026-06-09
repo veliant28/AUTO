@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/products", response_model=AdminProductListResponse)
 async def list_products(
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=1000),
     supplier: str = Query("", max_length=50),
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),

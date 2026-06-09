@@ -11,7 +11,7 @@ router = APIRouter()
 def _get_settings(db: Session) -> SiteSettings:
     s = db.query(SiteSettings).first()
     if not s:
-        s = SiteSettings(brand_name="AutoParts")
+        s = SiteSettings(brand_name="AutoParts", timezone="Europe/Kiev")
         db.add(s)
         db.commit()
         db.refresh(s)
@@ -20,7 +20,7 @@ def _get_settings(db: Session) -> SiteSettings:
 @router.get("/settings", response_model=SettingsResponse)
 async def get_public_settings(db: Session = Depends(get_db)):
     s = _get_settings(db)
-    return SettingsResponse(brand_name=s.brand_name)
+    return SettingsResponse(brand_name=s.brand_name, timezone=s.timezone)
 
 @router.get("/admin/settings", response_model=SettingsResponse)
 async def get_admin_settings(
@@ -28,7 +28,7 @@ async def get_admin_settings(
     db: Session = Depends(get_db),
 ):
     s = _get_settings(db)
-    return SettingsResponse(brand_name=s.brand_name)
+    return SettingsResponse(brand_name=s.brand_name, timezone=s.timezone)
 
 @router.put("/admin/settings", response_model=SettingsResponse)
 async def update_settings(
@@ -39,6 +39,8 @@ async def update_settings(
     s = _get_settings(db)
     if body.brand_name is not None:
         s.brand_name = body.brand_name
+    if body.timezone is not None:
+        s.timezone = body.timezone
     db.commit()
     db.refresh(s)
-    return SettingsResponse(brand_name=s.brand_name)
+    return SettingsResponse(brand_name=s.brand_name, timezone=s.timezone)

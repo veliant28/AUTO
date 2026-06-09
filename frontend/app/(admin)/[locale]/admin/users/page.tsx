@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
     columnHelper.accessor('role', {
       header: t('role_label'),
       cell: (info) => (
-        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-xs`}>
+        <Badge className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}>
           {t(info.getValue())}
         </Badge>
       ),
@@ -373,7 +373,7 @@ export default function AdminUsersPage() {
             <div className="rounded-lg bg-muted p-3 text-sm min-w-0 space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium truncate min-w-0">{deleteTarget.email}</span>
-                <Badge className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-xs shrink-0`}>{t(deleteTarget.role)}</Badge>
+                <Badge className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}>{t(deleteTarget.role)}</Badge>
               </div>
               <p className="text-muted-foreground truncate">{deleteTarget.full_name || '—'}</p>
             </div>

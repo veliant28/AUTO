@@ -229,13 +229,13 @@ export default function AdminCatalogPage() {
               <tbody>
                 {itemsData?.items?.map((item: any) => (
                   <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 text-xs whitespace-nowrap">{item.year_from != null && item.year_to != null ? `${item.year_from}–${item.year_to}` : item.year_from ?? item.constructioninterval ?? '—'}</td>
-                    <td className="p-3 text-xs font-semibold">{item.brand}</td>
-                    <td className="p-3 text-xs truncate">{item.model}</td>
-                    <td className="p-3 text-xs truncate">{item.modification}</td>
-                    {hasEngine && <td className="p-3 text-center text-xs">{item.capacity || '—'}</td>}
-                    {hasEngine && <td className="p-3 text-center text-xs font-mono">{item.engine || '—'}</td>}
-                    {hasEngine && <td className="p-3 text-center text-xs whitespace-nowrap">{item.power || '—'}</td>}
+                    <td className="p-3 text-sm whitespace-nowrap">{item.year_from != null && item.year_to != null ? `${item.year_from}–${item.year_to}` : item.year_from ?? item.constructioninterval ?? '—'}</td>
+                    <td className="p-3 text-sm font-semibold">{item.brand}</td>
+                    <td className="p-3 text-sm truncate">{item.model}</td>
+                    <td className="p-3 text-sm truncate">{item.modification}</td>
+                    {hasEngine && <td className="p-3 text-center text-sm">{item.capacity || '—'}</td>}
+                    {hasEngine && <td className="p-3 text-center text-sm font-mono">{item.engine || '—'}</td>}
+                    {hasEngine && <td className="p-3 text-center text-sm whitespace-nowrap">{item.power || '—'}</td>}
                   </tr>
                 ))}
                 {(!itemsData?.items || itemsData.items.length === 0) && (

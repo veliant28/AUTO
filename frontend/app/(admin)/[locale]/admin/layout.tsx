@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -37,6 +37,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isTecDoc = pathname.includes('/admin/tecdoc');
   const isFooter = pathname.includes('/admin/footer');
   const isSettings = pathname.includes('/admin/settings');
+  const isImport = pathname.includes('/admin/import');
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
@@ -48,6 +49,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
+    '/admin/import': { icon: FileDown, titleKey: 'import_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
   };
 
@@ -144,6 +146,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
+        {pathname.includes('/admin/import') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__openImportExport?.()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('import_request')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         {(isFooter || isSettings) && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
@@ -233,6 +247,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
+    { href: '/admin/import', icon: FileDown, label: t('import_title'), roles: ['admin'] },
     { href: '/admin/settings', icon: Settings, label: t('settings_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
@@ -255,7 +270,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-1">
             {userRole && (
-              <Badge className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-xs`}>
+              <Badge className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-sm`}>
                 {t(userRole) || userRole}
               </Badge>
             )}

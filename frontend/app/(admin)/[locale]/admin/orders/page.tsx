@@ -102,7 +102,7 @@ export default function AdminOrdersPage() {
     }),
     columnHelper.accessor('created_at', {
       header: t('order_date'),
-      cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+      cell: (info) => new Date(info.getValue() + 'Z').toLocaleDateString(),
     }),
     columnHelper.display({
       id: 'actions',

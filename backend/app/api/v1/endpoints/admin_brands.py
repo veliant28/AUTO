@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/brands", response_model=BrandListResponse)
 async def list_brands(
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=1000),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),

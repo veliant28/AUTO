@@ -6,3 +6,4 @@ class SiteSettings(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     brand_name = Column(String, nullable=False, default="AutoParts")
+    timezone = Column(String, nullable=False, default="Europe/Kiev")
