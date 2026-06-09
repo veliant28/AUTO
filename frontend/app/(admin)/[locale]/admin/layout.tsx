@@ -190,6 +190,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     b2b: 'bg-green-500 text-white',
     retail: 'bg-gray-500 text-white',
   };
+  const userRole = user?.role || '';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -244,23 +245,21 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex items-center justify-between h-16 px-4 border-b">
+        <div className="flex items-center justify-between h-16 px-4 border-b relative">
           <Link href="/admin" className="font-bold text-lg tracking-tight flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-1 rounded">
               <LayoutDashboard className="w-5 h-5" />
             </div>
             <span>{brandName}</span>
           </Link>
-          <div className="flex items-center gap-1">
-            {userRole && (
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${roleBadgeColors[userRole] || 'bg-gray-500 text-white'}`}>
-                {t(userRole) || userRole}
-              </span>
-            )}
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+          {userRole && (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full absolute -top-2 right-2 shadow-sm ${roleBadgeColors[userRole] || 'bg-gray-500 text-white'}`}>
+              {t(userRole) || userRole}
+            </span>
+          )}
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
         <nav className="flex flex-col gap-1 p-4">
