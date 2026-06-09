@@ -14,12 +14,13 @@ class PartSchema(BaseModel):
     article: str
     name: str
     brand_id: int
+    brand: Optional[str] = None
     tecdoc_id: Optional[int]
     category_id: Optional[int]
     price: Optional[float] = None
     quantity: Optional[int] = None
     supplier_name: Optional[str] = None
-    currency: Optional[str] = 'RUB'
+    currency: Optional[str] = 'UAH'
 
     class Config:
         from_attributes = True

@@ -1,3 +1,4 @@
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from app.services.tecdoc_client import tecdoc_client
@@ -134,14 +135,13 @@ class SyncService:
                 "tecdoc_id": item["id"]
             })
             part_stmt = part_stmt.on_conflict_do_update(
-                index_elements=["tecdoc_id"],
-                set_={"name": part_stmt.excluded.name}
+                index_elements=["article", sa.text("COALESCE(brand, '')")],
+                set_={"name": part_stmt.excluded.name, "tecdoc_id": part_stmt.excluded.tecdoc_id}
             )
             db.execute(part_stmt)
-            db.flush() # Get the part ID
-            
-            # Get part ID for applicability
-            part_id = db.query(Part).filter(Part.tecdoc_id == item["id"]).scalar()
+            db.flush()
+
+            part_id = db.query(Part).filter(Part.article == item["article"]).scalar()
             
             # 2. Upsert Applicability
             local_mod = db.query(VehicleModification).filter(VehicleModification.tecdoc_id == mod_id).first()

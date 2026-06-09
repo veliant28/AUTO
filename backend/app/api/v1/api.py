@@ -1,9 +1,9 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import catalog_local, users, cart, auth, favorites, orders, notifications, telegram, admin, footer
+from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, admin, footer
 
 api_router = APIRouter()
 
-api_router.include_router(catalog_local.router, prefix="/catalog", tags=["Catalog"])
+api_router.include_router(catalog.router, prefix="/catalog", tags=["Catalog"])
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(cart.router, prefix="/cart", tags=["Cart"])
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])

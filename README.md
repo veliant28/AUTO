@@ -23,7 +23,7 @@ Full-stack auto parts e-commerce platform with TecDoc catalog integration, admin
 - **Garage** — Save and manage vehicles for quick parts lookup
 - **Favorites** — Save favorite parts (requires auth)
 - **Orders** — Order history with status tracking
-- **Admin Panel** — Dashboard (ECharts: orders by day, revenue by day, orders by status, parts by category), Users CRUD (TanStack Table), Orders management with inline status update
+- **Admin Panel** — Dashboard (ECharts: orders by day, revenue by day, orders by status, parts by category), Users CRUD (TanStack Table), Orders management with inline status update, **Products catalog** (view/filter/delete parts by supplier, status, search; multi-supplier price tooltip with update time; stock regions Snake)
 - **RBAC** — Roles: `admin`, `manager`, `operator` with granular access control
 - **Telegram Notifications** — Bot integration for order status changes
 - **Multi-language** — Russian, English, Ukrainian (next-intl v4)
@@ -124,8 +124,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
 | GET | `/api/v1/catalog/makes` | Vehicle brands |
 | GET | `/api/v1/catalog/models/{make_id}` | Vehicle models |
 | GET | `/api/v1/catalog/modifications/{model_id}` | Modifications |
-| GET | `/api/v1/catalog/search?q=` | Search parts |
-| GET | `/api/v1/catalog/parts/{article}` | Part detail |
+| GET | `/api/v1/catalog/search?q=&brand=` | Search parts by article/brand |
+| GET | `/api/v1/catalog/parts` | Part detail (by article+brand query params) |
 | GET | `/api/v1/cart` | Get cart |
 | POST | `/api/v1/cart/sync` | Sync cart |
 | GET | `/api/v1/orders` | User orders |
@@ -135,12 +135,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
 | GET | `/api/v1/admin/orders` | Admin: orders list |
 | PUT | `/api/v1/admin/orders/{id}/status` | Admin: update status |
 | GET | `/api/v1/admin/dashboard` | Admin: dashboard stats |
+| GET | `/api/v1/admin/products` | Admin: products list (filter by supplier, status, search) |
+| DELETE | `/api/v1/admin/products/{id}` | Admin: delete product + offers |
+| POST | `/api/v1/admin/products/generate-skus` | Admin: generate SKUs for parts without one |
 
 ## RBAC Roles
 
 | Role | Permissions |
 |------|------------|
-| **admin** | Full access — dashboard, users CRUD, orders management |
+| **admin** | Full access — dashboard, users CRUD, orders management, products catalog CRUD |
 | **manager** | Dashboard, orders management, view users |
 | **operator** | Dashboard, view orders, update order status |
 

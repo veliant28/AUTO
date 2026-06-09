@@ -47,3 +47,4 @@ class SupplierPrice(Base):
     match_status = Column(String, default="pending", nullable=False)
     attempts = Column(Integer, default=0, nullable=False)
     last_attempt_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=func.now())

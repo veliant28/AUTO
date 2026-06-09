@@ -72,6 +72,41 @@ class SupplierPriceListResponse(BaseModel):
     page_size: int
 
 
+class AdminOfferItem(BaseModel):
+    supplier_name: str
+    price: float
+    currency: str
+    quantity: int
+    stock_regions: Optional[dict] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AdminProductItem(BaseModel):
+    id: int
+    article: str
+    brand: Optional[str] = None
+    name: str
+    sku: Optional[str] = None
+    offers: List[AdminOfferItem] = []
+    min_price: Optional[float] = None
+    total_stock: int = 0
+    best_supplier: Optional[str] = None
+    best_updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AdminProductListResponse(BaseModel):
+    items: List[AdminProductItem]
+    total: int
+    page: int
+    page_size: int
+
+
 class BatchStartRequest(BaseModel):
     size: int = 25
 
