@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -183,6 +183,13 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const t = useTranslations('admin');
   const tc = useTranslations('common');
   const brandName = useBrandName();
+  const roleBadgeColors: Record<string, string> = {
+    admin: 'bg-red-500 text-white',
+    manager: 'bg-blue-500 text-white',
+    operator: 'bg-orange-500 text-white',
+    b2b: 'bg-green-500 text-white',
+    retail: 'bg-gray-500 text-white',
+  };
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -244,9 +251,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             </div>
             <span>{brandName}</span>
           </Link>
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {userRole && (
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${roleBadgeColors[userRole] || 'bg-gray-500 text-white'}`}>
+                {t(userRole) || userRole}
+              </span>
+            )}
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <nav className="flex flex-col gap-1 p-4">
