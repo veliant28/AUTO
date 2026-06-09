@@ -18,40 +18,46 @@ def _get_client(supplier: str, db) -> tuple:
     if not config:
         return None, None
 
-    if supplier.upper() == "GPL":
-        client = GPLAPIClient(config)
-        refresh_ok = False
-    elif supplier.upper() == "UTR":
-        client = UTRAPIClient(config)
-        refresh_ok = False
-    else:
-        return None, None
-
     now = datetime.utcnow()
-    token_valid = config.token and config.token_expires_at and config.token_expires_at > now
+    token = config.token
+    token_valid = token and config.token_expires_at and config.token_expires_at > now
 
     if not token_valid:
+        if supplier.upper() == "GPL":
+            client = GPLAPIClient(config)
+        elif supplier.upper() == "UTR":
+            client = UTRAPIClient(config)
+        else:
+            return None, None
+
         result = None
 
-        if config.token:
-            if supplier.upper() == "GPL":
-                result = GPLAPIClient(config).refresh(config.token)
-            elif supplier.upper() == "UTR" and config.refresh_token:
-                result = UTRAPIClient(config).refresh(config.refresh_token)
+        # 1. Пробуем рефреш
+        if supplier.upper() == "GPL" and token:
+            result = client.refresh(token)
+        elif supplier.upper() == "UTR" and config.refresh_token:
+            result = client.refresh(config.refresh_token)
 
+        # 2. Рефреш не вышел или не пробовали — полная авторизация
         if not result or not result.success:
             result = client.auth()
 
-        if not result or not result.success:
-            return None, (result.message if result else "Auth failed")
+        # 3. Всё упало — ошибка
+        if not result.success:
+            return None, result.message or "Auth failed"
 
         config.token = result.token
         config.token_expires_at = result.expires_at
         if result.refresh_token:
             config.refresh_token = result.refresh_token
         db.commit()
+        token = result.token
 
-    return client, config.token
+    if supplier.upper() == "GPL":
+        return GPLAPIClient(config), token
+    elif supplier.upper() == "UTR":
+        return UTRAPIClient(config), token
+    return None, None
 
 
 @celery_app.task(bind=True, name="process_price_import")
