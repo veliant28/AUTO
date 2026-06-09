@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://backend:8080/api/v1';
   let brandName = 'AutoParts';
   try {
-    const res = await fetch(`${API}/settings`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${API}/settings`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
     if (res.ok) {
       const data = await res.json();
       if (data?.brand_name) brandName = data.brand_name;

@@ -1,9 +1,27 @@
+import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 import { Toaster } from 'sonner';
 import { use } from 'react';
 import Providers from '@/components/Providers';
 import '@/app/globals.css';
+
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  const { locale } = await params;
+  const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000/api/v1';
+  let brandName = 'AutoParts';
+  try {
+    const res = await fetch(`${API}/settings`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.brand_name) brandName = data.brand_name;
+    }
+  } catch {}
+
+  return {
+    title: { default: `${brandName} — Admin Panel`, template: `%s | ${brandName}` },
+  };
+}
 
 export default function AdminRootLayout(props: any) {
   const { children, messages } = props;
