@@ -14,6 +14,7 @@ import api from '@/lib/api';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { AdminLocaleProvider, useAdminLocale } from './components/AdminLocaleContext';
@@ -245,21 +246,23 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex items-center justify-between h-16 px-4 border-b relative">
+        <div className="flex items-center justify-between h-16 px-4 border-b">
           <Link href="/admin" className="font-bold text-lg tracking-tight flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-1 rounded">
               <LayoutDashboard className="w-5 h-5" />
             </div>
             <span>{brandName}</span>
           </Link>
-          {userRole && (
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full absolute -top-2 right-2 shadow-sm ${roleBadgeColors[userRole] || 'bg-gray-500 text-white'}`}>
-              {t(userRole) || userRole}
-            </span>
-          )}
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {userRole && (
+              <Badge className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-xs`}>
+                {t(userRole) || userRole}
+              </Badge>
+            )}
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <nav className="flex flex-col gap-1 p-4">
