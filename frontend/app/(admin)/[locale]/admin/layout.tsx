@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { AdminLocaleProvider, useAdminLocale } from './components/AdminLocaleContext';
+import { useBrandName } from '@/hooks/useBrandName';
 
 const LOCALES = ['ru', 'en', 'ua'];
 
@@ -44,12 +45,14 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/users': { icon: Users, titleKey: 'users_title' },
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
+    '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
   };
 
   const pageMetaEntries = Object.entries(pageMeta).sort((a, b) => b[0].length - a[0].length);
   const currentMeta = pageMetaEntries.find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || pageMetaEntries.find(([route]) => pathname.includes(route));
   const meta = currentMeta?.[1];
+  const brandName = useBrandName();
 
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
@@ -155,7 +158,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="bg-primary text-primary-foreground p-1 rounded">
             <Package className="w-5 h-5" />
           </div>
-          <span className="hidden sm:inline">Auto<span className="text-primary">Parts</span></span>
+          <span className="hidden sm:inline">{brandName}</span>
         </Link>
         <div className="border-l pl-2 flex items-center gap-1">
           <LanguageSwitcher />
@@ -216,6 +219,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
     { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
+    { href: '/admin/settings', icon: Settings, label: t('settings_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];
 

@@ -376,7 +376,11 @@
     "catalog_engine": "Двигун",
     "catalog_power": "Потужність",
     "catalog_search": "Пошук по каталогу...",
-    "catalog_empty": "Автомобілі не знайдено"
+    "catalog_empty": "Автомобілі не знайдено",
+    "settings_title": "Налаштування",
+    "settings_brand_name": "Назва магазину",
+    "settings_saved": "Налаштування збережено",
+    "settings_logo_preview": "Попередній перегляд"
   },
   "catalog": {
     "title": "Каталог",

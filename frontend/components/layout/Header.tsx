@@ -23,6 +23,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { CART_MAX_DISPLAY } from '@/lib/constants';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
+import { useBrandName } from '@/hooks/useBrandName';
 
 export default function Header() {
   const pathname = usePathname();
@@ -33,6 +34,8 @@ export default function Header() {
   const t = useTranslations('header');
   const tc = useTranslations('common');
   const ta = useTranslations('admin');
+
+  const brandName = useBrandName();
 
   const navItems = [
     { name: tc('search'), href: '/catalog/search', icon: Search },
@@ -50,7 +53,7 @@ export default function Header() {
             <div className="bg-primary text-primary-foreground p-1 rounded">
               <Package className="w-6 h-6" />
             </div>
-            <span className="hidden sm:inline">Auto<span className="text-primary">Parts</span></span>
+            <span className="hidden sm:inline">{brandName}</span>
           </Link>
 
           <div className="flex items-center gap-1 sm:gap-2">

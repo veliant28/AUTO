@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useBrandName } from '@/hooks/useBrandName';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -25,6 +26,7 @@ export default function Footer() {
     refetchOnMount: 'always',
   });
 
+  const brandName = useBrandName();
   const hasAdminAccess = !!(user?.role && ['admin', 'manager', 'operator'].includes(user.role));
 
   const ft = (key: string) => f?.[key] || t(key);
@@ -38,7 +40,7 @@ export default function Footer() {
               <div className="bg-primary text-primary-foreground p-1 rounded">
                 <Package className="w-6 h-6" />
               </div>
-              <span>Auto<span className="text-primary">Parts</span></span>
+              <span>{brandName}</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
               {ft('description')}

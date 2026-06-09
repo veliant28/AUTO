@@ -376,7 +376,11 @@
     "catalog_engine": "Engine",
     "catalog_power": "Power",
     "catalog_search": "Search catalog...",
-    "catalog_empty": "No vehicles found"
+    "catalog_empty": "No vehicles found",
+    "settings_title": "Settings",
+    "settings_brand_name": "Store Name",
+    "settings_saved": "Settings saved",
+    "settings_logo_preview": "Preview"
   },
   "catalog": {
     "title": "Catalog",

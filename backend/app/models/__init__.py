@@ -10,6 +10,7 @@ from .orders import Order, OrderItem, OrderStatus
 from .footer import FooterContent
 from .role import Role, Permission, RolePermission
 from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
+from .settings import SiteSettings
 
 __all__ = [
     "Base", 
@@ -25,4 +26,5 @@ __all__ = [
     "FooterContent",
     "Role", "Permission", "RolePermission",
     "TecDocConfig", "TecDocRateLog", "SupplierPrice",
+    "SiteSettings",
 ]

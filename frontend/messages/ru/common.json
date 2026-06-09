@@ -376,7 +376,11 @@
     "tecdoc_unmatched": "Не найден",
     "tecdoc_not_found": "Не опознан",
     "tecdoc_pending": "Ожидает",
-    "loading": "Загрузка..."
+    "loading": "Загрузка...",
+    "settings_title": "Настройки",
+    "settings_brand_name": "Название магазина",
+    "settings_saved": "Настройки сохранены",
+    "settings_logo_preview": "Предпросмотр"
   },
   "catalog": {
     "title": "Каталог",
