@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -60,6 +61,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const currentMeta = pageMetaEntries.find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || pageMetaEntries.find(([route]) => pathname.includes(route));
   const meta = currentMeta?.[1];
   const brandName = useBrandName();
+  const [pricingTaskStatus, setPricingTaskStatus] = useState<string | null>(null);
+  useEffect(() => {
+    const id = setInterval(() => setPricingTaskStatus((window as any).__pricingTaskStatus || null), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
@@ -192,8 +198,17 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="outline" onClick={() => (window as any).__applyPricing?.()}>
-                  <Play className="w-4 h-4" />
+                <Button
+                  size="icon"
+                  className="bg-green-500 text-white hover:bg-green-600 disabled:opacity-60"
+                  disabled={['PENDING', 'PROGRESS'].includes(pricingTaskStatus || '')}
+                  onClick={() => (window as any).__applyPricing?.()}
+                >
+                  {['PENDING', 'PROGRESS'].includes(pricingTaskStatus || '') ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('apply')}</TooltipContent>

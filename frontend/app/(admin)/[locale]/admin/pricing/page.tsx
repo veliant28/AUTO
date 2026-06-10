@@ -9,7 +9,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus } from 'lucide-react';
+import { Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus, LineChart, FolderTree, SlidersHorizontal, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -158,15 +158,17 @@ export default function PricingPage() {
     onError: () => toast.error(t('pricing_apply_error')),
   });
 
-  // Expose actions to TopBar — must be AFTER useMutation definitions
+  // Expose actions + task status to TopBar
   useEffect(() => {
     (window as any).__applyPricing = () => applyMargins.mutate();
     (window as any).__savePricing = () => saveAll.mutate();
+    (window as any).__pricingTaskStatus = taskStatus;
     return () => {
       delete (window as any).__applyPricing;
       delete (window as any).__savePricing;
+      delete (window as any).__pricingTaskStatus;
     };
-  }, [applyMargins.mutate, saveAll.mutate]);
+  }, [applyMargins.mutate, saveAll.mutate, taskStatus]);
 
   const chartData = history || [];
   const chartOption = {
@@ -233,17 +235,20 @@ export default function PricingPage() {
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
-              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: (prev[catId] || 0) - 1 }))}
+              className="h-8 w-8 rounded-full"
+              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: Math.max(0, (prev[catId] || 0) - 1) }))}
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-4 h-4" />
             </Button>
             <Input
               type="number"
-              className="w-20 h-8 text-sm text-center"
+              min={0}
+              max={100}
+              className="w-20 h-9 text-sm text-center"
               value={val ?? ''}
               onChange={(e) => {
-                const v = e.target.value === '' ? null : Number(e.target.value);
+                let v = e.target.value === '' ? null : Number(e.target.value);
+                if (v !== null) v = Math.min(100, Math.max(0, v));
                 setCategoryMargins((prev) => ({ ...prev, [catId]: v }));
               }}
               placeholder="—"
@@ -251,10 +256,10 @@ export default function PricingPage() {
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
-              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: (prev[catId] || 0) + 1 }))}
+              className="h-8 w-8 rounded-full"
+              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: Math.min(100, (prev[catId] || 0) + 1) }))}
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         );
@@ -298,7 +303,10 @@ export default function PricingPage() {
       {/* Chart */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">{t('pricing_history')}</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <LineChart className="w-5 h-5 text-primary" />
+            {t('pricing_history')}
+          </CardTitle>
           <Select
             value={String(chartType)}
             onValueChange={(v) => setChartType(v === 'general' ? 'general' : Number(v))}
@@ -324,32 +332,54 @@ export default function PricingPage() {
       {/* Categories Table with General Margin inline */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <CardTitle className="text-lg">{t('pricing_categories')}</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FolderTree className="w-5 h-5 text-primary" />
+            {t('pricing_categories')}
+          </CardTitle>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">{t('pricing_general')}:</span>
+            <div className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+              <SlidersHorizontal className="w-5 h-5 text-primary" />
+              {t('pricing_general')}
+            </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
-              onClick={() => setGeneralMargin((v) => v - 1)}
+              className="h-9 w-9 rounded-full"
+              onClick={() => setGeneralMargin((v) => Math.max(0, v - 1))}
             >
-              <Minus className="w-3.5 h-3.5" />
+              <Minus className="w-4 h-4" />
             </Button>
-            <Input
-              type="number"
-              className="w-20 h-8 text-sm text-center"
-              value={generalMargin}
-              onChange={(e) => setGeneralMargin(Number(e.target.value))}
-            />
+            <div className="flex items-center gap-0.5">
+              {(() => {
+                const marginStr = String(Math.min(100, Math.max(0, generalMargin))).padStart(3, '0');
+                const digits = marginStr.split('');
+                return digits.map((d, i) => (
+                  <Input
+                    key={i}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={d}
+                    className="w-10 h-12 text-center text-xl font-mono p-0 rounded-lg border-2 focus:border-primary"
+                    onChange={(e) => {
+                      const newDigits = [...digits];
+                      newDigits[i] = e.target.value.slice(-1).replace(/\D/, '') || '0';
+                      const num = Math.min(100, Math.max(0, Number(newDigits.join(''))));
+                      setGeneralMargin(num);
+                    }}
+                  />
+                ));
+              })()}
+            </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-7 w-7"
-              onClick={() => setGeneralMargin((v) => v + 1)}
+              className="h-9 w-9 rounded-full"
+              onClick={() => setGeneralMargin((v) => Math.min(100, v + 1))}
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
             </Button>
-            <span className="text-muted-foreground">%</span>
+            <span className="text-muted-foreground text-sm">%</span>
           </div>
         </CardHeader>
         <CardContent>
