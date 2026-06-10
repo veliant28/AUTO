@@ -54,6 +54,7 @@ export default function PricingPage() {
   const [otpDigits, setOtpDigits] = useState<string[]>(['0', '0', '0']);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const [categoryMargins, setCategoryMargins] = useState<Record<number, number | null>>({});
+  const [categoryOtp, setCategoryOtp] = useState<Record<number, string[]>>({});
   const [taskStatus, setTaskStatus] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'general' | number>('general');
@@ -103,10 +104,14 @@ export default function PricingPage() {
   useEffect(() => {
     if (categoryRules) {
       const map: Record<number, number | null> = {};
+      const otpMap: Record<number, string[]> = {};
       categoryRules.forEach((c) => {
         map[c.category_id] = c.margin_percent ?? null;
+        const num = Math.min(100, Math.max(0, c.margin_percent ?? 0));
+        otpMap[c.category_id] = String(num).padStart(3, '0').split('');
       });
       setCategoryMargins(map);
+      setCategoryOtp(otpMap);
     }
   }, [categoryRules]);
 
@@ -236,38 +241,70 @@ export default function PricingPage() {
       header: `${t('pricing_margin')} %`,
       cell: (info) => {
         const catId = info.row.original.category_id;
-        const val = categoryMargins[catId] ?? '';
+        const digits = categoryOtp[catId] || ['0', '0', '0'];
+        const updateVal = (newDigits: string[]) => {
+          setCategoryOtp((prev) => ({ ...prev, [catId]: newDigits }));
+          const num = Math.min(100, Math.max(0, Number(newDigits.join(''))));
+          setCategoryMargins((prev) => ({ ...prev, [catId]: num }));
+        };
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-full"
-              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: Math.max(0, (prev[catId] || 0) - 1) }))}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              className="w-20 h-9 text-sm text-center"
-              value={val ?? ''}
-              onChange={(e) => {
-                let v = e.target.value === '' ? null : Number(e.target.value);
-                if (v !== null) v = Math.min(100, Math.max(0, v));
-                setCategoryMargins((prev) => ({ ...prev, [catId]: v }));
+              className="h-7 w-7 rounded-full"
+              onClick={() => {
+                const current = categoryMargins[catId] || 0;
+                const newVal = Math.max(0, current - 1);
+                updateVal(String(newVal).padStart(3, '0').split(''));
               }}
-              placeholder="—"
-            />
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </Button>
+            <div className="flex items-center gap-0.5">
+              {digits.map((digit, i) => (
+                <Input
+                  key={i}
+                  type="text"
+                  inputMode="numeric"
+                  value={digit}
+                  className="w-7 h-8 text-center text-xs font-mono p-0 rounded-md border-2 focus:border-primary"
+                  onFocus={(e) => e.target.select()}
+                  onBeforeInput={(e) => {
+                    const char = (e as any).data;
+                    if (char && /\d/.test(char)) {
+                      e.preventDefault();
+                      const next = [...digits];
+                      next[i] = char;
+                      updateVal(next);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace') {
+                      e.preventDefault();
+                      const next = [...digits];
+                      next[i] = '0';
+                      setCategoryOtp((prev) => ({ ...prev, [catId]: next }));
+                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
+                      setCategoryMargins((prev) => ({ ...prev, [catId]: num }));
+                    }
+                  }}
+                />
+              ))}
+            </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-full"
-              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: Math.min(100, (prev[catId] || 0) + 1) }))}
+              className="h-7 w-7 rounded-full"
+              onClick={() => {
+                const current = categoryMargins[catId] || 0;
+                const newVal = Math.min(100, current + 1);
+                updateVal(String(newVal).padStart(3, '0').split(''));
+              }}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
             </Button>
+            <span className="text-base font-semibold text-foreground">%</span>
           </div>
         );
       },
