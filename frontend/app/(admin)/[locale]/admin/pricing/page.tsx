@@ -125,36 +125,6 @@ export default function PricingPage() {
     return () => clearInterval(interval);
   }, [taskId]);
 
-  // Expose actions to TopBar
-  useEffect(() => {
-    (window as any).__applyPricing = () => applyMargins.mutate();
-    (window as any).__savePricing = () => saveAll.mutate();
-    return () => {
-      delete (window as any).__applyPricing;
-      delete (window as any).__savePricing;
-    };
-  }, [applyMargins.mutate, saveAll.mutate]);
-
-  const saveAll = useMutation({
-    mutationFn: async () => {
-      await api.put('/admin/pricing/general', { margin_percent: generalMargin });
-      const rules = Object.entries(categoryMargins)
-        .filter(([, v]) => v !== null && v !== undefined)
-        .map(([category_id, margin_percent]) => ({
-          category_id: Number(category_id),
-          margin_percent,
-        }));
-      await api.post('/admin/pricing/categories/bulk', { rules });
-    },
-    onSuccess: () => {
-      toast.success(t('pricing_saved'));
-      queryClient.invalidateQueries({ queryKey: ['pricing-general'] });
-      queryClient.invalidateQueries({ queryKey: ['pricing-categories'] });
-      queryClient.invalidateQueries({ queryKey: ['pricing-history'] });
-    },
-    onError: () => toast.error(t('pricing_save_error')),
-  });
-
   const applyMargins = useMutation({
     mutationFn: async () => {
       const res = await api.post('/admin/pricing/apply');
@@ -167,6 +137,16 @@ export default function PricingPage() {
     },
     onError: () => toast.error(t('pricing_apply_error')),
   });
+
+  // Expose actions to TopBar — must be AFTER useMutation definitions
+  useEffect(() => {
+    (window as any).__applyPricing = () => applyMargins.mutate();
+    (window as any).__savePricing = () => saveAll.mutate();
+    return () => {
+      delete (window as any).__applyPricing;
+      delete (window as any).__savePricing;
+    };
+  }, [applyMargins.mutate, saveAll.mutate]);
 
   const chartData = history || [];
   const chartOption = {
