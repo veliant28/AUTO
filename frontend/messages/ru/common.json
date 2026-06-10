@@ -441,7 +441,21 @@
     "import_promote": "Обновить товары",
     "import_promote_success": "Обновлено товаров: {count}",
     "import_promote_error": "Ошибка обновления товаров",
-    "import_promoted": "Выгружен"
+    "import_promoted": "Выгружен",
+    "categories_title": "Категории",
+    "categories_name": "Название",
+    "categories_parent": "Родительская",
+    "categories_tecdoc_id": "TecDoc ID",
+    "categories_empty": "Категории не найдены",
+    "categories_create": "Создать категорию",
+    "categories_edit": "Изменить категорию",
+    "categories_delete_confirm_title": "Удаление категории",
+    "categories_delete_confirm_message": "Вы уверены, что хотите удалить эту категорию?",
+    "categories_delete_error": "Ошибка при удалении",
+    "categories_created": "Категория создана",
+    "categories_updated": "Категория обновлена",
+    "categories_deleted": "Категория удалена",
+    "categories_no_parent": "Нет (корневая)"
   },
   "catalog": {
     "title": "Каталог",

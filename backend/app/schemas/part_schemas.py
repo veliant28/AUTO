@@ -4,10 +4,26 @@ from typing import Optional, List
 class PartCategorySchema(BaseModel):
     id: int
     name: str
-    tecdoc_id: Optional[int]
+    tecdoc_id: Optional[int] = None
+    parent_id: Optional[int] = None
+    depth: int = 0
 
     class Config:
         from_attributes = True
+
+class CategoryCreate(BaseModel):
+    name: str
+    parent_id: Optional[int] = None
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    parent_id: Optional[int] = None
+
+class CategoryListResponse(BaseModel):
+    items: List[PartCategorySchema]
+    total: int
+    page: int
+    page_size: int
 
 class PartSchema(BaseModel):
     id: int

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -44,6 +44,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
+    '/admin/categories': { icon: FolderTree, titleKey: 'categories_title' },
     '/admin/catalog': { icon: Car, titleKey: 'catalog_title' },
     '/admin/users': { icon: Users, titleKey: 'users_title' },
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
@@ -146,6 +147,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
+        {pathname.includes('/admin/categories') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__openCreateCategory?.()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('categories_create')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         {pathname.includes('/admin/import') && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
@@ -243,6 +256,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
     { href: '/admin/products', icon: Package, label: t('products_title'), roles: ['admin'] },
     { href: '/admin/brands', icon: Tag, label: t('brands_title'), roles: ['admin'] },
+    { href: '/admin/categories', icon: FolderTree, label: t('categories_title'), roles: ['admin'] },
     { href: '/admin/catalog', icon: Car, label: t('catalog_title'), roles: ['admin'] },
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },

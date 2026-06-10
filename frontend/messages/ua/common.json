@@ -441,7 +441,21 @@
     "import_promote": "Оновити товари",
     "import_promote_success": "Оновлено товарів: {count}",
     "import_promote_error": "Помилка оновлення товарів",
-    "import_promoted": "Вивантажено"
+    "import_promoted": "Вивантажено",
+    "categories_title": "Категорії",
+    "categories_name": "Назва",
+    "categories_parent": "Батьківська",
+    "categories_tecdoc_id": "TecDoc ID",
+    "categories_empty": "Категорії не знайдено",
+    "categories_create": "Створити категорію",
+    "categories_edit": "Змінити категорію",
+    "categories_delete_confirm_title": "Видалення категорії",
+    "categories_delete_confirm_message": "Ви впевнені, що хочете видалити цю категорію?",
+    "categories_delete_error": "Помилка при видаленні",
+    "categories_created": "Категорію створено",
+    "categories_updated": "Категорію оновлено",
+    "categories_deleted": "Категорію видалено",
+    "categories_no_parent": "Немає (коренева)"
   },
   "catalog": {
     "title": "Каталог",

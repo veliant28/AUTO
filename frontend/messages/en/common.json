@@ -441,7 +441,21 @@
     "import_promote": "Update products",
     "import_promote_success": "Products updated: {count}",
     "import_promote_error": "Error updating products",
-    "import_promoted": "Promoted"
+    "import_promoted": "Promoted",
+    "categories_title": "Categories",
+    "categories_name": "Name",
+    "categories_parent": "Parent",
+    "categories_tecdoc_id": "TecDoc ID",
+    "categories_empty": "No categories found",
+    "categories_create": "Create Category",
+    "categories_edit": "Edit Category",
+    "categories_delete_confirm_title": "Delete Category",
+    "categories_delete_confirm_message": "Are you sure you want to delete this category?",
+    "categories_delete_error": "Error deleting category",
+    "categories_created": "Category created",
+    "categories_updated": "Category updated",
+    "categories_deleted": "Category deleted",
+    "categories_no_parent": "None (root)"
   },
   "catalog": {
     "title": "Catalog",
