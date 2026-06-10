@@ -125,6 +125,26 @@ export default function PricingPage() {
     return () => clearInterval(interval);
   }, [taskId]);
 
+  const saveAll = useMutation({
+    mutationFn: async () => {
+      await api.put('/admin/pricing/general', { margin_percent: generalMargin });
+      const rules = Object.entries(categoryMargins)
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([category_id, margin_percent]) => ({
+          category_id: Number(category_id),
+          margin_percent,
+        }));
+      await api.post('/admin/pricing/categories/bulk', { rules });
+    },
+    onSuccess: () => {
+      toast.success(t('pricing_saved'));
+      queryClient.invalidateQueries({ queryKey: ['pricing-general'] });
+      queryClient.invalidateQueries({ queryKey: ['pricing-categories'] });
+      queryClient.invalidateQueries({ queryKey: ['pricing-history'] });
+    },
+    onError: () => toast.error(t('pricing_save_error')),
+  });
+
   const applyMargins = useMutation({
     mutationFn: async () => {
       const res = await api.post('/admin/pricing/apply');
