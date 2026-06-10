@@ -457,7 +457,13 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
   const [left, setLeft] = React.useState<number | null>(null);
 
   React.useEffect(() => {
-    nextRunRef.current = nextRunUtc ? new Date(nextRunUtc + 'Z').getTime() : null;
+    if (nextRunUtc) {
+      nextRunRef.current = new Date(nextRunUtc + 'Z').getTime();
+      setLeft(Math.max(0, Math.floor((nextRunRef.current - Date.now()) / 1000)));
+    } else {
+      nextRunRef.current = null;
+      setLeft(null);
+    }
   }, [nextRunUtc]);
 
   React.useEffect(() => {
