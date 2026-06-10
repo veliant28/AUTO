@@ -72,14 +72,14 @@ function TokenBadge({ supplier, onRefresh }: { supplier: string; onRefresh: () =
   });
 
   React.useEffect(() => {
-    if (data?.seconds_remaining != null && data.seconds_remaining > 0) {
-      expiresAtRef.current = Date.now() + data.seconds_remaining * 1000;
-      setSecondsLeft(data.seconds_remaining);
+    if (data?.token_expires_at) {
+      expiresAtRef.current = new Date(data.token_expires_at + 'Z').getTime();
+      setSecondsLeft(Math.max(0, Math.floor((expiresAtRef.current - Date.now()) / 1000)));
     } else {
       expiresAtRef.current = null;
       setSecondsLeft(null);
     }
-  }, [data?.seconds_remaining]);
+  }, [data?.token_expires_at]);
 
   const [secondsLeft, setSecondsLeft] = React.useState<number | null>(null);
 
@@ -469,7 +469,12 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
   }, []);
 
   if (!nextRunUtc) return <span className="text-sm text-muted-foreground">—</span>;
-  if (left === null) return <span className="text-sm text-muted-foreground">—</span>;
+  if (left === null) return (
+    <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500/20 text-blue-400 min-w-[85px] justify-center">
+      <Clock className="w-3 h-3" />
+      00:00:00
+    </Badge>
+  );
   if (left <= 0) return <Badge className="text-sm font-mono bg-green-500 text-white border-0 gap-1.5"><Clock className="w-3 h-3" />Запуск...</Badge>;
 
   const h = Math.floor(left / 3600);
