@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -38,6 +38,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isFooter = pathname.includes('/admin/footer');
   const isSettings = pathname.includes('/admin/settings');
   const isImport = pathname.includes('/admin/import');
+  const isPricing = pathname.includes('/admin/pricing');
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
@@ -184,6 +185,26 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('save_footer', { locale: activeLocale.toUpperCase() })}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {isPricing && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="outline" onClick={() => (window as any).__applyPricing?.()}>
+                  <Play className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('apply')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__savePricing?.()}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('save')}</TooltipContent>
             </Tooltip>
           </div>
         )}

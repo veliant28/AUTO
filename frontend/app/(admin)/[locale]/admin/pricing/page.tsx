@@ -125,6 +125,16 @@ export default function PricingPage() {
     return () => clearInterval(interval);
   }, [taskId]);
 
+  // Expose actions to TopBar
+  useEffect(() => {
+    (window as any).__applyPricing = () => applyMargins.mutate();
+    (window as any).__savePricing = () => saveAll.mutate();
+    return () => {
+      delete (window as any).__applyPricing;
+      delete (window as any).__savePricing;
+    };
+  }, [applyMargins.mutate, saveAll.mutate]);
+
   const saveAll = useMutation({
     mutationFn: async () => {
       await api.put('/admin/pricing/general', { margin_percent: generalMargin });
@@ -278,41 +288,10 @@ export default function PricingPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Top bar with actions + status */}
+      {/* Status badge row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {statusBadge()}
-        </div>
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() => applyMargins.mutate()}
-                disabled={applyMargins.isPending}
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-              >
-                {applyMargins.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                {t('apply')}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('apply')}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() => saveAll.mutate()}
-                disabled={saveAll.isPending}
-                size="sm"
-                className="gap-1.5"
-              >
-                {saveAll.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {t('save')}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('save')}</TooltipContent>
-          </Tooltip>
         </div>
       </div>
 
