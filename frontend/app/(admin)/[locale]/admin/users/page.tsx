@@ -241,8 +241,10 @@ export default function AdminUsersPage() {
   return (
     <div className="p-6">
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogContent>
-            <h2 className="text-lg font-semibold mb-4">{t('create_user')}</h2>
+          <DialogContent aria-describedby={undefined}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">{t('create_user')}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <Input placeholder={tc('password_label')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
@@ -324,8 +326,10 @@ export default function AdminUsersPage() {
 
       {editUser && (
         <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
-          <DialogContent>
-            <h2 className="text-lg font-semibold mb-4">{t('edit_user')}</h2>
+          <DialogContent aria-describedby={undefined}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">{t('edit_user')}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <Input placeholder={tc('name_label')} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />

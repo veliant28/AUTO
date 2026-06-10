@@ -235,8 +235,10 @@ export default function AdminRolesPage() {
   return (
     <div className="p-6">
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">{t('roles_create')}</h2>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={undefined}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">{t('roles_create')}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('roles_name')}</label>
@@ -323,8 +325,10 @@ export default function AdminRolesPage() {
 
       {editRole && (
         <Dialog open={!!editRole} onOpenChange={(open) => { if (!open) setEditRole(null); }}>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">{t('roles_edit')}</h2>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={undefined}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">{t('roles_edit')}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('roles_name')}</label>
