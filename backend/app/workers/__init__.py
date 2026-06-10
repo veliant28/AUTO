@@ -9,6 +9,7 @@ celery_app = Celery(
 
 import app.workers.tasks.tecdoc_tasks  # noqa: F401
 import app.workers.tasks.import_tasks  # noqa: F401
+import app.workers.tasks.pricing_tasks  # noqa: F401
 
 celery_app.conf.beat_schedule = {
     'scheduler-tick': {

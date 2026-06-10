@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, ForeignKey, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from .vehicles import Base
@@ -29,3 +29,12 @@ class PriceRuleHistory(Base):
     changed_at = Column(DateTime, server_default=func.now())
 
     price_rule = relationship("PriceRule", back_populates="history")
+
+
+class PricingApplySnapshot(Base):
+    __tablename__ = "pricing_apply_snapshots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    applied_at = Column(DateTime, server_default=func.now(), nullable=False)
+    general_margin = Column(Numeric(6, 2), nullable=True)
+    category_margins = Column(Text, nullable=True)

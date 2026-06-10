@@ -2,7 +2,8 @@ from celery import shared_task
 from app.workers import celery_app
 from app.core.db import SessionLocal
 from app.services.pricing_service import apply_margins_bulk
-from app.models.pricing import PriceRule
+import json
+from app.models.pricing import PriceRule, PricingApplySnapshot
 from app.services.notifications import send_telegram_notification
 
 
@@ -13,6 +14,24 @@ def apply_margins_task(self, part_ids=None):
         self.update_state(state="PROGRESS", meta={"progress": 0})
         
         count = apply_margins_bulk(db, part_ids)
+        
+        # Snapshot current rules after successful apply
+        from sqlalchemy import text
+        general = db.query(PriceRule).filter(
+            PriceRule.type == "general",
+            PriceRule.is_active == True
+        ).first()
+        categories = db.query(PriceRule).filter(
+            PriceRule.type == "category",
+            PriceRule.is_active == True
+        ).all()
+        cat_margins = {str(r.category_id): float(r.margin_percent) for r in categories} if categories else {}
+        snapshot = PricingApplySnapshot(
+            general_margin=float(general.margin_percent) if general else None,
+            category_margins=json.dumps(cat_margins) if cat_margins else None,
+        )
+        db.add(snapshot)
+        db.commit()
         
         self.update_state(state="SUCCESS", meta={"progress": 100, "updated": count})
         

@@ -12,7 +12,7 @@ from .role import Role, Permission, RolePermission
 from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
 from .settings import SiteSettings
 from .imports import SupplierConfig, PriceImport, ImportSchedule
-from .pricing import PriceRule, PriceRuleHistory
+from .pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 
 __all__ = [
     "Base", 
@@ -30,5 +30,5 @@ __all__ = [
     "TecDocConfig", "TecDocRateLog", "SupplierPrice",
     "SiteSettings",
     "SupplierConfig", "PriceImport", "ImportSchedule",
-    "PriceRule", "PriceRuleHistory",
+    "PriceRule", "PriceRuleHistory", "PricingApplySnapshot",
 ]

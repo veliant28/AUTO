@@ -1,0 +1,181 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from app.api.v1.deps import require_role
+from app.models import User
+from app.workers import celery_app
+import time
+import logging
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+class TaskItem(BaseModel):
+    id: str
+    name: str
+    worker: str
+    status: str
+    runtime_seconds: float
+    time_start: float | None = None
+    slot_index: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class WorkerStatus(BaseModel):
+    name: str
+    status: str
+    active_count: int
+    reserved_count: int
+    concurrency: int
+    cpu_percent: float
+
+
+class WorkersResponse(BaseModel):
+    worker: WorkerStatus
+    tasks: list[TaskItem]
+    stuck_tasks: list[TaskItem]
+
+
+def _get_docker_cpu() -> float:
+    try:
+        import docker
+        client = docker.from_env()
+        container = client.containers.get("celery_worker")
+        stats = container.stats(stream=False)
+        cpu_stats = stats.get("cpu_stats", {})
+        precpu_stats = stats.get("precpu_stats", {})
+        cpu_usage = cpu_stats.get("cpu_usage", {})
+        precpu_usage = precpu_stats.get("cpu_usage", {})
+
+        cpu_delta = cpu_usage.get("total_usage", 0) - precpu_usage.get("total_usage", 0)
+        system_delta = cpu_stats.get("system_cpu_usage", 0) - precpu_stats.get("system_cpu_usage", 0)
+
+        if system_delta > 0 and cpu_delta > 0:
+            percpu = cpu_usage.get("percpu_usage") or []
+            cpu_count = len(percpu) if percpu else 1
+            cpu_percent = (cpu_delta / system_delta) * cpu_count * 100
+            return round(cpu_percent, 1)
+    except Exception as e:
+        logger.warning(f"Docker CPU read failed: {e}")
+    return 0.0
+
+
+def _collect_tasks(
+    active_raw: dict | None,
+    reserved_raw: dict | None,
+    scheduled_raw: dict | None,
+) -> tuple[list[TaskItem], list[TaskItem]]:
+    now = time.time()
+    stuck_threshold = 3600.0
+    tasks: list[TaskItem] = []
+    stuck: list[TaskItem] = []
+
+    def _append(source: dict | None, status: str, assign_slot: bool = False) -> None:
+        if not source:
+            return
+        for worker_name, task_list in source.items():
+            if not task_list:
+                continue
+            slot_counter = 0
+            for task in task_list:
+                tid = task.get("id", "")
+                tname = task.get("name", "")
+                tstart = task.get("time_start")
+                runtime = round(now - tstart, 0) if tstart else 0.0
+                si = slot_counter if assign_slot else -1
+                item = TaskItem(
+                    id=tid,
+                    name=tname,
+                    worker=worker_name,
+                    status=status,
+                    runtime_seconds=runtime,
+                    time_start=tstart,
+                    slot_index=si,
+                )
+                tasks.append(item)
+                if status == "active" and tstart and now - tstart > stuck_threshold:
+                    stuck.append(item)
+                if assign_slot:
+                    slot_counter += 1
+
+    _append(active_raw, "active", assign_slot=True)
+    _append(reserved_raw, "reserved")
+    _append(scheduled_raw, "scheduled")
+
+    return tasks, stuck
+
+
+@router.get("/workers", response_model=WorkersResponse)
+async def get_workers(
+    current_user: User = Depends(require_role("admin")),
+):
+    inspect = celery_app.control.inspect()
+    active_raw = inspect.active() or {}
+    reserved_raw = inspect.reserved() or {}
+    scheduled_raw = inspect.scheduled() or {}
+    stats_raw = inspect.stats() or {}
+
+    worker_name = ""
+    active_count = 0
+    reserved_count = 0
+    concurrency = 4
+
+    if active_raw:
+        worker_name = list(active_raw.keys())[0]
+        active_count = len(active_raw.get(worker_name, []))
+    elif stats_raw:
+        worker_name = list(stats_raw.keys())[0]
+
+    if reserved_raw and worker_name:
+        reserved_count = len(reserved_raw.get(worker_name, []))
+
+    if stats_raw and worker_name:
+        stats = stats_raw.get(worker_name, {})
+        concurrency = stats.get("pool", {}).get("max-concurrency", 4)
+        if not concurrency:
+            concurrency = 4
+
+    cpu_percent = _get_docker_cpu()
+
+    tasks, stuck = _collect_tasks(active_raw, reserved_raw, scheduled_raw)
+
+    worker = WorkerStatus(
+        name=worker_name or "unknown",
+        status="online" if worker_name else "offline",
+        active_count=active_count,
+        reserved_count=reserved_count,
+        concurrency=concurrency,
+        cpu_percent=cpu_percent,
+    )
+
+    return WorkersResponse(worker=worker, tasks=tasks, stuck_tasks=stuck)
+
+
+@router.post("/workers/tasks/{task_id}/revoke")
+async def revoke_task(
+    task_id: str,
+    current_user: User = Depends(require_role("admin")),
+):
+    try:
+        celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
+        return {"status": "revoked", "task_id": task_id}
+    except Exception as e:
+        logger.error(f"Revoke task {task_id} failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/workers/restart")
+async def restart_worker(
+    current_user: User = Depends(require_role("admin")),
+):
+    try:
+        import docker
+        client = docker.from_env()
+        container = client.containers.get("celery_worker")
+        container.restart()
+        return {"status": "restarted"}
+    except Exception as e:
+        logger.error(f"Restart worker failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

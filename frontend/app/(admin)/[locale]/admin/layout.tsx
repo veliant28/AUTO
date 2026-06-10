@@ -5,12 +5,16 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play,
+  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play, RotateCcw, Activity, Clock, Minus, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
+import { toast } from '@/lib/toast';
+import { useMutation } from '@tanstack/react-query';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,6 +43,12 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isSettings = pathname.includes('/admin/settings');
   const isImport = pathname.includes('/admin/import');
   const isPricing = pathname.includes('/admin/pricing');
+  const isAdmin = pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname);
+
+  const adminTabs = [
+    { key: 'dashboard', label: ta('workers_tab_dashboard') },
+    { key: 'workers', label: ta('workers_title') },
+  ];
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
@@ -61,8 +71,38 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const meta = currentMeta?.[1];
   const brandName = useBrandName();
   const [pricingTaskStatus, setPricingTaskStatus] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [restartDialogOpen, setRestartDialogOpen] = useState(false);
+  const [restartCounts, setRestartCounts] = useState({ active: 0, reserved: 0 });
+  useEffect(() => {
+    if (restartDialogOpen) {
+      setRestartCounts({
+        active: (window as any).__workerActiveCount ?? 0,
+        reserved: (window as any).__workerReservedCount ?? 0,
+      });
+    }
+  }, [restartDialogOpen]);
+  const restartMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/admin/workers/restart');
+      return data;
+    },
+    onSuccess: () => {
+      toast.success(ta('workers_restart_success'));
+      setTimeout(() => (window as any).__refreshWorkers?.(), 3000);
+    },
+    onError: () => toast.error(ta('workers_restart_error')),
+  });
   useEffect(() => {
     const id = setInterval(() => setPricingTaskStatus((window as any).__pricingTaskStatus || null), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const [pricingOtpDigits, setPricingOtpDigits] = useState<string[]>(['0', '0', '0']);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const d = (window as any).__pricingOtpDigits;
+      if (d) setPricingOtpDigits([...d]);
+    }, 200);
     return () => clearInterval(id);
   }, []);
 
@@ -103,6 +143,24 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </button>
           );
         })}
+        {isAdmin && adminTabs.map((t) => {
+          const active = (searchParams.get('tab') || 'dashboard') === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('tab', t.key);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {t.label.toUpperCase()}
+            </button>
+          );
+        })}
         {isFooter && LOCALES.map((loc) => (
           <button
             key={loc}
@@ -118,7 +176,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         ))}
       </div>
       <div className="flex items-center gap-2">
-        {pathname.endsWith('/admin') && (
+        {isAdmin && (searchParams.get('tab') || 'dashboard') === 'dashboard' && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -127,6 +185,26 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('sync_catalog')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {isAdmin && (searchParams.get('tab') || 'dashboard') === 'workers' && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => { setRefreshing(true); Promise.resolve((window as any).__refreshWorkers?.()).finally(() => setTimeout(() => setRefreshing(false), 600)); }}>
+                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('workers_refresh')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="destructive" onClick={() => setRestartDialogOpen(true)}>
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('workers_restart')}</TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -195,6 +273,40 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         )}
         {isPricing && (
           <div className="border-r pr-2 self-stretch flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground whitespace-nowrap">
+              <SlidersHorizontal className="w-4 h-4 text-primary" />
+              {ta('pricing_general')}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7 rounded-full"
+              onClick={() => (window as any).__pricingSetGeneralMargin?.((v: number) => Math.max(0, v - 1))}
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </Button>
+            <div className="flex items-center gap-0.5">
+              {pricingOtpDigits.map((digit, i) => (
+                <Input
+                  key={i}
+                  type="text"
+                  inputMode="numeric"
+                  value={digit}
+                  className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
+                  readOnly
+                />
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7 rounded-full"
+              onClick={() => (window as any).__pricingSetGeneralMargin?.((v: number) => Math.min(100, v + 1))}
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+            <span className="text-base font-semibold text-foreground">%</span>
+            <div className="w-px h-6 bg-border mx-1" />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -237,6 +349,39 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <ThemeToggle />
         </div>
       </div>
+
+      <Dialog open={restartDialogOpen} onOpenChange={setRestartDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <RotateCcw className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{ta('workers_restart')}</DialogTitle>
+                <DialogDescription>{ta('workers_restart_confirm')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="rounded-lg bg-muted p-4 flex items-center justify-center gap-4">
+            <Badge className="bg-blue-500 text-white border-0 gap-1.5 text-sm px-3 py-1" variant="default">
+              <Activity className="w-3.5 h-3.5" />
+              {ta('workers_active')}: {restartCounts.active}
+            </Badge>
+            <Badge className="bg-yellow-500 text-white border-0 gap-1.5 text-sm px-3 py-1" variant="default">
+              <Clock className="w-3.5 h-3.5" />
+              {ta('workers_reserved')}: {restartCounts.reserved}
+            </Badge>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestartDialogOpen(false)}>{ta('cancel')}</Button>
+            <Button variant="destructive" onClick={() => { setRestartDialogOpen(false); restartMutation.mutate(); }} disabled={restartMutation.isPending} className="gap-2">
+              {restartMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              {ta('workers_restart_action')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

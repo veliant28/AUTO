@@ -26,6 +26,7 @@ services:
       REDIS_PORT: 6379
     volumes:
       - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - postgres
       - redis
@@ -33,15 +34,18 @@ services:
 
   celery_worker:
     build: ./backend
+    container_name: celery_worker
     command: celery -A app.workers worker --loglevel=info
     environment:
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      TZ: Europe/Kyiv
     depends_on:
       - redis
       - postgres
+    restart: unless-stopped
 
   celery_beat:
     build: ./backend

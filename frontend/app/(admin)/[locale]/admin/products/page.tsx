@@ -201,23 +201,21 @@ export default function AdminProductsPage() {
                             </Badge>
                           </TooltipTrigger>
                             <TooltipContent>
-                            <div className="grid gap-1.5 text-xs min-w-[200px]">
+                            <div className="space-y-1 text-xs">
                               {item.final_price != null && (
-                                <div className="border-b border-border pb-1.5 mb-0.5">
-                                  <div className="flex items-center justify-between gap-3">
-                                    <span className="font-bold text-primary">FIN:</span>
-                                    <span className="font-bold">
-                                      {Number(item.final_price).toFixed(2)} UAH
-                                      {item.margin_percent != null && (
-                                        <span className="text-muted-foreground ml-1">(+{item.margin_percent}%)</span>
-                                      )}
-                                    </span>
-                                  </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold">FIN:</span>
+                                  <span>
+                                    {Number(item.final_price).toFixed(2)} UAH
+                                    {item.margin_percent != null && (
+                                      <span className="text-muted-foreground"> (+{item.margin_percent}%)</span>
+                                    )}
+                                  </span>
                                 </div>
                               )}
                               {item.offers?.map((o: any, i: number) => (
                                 <div key={i}>
-                                  <div className="flex items-center gap-2 justify-between">
+                                  <div className="flex items-center gap-2">
                                     <span className="font-semibold">{o.supplier_name}:</span>
                                     <span>{Number(o.price).toFixed(2)} {o.currency || 'UAH'}</span>
                                   </div>

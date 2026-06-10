@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from decimal import Decimal
@@ -5,7 +6,7 @@ from typing import List, Optional
 from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.models import User
-from app.models.pricing import PriceRule, PriceRuleHistory
+from app.models.pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from app.models.parts import PartCategory
 from app.services.pricing_service import (
     get_or_create_general_rule, get_or_create_category_rule, update_rule,
@@ -242,3 +243,22 @@ async def get_task_status(
         "status": result.status,
         "result": result.result if result.ready() else None,
     }
+
+
+@router.get("/pricing/applied-history")
+async def get_applied_pricing_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    items = db.query(PricingApplySnapshot).order_by(
+        PricingApplySnapshot.applied_at.desc()
+    ).limit(100).all()
+    return [
+        {
+            "id": s.id,
+            "applied_at": str(s.applied_at),
+            "general_margin": float(s.general_margin) if s.general_margin is not None else None,
+            "category_margins": json.loads(s.category_margins) if s.category_margins else None,
+        }
+        for s in items
+    ]

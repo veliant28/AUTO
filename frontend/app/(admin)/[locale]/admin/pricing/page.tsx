@@ -77,7 +77,24 @@ export default function PricingPage() {
     },
   });
 
-  // Fetch history
+  interface AppliedSnapshot {
+    id: number;
+    applied_at: string;
+    general_margin: number | null;
+    category_margins: Record<string, number> | null;
+  }
+
+  // Fetch applied (snapshots after real Apply)
+  const { data: appliedHistory } = useQuery<AppliedSnapshot[]>({
+    queryKey: ['pricing-applied-history'],
+    queryFn: async () => {
+      const res = await api.get('/admin/pricing/applied-history');
+      return res.data;
+    },
+    enabled: !!generalRule,
+  });
+
+  // Fetch raw history (for save-time line chart, kept for reference)
   const { data: history } = useQuery<HistoryItem[]>({
     queryKey: ['pricing-history', chartType],
     queryFn: async () => {
@@ -165,65 +182,108 @@ export default function PricingPage() {
     onSuccess: (data) => {
       setTaskId(data.task_id);
       setTaskStatus('PENDING');
+      queryClient.invalidateQueries({ queryKey: ['pricing-applied-history'] });
       toast.success(t('pricing_queued'));
     },
     onError: () => toast.error(t('pricing_apply_error')),
   });
 
-  // Expose actions + task status to TopBar
+  // Expose actions + task status + OTP state to TopBar
   useEffect(() => {
     (window as any).__applyPricing = () => applyMargins.mutate();
     (window as any).__savePricing = () => saveAll.mutate();
     (window as any).__pricingTaskStatus = taskStatus;
+    (window as any).__pricingOtpDigits = otpDigits;
+    (window as any).__pricingSetGeneralMargin = setGeneralMargin;
     return () => {
       delete (window as any).__applyPricing;
       delete (window as any).__savePricing;
       delete (window as any).__pricingTaskStatus;
+      delete (window as any).__pricingOtpDigits;
+      delete (window as any).__pricingSetGeneralMargin;
     };
-  }, [applyMargins.mutate, saveAll.mutate, taskStatus]);
+  }, [applyMargins.mutate, saveAll.mutate, taskStatus, otpDigits]);
 
-  const chartData = history || [];
+  const appliedData = (appliedHistory || []).filter((s) => {
+    if (chartType === 'general') return s.general_margin != null;
+    return s.category_margins && s.category_margins[String(chartType)] != null;
+  });
+  const axisTextColor = isDark ? '#9ca3af' : '#6b7280';
+  const chartBg = isDark ? 'transparent' : '#fff';
+  const borderColor = isDark ? '#374151' : '#e5e7eb';
+
+  const displayData = appliedData.slice(-20);
+  const uniqueCatIds = new Set<number>();
+  displayData.forEach((s) => {
+    if (s.category_margins) {
+      Object.keys(s.category_margins).forEach((k) => uniqueCatIds.add(Number(k)));
+    }
+  });
+  const sortedCatIds = [...uniqueCatIds].sort((a, b) => a - b);
+  const CAT_COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316'];
+
+  const series: any[] = [{
+    name: t('pricing_general'),
+    type: 'bar',
+    stack: 'total',
+    data: displayData.map((s) => s.general_margin ?? 0),
+    itemStyle: { color: '#22c55e', borderRadius: [4, 4, 0, 0] },
+  }];
+  sortedCatIds.forEach((catId, i) => {
+    const cat = categoryRules?.find((c) => c.category_id === catId);
+    series.push({
+      name: cat?.category_name || `#${catId}`,
+      type: 'bar',
+      stack: 'total',
+      data: displayData.map((s) => s.category_margins?.[String(catId)] ?? 0),
+      itemStyle: { color: CAT_COLORS[i % CAT_COLORS.length], borderRadius: [4, 4, 0, 0] },
+    });
+  });
+
   const chartOption = {
-    backgroundColor: 'transparent',
+    backgroundColor: chartBg,
     tooltip: {
-      trigger: 'axis',
+      trigger: 'axis' as const,
+      backgroundColor: isDark ? '#1f2937' : '#fff',
+      borderColor: borderColor,
       formatter: (params: any) => {
-        const p = params[0];
-        return `${new Date(p.value[0]).toLocaleString()}<br/>${t('pricing_margin')}: ${p.value[1]}%`;
+        const snap = displayData[params[0].dataIndex];
+        if (!snap) return '';
+        let html = `<div style="font-weight:600;margin-bottom:6px;color:${axisTextColor}">${new Date(snap.applied_at).toLocaleString()}</div>`;
+        if (snap.general_margin != null) {
+          html += `<div style="color:${axisTextColor};display:flex;align-items:center;gap:4px;margin-top:2px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22c55e"></span>${t('pricing_general')}: <b>${snap.general_margin}%</b></div>`;
+        }
+        if (snap.category_margins) {
+          const cats = categoryRules || [];
+          Object.entries(snap.category_margins).forEach(([catId, val]) => {
+            const cat = cats.find((c) => c.category_id === Number(catId));
+            const name = cat ? cat.category_name : `#${catId}`;
+            const color = CAT_COLORS[sortedCatIds.indexOf(Number(catId)) % CAT_COLORS.length];
+            html += `<div style="color:${axisTextColor};display:flex;align-items:center;gap:4px;margin-top:2px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color}"></span>${name}: <b>${val}%</b></div>`;
+          });
+        }
+        return html;
       },
     },
-    grid: { left: 50, right: 20, top: 20, bottom: 30 },
+    grid: { top: 20, right: 20, bottom: 50, left: 50 },
     xAxis: {
-      type: 'time',
-      axisLine: { lineStyle: { color: isDark ? '#888' : '#ccc' } },
-      axisLabel: { color: isDark ? '#aaa' : '#666' },
-    },
-    yAxis: {
-      type: 'value',
-      name: '%',
-      axisLine: { lineStyle: { color: isDark ? '#888' : '#ccc' } },
-      axisLabel: { color: isDark ? '#aaa' : '#666' },
-      splitLine: { lineStyle: { color: isDark ? '#333' : '#eee' } },
-    },
-    series: [
-      {
-        type: 'line',
-        data: chartData.map((h) => [h.changed_at, h.new_percent]),
-        smooth: true,
-        lineStyle: { color: '#3b82f6', width: 3 },
-        itemStyle: { color: '#3b82f6' },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(59,130,246,0.3)' },
-              { offset: 1, color: 'rgba(59,130,246,0.05)' },
-            ],
-          },
+      type: 'category' as const,
+      data: displayData.map((s) => s.applied_at),
+      axisLabel: {
+        color: axisTextColor,
+        formatter: (value: string) => {
+          const d = new Date(value);
+          return d.toLocaleDateString() + '\n' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         },
       },
-    ],
+      axisLine: { lineStyle: { color: borderColor } },
+    },
+    yAxis: {
+      type: 'value' as const,
+      axisLabel: { color: axisTextColor, formatter: '{value}%' },
+      splitLine: { lineStyle: { color: borderColor } },
+    },
+    series,
   };
 
   const columnHelper = createColumnHelper<CategoryRule>();
@@ -328,7 +388,7 @@ export default function PricingPage() {
     const s = map[taskStatus] || { label: taskStatus, color: 'bg-gray-500 text-white', icon: AlertTriangle };
     const Icon = s.icon;
     return (
-      <Badge className={`${s.color} border-0 gap-1`}>
+      <Badge className={`${s.color} border-0 text-sm gap-1`}>
         <Icon className="w-3.5 h-3.5" />
         {s.label}
       </Badge>
@@ -337,12 +397,6 @@ export default function PricingPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Status badge row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {statusBadge()}
-        </div>
-      </div>
 
       {/* Chart */}
       <Card>
@@ -350,6 +404,7 @@ export default function PricingPage() {
           <CardTitle className="text-lg flex items-center gap-2">
             <LineChart className="w-5 h-5 text-primary" />
             {t('pricing_history')}
+            {statusBadge()}
           </CardTitle>
           <Select
             value={String(chartType)}
@@ -373,109 +428,36 @@ export default function PricingPage() {
         </CardContent>
       </Card>
 
-      {/* Categories Table with General Margin inline */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FolderTree className="w-5 h-5 text-primary" />
-            {t('pricing_categories')}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-              <SlidersHorizontal className="w-5 h-5 text-primary" />
-              {t('pricing_general')}
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-full"
-              onClick={() => setGeneralMargin((v) => Math.max(0, v - 1))}
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </Button>
-            <div className="flex items-center gap-0.5">
-              {otpDigits.map((digit, i) => (
-                <Input
-                  key={i}
-                  ref={(el) => { (otpRefs.current[i] as any) = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  value={digit}
-                  className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
-                  onFocus={(e) => e.target.select()}
-                  onBeforeInput={(e) => {
-                    const char = (e as any).data;
-                    if (char && /\d/.test(char)) {
-                      e.preventDefault();
-                      const next = [...otpDigits];
-                      next[i] = char;
-                      setOtpDigits(next);
-                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
-                      setGeneralMargin(num);
-                      if (i < 2) {
-                        otpRefs.current[i + 1]?.focus();
-                      }
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace') {
-                      e.preventDefault();
-                      const next = [...otpDigits];
-                      next[i] = '0';
-                      setOtpDigits(next);
-                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
-                      setGeneralMargin(num);
-                      if (i > 0) {
-                        otpRefs.current[i - 1]?.focus();
-                      }
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-full"
-              onClick={() => setGeneralMargin((v) => Math.min(100, v + 1))}
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </Button>
-            <span className="text-base font-semibold text-foreground">%</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                {table.getHeaderGroups().map((hg) => (
-                  <tr key={hg.id} className="border-b bg-muted/50">
-                    {hg.headers.map((header) => (
-                      <th key={header.id} className="text-left p-3 font-medium text-muted-foreground" style={{ width: header.getSize() }}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
+      {/* Categories Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id} className="border-b bg-muted/50">
+                {hg.headers.map((header) => (
+                  <th key={header.id} className="text-left p-3 font-medium text-muted-foreground" style={{ width: header.getSize() }}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
                 ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b last:border-0">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-3">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="border-b last:border-0">
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="p-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
                 ))}
-              </tbody>
-            </table>
-            {(!categoryRules || categoryRules.length === 0) && (
-              <div className="p-6 text-center text-muted-foreground text-sm">{t('pricing_empty')}</div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {(!categoryRules || categoryRules.length === 0) && (
+          <div className="p-6 text-center text-muted-foreground text-sm">{t('pricing_empty')}</div>
+        )}
+      </div>
     </div>
   );
 }
