@@ -103,23 +103,28 @@ def process_price_import(self, import_id: int):
             pi.total_items = count
             db.commit()
 
-            # Apply margins after prices parsed
-            apply_margins_bulk(db)
-            pi.progress = 40
-            db.commit()
-
-            def update_progress(pct: int):
+            # Stage 1: promote to catalog first (creates/updates SupplierOffer rows with raw prices)
+            def update_progress_gpl(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
                     if pi2:
-                        pi2.progress = 40 + int(pct * 0.60)
+                        pi2.progress = 35 + int(pct * 0.30)
                         db.commit()
                 except Exception:
                     db.rollback()
 
-            promoted = promote_all_to_catalog(db, "GPL", progress_cb=update_progress)
+            promoted = promote_all_to_catalog(db, "GPL", progress_cb=update_progress_gpl)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
+            pi.progress = 65
+            db.commit()
+
+            # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
+            apply_margins_bulk(db)
+            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
+            pi.progress = 85
+            db.commit()
+
             pi.progress = 100
             pi.status = "complete"
             pi.finished_at = datetime.utcnow()
@@ -166,16 +171,12 @@ def process_price_import(self, import_id: int):
             pi.total_items = count
             db.commit()
 
-            # Apply margins after prices parsed
-            apply_margins_bulk(db)
-            pi.progress = 40
-            db.commit()
-
+            # Stage 1: promote to catalog first (creates/updates SupplierOffer rows with raw prices)
             def update_progress_utr(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
                     if pi2:
-                        pi2.progress = 40 + int(pct * 0.60)
+                        pi2.progress = 35 + int(pct * 0.30)
                         db.commit()
                 except Exception:
                     db.rollback()
@@ -183,6 +184,15 @@ def process_price_import(self, import_id: int):
             promoted = promote_all_to_catalog(db, "UTR", progress_cb=update_progress_utr)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
+            pi.progress = 65
+            db.commit()
+
+            # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
+            apply_margins_bulk(db)
+            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
+            pi.progress = 85
+            db.commit()
+
             pi.progress = 100
             pi.status = "complete"
             pi.finished_at = datetime.utcnow()
