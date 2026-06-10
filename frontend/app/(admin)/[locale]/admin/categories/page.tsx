@@ -51,7 +51,7 @@ export default function CategoriesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: '', parent_id: '' });
+  const [form, setForm] = useState({ name: '', parent_id: 'null' });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-categories'],
@@ -77,7 +77,7 @@ export default function CategoriesPage() {
     mutationFn: async (payload: typeof form) => {
       const { data } = await api.post('/admin/categories', {
         name: payload.name,
-        parent_id: payload.parent_id ? Number(payload.parent_id) : null,
+        parent_id: payload.parent_id && payload.parent_id !== 'null' ? Number(payload.parent_id) : null,
       });
       return data;
     },
@@ -85,7 +85,7 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success(t('categories_created'));
       setCreateOpen(false);
-      setForm({ name: '', parent_id: '' });
+      setForm({ name: '', parent_id: 'null' });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.detail || t('save_error'));
@@ -96,7 +96,7 @@ export default function CategoriesPage() {
     mutationFn: async ({ id, payload }: { id: number; payload: typeof form }) => {
       const { data } = await api.put(`/admin/categories/${id}`, {
         name: payload.name,
-        parent_id: payload.parent_id ? Number(payload.parent_id) : null,
+        parent_id: payload.parent_id && payload.parent_id !== 'null' ? Number(payload.parent_id) : null,
       });
       return data;
     },
@@ -104,7 +104,7 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success(t('categories_updated'));
       setEditTarget(null);
-      setForm({ name: '', parent_id: '' });
+      setForm({ name: '', parent_id: 'null' });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.detail || t('save_error'));
@@ -130,13 +130,13 @@ export default function CategoriesPage() {
     return () => { delete (window as any).__openCreateCategory; };
   }, []);
 
-  const resetForm = () => setForm({ name: '', parent_id: '' });
+  const resetForm = () => setForm({ name: '', parent_id: 'null' });
 
   const openEdit = (cat: Category) => {
     setEditTarget(cat);
     setForm({
       name: cat.name,
-      parent_id: cat.parent_id ? String(cat.parent_id) : '',
+      parent_id: cat.parent_id ? String(cat.parent_id) : 'null',
     });
   };
 
@@ -297,7 +297,7 @@ export default function CategoriesPage() {
                     <SelectValue placeholder={t('categories_no_parent')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">{t('categories_no_parent')}</SelectItem>
+                    <SelectItem value="null">{t('categories_no_parent')}</SelectItem>
                     {parentOptions
                       .filter((opt) => opt.value !== String(editTarget.id))
                       .map((opt) => (

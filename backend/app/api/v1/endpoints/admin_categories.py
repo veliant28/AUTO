@@ -28,7 +28,7 @@ def _build_tree_flat(categories: List[PartCategory]) -> List[Tuple[PartCategory,
 @router.get("/categories", response_model=CategoryListResponse)
 async def list_categories(
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=1000),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
