@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -52,6 +52,7 @@ export default function PricingPage() {
 
   const [generalMargin, setGeneralMargin] = useState<number>(0);
   const [otpDigits, setOtpDigits] = useState<string[]>(['0', '0', '0']);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const [categoryMargins, setCategoryMargins] = useState<Record<number, number | null>>({});
   const [taskStatus, setTaskStatus] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -350,40 +351,49 @@ export default function PricingPage() {
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full"
+              className="h-7 w-7 rounded-full"
               onClick={() => setGeneralMargin((v) => Math.max(0, v - 1))}
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3.5 h-3.5" />
             </Button>
             <div className="flex items-center gap-0.5">
-              {(() => {
-                const marginStr = String(Math.min(100, Math.max(0, generalMargin))).padStart(3, '0');
-                const digits = marginStr.split('');
-                return digits.map((d, i) => (
-                  <Input
-                    key={i}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={d}
-                    className="w-10 h-12 text-center text-xl font-mono p-0 rounded-lg border-2 focus:border-primary"
-                    onChange={(e) => {
-                      const newDigits = [...digits];
-                      newDigits[i] = e.target.value.slice(-1).replace(/\D/, '') || '0';
-                      const num = Math.min(100, Math.max(0, Number(newDigits.join(''))));
-                      setGeneralMargin(num);
-                    }}
-                  />
-                ));
-              })()}
+              {otpDigits.map((digit, i) => (
+                <Input
+                  key={i}
+                  ref={(el) => { (otpRefs.current[i] as any) = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  className="w-8 h-9 text-center text-base font-mono p-0 rounded-md border-2 focus:border-primary"
+                  onChange={(e) => {
+                    let val = e.target.value.slice(-1).replace(/\D/, '');
+                    if (val === '') val = '0';
+                    const next = [...otpDigits];
+                    next[i] = val;
+                    setOtpDigits(next);
+                    const num = Math.min(100, Math.max(0, Number(next.join(''))));
+                    setGeneralMargin(num);
+                    // focus next
+                    if (val !== '0' && i < 2) {
+                      otpRefs.current[i + 1]?.focus();
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace' && digit === '0' && i > 0) {
+                      otpRefs.current[i - 1]?.focus();
+                    }
+                  }}
+                />
+              ))}
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-full"
+              className="h-7 w-7 rounded-full"
               onClick={() => setGeneralMargin((v) => Math.min(100, v + 1))}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
             </Button>
             <span className="text-muted-foreground text-sm">%</span>
           </div>
