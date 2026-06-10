@@ -475,7 +475,8 @@
     "categories_created": "Категорію створено",
     "categories_updated": "Категорію оновлено",
     "categories_deleted": "Категорію видалено",
-    "categories_no_parent": "Немає (коренева)"
+    "categories_no_parent": "Немає (коренева)",
+    "pricing_categories": "Категорії націнки"
   },
   "catalog": {
     "title": "Каталог",

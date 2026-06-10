@@ -1,6 +1,7 @@
 from decimal import Decimal
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func, and_
+from sqlalchemy import text, and_
 from sqlalchemy.orm import joinedload
 from typing import Optional, List
 from app.models.pricing import PriceRule, PriceRuleHistory
@@ -123,8 +124,9 @@ def update_rule(db: Session, rule: PriceRule, new_margin: Decimal) -> None:
 
 def cleanup_old_history(db: Session, days: int = 30) -> int:
     """Delete history older than N days."""
+    cutoff = datetime.utcnow() - timedelta(days=days)
     result = db.query(PriceRuleHistory).filter(
-        PriceRuleHistory.changed_at < func.now() - func.interval(f'{days} days')
+        PriceRuleHistory.changed_at < cutoff
     ).delete(synchronize_session=False)
     db.commit()
     return result

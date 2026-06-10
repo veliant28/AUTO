@@ -475,7 +475,8 @@
     "categories_created": "Category created",
     "categories_updated": "Category updated",
     "categories_deleted": "Category deleted",
-    "categories_no_parent": "None (root)"
+    "categories_no_parent": "None (root)",
+    "pricing_categories": "Pricing categories"
   },
   "catalog": {
     "title": "Catalog",

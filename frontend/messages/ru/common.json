@@ -475,7 +475,8 @@
     "categories_created": "Категория создана",
     "categories_updated": "Категория обновлена",
     "categories_deleted": "Категория удалена",
-    "categories_no_parent": "Нет (корневая)"
+    "categories_no_parent": "Нет (корневая)",
+    "pricing_categories": "Категории наценки"
   },
   "catalog": {
     "title": "Каталог",
