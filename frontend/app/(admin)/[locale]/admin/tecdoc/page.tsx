@@ -153,18 +153,20 @@ function shiftPieLabelAlongArcNearEdge(params: PieLabelLayoutParams, sliceValues
 }
 
 function ResetTimer({ exhausted }: { exhausted: boolean }) {
-  const [ms, setMs] = useState(0);
+  const computeMs = React.useCallback(() => {
+    const next = Math.ceil(Date.now() / 3600000) * 3600000;
+    return Math.max(0, next - Date.now());
+  }, []);
+
+  const [ms, setMs] = useState(exhausted ? computeMs() : 0);
 
   useEffect(() => {
     if (!exhausted) return;
-    const tick = () => {
-      const next = Math.ceil(Date.now() / 3600000) * 3600000;
-      setMs(Math.max(0, next - Date.now()));
-    };
-    tick();
+    setMs(computeMs());
+    const tick = () => setMs(computeMs());
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [exhausted]);
+  }, [exhausted, computeMs]);
 
   const totalSec = Math.floor(ms / 1000);
   const h = Math.floor(totalSec / 3600);
