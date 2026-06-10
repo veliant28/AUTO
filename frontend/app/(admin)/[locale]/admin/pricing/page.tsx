@@ -363,18 +363,15 @@ export default function PricingPage() {
                   ref={(el) => { (otpRefs.current[i] as any) = el; }}
                   type="text"
                   inputMode="numeric"
-                  maxLength={1}
                   value={digit}
-                  className="w-8 h-9 text-center text-base font-mono p-0 rounded-md border-2 focus:border-primary"
+                  className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
                   onChange={(e) => {
-                    let val = e.target.value.slice(-1).replace(/\D/, '');
-                    if (val === '') val = '0';
+                    const val = (e.target.value.replace(/\D/g, '').slice(-1) || '0');
                     const next = [...otpDigits];
                     next[i] = val;
                     setOtpDigits(next);
                     const num = Math.min(100, Math.max(0, Number(next.join(''))));
                     setGeneralMargin(num);
-                    // focus next
                     if (val !== '0' && i < 2) {
                       otpRefs.current[i + 1]?.focus();
                     }
@@ -395,7 +392,7 @@ export default function PricingPage() {
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
-            <span className="text-muted-foreground text-sm">%</span>
+            <span className="text-base font-semibold text-foreground">%</span>
           </div>
         </CardHeader>
         <CardContent>
