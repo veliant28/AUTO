@@ -478,8 +478,8 @@ export default function WorkersTab() {
         </Card>
         <Card className="md:col-span-2">
           <CardHeader className="pb-0 flex flex-row items-center justify-between gap-2">
-            <CardTitle className="text-sm flex items-center gap-2 shrink-0">
-              <Cpu className="w-4 h-4 text-blue-500" />
+            <CardTitle className="text-lg flex items-center gap-2 shrink-0">
+              <Cpu className="w-5 h-5 text-blue-500" />
               {t('workers_active_slots')}
             </CardTitle>
             <div className="flex items-center gap-1.5 flex-wrap justify-end">

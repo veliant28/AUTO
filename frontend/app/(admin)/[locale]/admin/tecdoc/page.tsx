@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Database, Play, Square, Minus, Plus, CheckSquare, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock, Save, Plug, Copy, Search } from 'lucide-react';
+import { Database, Play, Square, Minus, Plus, CheckSquare, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock, Save, Plug, Copy, Search, BarChart3, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -324,7 +324,10 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
         </Card>
         <Card className="md:col-span-2">
           <CardHeader className="pb-0 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm">{t('tecdoc_hourly_usage')}</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              {t('tecdoc_hourly_usage')}
+            </CardTitle>
             <ResetTimer exhausted={data.exhausted} />
           </CardHeader>
           <CardContent className="p-2">
@@ -334,7 +337,7 @@ function DashboardTab({ t }: { t: (k: string) => string }) {
       </div>
       {brandData?.items && brandData.items.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-sm">{t('brands_coverage')}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Target className="w-5 h-5 text-primary" />{t('brands_coverage')}</CardTitle></CardHeader>
           <CardContent className="p-2">
             <ReactECharts option={brandBarOption} style={{ width: '100%', height: 400 }} />
           </CardContent>
