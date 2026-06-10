@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -9,12 +9,13 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { TrendingUp, Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
 import api from '@/lib/api';
 import ReactECharts from 'echarts-for-react';
@@ -77,8 +78,8 @@ export default function PricingPage() {
   const { data: history } = useQuery<HistoryItem[]>({
     queryKey: ['pricing-history', chartType],
     queryFn: async () => {
-      const params = chartType === 'general' 
-        ? { type: 'general' } 
+      const params = chartType === 'general'
+        ? { type: 'general' }
         : { type: 'category', category_id: chartType };
       const res = await api.get('/admin/pricing/history', { params });
       return res.data;
@@ -124,20 +125,9 @@ export default function PricingPage() {
     return () => clearInterval(interval);
   }, [taskId]);
 
-  const saveGeneral = useMutation({
+  const saveAll = useMutation({
     mutationFn: async () => {
       await api.put('/admin/pricing/general', { margin_percent: generalMargin });
-    },
-    onSuccess: () => {
-      toast.success(t('pricing_saved'));
-      queryClient.invalidateQueries({ queryKey: ['pricing-general'] });
-      queryClient.invalidateQueries({ queryKey: ['pricing-history'] });
-    },
-    onError: () => toast.error(t('pricing_save_error')),
-  });
-
-  const saveCategories = useMutation({
-    mutationFn: async () => {
       const rules = Object.entries(categoryMargins)
         .filter(([, v]) => v !== null && v !== undefined)
         .map(([category_id, margin_percent]) => ({
@@ -147,7 +137,8 @@ export default function PricingPage() {
       await api.post('/admin/pricing/categories/bulk', { rules });
     },
     onSuccess: () => {
-      toast.success(t('pricing_categories_saved'));
+      toast.success(t('pricing_saved'));
+      queryClient.invalidateQueries({ queryKey: ['pricing-general'] });
       queryClient.invalidateQueries({ queryKey: ['pricing-categories'] });
       queryClient.invalidateQueries({ queryKey: ['pricing-history'] });
     },
@@ -228,16 +219,34 @@ export default function PricingPage() {
         const catId = info.row.original.category_id;
         const val = categoryMargins[catId] ?? '';
         return (
-          <Input
-            type="number"
-            className="w-24 h-8 text-sm"
-            value={val ?? ''}
-            onChange={(e) => {
-              const v = e.target.value === '' ? null : Number(e.target.value);
-              setCategoryMargins((prev) => ({ ...prev, [catId]: v }));
-            }}
-            placeholder="—"
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: (prev[catId] || 0) - 1 }))}
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </Button>
+            <Input
+              type="number"
+              className="w-20 h-8 text-sm text-center"
+              value={val ?? ''}
+              onChange={(e) => {
+                const v = e.target.value === '' ? null : Number(e.target.value);
+                setCategoryMargins((prev) => ({ ...prev, [catId]: v }));
+              }}
+              placeholder="—"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setCategoryMargins((prev) => ({ ...prev, [catId]: (prev[catId] || 0) + 1 }))}
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         );
       },
     }),
@@ -269,39 +278,43 @@ export default function PricingPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Top bar with actions + status */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <TrendingUp className="w-6 h-6" />
-          {t('pricing_title')}
-        </h1>
-        {statusBadge()}
+        <div className="flex items-center gap-3">
+          {statusBadge()}
+        </div>
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => applyMargins.mutate()}
+                disabled={applyMargins.isPending}
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+              >
+                {applyMargins.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                {t('apply')}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('apply')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => saveAll.mutate()}
+                disabled={saveAll.isPending}
+                size="sm"
+                className="gap-1.5"
+              >
+                {saveAll.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {t('save')}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('save')}</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
-
-      {/* General Margin */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t('pricing_general')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Input
-              type="number"
-              className="w-32"
-              value={generalMargin}
-              onChange={(e) => setGeneralMargin(Number(e.target.value))}
-            />
-            <span className="text-muted-foreground">%</span>
-            <Button onClick={() => saveGeneral.mutate()} disabled={saveGeneral.isPending} size="sm">
-              {saveGeneral.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-              {t('save')}
-            </Button>
-            <Button onClick={() => applyMargins.mutate()} disabled={applyMargins.isPending} size="sm" variant="outline">
-              {applyMargins.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-              {t('apply')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Chart */}
       <Card>
@@ -329,14 +342,36 @@ export default function PricingPage() {
         </CardContent>
       </Card>
 
-      {/* Categories Table */}
+      {/* Categories Table with General Margin inline */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle className="text-lg">{t('pricing_categories')}</CardTitle>
-          <Button onClick={() => saveCategories.mutate()} disabled={saveCategories.isPending} size="sm">
-            {saveCategories.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            {t('save')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">{t('pricing_general')}:</span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setGeneralMargin((v) => v - 1)}
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </Button>
+            <Input
+              type="number"
+              className="w-20 h-8 text-sm text-center"
+              value={generalMargin}
+              onChange={(e) => setGeneralMargin(Number(e.target.value))}
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setGeneralMargin((v) => v + 1)}
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </Button>
+            <span className="text-muted-foreground">%</span>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg overflow-hidden">
