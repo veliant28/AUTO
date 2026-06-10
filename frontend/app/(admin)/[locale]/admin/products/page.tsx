@@ -235,10 +235,10 @@ export default function AdminProductsPage() {
                     <td className="p-3">
                       <div className="flex gap-1">
                         <Tooltip><TooltipTrigger asChild>
-                          <Button variant="outline" size="icon" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
+                          <Button variant="outline" size="icon" className="h-8 w-8"><Pencil className="w-4 h-4" /></Button>
                         </TooltipTrigger><TooltipContent>{t('edit')}</TooltipContent></Tooltip>
                         <Tooltip><TooltipTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(item)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(item)}><Trash2 className="w-4 h-4" /></Button>
                         </TooltipTrigger><TooltipContent>{t('delete')}</TooltipContent></Tooltip>
                       </div>
                     </td>

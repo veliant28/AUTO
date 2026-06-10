@@ -51,6 +51,7 @@ export default function PricingPage() {
   const isDark = resolvedTheme === 'dark';
 
   const [generalMargin, setGeneralMargin] = useState<number>(0);
+  const [otpDigits, setOtpDigits] = useState<string[]>(['0', '0', '0']);
   const [categoryMargins, setCategoryMargins] = useState<Record<number, number | null>>({});
   const [taskStatus, setTaskStatus] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -92,6 +93,11 @@ export default function PricingPage() {
       setGeneralMargin(generalRule.margin_percent || 0);
     }
   }, [generalRule]);
+
+  useEffect(() => {
+    const str = String(Math.min(100, Math.max(0, generalMargin))).padStart(3, '0');
+    setOtpDigits(str.split(''));
+  }, [generalMargin]);
 
   useEffect(() => {
     if (categoryRules) {
