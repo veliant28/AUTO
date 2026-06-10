@@ -75,6 +75,7 @@ class SupplierPriceListResponse(BaseModel):
 class AdminOfferItem(BaseModel):
     supplier_name: str
     price: float
+    final_price: Optional[float] = None
     currency: str
     quantity: int
     stock_regions: Optional[dict] = None
@@ -92,6 +93,8 @@ class AdminProductItem(BaseModel):
     sku: Optional[str] = None
     offers: List[AdminOfferItem] = []
     min_price: Optional[float] = None
+    final_price: Optional[float] = None
+    margin_percent: Optional[float] = None
     total_stock: int = 0
     best_supplier: Optional[str] = None
     best_updated_at: Optional[datetime] = None

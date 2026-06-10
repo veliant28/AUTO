@@ -22,6 +22,7 @@ class SupplierOffer(Base):
     part_id = Column(Integer, ForeignKey("parts.id"), nullable=False, index=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    final_price = Column(Numeric(10, 2), nullable=True)
     currency = Column(String, default="RUB", nullable=False)
     quantity = Column(Integer, default=0)
     delivery_days = Column(Integer, default=0)

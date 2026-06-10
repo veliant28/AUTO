@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileDown, Loader2, Search, Trash2, AlertTriangle, CheckCircle2, Clock, Download, XCircle, Loader, RefreshCw } from 'lucide-react';
+import { FileDown, Loader2, Search, Trash2, AlertTriangle, CheckCircle2, Clock, Download, XCircle, Loader, RefreshCw, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -111,6 +111,17 @@ export default function ImportPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-imports'] });
     },
     onError: () => toast.error(t('import_promote_error')),
+  });
+
+  const applyMarginsMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/admin/pricing/apply');
+      return data as { task_id: string };
+    },
+    onSuccess: () => {
+      toast.success(t('pricing_queued'));
+    },
+    onError: () => toast.error(t('pricing_apply_error')),
   });
 
   const { data } = useQuery({
@@ -270,6 +281,14 @@ export default function ImportPage() {
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>{t('import_promote')}</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => applyMarginsMutation.mutate()} disabled={applyMarginsMutation.isPending}>
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('apply')}</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>

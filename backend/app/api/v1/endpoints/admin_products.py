@@ -4,6 +4,7 @@ from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.models import User, Part, SupplierOffer, Supplier
 from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse
+from app.services.pricing_service import resolve_margin
 
 router = APIRouter()
 
@@ -50,12 +51,15 @@ async def list_products(
         offers_data = []
         total_stock = 0
         best_offer = None
+        margin = resolve_margin(db, part.category_id)
         for offer in part.offers:
             qty = offer.quantity or 0
             total_stock += qty
+            effective_price = float(offer.final_price) if offer.final_price is not None else float(offer.price)
             offers_data.append({
                 "supplier_name": offer.supplier.name,
                 "price": float(offer.price),
+                "final_price": effective_price,
                 "currency": offer.currency or "UAH",
                 "quantity": qty,
                 "stock_regions": offer.stock_regions,
@@ -67,11 +71,14 @@ async def list_products(
                 best_offer = {
                     "supplier_name": offer.supplier.name,
                     "price": float(offer.price),
+                    "final_price": effective_price,
                     "currency": offer.currency or "UAH",
                     "quantity": qty,
                     "stock_regions": offer.stock_regions,
                     "updated_at": offer.updated_at,
                 }
+
+        final_min = min((o["final_price"] for o in offers_data if o.get("final_price") is not None), default=None)
 
         result.append({
             "id": part.id,
@@ -81,6 +88,8 @@ async def list_products(
             "sku": part.sku,
             "offers": offers_data,
             "min_price": min((o["price"] for o in offers_data if o["price"] is not None), default=None),
+            "final_price": final_min,
+            "margin_percent": float(margin) if margin else None,
             "total_stock": total_stock,
             "best_supplier": best_offer["supplier_name"] if best_offer else None,
             "best_updated_at": best_offer["updated_at"] if best_offer else None,

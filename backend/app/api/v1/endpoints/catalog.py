@@ -13,14 +13,16 @@ router = APIRouter()
 
 
 def _best_offer(offers: List[SupplierOffer]) -> Optional[Dict[str, Any]]:
-    """Pick the best offer: in-stock, freshest first."""
+    """Pick the best offer: in-stock, freshest first. Use final_price if available."""
     in_stock = [o for o in offers if o.quantity > 0]
     candidates = in_stock or offers
     if not candidates:
         return None
     best = max(candidates, key=lambda o: (o.updated_at or o.id, o.id))
+    effective_price = float(best.final_price) if best.final_price is not None else float(best.price)
     return {
-        "price": float(best.price),
+        "price": effective_price,
+        "original_price": float(best.price),
         "quantity": best.quantity or 0,
         "supplier_name": best.supplier.name if best.supplier else None,
         "currency": best.currency or "UAH",
@@ -74,15 +76,15 @@ async def get_parts(
     if in_stock_only:
         query = query.join(SupplierOffer).filter(SupplierOffer.quantity > 0)
     if min_price is not None:
-        query = query.join(SupplierOffer).filter(SupplierOffer.price >= min_price)
+        query = query.join(SupplierOffer).filter(SupplierOffer.final_price >= min_price)
     if max_price is not None:
-        query = query.join(SupplierOffer).filter(SupplierOffer.price <= max_price)
+        query = query.join(SupplierOffer).filter(SupplierOffer.final_price <= max_price)
     if supplier_id is not None:
         query = query.join(SupplierOffer).filter(SupplierOffer.supplier_id == supplier_id)
 
     if sort_by == "price":
         query = query.join(SupplierOffer)
-        order_col = SupplierOffer.price
+        order_col = SupplierOffer.final_price
         query = query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
     elif sort_by == "name":
         order_col = Part.name

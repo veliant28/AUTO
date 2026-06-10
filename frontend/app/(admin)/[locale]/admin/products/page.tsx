@@ -201,10 +201,23 @@ export default function AdminProductsPage() {
                             </Badge>
                           </TooltipTrigger>
                             <TooltipContent>
-                            <div className="grid gap-1.5 text-xs">
+                            <div className="grid gap-1.5 text-xs min-w-[200px]">
+                              {item.final_price != null && (
+                                <div className="border-b border-border pb-1.5 mb-0.5">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <span className="font-bold text-primary">FIN:</span>
+                                    <span className="font-bold">
+                                      {Number(item.final_price).toFixed(2)} UAH
+                                      {item.margin_percent != null && (
+                                        <span className="text-muted-foreground ml-1">(+{item.margin_percent}%)</span>
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                               {item.offers?.map((o: any, i: number) => (
                                 <div key={i}>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 justify-between">
                                     <span className="font-semibold">{o.supplier_name}:</span>
                                     <span>{Number(o.price).toFixed(2)} {o.currency || 'UAH'}</span>
                                   </div>

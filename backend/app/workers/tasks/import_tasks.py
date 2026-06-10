@@ -9,6 +9,7 @@ from app.services.supplier_api import GPLAPIClient, UTRAPIClient
 from app.services.import_processor import (
     build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog, _ensure_import_dir, IMPORT_DIR
 )
+from app.services.pricing_service import apply_margins_bulk
 import os
 import time
 
@@ -102,11 +103,16 @@ def process_price_import(self, import_id: int):
             pi.total_items = count
             db.commit()
 
+            # Apply margins after prices parsed
+            apply_margins_bulk(db)
+            pi.progress = 40
+            db.commit()
+
             def update_progress(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
                     if pi2:
-                        pi2.progress = 35 + int(pct * 0.65)
+                        pi2.progress = 40 + int(pct * 0.60)
                         db.commit()
                 except Exception:
                     db.rollback()
@@ -160,11 +166,16 @@ def process_price_import(self, import_id: int):
             pi.total_items = count
             db.commit()
 
+            # Apply margins after prices parsed
+            apply_margins_bulk(db)
+            pi.progress = 40
+            db.commit()
+
             def update_progress_utr(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
                     if pi2:
-                        pi2.progress = 35 + int(pct * 0.65)
+                        pi2.progress = 40 + int(pct * 0.60)
                         db.commit()
                 except Exception:
                     db.rollback()
