@@ -203,6 +203,7 @@ export default function CategoriesPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('categories_create')}</DialogTitle>
+            <DialogDescription>{t('categories_create')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -284,6 +285,7 @@ export default function CategoriesPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>{t('categories_edit')}</DialogTitle>
+              <DialogDescription>{t('categories_edit')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div>
