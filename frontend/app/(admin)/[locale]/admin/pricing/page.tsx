@@ -365,20 +365,32 @@ export default function PricingPage() {
                   inputMode="numeric"
                   value={digit}
                   className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
-                  onChange={(e) => {
-                    const val = (e.target.value.replace(/\D/g, '').slice(-1) || '0');
-                    const next = [...otpDigits];
-                    next[i] = val;
-                    setOtpDigits(next);
-                    const num = Math.min(100, Math.max(0, Number(next.join(''))));
-                    setGeneralMargin(num);
-                    if (val !== '0' && i < 2) {
-                      otpRefs.current[i + 1]?.focus();
+                  onFocus={(e) => e.target.select()}
+                  onBeforeInput={(e) => {
+                    const char = (e as any).data;
+                    if (char && /\d/.test(char)) {
+                      e.preventDefault();
+                      const next = [...otpDigits];
+                      next[i] = char;
+                      setOtpDigits(next);
+                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
+                      setGeneralMargin(num);
+                      if (i < 2) {
+                        otpRefs.current[i + 1]?.focus();
+                      }
                     }
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && digit === '0' && i > 0) {
-                      otpRefs.current[i - 1]?.focus();
+                    if (e.key === 'Backspace') {
+                      e.preventDefault();
+                      const next = [...otpDigits];
+                      next[i] = '0';
+                      setOtpDigits(next);
+                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
+                      setGeneralMargin(num);
+                      if (i > 0) {
+                        otpRefs.current[i - 1]?.focus();
+                      }
                     }
                   }}
                 />
