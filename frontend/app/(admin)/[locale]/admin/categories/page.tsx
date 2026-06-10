@@ -216,7 +216,7 @@ export default function CategoriesPage() {
                   <SelectValue placeholder={t('categories_no_parent')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('categories_no_parent')}</SelectItem>
+                  <SelectItem value="null">{t('categories_no_parent')}</SelectItem>
                   {parentOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
