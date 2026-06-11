@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, Loader2, RefreshCw, CheckCircle2, XCircle, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { Package, Loader2, CheckCircle2, XCircle, Pencil, Trash2, Search, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -97,18 +97,6 @@ export default function AdminProductsPage() {
     },
   });
 
-  const skuMutation = useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post('/admin/products/generate-skus');
-      return data as { count: number };
-    },
-    onSuccess: (result) => {
-      toast.success(t('products_sku_generated', { count: result.count }));
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-    },
-    onError: () => toast.error(t('products_sku_error')),
-  });
-
   const { data } = useQuery({
     queryKey: ['admin-products', page, pageSize, search, supplier, status],
     queryFn: async () => {
@@ -159,14 +147,6 @@ export default function AdminProductsPage() {
           <SelectTrigger className="w-[140px]"><SelectValue placeholder={t('products_supplier')} /></SelectTrigger>
           <SelectContent><SelectItem value="all">{t('products_filter_all')}</SelectItem><SelectItem value="UTR">UTR</SelectItem><SelectItem value="GPL">GPL</SelectItem></SelectContent>
         </Select>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => skuMutation.mutate()} disabled={skuMutation.isPending}>
-              {skuMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('products_generate_skus')}</TooltipContent>
-        </Tooltip>
       </div>
       <Card className="overflow-hidden">
         <CardContent className="p-0">

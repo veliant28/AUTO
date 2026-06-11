@@ -144,6 +144,9 @@ def process_price_import(self, import_id: int):
             pi.progress = 65
             db.commit()
 
+            from app.services.sku_generator import bulk_generate_skus
+            bulk_generate_skus(db)
+
             # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
             apply_margins_bulk(db)
             _snapshot_margins(db)
@@ -219,6 +222,9 @@ def process_price_import(self, import_id: int):
             pi.progress = 65
             db.commit()
 
+            from app.services.sku_generator import bulk_generate_skus
+            bulk_generate_skus(db)
+
             # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
             apply_margins_bulk(db)
             _snapshot_margins(db)
@@ -275,6 +281,9 @@ def promote_import_task(self, import_id: int):
         pi.matched_items = promoted
         pi.progress = 90
         db.commit()
+
+        from app.services.sku_generator import bulk_generate_skus
+        bulk_generate_skus(db)
 
         apply_margins_bulk(db)
         _snapshot_margins(db)

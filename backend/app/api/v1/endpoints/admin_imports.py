@@ -136,15 +136,15 @@ async def promote_import(
     if not pimport:
         raise HTTPException(status_code=404, detail="Import not found")
 
-    from app.services.import_processor import promote_all_to_catalog
+    from app.services.import_processor import promote_all_to_catalog, assign_gpl_categories
     from app.services.pricing_service import apply_margins_bulk
+    from app.services.sku_generator import bulk_generate_skus
     from app.workers.tasks.import_tasks import _snapshot_margins
 
     promoted = promote_all_to_catalog(db, pimport.supplier)
+    bulk_generate_skus(db)
     apply_margins_bulk(db)
     _snapshot_margins(db)
-
-    from app.services.import_processor import assign_gpl_categories
     assign_gpl_categories(db, pimport.supplier)
 
     pimport.matched_items = promoted
