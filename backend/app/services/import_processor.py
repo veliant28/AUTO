@@ -35,7 +35,7 @@ def build_xlsx_from_json(items: list) -> bytes:
                 item.get("brand", ""),
                 item.get("category", ""),
                 item.get("name", ""),
-                item.get("price_type_1", item.get("price_currency_980", "")),
+                item.get("price_type_10", item.get("price_currency_980", "")),
                 "UAH",
                 _sum_stock(item),
                 str(_extract_stock(item)),
