@@ -94,16 +94,7 @@ export default function GaragePage() {
                 className="bg-card border rounded-lg p-3 hover:border-primary transition-colors space-y-2"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1 min-w-0">
-                    <Badge variant="outline" className="text-xs">{t(badgeKey)}</Badge>
-                    <div className="text-sm leading-snug">
-                      {vehicle.brand_name && <span className="font-medium">{vehicle.brand_name} </span>}
-                      {vehicle.model_name && <span className="text-muted-foreground">{vehicle.model_name}</span>}
-                      {vehicle.name && <span className="text-muted-foreground"> / {vehicle.name}</span>}
-                      {hp && <span className="text-muted-foreground"> / {hp}</span>}
-                      {yearStr && <span className="text-muted-foreground"> / {yearStr}</span>}
-                    </div>
-                  </div>
+                  <Badge variant="outline" className="text-xs">{t(badgeKey)}</Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -117,6 +108,13 @@ export default function GaragePage() {
                     </TooltipTrigger>
                     <TooltipContent side="left">{t('remove')}</TooltipContent>
                   </Tooltip>
+                </div>
+                <div className="text-sm leading-snug">
+                  {vehicle.brand_name && <span className="font-medium">{vehicle.brand_name} </span>}
+                  {vehicle.model_name && <span className="text-muted-foreground">{vehicle.model_name}</span>}
+                  {vehicle.name && <span className="text-muted-foreground"> / {vehicle.name}</span>}
+                  {hp && <span className="text-muted-foreground"> / {hp}</span>}
+                  {yearStr && <span className="text-muted-foreground"> / {yearStr}</span>}
                 </div>
 
                 <Button
