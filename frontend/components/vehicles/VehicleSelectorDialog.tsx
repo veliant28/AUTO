@@ -83,7 +83,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
             {hasSelection ? (
               <>
                 <div className="pr-10 space-y-1">
-                  <Badge variant="outline" className="text-xs shrink-0">
+              <Badge variant="outline" className="text-xs shrink-0">
                     {store.type === 'motorbike' ? t('selected_motorbike') : store.type === 'commercial' ? t('selected_commercial') : t('selected_car')}
                   </Badge>
                   <div className="text-sm">

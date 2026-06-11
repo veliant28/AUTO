@@ -34,6 +34,8 @@
     "reset": "Сбросить",
     "save_to_garage": "Сохранить в гараж",
     "saved_to_garage": "Автомобиль сохранен в гараж!",
+    "vehicle_selected": "Автомобиль выбран",
+    "vehicle_removed": "Автомобиль удален из гаража",
     "vehicle_select_title": "Выбор автомобиля",
     "vehicle_garage": "В гараже",
     "vehicle_type": "Тип ТС",

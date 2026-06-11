@@ -34,6 +34,8 @@
     "reset": "Reset",
     "save_to_garage": "Save to Garage",
     "saved_to_garage": "Car saved to garage!",
+    "vehicle_selected": "Vehicle selected",
+    "vehicle_removed": "Vehicle removed from garage",
     "vehicle_select_title": "Select Vehicle",
     "vehicle_garage": "In Garage",
     "vehicle_type": "Vehicle Type",
