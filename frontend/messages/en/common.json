@@ -486,6 +486,7 @@
     "import_delete_confirm_title": "Delete import",
     "import_delete_confirm_message": "Are you sure you want to delete this import?",
     "import_promote": "Update products",
+    "import_promote_started": "Task started, status will update automatically",
     "import_promote_success": "Products updated: {count}",
     "import_promote_error": "Error updating products",
     "import_promoted": "Promoted",

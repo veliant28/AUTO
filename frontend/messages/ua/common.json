@@ -486,6 +486,7 @@
     "import_delete_confirm_title": "Видалення імпорту",
     "import_delete_confirm_message": "Ви впевнені, що хочете видалити цей імпорт?",
     "import_promote": "Оновити товари",
+    "import_promote_started": "Завдання запущено, статус оновиться автоматично",
     "import_promote_success": "Оновлено товарів: {count}",
     "import_promote_error": "Помилка оновлення товарів",
     "import_promoted": "Вивантажено",

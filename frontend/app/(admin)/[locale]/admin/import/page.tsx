@@ -103,15 +103,10 @@ export default function ImportPage() {
 
   const promoteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await api.post(`/admin/imports/${id}/promote`);
-      return data as { ok: boolean; promoted: number };
+      await api.post(`/admin/imports/${id}/promote`);
     },
-    onSuccess: (result) => {
-      if (result.promoted > 0) {
-        toast.success(t('import_promote_success', { count: result.promoted }));
-      } else {
-        toast.success(t('import_promoted'));
-      }
+    onSuccess: () => {
+      toast.success(t('import_promote_started'));
       queryClient.invalidateQueries({ queryKey: ['admin-imports'] });
     },
     onError: () => toast.error(t('import_promote_error')),

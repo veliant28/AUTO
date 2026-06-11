@@ -486,6 +486,7 @@
     "import_delete_confirm_title": "Удаление импорта",
     "import_delete_confirm_message": "Вы уверены, что хотите удалить этот импорт?",
     "import_promote": "Обновить товары",
+    "import_promote_started": "Задача запущена, статус обновится автоматически",
     "import_promote_success": "Обновлено товаров: {count}",
     "import_promote_error": "Ошибка обновления товаров",
     "import_promoted": "Выгружен",
