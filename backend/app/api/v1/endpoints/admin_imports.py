@@ -136,10 +136,22 @@ async def promote_import(
     if not pimport:
         raise HTTPException(status_code=404, detail="Import not found")
 
-    from app.workers.tasks.import_tasks import promote_import_task
-    promote_import_task.delay(import_id)
+    from app.services.import_processor import promote_all_to_catalog
+    from app.services.pricing_service import apply_margins_bulk
+    from app.workers.tasks.import_tasks import _snapshot_margins
 
-    return {"ok": True, "promoted": 0}
+    promoted = promote_all_to_catalog(db, pimport.supplier)
+    apply_margins_bulk(db)
+    _snapshot_margins(db)
+
+    from app.services.import_processor import assign_gpl_categories
+    assign_gpl_categories(db, pimport.supplier)
+
+    pimport.matched_items = promoted
+    pimport.status = "promoted"
+    db.commit()
+
+    return {"ok": True, "promoted": promoted}
 
 
 @router.delete("/imports/{import_id}")

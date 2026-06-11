@@ -103,12 +103,15 @@ export default function ImportPage() {
 
   const promoteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const { data: promoteData } = await api.post(`/admin/imports/${id}/promote`);
-      await api.post('/admin/pricing/apply');
-      return promoteData as { ok: boolean; promoted: number };
+      const { data } = await api.post(`/admin/imports/${id}/promote`);
+      return data as { ok: boolean; promoted: number };
     },
     onSuccess: (result) => {
-      toast.success(t('import_promote_success', { count: result.promoted }));
+      if (result.promoted > 0) {
+        toast.success(t('import_promote_success', { count: result.promoted }));
+      } else {
+        toast.success(t('import_promoted'));
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-imports'] });
     },
     onError: () => toast.error(t('import_promote_error')),

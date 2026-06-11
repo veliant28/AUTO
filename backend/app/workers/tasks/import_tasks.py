@@ -276,6 +276,9 @@ def promote_import_task(self, import_id: int):
         pi.progress = 90
         db.commit()
 
+        apply_margins_bulk(db)
+        _snapshot_margins(db)
+
         cat_assigned = assign_gpl_categories(db, pi.supplier)
 
         pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
