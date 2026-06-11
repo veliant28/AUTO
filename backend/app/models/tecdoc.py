@@ -45,6 +45,7 @@ class SupplierPrice(Base):
     tecdoc_article = Column(String, nullable=True)
     tecdoc_brand_id = Column(Integer, nullable=True)
     match_status = Column(String, default="pending", nullable=False)
+    category = Column(String, nullable=True)
     attempts = Column(Integer, default=0, nullable=False)
     last_attempt_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=func.now())

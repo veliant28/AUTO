@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ShoppingCart, User, Car, Package, Heart, ClipboardList, LogOut, Search } from 'lucide-react';
+import { ShoppingCart, User, Car, Package, LogOut, Search, Heart, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +21,9 @@ import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import CategoryNav from '@/components/layout/CategoryNav';
+import VehicleSelectorDialog from '@/components/vehicles/VehicleSelectorDialog';
+import { useVehicleStore } from '@/store/vehicleStore';
 import { CART_MAX_DISPLAY } from '@/lib/constants';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { useBrandName } from '@/hooks/useBrandName';
@@ -29,6 +32,7 @@ export default function Header() {
   const pathname = usePathname();
   const { user, isAuthenticated, logout, avatarStyle } = useAuthStore();
   const { totalItems } = useCartStore();
+  const { modId } = useVehicleStore();
 
   const cartCount = totalItems();
   const t = useTranslations('header');
@@ -37,12 +41,9 @@ export default function Header() {
 
   const brandName = useBrandName();
 
-  const navItems = [
+  const mobileNavItems = [
     { name: tc('search'), href: '/catalog/search', icon: Search },
-    { name: t('catalog'), href: '/catalog', icon: Package },
-    { name: t('garage'), href: '/garage', icon: Car },
-    { name: t('favorites'), href: '/favorites', icon: Heart },
-    { name: t('orders'), href: '/orders', icon: ClipboardList },
+    { name: tc('cart'), href: '/cart', icon: ShoppingCart },
   ];
 
   return (
@@ -56,24 +57,30 @@ export default function Header() {
             <span className="hidden sm:inline">{brandName}</span>
           </Link>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            <nav className="hidden lg:flex items-center gap-1 mr-2">
-              {navItems.map((item) => (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                      <Button variant="ghost" size="icon" className={pathname === item.href ? 'bg-accent text-accent-foreground' : ''}>
-                        <item.icon className="h-5 w-5" />
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>{item.name}</TooltipContent>
-                </Tooltip>
-              ))}
-            </nav>
+          <CategoryNav />
 
-            <div className="flex items-center gap-1 sm:gap-2 border-l pl-2">
-              <Tooltip>
+          <div className="flex items-center gap-1 sm:gap-2 border-l pl-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/catalog/search">
+                  <Button variant="ghost" size="icon">
+                    <Search className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>{tc('search')}</TooltipContent>
+            </Tooltip>
+
+            <VehicleSelectorDialog>
+              <Button variant="ghost" size="icon" className="relative">
+                <Car className="h-5 w-5" />
+                {modId && (
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full ring-2 ring-background" />
+                )}
+              </Button>
+            </VehicleSelectorDialog>
+
+            <Tooltip>
                 <TooltipTrigger asChild>
                   <Link href="/cart">
                     <Button variant="ghost" size="icon" className="relative">
@@ -161,12 +168,11 @@ export default function Header() {
 
             <ThemeToggle />
             </div>
-          </div>
         </div>
       </header>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background lg:hidden flex items-center justify-around py-2 safe-area-bottom">
-        {navItems.map((item) => (
+        {mobileNavItems.map((item) => (
           <Link 
             key={item.href} 
             href={item.href}
@@ -178,18 +184,23 @@ export default function Header() {
             <span className="text-[10px]">{item.name}</span>
           </Link>
         ))}
-        <Link href="/cart" className={`flex flex-col items-center gap-1 px-3 py-1 rounded-md transition-colors ${
-          pathname === '/cart' ? 'text-primary' : 'text-muted-foreground'
+        <Link href="/garage" className={`flex flex-col items-center gap-1 px-3 py-1 rounded-md transition-colors ${
+          pathname === '/garage' ? 'text-primary' : 'text-muted-foreground'
         }`}>
-          <div className="relative">
-            <ShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[8px]">
-                {cartCount > CART_MAX_DISPLAY ? '99+' : cartCount}
-              </Badge>
-            )}
-          </div>
-          <span className="text-[10px]">{tc('cart')}</span>
+          <Package className="w-5 h-5" />
+          <span className="text-[10px]">{t('garage')}</span>
+        </Link>
+        <Link href="/favorites" className={`flex flex-col items-center gap-1 px-3 py-1 rounded-md transition-colors ${
+          pathname === '/favorites' ? 'text-primary' : 'text-muted-foreground'
+        }`}>
+          <Heart className="w-5 h-5" />
+          <span className="text-[10px]">{t('favorites')}</span>
+        </Link>
+        <Link href="/orders" className={`flex flex-col items-center gap-1 px-3 py-1 rounded-md transition-colors ${
+          pathname === '/orders' ? 'text-primary' : 'text-muted-foreground'
+        }`}>
+          <ClipboardList className="w-5 h-5" />
+          <span className="text-[10px]">{t('orders')}</span>
         </Link>
       </nav>
     </>

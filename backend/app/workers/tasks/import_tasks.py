@@ -7,7 +7,8 @@ from app.models.imports import SupplierConfig, PriceImport, ImportSchedule
 from app.models.settings import SiteSettings
 from app.services.supplier_api import GPLAPIClient, UTRAPIClient
 from app.services.import_processor import (
-    build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog, _ensure_import_dir, IMPORT_DIR
+    build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog,
+    assign_gpl_categories, _ensure_import_dir, IMPORT_DIR
 )
 from app.services.pricing_service import apply_margins_bulk
 from app.models.pricing import PriceRule, PricingApplySnapshot
@@ -150,6 +151,12 @@ def process_price_import(self, import_id: int):
             pi.progress = 85
             db.commit()
 
+            # Stage 3: assign GPL categories from category mapping
+            cat_assigned = assign_gpl_categories(db, "GPL")
+            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
+            pi.progress = 90
+            db.commit()
+
             pi.progress = 100
             pi.status = "complete"
             pi.finished_at = datetime.utcnow()
@@ -266,11 +273,17 @@ def promote_import_task(self, import_id: int):
         promoted = promote_all_to_catalog(db, pi.supplier, progress_cb=update_progress)
         pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
         pi.matched_items = promoted
+        pi.progress = 90
+        db.commit()
+
+        cat_assigned = assign_gpl_categories(db, pi.supplier)
+
+        pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
         pi.progress = 100
         pi.status = "complete" if pi.total_items > 0 else pi.status
         db.commit()
 
-        return {"promoted": promoted}
+        return {"promoted": promoted, "categories_assigned": cat_assigned}
     except Exception as e:
         db.rollback()
         try:

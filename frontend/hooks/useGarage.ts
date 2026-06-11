@@ -13,8 +13,8 @@ export function useGarage() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (modId: number) => {
-      await api.post('/users/garage/add', { mod_id: modId });
+    mutationFn: async ({ modId, tecdocCarId }: { modId: number; tecdocCarId?: number }) => {
+      await api.post('/users/garage/add', { mod_id: modId, tecdoc_car_id: tecdocCarId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['garage'] });

@@ -28,8 +28,9 @@ class UserGarage(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    mod_id = Column(Integer, ForeignKey("vehicle_modifications.id"), nullable=False)
+    mod_id = Column(Integer, ForeignKey("vehicle_modifications.id"), nullable=True)
     added_at = Column(String, nullable=True) # Simulating timestamp for brevity
+    tecdoc_car_id = Column(Integer, nullable=True)
     
     user = relationship("User", back_populates="garage")
     modification = relationship("VehicleModification")

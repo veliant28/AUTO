@@ -120,6 +120,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
                 "tecdoc_article": stmt.excluded.tecdoc_article,
                 "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
                 "match_status": stmt.excluded.match_status,
+                "category": stmt.excluded.category,
             },
         )
         db.execute(stmt)
@@ -160,6 +161,8 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         tecdoc_brand_id = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
         match_status = "matched" if tecdoc_brand_id else "pending"
 
+        category = str(values.get("category", "")).strip() or None
+
         batch.append({
             "supplier": supplier,
             "article": str(article)[:100],
@@ -172,6 +175,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             "tecdoc_article": tecdoc_article,
             "tecdoc_brand_id": tecdoc_brand_id,
             "match_status": match_status,
+            "category": category,
         })
         total += 1
 
@@ -270,3 +274,50 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
 
     db.commit()
     return matched
+
+
+def assign_gpl_categories(db: Session, supplier: str):
+    from app.services.gpl_categories import GPL_CATEGORY_MAP
+    from sqlalchemy import text
+
+    if supplier.upper() != "GPL":
+        return
+
+    rows = db.query(SupplierPrice).filter(
+        SupplierPrice.supplier == supplier,
+        SupplierPrice.category.isnot(None),
+        SupplierPrice.category != "",
+    ).all()
+
+    cat_map = {}
+    for sp in rows:
+        tecdoc_id = GPL_CATEGORY_MAP.get(sp.category)
+        if tecdoc_id is None:
+            continue
+        cat_map.setdefault(tecdoc_id, []).append((sp.article, sp.brand or ""))
+
+    parts_to_update = []
+    for tecdoc_id, article_brands in cat_map.items():
+        for article, brand in article_brands:
+            parts_to_update.append((article, brand, tecdoc_id))
+
+    if not parts_to_update:
+        return 0
+
+    updated = 0
+    for article, brand, tecdoc_id in parts_to_update:
+        part = db.query(Part).filter(
+            Part.article == article,
+            Part.brand == brand,
+        ).first()
+        if part:
+            cat_pc = db.execute(
+                text("SELECT id FROM part_categories WHERE tecdoc_id = :tid LIMIT 1"),
+                {"tid": tecdoc_id},
+            ).first()
+            if cat_pc and part.category_id != cat_pc[0]:
+                part.category_id = cat_pc[0]
+                updated += 1
+
+    db.commit()
+    return updated

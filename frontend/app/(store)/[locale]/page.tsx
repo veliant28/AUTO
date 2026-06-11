@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Search, Car, Package, Truck, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroSearchForm from '@/components/features/HeroSearchForm';
+import VehicleSelectorDialog from '@/components/vehicles/VehicleSelectorDialog';
 import { getTranslations } from 'next-intl/server';
 
 export default async function HomePage() {
@@ -33,12 +34,12 @@ export default async function HomePage() {
           <HeroSearchForm />
 
           <div className="flex flex-wrap justify-center gap-4 pt-4">
-            <Link href="/catalog">
+            <VehicleSelectorDialog>
               <Button size="lg" className="gap-2">
                 <Car className="w-5 h-5" />
                 {t('cta')}
               </Button>
-            </Link>
+            </VehicleSelectorDialog>
           </div>
         </div>
       </section>

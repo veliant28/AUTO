@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text as sa_text
 from typing import List
 import hashlib
-from app.core.db import get_db
+from app.core.db import get_db, get_tecdoc_db
 from app.schemas.user_schemas import UserSchema, ProfileUpdate, ChangePasswordSchema, GarageVehicleSchema, GarageAddSchema
 from app.services.user_service import user_service
 from app.models import User, UserGarage, VehicleModification, VehicleModel, VehicleBrand
@@ -63,22 +64,47 @@ async def change_password(data: ChangePasswordSchema, user_id: int = Depends(get
 
 
 @router.get("/garage", response_model=List[GarageVehicleSchema])
-async def get_garage(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_garage(user_id: int = Depends(get_current_user), db: Session = Depends(get_db), tecdb: Session = Depends(get_tecdoc_db)):
     entries = user_service.get_user_garage(db, user_id)
     
     result = []
     for entry in entries:
-        mod = entry.modification
-        model = db.query(VehicleModel).filter(VehicleModel.id == mod.model_id).first()
-        brand = db.query(VehicleBrand).filter(VehicleBrand.id == model.brand_id).first()
-        
-        result.append({
-            "id": entry.id,
-            "mod_id": mod.id,
-            "name": mod.name,
-            "model_name": model.name,
-            "brand_name": brand.name
-        })
+        if entry.mod_id and entry.modification:
+            mod = entry.modification
+            model = db.query(VehicleModel).filter(VehicleModel.id == mod.model_id).first()
+            brand = db.query(VehicleBrand).filter(VehicleBrand.id == model.brand_id).first() if model else None
+            result.append({
+                "id": entry.id,
+                "mod_id": mod.id,
+                "name": mod.name,
+                "model_name": model.name if model else "",
+                "brand_name": brand.name if brand else "",
+                "tecdoc_car_id": entry.tecdoc_car_id,
+            })
+        elif entry.tecdoc_car_id:
+            row = None
+            for tbl, joins in [
+                ("autodb_passenger_cars pc JOIN autodb_models m ON m.id = pc.model_id JOIN autodb_manufacturers man ON man.id = m.manufacturer_id", ""),
+                ("commercial_vehicles pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", ""),
+                ("motorbikes pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", ""),
+            ]:
+                row = tecdb.execute(sa_text(f"""
+                    SELECT pc.description, m.description as model, man.description as brand
+                    FROM {tbl}
+                    WHERE pc.id = :car_id
+                    LIMIT 1
+                """), {"car_id": entry.tecdoc_car_id}).first()
+                if row:
+                    break
+            if row:
+                result.append({
+                    "id": entry.id,
+                    "mod_id": 0,
+                    "name": row[0] or "",
+                    "model_name": row[1] or "",
+                    "brand_name": row[2] or "",
+                    "tecdoc_car_id": entry.tecdoc_car_id,
+                })
     return result
 
 

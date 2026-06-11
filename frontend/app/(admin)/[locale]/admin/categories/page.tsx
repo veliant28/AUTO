@@ -9,7 +9,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { Pencil, Trash2, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -47,22 +47,33 @@ export default function CategoriesPage() {
   const { user } = useAuthStore();
   const t = useTranslations('admin');
   const queryClient = useQueryClient();
+  const [hydrated, setHydrated] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [search, setSearch] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: '', parent_id: 'null' });
 
+  useEffect(() => { setHydrated(true); }, []);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-categories'],
+    queryKey: ['admin-categories', page, pageSize, search],
     queryFn: async () => {
-      const { data } = await api.get('/admin/categories', { params: { page: 1, page_size: 1000 } });
+      const params: any = { page, page_size: pageSize };
+      if (search) params.search = search;
+      const { data } = await api.get('/admin/categories', { params });
       return data as { items: Category[]; total: number };
     },
-    enabled: !!user,
+    enabled: !!user && hydrated,
   });
 
   const categories = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / pageSize);
 
   // Build parent name lookup
   const parentMap = useMemo(() => {
@@ -197,6 +208,8 @@ export default function CategoriesPage() {
 
   const parentOptions = categories.map((c) => ({ value: String(c.id), label: c.name }));
 
+  if (!hydrated) return <Loader2 className="w-4 h-4 animate-spin" />;
+
   return (
     <div className="p-6">
       <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
@@ -234,6 +247,33 @@ export default function CategoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Search & controls */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder={t('search')}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          />
+        </div>
+        <Select
+          value={String(pageSize)}
+          onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}
+        >
+          <SelectTrigger className="w-[80px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
+            <SelectItem value="500">500</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -276,6 +316,40 @@ export default function CategoriesPage() {
               </table>
             </div>
           </CardContent>
+
+          {/* Pagination footer */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-3 border-t">
+              <span className="text-sm text-muted-foreground">
+                {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                  {t('prev_page')}
+                </Button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let p: number;
+                  if (totalPages <= 7) {
+                    p = i + 1;
+                  } else if (page <= 4) {
+                    p = i + 1;
+                  } else if (page >= totalPages - 3) {
+                    p = totalPages - 6 + i;
+                  } else {
+                    p = page - 3 + i;
+                  }
+                  return (
+                    <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}>
+                      {p}
+                    </Button>
+                  );
+                })}
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                  {t('next_page')}
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 

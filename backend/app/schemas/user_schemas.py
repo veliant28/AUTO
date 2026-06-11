@@ -58,9 +58,11 @@ class GarageVehicleSchema(BaseModel):
     name: str
     brand_name: str
     model_name: str
+    tecdoc_car_id: Optional[int] = None
 
     class Config:
         from_attributes = True
 
 class GarageAddSchema(BaseModel):
     mod_id: int
+    tecdoc_car_id: Optional[int] = None
