@@ -64,6 +64,8 @@
     "go_to_catalog": "To Catalog",
     "garage_empty": "Your garage is empty",
     "garage_empty_desc": "Add a vehicle in the catalog to quickly find parts",
+    "garage_delete_title": "Delete Vehicle",
+    "garage_delete_desc": "Are you sure you want to remove this vehicle from your garage?",
     "orders_empty_desc": "Log in to view order history",
     "select_car_first": "First select a vehicle",
     "select_car_desc": "Use the selector on the left to find parts for your car",

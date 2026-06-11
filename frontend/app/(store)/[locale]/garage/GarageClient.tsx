@@ -7,7 +7,11 @@ import { useGarage } from '@/hooks/useGarage';
 import { useVehicleStore } from '@/store/vehicleStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Car, Check } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Trash2, Car, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { GarageSkeleton } from '@/components/ui/Skeletons';
 import PageTransition from '@/components/ui/PageTransition';
@@ -23,7 +27,7 @@ export default function GaragePage() {
   const router = useRouter();
   const t = useTranslations('common');
   const { garage, isLoading, removeFromGarage, isRemoving } = useGarage();
-  const store = useVehicleStore();
+  const [deleteTarget, setDeleteTarget] = React.useState<any>(null);
 
   const handleSelectVehicle = (vehicle: any) => {
     useVehicleStore.setState({
@@ -42,9 +46,11 @@ export default function GaragePage() {
     router.back();
   };
 
-  const handleRemove = (entryId: number) => {
-    removeFromGarage(entryId);
+  const confirmRemove = () => {
+    if (!deleteTarget) return;
+    removeFromGarage(deleteTarget.id);
     toast.success(t('vehicle_removed'));
+    setDeleteTarget(null);
   };
 
   if (isLoading) {
@@ -78,6 +84,9 @@ export default function GaragePage() {
               : vehicle.vehicle_type === 'commercial' ? 'selected_commercial'
               : 'selected_car';
             const hp = formatPower(vehicle.power);
+            const yearStr = vehicle.year_from != null || vehicle.year_to != null
+              ? `${vehicle.year_from ?? '?'}–${vehicle.year_to ?? '?'}`
+              : null;
 
             return (
               <div
@@ -87,23 +96,27 @@ export default function GaragePage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1 min-w-0">
                     <Badge variant="outline" className="text-xs">{t(badgeKey)}</Badge>
-                    <div className="text-xs text-foreground leading-snug">
-                      {[vehicle.brand_name, vehicle.model_name, vehicle.name, hp,
-                        vehicle.year_from != null || vehicle.year_to != null
-                          ? `${vehicle.year_from ?? '?'}–${vehicle.year_to ?? '?'}`
-                          : null
-                      ].filter(Boolean).join(' / ')}
+                    <div className="text-sm leading-snug">
+                      {vehicle.brand_name && <span className="font-medium">{vehicle.brand_name} </span>}
+                      {vehicle.model_name && <span className="text-muted-foreground">{vehicle.model_name}</span>}
+                      {vehicle.name && <span className="text-muted-foreground"> / {vehicle.name}</span>}
+                      {hp && <span className="text-muted-foreground"> / {hp}</span>}
+                      {yearStr && <span className="text-muted-foreground"> / {yearStr}</span>}
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => handleRemove(vehicle.id)}
-                    disabled={isRemoving}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => setDeleteTarget(vehicle)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">{t('remove')}</TooltipContent>
+                  </Tooltip>
                 </div>
 
                 <Button
@@ -118,6 +131,36 @@ export default function GaragePage() {
           })}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('garage_delete_title')}</DialogTitle>
+                <DialogDescription>{t('garage_delete_desc')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm">
+              <span className="font-medium">{deleteTarget.brand_name} {deleteTarget.model_name}</span>
+              {deleteTarget.name && <span className="text-muted-foreground"> / {deleteTarget.name}</span>}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" onClick={confirmRemove} disabled={isRemoving} className="gap-2">
+              {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
     </PageTransition>
   );
