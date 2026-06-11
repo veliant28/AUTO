@@ -104,7 +104,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="destructive" size="icon" className="h-8 w-8" onClick={handleReset}>
+                      <Button variant="destructive" size="icon" className="h-8 w-8" onClick={handleReset} tabIndex={-1}>
                         <RotateCcw className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
