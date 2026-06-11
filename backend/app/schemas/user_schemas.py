@@ -62,6 +62,7 @@ class GarageVehicleSchema(BaseModel):
     power: Optional[str] = None
     year_from: Optional[int] = None
     year_to: Optional[int] = None
+    vehicle_type: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -12,6 +12,13 @@ import { toast } from '@/lib/toast';
 import { GarageSkeleton } from '@/components/ui/Skeletons';
 import PageTransition from '@/components/ui/PageTransition';
 
+function formatPower(power: string | null | undefined): string | null {
+  if (!power) return null;
+  const match = power.match(/^([\d.]+)/);
+  const kw = match ? parseFloat(match[1]) : null;
+  return kw ? `${Math.round(kw * 1.34102)} л.с.` : null;
+}
+
 export default function GaragePage() {
   const router = useRouter();
   const t = useTranslations('common');
@@ -20,6 +27,7 @@ export default function GaragePage() {
 
   const handleSelectVehicle = (vehicle: any) => {
     useVehicleStore.setState({
+      type: vehicle.vehicle_type || null,
       brandId: vehicle.brand_name ? String(vehicle.mod_id || vehicle.tecdoc_car_id) : null,
       brandName: vehicle.brand_name || null,
       modelId: vehicle.model_name ? String(vehicle.mod_id || vehicle.tecdoc_car_id) : null,
@@ -64,46 +72,50 @@ export default function GaragePage() {
           <p className="text-sm">{t('garage_empty_desc')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {garage.map((vehicle) => (
-            <div
-              key={vehicle.id}
-              className="bg-card border rounded-lg p-4 hover:border-primary transition-colors space-y-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className="text-xs shrink-0">{t('selected_car')}</Badge>
-                    {vehicle.brand_name && <span className="text-sm font-medium truncate">{vehicle.brand_name}</span>}
-                    {vehicle.model_name && <span className="text-sm text-muted-foreground truncate">{vehicle.model_name}</span>}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {vehicle.name}
-                  </div>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => handleRemove(vehicle.id)}
-                  disabled={isRemoving}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {garage.map((vehicle) => {
+            const badgeKey = vehicle.vehicle_type === 'motorbike' ? 'selected_motorbike'
+              : vehicle.vehicle_type === 'commercial' ? 'selected_commercial'
+              : 'selected_car';
+            const hp = formatPower(vehicle.power);
 
-              <div className="flex gap-2">
+            return (
+              <div
+                key={vehicle.id}
+                className="bg-card border rounded-lg p-3 hover:border-primary transition-colors space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1 min-w-0">
+                    <Badge variant="outline" className="text-xs">{t(badgeKey)}</Badge>
+                    <div className="text-xs text-foreground leading-snug">
+                      {[vehicle.brand_name, vehicle.model_name, vehicle.name, hp,
+                        vehicle.year_from != null || vehicle.year_to != null
+                          ? `${vehicle.year_from ?? '?'}–${vehicle.year_to ?? '?'}`
+                          : null
+                      ].filter(Boolean).join(' / ')}
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => handleRemove(vehicle.id)}
+                    disabled={isRemoving}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
                 <Button
-                  size="sm"
-                  className="flex-1 gap-1.5"
+                  className="w-full gap-1.5"
                   onClick={() => handleSelectVehicle(vehicle)}
                 >
                   <Check className="w-4 h-4" />
                   {t('vehicle_find_parts')}
                 </Button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
