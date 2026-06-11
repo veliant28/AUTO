@@ -23,6 +23,7 @@ import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { AdminLocaleProvider, useAdminLocale } from './components/AdminLocaleContext';
 import { useBrandName } from '@/hooks/useBrandName';
+import FalconLogo from '@/components/ui/FalconLogo';
 
 const LOCALES = ['ru', 'en', 'ua'];
 
@@ -336,7 +337,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         )}
         <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
           <div className="bg-primary text-primary-foreground p-1 rounded">
-            <Package className="w-5 h-5" />
+            <FalconLogo className="w-5 h-5" />
           </div>
           <span className="hidden sm:inline">{brandName}</span>
         </Link>

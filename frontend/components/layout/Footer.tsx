@@ -3,13 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Package, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useBrandName } from '@/hooks/useBrandName';
+import FalconLogo from '@/components/ui/FalconLogo';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -36,7 +37,7 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
               <div className="bg-primary text-primary-foreground p-1 rounded">
-                <Package className="w-6 h-6" />
+              <FalconLogo className="w-6 h-6" />
               </div>
               <span>{brandName}</span>
             </Link>

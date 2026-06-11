@@ -23,6 +23,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import CategoryNav from '@/components/layout/CategoryNav';
 import VehicleSelectorDialog from '@/components/vehicles/VehicleSelectorDialog';
+import FalconLogo from '@/components/ui/FalconLogo';
 import { useVehicleStore } from '@/store/vehicleStore';
 import { CART_MAX_DISPLAY } from '@/lib/constants';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
@@ -52,7 +53,7 @@ export default function Header() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight shrink-0">
             <div className="bg-primary text-primary-foreground p-1 rounded">
-              <Package className="w-6 h-6" />
+              <FalconLogo className="w-6 h-6" />
             </div>
             <span className="hidden sm:inline">{brandName}</span>
           </Link>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Package, Eye, EyeOff, Key, ShieldCheck, Clock, RefreshCw, Settings, Play, Check, X, CalendarClock, Loader, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Key, ShieldCheck, Clock, RefreshCw, Settings, Play, Check, X, CalendarClock, Loader, CheckCircle2, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { toast } from '@/lib/toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useTimezone, formatDate } from '@/hooks/useTimezone';
+import FalconLogo from '@/components/ui/FalconLogo';
 
 const supplierMeta: Record<string, { label: string; color: string }> = {
   GPL: { label: 'GPL', color: 'bg-orange-500' },
@@ -346,7 +347,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">{t('settings_logo_preview')}</p>
                   <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
                     <div className="bg-primary text-primary-foreground p-1.5 rounded">
-                      <Package className="w-5 h-5" />
+                      <FalconLogo className="w-5 h-5" />
                     </div>
                     <span>{brandName || 'AutoParts'}</span>
                   </div>
