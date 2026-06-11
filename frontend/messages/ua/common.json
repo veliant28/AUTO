@@ -32,6 +32,8 @@
     "selected_motorbike": "Обрано мотоцикл",
     "selected_commercial": "Обрано вантажний",
     "reset": "Скинути",
+    "delete": "Видалити",
+    "remove": "Видалити",
     "save_to_garage": "Зберегти в гараж",
     "saved_to_garage": "Автомобіль збережено в гараж!",
     "vehicle_selected": "Автомобіль обрано",

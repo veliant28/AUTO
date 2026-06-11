@@ -32,6 +32,8 @@
     "selected_motorbike": "Motorbike Selected",
     "selected_commercial": "Truck Selected",
     "reset": "Reset",
+    "delete": "Delete",
+    "remove": "Remove",
     "save_to_garage": "Save to Garage",
     "saved_to_garage": "Car saved to garage!",
     "vehicle_selected": "Vehicle selected",
