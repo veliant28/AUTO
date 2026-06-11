@@ -182,7 +182,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
             <div className="space-y-1.5">
               <p className="text-sm font-medium">{t('vehicle_model')}</p>
               <Select
-                disabled={!store.brandId || loadingModels}
+                disabled={!store.brandId || loadingModels || !models}
                 value={models?.some(m => String(m.id) === store.modelId) ? store.modelId : undefined}
                 onValueChange={(val) => store.setModel(val, models?.find(m => m.id === parseInt(val))?.name || '')}
               >
@@ -201,7 +201,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
             <div className="space-y-1.5">
               <p className="text-sm font-medium">{t('vehicle_modification')}</p>
               <Select
-                disabled={!store.modelId || loadingCars}
+                disabled={!store.modelId || loadingCars || !cars}
                 value={carOptions?.some(c => String(c.id) === store.modId) ? store.modId : undefined}
                 onValueChange={(val) => {
                   const car = carOptions.find(c => c.id === parseInt(val));
@@ -242,7 +242,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
             <div className="space-y-1.5">
               <p className="text-sm font-medium">{t('vehicle_volume')}</p>
               <Select
-                disabled={!store.modelId}
+                disabled={!store.modelId || !volumes}
                 value={store.volume || undefined}
                 onValueChange={(val) => store.setVolume(val)}
               >
@@ -259,7 +259,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
             <div className="space-y-1.5">
               <p className="text-sm font-medium">{t('vehicle_engine')}</p>
               <Select
-                disabled={!store.volume || loadingEngines}
+                disabled={!store.volume || loadingEngines || !engines}
                 value={store.engine || undefined}
                 onValueChange={(val) => store.setEngine(val)}
               >
