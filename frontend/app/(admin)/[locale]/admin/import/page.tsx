@@ -24,6 +24,7 @@ const supplierColors: Record<string, string> = {
 
 const statusIcons: Record<string, any> = {
   complete: CheckCircle2,
+  promoted: CheckCircle2,
   failed: XCircle,
   processing: Loader,
   in_queue: Clock,
@@ -31,6 +32,7 @@ const statusIcons: Record<string, any> = {
 
 const statusColors: Record<string, string> = {
   complete: 'bg-green-500 text-white',
+  promoted: 'bg-green-500 text-white',
   failed: 'bg-red-500 text-white',
   processing: 'bg-blue-500 text-white',
   in_queue: 'bg-yellow-500 text-white',
@@ -248,7 +250,7 @@ export default function ImportPage() {
                             className="h-2 flex-1"
                             indicatorClassName={
                               item.status === 'failed' ? 'bg-red-500' :
-                              item.status === 'complete' ? 'bg-green-500' :
+                              item.status === 'complete' || item.status === 'promoted' ? 'bg-green-500' :
                               'bg-blue-500'
                             }
                           />
@@ -260,7 +262,7 @@ export default function ImportPage() {
                       <td className="p-3 text-sm text-muted-foreground">{formatDate(item.created_at, tz)}</td>
                       <td className="p-3">
                         <div className="flex gap-2">
-                          {item.status === 'complete' && (
+                          {(item.status === 'complete' || item.status === 'promoted') && (
                             <>
                               <Tooltip>
                                 <TooltipTrigger asChild>
