@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus, LineChart, SlidersHorizontal, Percent, Search
 } from 'lucide-react';
