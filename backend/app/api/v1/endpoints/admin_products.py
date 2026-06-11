@@ -79,6 +79,7 @@ async def list_products(
                 }
 
         final_min = min((o["final_price"] for o in offers_data if o.get("final_price") is not None), default=None)
+        raw_min_price = min((o["price"] for o in offers_data if o["price"] is not None), default=None)
 
         result.append({
             "id": part.id,
@@ -87,9 +88,9 @@ async def list_products(
             "name": part.name,
             "sku": part.sku,
             "offers": offers_data,
-            "min_price": min((o["price"] for o in offers_data if o["price"] is not None), default=None),
+            "min_price": raw_min_price,
             "final_price": final_min,
-            "margin_percent": float(margin) if margin else None,
+            "margin_percent": float(margin) if (margin and final_min is not None and raw_min_price is not None and final_min != raw_min_price) else None,
             "total_stock": total_stock,
             "best_supplier": best_offer["supplier_name"] if best_offer else None,
             "best_updated_at": best_offer["updated_at"] if best_offer else None,

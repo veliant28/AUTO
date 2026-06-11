@@ -366,9 +366,9 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight shrink-0">
           <div className="bg-primary text-primary-foreground p-1 rounded">
-            <FalconLogo className="w-5 h-5" />
+            <FalconLogo className="w-6 h-6" />
           </div>
           <span className="hidden sm:inline">{brandName}</span>
         </Link>
@@ -490,11 +490,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <Link href="/admin" className="font-bold text-lg tracking-tight flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground p-1 rounded">
+          <Link href="/admin" className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground p-1.5 rounded">
               <LayoutDashboard className="w-5 h-5" />
             </div>
-            <span>{brandName}</span>
           </Link>
           <div className="flex items-center gap-1">
             {userRole && (
