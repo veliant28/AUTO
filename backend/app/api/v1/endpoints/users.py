@@ -83,13 +83,17 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
             })
         elif entry.tecdoc_car_id:
             row = None
-            for tbl, joins in [
-                ("autodb_passenger_cars pc JOIN autodb_models m ON m.id = pc.model_id JOIN autodb_manufacturers man ON man.id = m.manufacturer_id", ""),
-                ("commercial_vehicles pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", ""),
-                ("motorbikes pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", ""),
+            for tbl, joins, extra_cols in [
+                ("autodb_passenger_cars pc JOIN autodb_models m ON m.id = pc.model_id JOIN autodb_manufacturers man ON man.id = m.manufacturer_id", "",
+                 ", pc.start_year, pc.end_year, "
+                 "(SELECT attr.displayvalue FROM passanger_car_attributes attr WHERE attr.passangercarid = pc.id AND attr.attributetype = 'Power' LIMIT 1) as power"),
+                ("commercial_vehicles pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", "",
+                 ", NULL::int as start_year, NULL::int as end_year, NULL::varchar as power"),
+                ("motorbikes pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", "",
+                 ", NULL::int as start_year, NULL::int as end_year, NULL::varchar as power"),
             ]:
                 row = tecdb.execute(sa_text(f"""
-                    SELECT pc.description, m.description as model, man.description as brand
+                    SELECT pc.description, m.description as model, man.description as brand{extra_cols}
                     FROM {tbl}
                     WHERE pc.id = :car_id
                     LIMIT 1
@@ -104,6 +108,9 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                     "model_name": row[1] or "",
                     "brand_name": row[2] or "",
                     "tecdoc_car_id": entry.tecdoc_car_id,
+                    "power": row[5] or "" if len(row) > 5 else "",
+                    "year_from": row[3] if len(row) > 3 and row[3] else None,
+                    "year_to": row[4] if len(row) > 4 and row[4] else None,
                 })
     return result
 

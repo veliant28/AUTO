@@ -59,6 +59,9 @@ class GarageVehicleSchema(BaseModel):
     brand_name: str
     model_name: str
     tecdoc_car_id: Optional[int] = None
+    power: Optional[str] = None
+    year_from: Optional[int] = None
+    year_to: Optional[int] = None
 
     class Config:
         from_attributes = True

@@ -26,6 +26,9 @@ export default function GaragePage() {
       modelName: vehicle.model_name || null,
       modId: String(vehicle.tecdoc_car_id || vehicle.mod_id),
       modName: vehicle.name || null,
+      power: vehicle.power || null,
+      yearFrom: vehicle.year_from ?? null,
+      yearTo: vehicle.year_to ?? null,
     });
     toast.success(t('vehicle_selected'));
     router.back();
