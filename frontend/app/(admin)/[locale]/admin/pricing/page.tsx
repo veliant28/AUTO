@@ -330,12 +330,11 @@ export default function PricingPage() {
                   value={digit}
                   className="w-7 h-8 text-center text-xs font-mono p-0 rounded-md border-2 focus:border-primary"
                   onFocus={(e) => e.target.select()}
-                  onBeforeInput={(e) => {
-                    const char = (e as any).data;
+                  onChange={(e) => {
+                    const char = e.target.value;
                     if (char && /\d/.test(char)) {
-                      e.preventDefault();
                       const next = [...digits];
-                      next[i] = char;
+                      next[i] = char.slice(-1);
                       updateVal(next);
                     }
                   }}

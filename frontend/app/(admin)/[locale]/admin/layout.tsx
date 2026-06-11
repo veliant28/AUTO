@@ -282,7 +282,13 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               variant="outline"
               size="icon"
               className="h-7 w-7 rounded-full"
-              onClick={() => (window as any).__pricingSetGeneralMargin?.((v: number) => Math.max(0, v - 1))}
+              onClick={() => {
+                const current = Number(pricingOtpDigits.join(''));
+                const newVal = Math.max(0, current - 1);
+                const str = String(newVal).padStart(3, '0');
+                setPricingOtpDigits(str.split(''));
+                (window as any).__pricingSetGeneralMargin?.(newVal);
+              }}
             >
               <Minus className="w-3.5 h-3.5" />
             </Button>
@@ -294,7 +300,26 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   inputMode="numeric"
                   value={digit}
                   className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
-                  readOnly
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const char = e.target.value;
+                    if (char && /\d/.test(char)) {
+                      const digits = [...pricingOtpDigits];
+                      digits[i] = char.slice(-1);
+                      setPricingOtpDigits(digits);
+                      const num = Math.min(100, Math.max(0, Number(digits.join(''))));
+                      (window as any).__pricingSetGeneralMargin?.(num);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace') {
+                      const digits = [...pricingOtpDigits];
+                      digits[i] = '0';
+                      setPricingOtpDigits(digits);
+                      const num = Math.min(100, Math.max(0, Number(digits.join(''))));
+                      (window as any).__pricingSetGeneralMargin?.(num);
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -302,7 +327,13 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               variant="outline"
               size="icon"
               className="h-7 w-7 rounded-full"
-              onClick={() => (window as any).__pricingSetGeneralMargin?.((v: number) => Math.min(100, v + 1))}
+              onClick={() => {
+                const current = Number(pricingOtpDigits.join(''));
+                const newVal = Math.min(100, current + 1);
+                const str = String(newVal).padStart(3, '0');
+                setPricingOtpDigits(str.split(''));
+                (window as any).__pricingSetGeneralMargin?.(newVal);
+              }}
             >
               <Plus className="w-3.5 h-3.5" />
             </Button>
