@@ -1,5 +1,7 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from decimal import Decimal
 from typing import List, Optional
@@ -99,10 +101,17 @@ async def update_general_margin(
 
 @router.get("/pricing/categories", response_model=List[CategoryRuleItem])
 async def get_category_margins(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=1000),
+    search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    categories = db.query(PartCategory).all()
+    q = db.query(PartCategory)
+    if search:
+        q = q.filter(PartCategory.name.ilike(f"%{search}%"))
+    total = q.count()
+    categories = q.order_by(PartCategory.name).offset((page - 1) * page_size).limit(page_size).all()
     rules = {
         r.category_id: r for r in db.query(PriceRule).filter(
             PriceRule.type == "category"
@@ -118,7 +127,17 @@ async def get_category_margins(
             margin_percent=float(rule.margin_percent) if rule else None,
             is_active=rule.is_active if rule else False,
         ))
-    return result
+    
+    return response_headers(result, total)
+
+
+def response_headers(items: list, total: int):
+    from fastapi.responses import JSONResponse
+    from fastapi.encoders import jsonable_encoder
+    
+    return JSONResponse(
+        content=jsonable_encoder({"items": items, "total": total})
+    )
 
 
 @router.put("/pricing/categories/{category_id}", response_model=CategoryRuleItem)

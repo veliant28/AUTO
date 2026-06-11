@@ -1,15 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper,
-} from '@tanstack/react-table';
-import { Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus, LineChart, FolderTree, SlidersHorizontal, Percent } from 'lucide-react';
+  Loader2, Save, Play, Clock, CheckCircle2, XCircle, AlertTriangle, TrendingUp, Minus, Plus, LineChart, SlidersHorizontal, Percent, Search
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +55,9 @@ export default function PricingPage() {
   const [taskStatus, setTaskStatus] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'general' | number>('general');
+  const [catPage, setCatPage] = useState(1);
+  const [catPageSize, setCatPageSize] = useState(25);
+  const [catSearch, setCatSearch] = useState('');
 
   // Fetch general rule
   const { data: generalRule, isLoading: generalLoading } = useQuery<GeneralRule>({
@@ -68,14 +68,19 @@ export default function PricingPage() {
     },
   });
 
-  // Fetch category rules
-  const { data: categoryRules, isLoading: categoriesLoading } = useQuery<CategoryRule[]>({
-    queryKey: ['pricing-categories'],
+  // Fetch category rules (paginated)
+  const { data: catData, isLoading: categoriesLoading } = useQuery<{ items: CategoryRule[]; total: number }>({
+    queryKey: ['pricing-categories', catPage, catPageSize, catSearch],
     queryFn: async () => {
-      const res = await api.get('/admin/pricing/categories');
+      const params: any = { page: catPage, page_size: catPageSize };
+      if (catSearch) params.search = catSearch;
+      const res = await api.get('/admin/pricing/categories', { params });
       return res.data;
     },
   });
+  const categoryRules = catData?.items || [];
+  const catTotal = catData?.total || 0;
+  const catTotalPages = Math.ceil(catTotal / catPageSize);
 
   interface AppliedSnapshot {
     id: number;
@@ -127,8 +132,8 @@ export default function PricingPage() {
         const num = Math.min(100, Math.max(0, c.margin_percent ?? 0));
         otpMap[c.category_id] = String(num).padStart(3, '0').split('');
       });
-      setCategoryMargins(map);
-      setCategoryOtp(otpMap);
+      setCategoryMargins((prev) => ({ ...prev, ...map }));
+      setCategoryOtp((prev) => ({ ...prev, ...otpMap }));
     }
   }, [categoryRules]);
 
@@ -286,96 +291,6 @@ export default function PricingPage() {
     series,
   };
 
-  const columnHelper = createColumnHelper<CategoryRule>();
-  const columns = [
-    columnHelper.accessor('category_id', {
-      header: 'ID',
-      cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
-      size: 60,
-    }),
-    columnHelper.accessor('category_name', {
-      header: t('pricing_category'),
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor('margin_percent', {
-      header: `${t('pricing_margin')} %`,
-      cell: (info) => {
-        const catId = info.row.original.category_id;
-        const digits = categoryOtp[catId] || ['0', '0', '0'];
-        const updateVal = (newDigits: string[]) => {
-          setCategoryOtp((prev) => ({ ...prev, [catId]: newDigits }));
-          const num = Math.min(100, Math.max(0, Number(newDigits.join(''))));
-          setCategoryMargins((prev) => ({ ...prev, [catId]: num }));
-        };
-        return (
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-full"
-              onClick={() => {
-                const current = categoryMargins[catId] || 0;
-                const newVal = Math.max(0, current - 1);
-                updateVal(String(newVal).padStart(3, '0').split(''));
-              }}
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </Button>
-            <div className="flex items-center gap-0.5">
-              {digits.map((digit, i) => (
-                <Input
-                  key={i}
-                  type="text"
-                  inputMode="numeric"
-                  value={digit}
-                  className="w-7 h-8 text-center text-xs font-mono p-0 rounded-md border-2 focus:border-primary"
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    const char = e.target.value;
-                    if (char && /\d/.test(char)) {
-                      const next = [...digits];
-                      next[i] = char.slice(-1);
-                      updateVal(next);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace') {
-                      e.preventDefault();
-                      const next = [...digits];
-                      next[i] = '0';
-                      setCategoryOtp((prev) => ({ ...prev, [catId]: next }));
-                      const num = Math.min(100, Math.max(0, Number(next.join(''))));
-                      setCategoryMargins((prev) => ({ ...prev, [catId]: num }));
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7 rounded-full"
-              onClick={() => {
-                const current = categoryMargins[catId] || 0;
-                const newVal = Math.min(100, current + 1);
-                updateVal(String(newVal).padStart(3, '0').split(''));
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </Button>
-            <span className="text-base font-semibold text-foreground">%</span>
-          </div>
-        );
-      },
-    }),
-  ];
-
-  const table = useReactTable({
-    data: categoryRules || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   const statusBadge = () => {
     if (!taskStatus) return null;
     const map: Record<string, { label: string; color: string; icon: any }> = {
@@ -428,33 +343,155 @@ export default function PricingPage() {
       </Card>
 
       {/* Categories Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className="border-b bg-muted/50">
-                {hg.headers.map((header) => (
-                  <th key={header.id} className="text-left p-3 font-medium text-muted-foreground" style={{ width: header.getSize() }}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
+      <div className="space-y-4">
+        {/* Search & page size */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder={t('search')}
+              value={catSearch}
+              onChange={(e) => { setCatSearch(e.target.value); setCatPage(1); }}
+            />
+          </div>
+          <Select
+            value={String(catPageSize)}
+            onValueChange={(v) => { setCatPageSize(Number(v)); setCatPage(1); }}
+          >
+            <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="200">200</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">ID</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">{t('pricing_category')}</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">{t('pricing_margin')} %</th>
               </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-b last:border-0">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="p-3">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {(!categoryRules || categoryRules.length === 0) && (
-          <div className="p-6 text-center text-muted-foreground text-sm">{t('pricing_empty')}</div>
+            </thead>
+            <tbody>
+              {categoryRules.map((cat) => {
+                const digits = categoryOtp[cat.category_id] || ['0', '0', '0'];
+                const updateVal = (newDigits: string[]) => {
+                  setCategoryOtp((prev) => ({ ...prev, [cat.category_id]: newDigits }));
+                  const num = Math.min(100, Math.max(0, Number(newDigits.join(''))));
+                  setCategoryMargins((prev) => ({ ...prev, [cat.category_id]: num }));
+                };
+                return (
+                  <tr key={cat.category_id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="p-3 font-mono text-xs">{cat.category_id}</td>
+                    <td className="p-3 text-sm">{cat.category_name}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-full"
+                          onClick={() => {
+                            const current = categoryMargins[cat.category_id] || 0;
+                            const newVal = Math.max(0, current - 1);
+                            updateVal(String(newVal).padStart(3, '0').split(''));
+                          }}
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </Button>
+                        <div className="flex items-center gap-0.5">
+                          {digits.map((digit, i) => (
+                            <Input
+                              key={i}
+                              type="text"
+                              inputMode="numeric"
+                              value={digit}
+                              className="w-7 h-8 text-center text-xs font-mono p-0 rounded-md border-2 focus:border-primary"
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => {
+                                const char = e.target.value;
+                                if (char && /\d/.test(char)) {
+                                  const next = [...digits];
+                                  next[i] = char.slice(-1);
+                                  updateVal(next);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Backspace') {
+                                  const next = [...digits];
+                                  next[i] = '0';
+                                  setCategoryOtp((prev) => ({ ...prev, [cat.category_id]: next }));
+                                  const num = Math.min(100, Math.max(0, Number(next.join(''))));
+                                  setCategoryMargins((prev) => ({ ...prev, [cat.category_id]: num }));
+                                }
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-full"
+                          onClick={() => {
+                            const current = categoryMargins[cat.category_id] || 0;
+                            const newVal = Math.min(100, current + 1);
+                            updateVal(String(newVal).padStart(3, '0').split(''));
+                          }}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
+                        <span className="text-base font-semibold text-foreground">%</span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {categoryRules.length === 0 && (
+            <div className="p-6 text-center text-muted-foreground text-sm">{t('pricing_empty')}</div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {catTotalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {(catPage - 1) * catPageSize + 1}–{Math.min(catPage * catPageSize, catTotal)} of {catTotal}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" disabled={catPage === 1} onClick={() => setCatPage(catPage - 1)}>
+                {t('prev_page')}
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(catTotalPages, 7) }, (_, i) => {
+                  let p: number;
+                  if (catTotalPages <= 7) {
+                    p = i + 1;
+                  } else if (catPage <= 4) {
+                    p = i + 1;
+                  } else if (catPage >= catTotalPages - 3) {
+                    p = catTotalPages - 6 + i;
+                  } else {
+                    p = catPage - 3 + i;
+                  }
+                  return (
+                    <Button key={p} variant={p === catPage ? 'default' : 'outline'} size="sm" onClick={() => setCatPage(p)}>
+                      {p}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button variant="outline" size="sm" disabled={catPage >= catTotalPages} onClick={() => setCatPage(catPage + 1)}>
+                {t('next_page')}
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>
