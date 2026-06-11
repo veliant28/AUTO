@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   return {
     title: { default: m.title, template: `%s | ${brandName}` },
     description: m.desc,
+    icons: {
+      icon: '/favicon.svg',
+    },
     alternates: {
       languages: {
         'ru': '/ru',
