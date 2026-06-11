@@ -22,8 +22,6 @@ export default function Footer() {
       const { data } = await api.get(`/footer?locale=${locale}`);
       return data?.data || {};
     },
-    staleTime: 0,
-    refetchOnMount: 'always',
   });
 
   const brandName = useBrandName();

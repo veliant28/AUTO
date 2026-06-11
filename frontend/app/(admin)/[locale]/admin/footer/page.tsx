@@ -69,8 +69,10 @@ export default function FooterPage() {
       if (form.contact_phone) form.contact_phone = phoneToApi(form.contact_phone);
       if (form.support_phone) form.support_phone = phoneToApi(form.support_phone);
       await api.put(`/admin/footer/${locale}`, { data: form });
+      return form;
     },
-    onSuccess: () => {
+    onSuccess: (form, locale) => {
+      queryClient.setQueryData(['footer', locale], form);
       queryClient.invalidateQueries({ queryKey: ['admin-footer'] });
       toast.success(t('saved'));
     },

@@ -261,13 +261,13 @@ export default function ImportPage() {
                       <td className="p-3 text-right text-sm text-muted-foreground">{formatBytes(item.file_size)}</td>
                       <td className="p-3 text-sm text-muted-foreground">{formatDate(item.created_at, tz)}</td>
                       <td className="p-3">
-                        <div className="flex gap-1">
+                        <div className="flex gap-2">
                           {item.status === 'complete' && (
                             <>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => promoteMutation.mutate(item.id)} disabled={promoteMutation.isPending}>
-                                    <RefreshCw className="w-3.5 h-3.5" />
+                                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => promoteMutation.mutate(item.id)} disabled={promoteMutation.isPending}>
+                                    <RefreshCw className="w-4 h-4" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>{t('import_promote')}</TooltipContent>
@@ -275,8 +275,8 @@ export default function ImportPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/imports/${item.id}/download`} target="_blank">
-                                    <Button variant="outline" size="icon" className="h-7 w-7">
-                                      <Download className="w-3.5 h-3.5" />
+                                    <Button variant="outline" size="icon" className="h-8 w-8">
+                                      <Download className="w-4 h-4" />
                                     </Button>
                                   </a>
                                 </TooltipTrigger>
@@ -286,8 +286,8 @@ export default function ImportPage() {
                           )}
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(item)}>
-                                <Trash2 className="w-3.5 h-3.5" />
+                              <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(item)}>
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>{t('delete')}</TooltipContent>

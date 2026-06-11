@@ -298,8 +298,8 @@ export default function SettingsPage() {
       await api.put('/admin/settings', { brand_name: brandName, timezone });
     },
     onSuccess: () => {
+      queryClient.setQueryData(['public-settings'], { brand_name: brandName });
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-      queryClient.invalidateQueries({ queryKey: ['public-settings'] });
       toast.success(t('settings_saved'));
     },
     onError: () => toast.error(t('save_error')),

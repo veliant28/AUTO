@@ -10,8 +10,28 @@ from app.services.import_processor import (
     build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog, _ensure_import_dir, IMPORT_DIR
 )
 from app.services.pricing_service import apply_margins_bulk
+from app.models.pricing import PriceRule, PricingApplySnapshot
+import json
 import os
 import time
+
+
+def _snapshot_margins(db):
+    general = db.query(PriceRule).filter(
+        PriceRule.type == "general",
+        PriceRule.is_active == True
+    ).first()
+    categories = db.query(PriceRule).filter(
+        PriceRule.type == "category",
+        PriceRule.is_active == True
+    ).all()
+    cat_margins = {str(r.category_id): float(r.margin_percent) for r in categories} if categories else {}
+    snapshot = PricingApplySnapshot(
+        general_margin=float(general.margin_percent) if general else None,
+        category_margins=json.dumps(cat_margins) if cat_margins else None,
+    )
+    db.add(snapshot)
+    db.commit()
 
 
 def _get_client(supplier: str, db) -> tuple:
@@ -121,6 +141,7 @@ def process_price_import(self, import_id: int):
 
             # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
             apply_margins_bulk(db)
+            _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.progress = 85
             db.commit()
@@ -189,6 +210,7 @@ def process_price_import(self, import_id: int):
 
             # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
             apply_margins_bulk(db)
+            _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.progress = 85
             db.commit()
@@ -280,8 +302,10 @@ def scheduler_tick(self):
                 if target > now_tz:
                     continue
 
-                if s.last_run_at and (now_utc - s.last_run_at).total_seconds() < 82800:
-                    continue
+                if s.last_run_at:
+                    last_kyiv = s.last_run_at.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+                    if last_kyiv.date() == now_tz.date():
+                        continue
 
                 pimport = PriceImport(supplier=s.supplier, format="xlsx", status="in_queue")
                 db.add(pimport)

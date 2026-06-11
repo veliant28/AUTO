@@ -199,16 +199,20 @@ function taskNameLabel(t: (k: string) => string, name: string): string {
 
 function statusBadge(t: (k: string) => string, status: string, runtimeSec: number, slotIdx: number) {
   const isStuck = status === 'active' && runtimeSec > STUCK_THRESHOLD;
-  const color = isStuck
+  const errorStatuses = ['error', 'failure', 'revoked', 'stopped'];
+  const isError = errorStatuses.includes(status.toLowerCase());
+  const color = isStuck || isError
     ? 'bg-red-500 text-white animate-pulse'
     : status === 'active'
-      ? `${slotBg(slotIdx)} text-white`
-      : 'bg-yellow-500 text-white';
-  const Icon = isStuck ? AlertTriangle : status === 'active' ? Activity : Clock;
+      ? 'bg-blue-500 text-white'
+      : status === 'reserved'
+        ? 'bg-yellow-500 text-white'
+        : 'bg-gray-500 text-white';
+  const Icon = isStuck || isError ? AlertTriangle : status === 'active' ? Activity : Clock;
   return (
     <Badge className={`${color} border-0 gap-1 text-sm`}>
       <Icon className="w-3.5 h-3.5" />
-      {isStuck ? t('workers_stuck') : statusLabel(t, status)}
+      {isStuck || isError ? t('workers_stuck') : statusLabel(t, status)}
     </Badge>
   );
 }
@@ -416,7 +420,6 @@ export default function WorkersTab() {
       cell: (info) => {
         const task = info.row.original;
         const pct = Math.min(100, Math.round((task.runtime_seconds / PROGRESS_THRESHOLD) * 100));
-        const color = slotBg(task.slot_index);
         const isStuck = task.runtime_seconds > STUCK_THRESHOLD;
         return (
           <div className="flex items-center gap-2 min-w-[180px]">
@@ -426,7 +429,7 @@ export default function WorkersTab() {
             </Badge>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${isStuck ? 'bg-red-500 animate-pulse' : color}`}
+                className={`h-full rounded-full transition-all duration-1000 ${isStuck ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}
                 style={{ width: `${pct}%` }}
               />
             </div>

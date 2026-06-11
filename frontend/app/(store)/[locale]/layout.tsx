@@ -5,8 +5,9 @@ import NotificationProvider from '@/components/NotificationProvider';
 import { NextIntlClientProvider } from 'next-intl';
 import { Toaster } from 'sonner';
 import Providers from '@/components/Providers';
-import { use } from 'react';
 import type { Metadata } from 'next';
+import SettingsHydrate from '@/components/layout/SettingsHydrate';
+import FooterHydrate from '@/components/layout/FooterHydrate';
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = await params;
@@ -45,10 +46,35 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   };
 }
 
-export default function RootLayout(props: any) {
+const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://backend:8080/api/v1';
+
+async function fetchBrandName(): Promise<string> {
+  try {
+    const res = await fetch(`${API}/settings`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.brand_name) return data.brand_name;
+    }
+  } catch {}
+  return 'AutoParts';
+}
+
+async function fetchFooter(locale: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${API}/footer?locale=${locale}`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const body = await res.json();
+      return body?.data || {};
+    }
+  } catch {}
+  return {};
+}
+
+export default async function RootLayout(props: any) {
   const { children, messages } = props;
-  const params = use(props.params);
+  const params = await props.params;
   const locale = params.locale;
+  const [brandName, footerData] = await Promise.all([fetchBrandName(), fetchFooter(locale)]);
   return (
     <html lang={locale} suppressHydrationWarning>
       <body>
@@ -60,6 +86,8 @@ export default function RootLayout(props: any) {
             disableTransitionOnChange
           >
             <Providers>
+              <SettingsHydrate brandName={brandName} />
+              <FooterHydrate locale={locale} data={footerData} />
               <Toaster position="bottom-right" offset={{ right: '48px' }} />
               <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
               <Header />
