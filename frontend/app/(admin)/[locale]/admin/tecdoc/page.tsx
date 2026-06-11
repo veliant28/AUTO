@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/lib/toast';
+import { toast as sonnerToast } from 'sonner';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import api from '@/lib/api';
 
@@ -395,15 +396,6 @@ function BatchTab({ t }: { t: (k: string) => string }) {
     staleTime: 300000,
   });
 
-  const { data: batchState } = useQuery({
-    queryKey: ['tecdoc-batch-status'],
-    queryFn: async () => {
-      const { data } = await api.get('/admin/tecdoc/batch/status');
-      return data as { running: boolean; task_id: string | null; processed: number; total: number; size: number };
-    },
-    refetchInterval: (query) => query.state.data?.running ? 3000 : false,
-  });
-
   const refreshAfterBatch = () => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['tecdoc-articles'] });
@@ -511,25 +503,6 @@ function BatchTab({ t }: { t: (k: string) => string }) {
           </TooltipTrigger><TooltipContent>{t('tecdoc_batch_start_selected')}</TooltipContent></Tooltip>
         </div>
       </div>
-
-      {batchState?.running && (
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-            <span className="text-blue-600 font-medium">{t('tecdoc_batch_progress')}: {batchState.processed} / {batchState.total}</span>
-            {batchState.total > 0 && (
-              <span className="text-muted-foreground">({Math.round((batchState.processed / batchState.total) * 100)}%)</span>
-            )}
-            {batchState.task_id && <span className="text-xs text-muted-foreground font-mono">ID: {batchState.task_id.slice(0, 8)}...</span>}
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500 rounded-full"
-              style={{ width: batchState.total ? `${(batchState.processed / batchState.total) * 100}%` : '0%' }}
-            />
-          </div>
-        </div>
-      )}
 
       <Card className="overflow-hidden">
         <CardContent className="p-0">
@@ -983,6 +956,28 @@ function TecDocPageInner() {
   const t = useTranslations('admin');
   const searchParams = useSearchParams();
   const tab = (searchParams.get('tab') || 'dashboard') as Tab;
+  const prevRunning = React.useRef(false);
+
+  const { data: batchState } = useQuery({
+    queryKey: ['tecdoc-batch-status'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/tecdoc/batch/status');
+      return data as { running: boolean; task_id: string | null; processed: number; total: number; size: number };
+    },
+    refetchInterval: (query) => query.state.data?.running ? 3000 : false,
+  });
+
+  useEffect(() => {
+    if (!batchState) return;
+    if (batchState.running && !prevRunning.current) {
+      sonnerToast.loading(t('tecdoc_batch_progress'), { id: 'tecdoc-batch' });
+    } else if (batchState.running) {
+      sonnerToast.loading(`${t('tecdoc_batch_progress')}: ${batchState.processed} / ${batchState.total}`, { id: 'tecdoc-batch' });
+    } else if (!batchState.running && prevRunning.current) {
+      sonnerToast.success(t('tecdoc_batch_completed'), { id: 'tecdoc-batch', duration: 5000 });
+    }
+    prevRunning.current = batchState.running;
+  }, [batchState, t]);
 
   return (
     <div className="p-6">
