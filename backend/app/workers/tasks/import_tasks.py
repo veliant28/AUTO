@@ -2,7 +2,7 @@ from celery import shared_task
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from app.workers import celery_app
-from app.core.db import SessionLocal
+from app.core.db import SessionLocal, TecDocSessionLocal
 from app.models.imports import SupplierConfig, PriceImport, ImportSchedule
 from app.models.settings import SiteSettings
 from app.services.supplier_api import GPLAPIClient, UTRAPIClient
@@ -118,7 +118,11 @@ def process_price_import(self, import_id: int):
             pi.progress = 30
             db.commit()
 
-            count = parse_xlsx_to_prices(db, "GPL", xlsx_data)
+            tecdb = TecDocSessionLocal()
+            try:
+                count = parse_xlsx_to_prices(db, "GPL", xlsx_data, tecdoc_db=tecdb)
+            finally:
+                tecdb.close()
             pi.progress = 35
             pi.total_items = count
             db.commit()

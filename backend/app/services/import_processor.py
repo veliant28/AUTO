@@ -7,6 +7,7 @@ from app.models.tecdoc import SupplierPrice
 from app.models.imports import PriceImport
 from app.models.parts import Part
 from app.models.suppliers import Supplier, SupplierOffer
+from app.core.db import TecDocSessionLocal
 
 
 IMPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "imports")
@@ -21,24 +22,24 @@ def build_xlsx_from_json(items: list) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Prices"
+    headers = ["cid", "article", "brand", "category", "name", "price", "currency",
+               "stock_total", "stock_regions", "tecdoc_article"]
     if not items:
-        ws.append(["cid", "article", "brand", "category", "name", "price", "currency",
-                    "stock_total", "stock_regions"])
+        ws.append(headers)
     else:
-        headers = ["cid", "article", "brand", "category", "name", "price", "currency",
-                   "stock_total", "stock_regions"]
         ws.append(headers)
         for item in items:
             row = [
                 item.get("cid", ""),
                 item.get("article", ""),
-                item.get("category", ""),
+                item.get("brand", ""),
                 item.get("category", ""),
                 item.get("name", ""),
-                item.get("price_currency_980", ""),
+                item.get("price_type_1", item.get("price_currency_980", "")),
                 "UAH",
                 _sum_stock(item),
                 str(_extract_stock(item)),
+                item.get("tecdoc_article", ""),
             ]
             ws.append(row)
     buf = io.BytesIO()
@@ -72,7 +73,25 @@ def _extract_stock(item: dict) -> dict:
     return regions
 
 
-def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes) -> int:
+def _resolve_tecdoc_brand(tecdoc_db, brand_name: str) -> int | None:
+    if not brand_name or not tecdoc_db:
+        return None
+    from sqlalchemy import text
+    norm = brand_name.lower().strip()
+    row = tecdoc_db.execute(
+        text("SELECT id FROM autodb_suppliers WHERE LOWER(normalized_name) = :name OR LOWER(matchcode) = :match LIMIT 1"),
+        {"name": norm, "match": norm},
+    ).first()
+    if row:
+        return row[0]
+    row = tecdoc_db.execute(
+        text("SELECT id FROM autodb_suppliers WHERE LOWER(name) = :name LIMIT 1"),
+        {"name": norm},
+    ).first()
+    return row[0] if row else None
+
+
+def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db: Session | None = None) -> int:
     from openpyxl import load_workbook
     wb = load_workbook(io.BytesIO(file_data), read_only=True)
     ws = wb.active
@@ -98,6 +117,9 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes) -> int:
                 "currency": stmt.excluded.currency,
                 "stock_total": stmt.excluded.stock_total,
                 "stock_regions": stmt.excluded.stock_regions,
+                "tecdoc_article": stmt.excluded.tecdoc_article,
+                "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
+                "match_status": stmt.excluded.match_status,
             },
         )
         db.execute(stmt)
@@ -134,6 +156,10 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes) -> int:
 
         currency = str(values.get("currency", values.get("currency_code", "UAH"))).upper()
 
+        tecdoc_article = str(values.get("tecdoc_article", "")).strip() or None
+        tecdoc_brand_id = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
+        match_status = "matched" if tecdoc_brand_id else "pending"
+
         batch.append({
             "supplier": supplier,
             "article": str(article)[:100],
@@ -143,7 +169,9 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes) -> int:
             "currency": currency,
             "stock_total": stock_total,
             "stock_regions": stock_regions if stock_regions else None,
-            "match_status": "pending",
+            "tecdoc_article": tecdoc_article,
+            "tecdoc_brand_id": tecdoc_brand_id,
+            "match_status": match_status,
         })
         total += 1
 
