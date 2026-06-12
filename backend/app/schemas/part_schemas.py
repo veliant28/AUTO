@@ -37,9 +37,17 @@ class PartSchema(BaseModel):
     quantity: Optional[int] = None
     supplier_name: Optional[str] = None
     currency: Optional[str] = 'UAH'
+    image_url: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class PartListResponse(BaseModel):
+    items: List[PartSchema]
+    total: int
+    page: int
+    page_size: int
 
 class ArtInfoSchema(BaseModel):
     name: str

@@ -1,44 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 
-export function useCategories(modId: string | null) {
-  return useQuery({
-    queryKey: ['categories', modId],
-    queryFn: async () => {
-      if (!modId) return [];
-      const { data } = await api.get(`/catalog/sections/${modId}`);
-      return data;
-    },
-    enabled: !!modId,
-  });
-}
-
 export function useParts(
-  modId: string | null, 
-  secId: string | null,
-  filters?: {
+  categoryId: string | null,
+  options?: {
+    page?: number;
+    page_size?: number;
     in_stock_only?: boolean;
     min_price?: number;
     max_price?: number;
     sort_by?: string;
     sort_order?: string;
-  }
+  },
 ) {
   return useQuery({
-    queryKey: ['parts', modId, secId, filters],
+    queryKey: ['parts', categoryId, options],
     queryFn: async () => {
-      if (!modId || !secId) return [];
-      const params: Record<string, any> = {};
-      if (filters) {
-        if (filters.in_stock_only) params.in_stock_only = true;
-        if (filters.min_price) params.min_price = filters.min_price;
-        if (filters.max_price) params.max_price = filters.max_price;
-        if (filters.sort_by) params.sort_by = filters.sort_by;
-        if (filters.sort_order) params.sort_order = filters.sort_order;
-      }
-      const { data } = await api.get(`/catalog/parts/${modId}/${secId}`, { params });
+      if (!categoryId) return { items: [], total: 0, page: 1, page_size: 25 };
+      const params: Record<string, any> = { page: options?.page ?? 1, page_size: options?.page_size ?? 25 };
+      if (options?.in_stock_only) params.in_stock_only = true;
+      if (options?.min_price) params.min_price = options.min_price;
+      if (options?.max_price) params.max_price = options.max_price;
+      if (options?.sort_by) params.sort_by = options.sort_by;
+      if (options?.sort_order) params.sort_order = options.sort_order;
+      const { data } = await api.get(`/catalog/parts/0/${categoryId}`, { params });
       return data;
     },
-    enabled: !!modId && !!secId,
+    enabled: !!categoryId,
   });
 }

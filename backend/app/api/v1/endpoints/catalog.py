@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 from app.core.db import get_db, get_tecdoc_db
 from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, SupplierOffer, Supplier
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
-from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartDetailSchema
+from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse, PartDetailSchema
 from app.services.sync_service import sync_service
 from app.services.tecdoc_client import tecdoc_client
 
@@ -26,6 +26,27 @@ def _best_offer(offers: List[SupplierOffer]) -> Optional[Dict[str, Any]]:
         "quantity": best.quantity or 0,
         "supplier_name": best.supplier.name if best.supplier else None,
         "currency": best.currency or "UAH",
+    }
+
+
+def _part_to_result(part, db) -> dict:
+    offers = db.query(SupplierOffer).options(
+        joinedload(SupplierOffer.supplier)
+    ).filter(SupplierOffer.part_id == part.id).all()
+    best = _best_offer(offers)
+    return {
+        "id": part.id,
+        "article": part.article,
+        "name": part.name,
+        "brand_id": part.brand_id,
+        "tecdoc_id": part.tecdoc_id,
+        "category_id": part.category_id,
+        "brand": part.brand,
+        "price": best["price"] if best else None,
+        "quantity": best["quantity"] if best else None,
+        "supplier_name": best["supplier_name"] if best else None,
+        "currency": best["currency"] if best else "UAH",
+        "image_url": None,
     }
 
 
@@ -53,11 +74,13 @@ async def get_sections(mod_id: int, db: Session = Depends(get_db)):
     return sections
 
 
-@router.get("/parts/{mod_id}/{sec_id}", response_model=List[PartSchema])
+@router.get("/parts/{mod_id}/{sec_id}", response_model=PartListResponse)
 async def get_parts(
     mod_id: int,
     sec_id: int,
     db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
     in_stock_only: bool = Query(False),
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
@@ -65,63 +88,54 @@ async def get_parts(
     sort_by: Optional[str] = Query(None),
     sort_order: Optional[str] = Query("asc"),
 ):
-    local_mod = db.query(VehicleModification).filter(
-        (VehicleModification.tecdoc_id == mod_id) | (VehicleModification.id == mod_id)
-    ).first()
-    if not local_mod:
-        raise HTTPException(status_code=404, detail="Modification not found")
-
-    query = db.query(Part).join(PartApplicability).filter(
-        PartApplicability.mod_id == local_mod.id
-    )
+    if mod_id == 0:
+        base_query = db.query(Part).filter(Part.category_id == sec_id)
+    else:
+        local_mod = db.query(VehicleModification).filter(
+            (VehicleModification.tecdoc_id == mod_id) | (VehicleModification.id == mod_id)
+        ).first()
+        if not local_mod:
+            raise HTTPException(status_code=404, detail="Modification not found")
+        base_query = db.query(Part).join(PartApplicability).filter(
+            PartApplicability.mod_id == local_mod.id,
+            Part.category_id == sec_id,
+        )
 
     if in_stock_only:
-        query = query.join(SupplierOffer).filter(SupplierOffer.quantity > 0)
+        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.quantity > 0)
     if min_price is not None:
-        query = query.join(SupplierOffer).filter(SupplierOffer.final_price >= min_price)
+        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.final_price >= min_price)
     if max_price is not None:
-        query = query.join(SupplierOffer).filter(SupplierOffer.final_price <= max_price)
+        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.final_price <= max_price)
     if supplier_id is not None:
-        query = query.join(SupplierOffer).filter(SupplierOffer.supplier_id == supplier_id)
+        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.supplier_id == supplier_id)
 
     if sort_by == "price":
-        query = query.join(SupplierOffer)
+        base_query = base_query.join(SupplierOffer)
         order_col = SupplierOffer.final_price
-        query = query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
+        base_query = base_query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
     elif sort_by == "name":
         order_col = Part.name
-        query = query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
+        base_query = base_query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
 
-    query = query.distinct()
+    base_query = base_query.distinct()
+    total = base_query.count()
+    parts = base_query.offset((page - 1) * page_size).limit(page_size).all()
 
-    parts = query.all()
-
-    if not parts:
+    if not parts and page == 1 and mod_id != 0:
         await sync_service.sync_parts_for_section(db, mod_id=mod_id, sec_id=sec_id)
-        parts = query.all()
+        parts = base_query.offset((page - 1) * page_size).limit(page_size).all()
+        if parts:
+            total = base_query.count()
 
-    result = []
-    for part in parts:
-        offers = db.query(SupplierOffer).options(
-            joinedload(SupplierOffer.supplier)
-        ).filter(SupplierOffer.part_id == part.id).all()
-        best = _best_offer(offers)
+    result = [_part_to_result(p, db) for p in parts]
 
-        result.append({
-            "id": part.id,
-            "article": part.article,
-            "name": part.name,
-            "brand_id": part.brand_id,
-            "tecdoc_id": part.tecdoc_id,
-            "category_id": part.category_id,
-            "brand": part.brand,
-            "price": best["price"] if best else None,
-            "quantity": best["quantity"] if best else None,
-            "supplier_name": best["supplier_name"] if best else None,
-            "currency": best["currency"] if best else "UAH",
-        })
-
-    return result
+    return {
+        "items": result,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
 
 
 @router.get("/search", response_model=List[PartSchema])

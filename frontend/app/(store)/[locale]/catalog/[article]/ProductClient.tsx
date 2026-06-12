@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ShoppingCart, Car, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -81,6 +82,7 @@ function ApplicabilitySection({ article: art }: { article: string }) {
 export default function ProductClient({ article }: { article: string }) {
   const t = useTranslations('catalog');
   const tc = useTranslations('common');
+  const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
 
   const { data, isLoading } = useQuery({
@@ -107,12 +109,12 @@ export default function ProductClient({ article }: { article: string }) {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <Link
-        href="/catalog"
+      <button
+        onClick={() => router.push('/catalog', { scroll: false })}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" /> {t('title')}
-      </Link>
+      </button>
 
       {isLoading ? (
         <div className="space-y-8">
