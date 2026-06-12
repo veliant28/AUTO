@@ -8,6 +8,7 @@ import Providers from '@/components/Providers';
 import type { Metadata } from 'next';
 import SettingsHydrate from '@/components/layout/SettingsHydrate';
 import FooterHydrate from '@/components/layout/FooterHydrate';
+import { QueryClient, dehydrate } from '@tanstack/react-query';
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = await params;
@@ -78,6 +79,17 @@ export default async function RootLayout(props: any) {
   const params = await props.params;
   const locale = params.locale;
   const [brandName, footerData] = await Promise.all([fetchBrandName(), fetchFooter(locale)]);
+
+  const queryClient = new QueryClient();
+  try {
+    const res = await fetch(`${API}/categories/header?locale=${locale}`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const data = await res.json();
+      queryClient.setQueryData(['categories-header', locale], data);
+    }
+  } catch {}
+  const dehydratedState = dehydrate(queryClient);
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body>
@@ -88,7 +100,7 @@ export default async function RootLayout(props: any) {
             enableSystem
             disableTransitionOnChange
           >
-            <Providers>
+            <Providers dehydratedState={dehydratedState}>
               <SettingsHydrate brandName={brandName} />
               <FooterHydrate locale={locale} data={footerData} />
               <Toaster position="bottom-right" offset={{ right: '48px' }} />

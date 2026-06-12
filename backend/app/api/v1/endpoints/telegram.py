@@ -37,7 +37,7 @@ async def start_connection(user_id: int = Depends(get_current_user), db: Session
     return {
         "message": "Код сгенерирован",
         "code": code,
-        "bot_username": settings.TELEGRAM_BOT_USERNAME or "AutoPartsBot",
+        "bot_username": settings.TELEGRAM_BOT_USERNAME or "SVOMBot",
         "connected": False,
     }
 
@@ -109,7 +109,7 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
                 )
         else:
             await send_message(chat_id,
-                "👋 Добро пожаловать в AutoParts Bot!\n\n"
+                "👋 Добро пожаловать в SVOM Bot!\n\n"
                 "Чтобы привязать аккаунт:\n"
                 "1. Откройте Настройки профиля на сайте\n"
                 "2. Нажмите «Подключить Telegram»\n"

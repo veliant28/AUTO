@@ -1,14 +1,17 @@
 'use client';
 
 import React from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, HydrationBoundary } from '@tanstack/react-query';
 import { queryClient } from '@/lib/api';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import type { DehydratedState } from '@tanstack/react-query';
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children, dehydratedState }: { children: React.ReactNode; dehydratedState?: DehydratedState }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>{children}</TooltipProvider>
+      <HydrationBoundary state={dehydratedState}>
+        <TooltipProvider>{children}</TooltipProvider>
+      </HydrationBoundary>
     </QueryClientProvider>
   );
 }

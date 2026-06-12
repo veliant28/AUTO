@@ -80,7 +80,7 @@ async def get_parts(
     sec_id: int,
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(24, ge=1, le=100),
     in_stock_only: bool = Query(False),
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
@@ -101,17 +101,19 @@ async def get_parts(
             Part.category_id == sec_id,
         )
 
+    need_offer_join = any([in_stock_only, min_price is not None, max_price is not None, supplier_id is not None, sort_by == "price"])
+    if need_offer_join:
+        base_query = base_query.join(SupplierOffer)
     if in_stock_only:
-        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.quantity > 0)
+        base_query = base_query.filter(SupplierOffer.quantity > 0)
     if min_price is not None:
-        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.final_price >= min_price)
+        base_query = base_query.filter(SupplierOffer.final_price >= min_price)
     if max_price is not None:
-        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.final_price <= max_price)
+        base_query = base_query.filter(SupplierOffer.final_price <= max_price)
     if supplier_id is not None:
-        base_query = base_query.join(SupplierOffer).filter(SupplierOffer.supplier_id == supplier_id)
+        base_query = base_query.filter(SupplierOffer.supplier_id == supplier_id)
 
     if sort_by == "price":
-        base_query = base_query.join(SupplierOffer)
         order_col = SupplierOffer.final_price
         base_query = base_query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
     elif sort_by == "name":

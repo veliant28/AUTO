@@ -11,7 +11,7 @@ router = APIRouter()
 def _get_settings(db: Session) -> SiteSettings:
     s = db.query(SiteSettings).first()
     if not s:
-        s = SiteSettings(brand_name="AutoParts", timezone="Europe/Kiev")
+        s = SiteSettings(brand_name="SVOM", timezone="Europe/Kiev")
         db.add(s)
         db.commit()
         db.refresh(s)

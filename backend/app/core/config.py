@@ -38,6 +38,6 @@ class Settings(BaseSettings):
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_WEBHOOK_URL: str = ""
-    TELEGRAM_BOT_USERNAME: str = "AutoPartsBot"
+    TELEGRAM_BOT_USERNAME: str = "SVOMBot"
 
 settings = Settings()
