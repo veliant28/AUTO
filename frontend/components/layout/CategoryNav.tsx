@@ -7,14 +7,14 @@ import { Wrench, ArrowUpDown, CircleStop, Thermometer, Fuel, Settings, Lightbulb
 import api from '@/lib/api';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'Подвеска и Рулевое': <ArrowUpDown className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Тормозная система': <CircleStop className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Охлаждение и Отопление': <Thermometer className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Двигатель и Выхлоп': <Fuel className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Сцепление и трансмиссия': <Settings className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Электрика и Освещение': <Lightbulb className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Детали кузова': <Car className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
-  'Автохимия и аксессуары': <FlaskConical className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />,
+  'Подвеска и Рулевое': <ArrowUpDown className="w-5 h-5" />,
+  'Тормозная система': <CircleStop className="w-5 h-5" />,
+  'Охлаждение и Отопление': <Thermometer className="w-5 h-5" />,
+  'Двигатель и Выхлоп': <Fuel className="w-5 h-5" />,
+  'Сцепление и трансмиссия': <Settings className="w-5 h-5" />,
+  'Электрика и Освещение': <Lightbulb className="w-5 h-5" />,
+  'Детали кузова': <Car className="w-5 h-5" />,
+  'Автохимия и аксессуары': <FlaskConical className="w-5 h-5" />,
 };
 
 interface ChildCat {
@@ -180,30 +180,32 @@ export default function CategoryNav() {
   }
 
   return (
-    <div ref={navRef} className="hidden lg:grid grid-cols-9 flex-1 mx-4 items-start" onMouseLeave={handleMouseLeave}>
+    <div ref={navRef} className="hidden lg:flex flex-1 mx-4 h-full items-center justify-around gap-1" onMouseLeave={handleMouseLeave}>
       {categories.map((cat, idx) => (
-        <div key={cat.id} className="col-span-1">
-          <button
-            ref={el => { btnRefs.current[idx] = el; }}
-            onMouseEnter={() => handleMouseEnter(idx)}
-            className={`w-full text-left text-sm leading-tight font-medium text-foreground/80 hover:text-primary transition-colors px-1 py-0.5 cursor-pointer ${activeIdx === idx ? 'text-primary' : ''}`}
-          >
-            {CATEGORY_ICONS[cat.name]}{cat.name}
-          </button>
-        </div>
+        <button
+          key={cat.id}
+          ref={el => { btnRefs.current[idx] = el; }}
+          onMouseEnter={() => handleMouseEnter(idx)}
+          className={`flex items-center gap-1.5 h-10 text-sm font-medium text-foreground/80 hover:text-primary transition-colors px-1 cursor-pointer ${activeIdx === idx ? 'text-primary' : ''}`}
+        >
+          <span className="w-5 h-5 shrink-0 flex items-center justify-center">
+            {CATEGORY_ICONS[cat.name]}
+          </span>
+          <span className="leading-tight line-clamp-2">{cat.name}</span>
+        </button>
       ))}
 
       {toSections.length > 0 && (
-        <div className="col-span-1">
-          <button
-            ref={el => { btnRefs.current[categories.length] = el; }}
-            onMouseEnter={() => handleMouseEnter(categories.length)}
-            className={`w-full text-left text-sm leading-tight font-medium text-foreground/80 hover:text-primary transition-colors px-1 py-0.5 cursor-pointer ${activeIdx === categories.length ? 'text-primary' : ''}`}
-          >
-            <Wrench className="w-3.5 h-3.5 inline mr-0.5 -mt-0.5" />
-            Запчасти для ТО
-          </button>
-        </div>
+        <button
+          ref={el => { btnRefs.current[categories.length] = el; }}
+          onMouseEnter={() => handleMouseEnter(categories.length)}
+          className={`flex items-center gap-1.5 h-10 text-sm font-medium text-foreground/80 hover:text-primary transition-colors px-1 cursor-pointer ${activeIdx === categories.length ? 'text-primary' : ''}`}
+        >
+          <span className="w-5 h-5 shrink-0 flex items-center justify-center">
+            <Wrench className="w-5 h-5" />
+          </span>
+          <span className="leading-tight line-clamp-2">Запчасти для ТО</span>
+        </button>
       )}
 
       {activePopup && popupTop !== null && (

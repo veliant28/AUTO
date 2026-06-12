@@ -24,6 +24,9 @@
     "added_to_cart": "Додано в кошик",
     "in_stock": "В наявності",
     "on_order": "Під замовлення",
+    "prev_page": "Назад",
+    "next_page": "Вперед",
+    "page_of": "Сторінка {page} з {total}",
     "loading": "Загрузка...",
     "save": "Зберегти",
     "cancel": "Скасувати",
@@ -74,6 +77,7 @@
     "select_category": "Оберіть категорію для відображення запчастин",
     "filters": "Фільтри",
     "filters_sort": "Фільтри та сортування",
+    "filters_reset": "Фільтри скинуто",
     "close": "Закрити",
     "login_required": "Авторизуйтесь",
     "login_for_checkout": "Для оформлення замовлення необхідно увійти в акаунт",
@@ -180,7 +184,7 @@
     "support": "Підтримка",
     "terms": "Умови",
     "admin_panel": "Адмін-панель",
-    "copyright": "© 2026 AutoParts Store",
+    "copyright": "© 2026 SVOM Store",
     "contact_phone": "+380 (44) 123-45-67",
     "contact_email": "info@autoparts.local",
     "contact_address": "Україна, м. Київ, вул. Автозаводська, 1",
@@ -192,7 +196,7 @@
     "title": "Дашборд",
     "sidebar_title": "Адмін-панель",
     "footer_title": "Футер",
-    "footer_logo_name": "AutoParts",
+    "footer_logo_name": "SVOM",
     "footer_section_company": "Компанія",
     "footer_section_help": "Допомога",
     "footer_description": "Опис",
@@ -367,7 +371,6 @@
     "products_delete_confirm_message": "Ви впевнені, що хочете видалити цей товар?",
     "products_delete_success": "Товар видалено",
     "products_delete_error": "Помилка при видаленні",
-    "prev_page": "Назад",
     "pricing_title": "Ціна",
     "pricing_general": "Загальна націнка",
     "pricing_category": "Категорія",
@@ -388,7 +391,6 @@
     "status_error": "Помилка",
     "save": "Зберегти",
     "apply": "Застосувати",
-    "next_page": "Вперед",
     "brands_title": "Бренди",
     "brands_brand": "Бренд",
     "brands_id": "ID",
@@ -636,8 +638,8 @@
     "about": {
       "title": "Про нас",
       "meta_title": "Про нас",
-      "meta_desc": "Інформація про AutoParts",
-      "p1": "AutoParts — провідний інтернет-магазин автозапчастин з інтеграцією TecDoc.",
+      "meta_desc": "Інформація про SVOM",
+      "p1": "SVOM — провідний інтернет-магазин автозапчастин з інтеграцією TecDoc.",
       "p2": "Понад 235 000 оригінальних та аналогових запчастин від перевірених постачальників.",
       "p3": "Наша місія — зробити пошук і купівлю запчастин швидким, зручним та надійним."
     },
@@ -653,7 +655,7 @@
       "title": "Умови використання",
       "meta_title": "Умови використання",
       "meta_desc": "Умови сайту",
-      "p1": "Використовуючи AutoParts, ви погоджуєтесь з умовами."
+      "p1": "Використовуючи SVOM, ви погоджуєтесь з умовами."
     },
     "contacts": {
       "phone_title": "Телефон",
@@ -664,7 +666,7 @@
       "address": "Україна, м. Київ, вул. Автозаводська, 1",
       "title": "Контакти",
       "meta_title": "Контакти",
-      "meta_desc": "Зв'язок з AutoParts"
+      "meta_desc": "Зв'язок з SVOM"
     },
     "delivery": {
       "courier_title": "Кур'єрська доставка",

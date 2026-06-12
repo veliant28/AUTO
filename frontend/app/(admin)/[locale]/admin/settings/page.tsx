@@ -330,7 +330,7 @@ export default function SettingsPage() {
               <>
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">{t('settings_brand_name')}</label>
-                  <Input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="AutoParts" />
+                  <Input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="SVOM" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">{t('settings_timezone')}</label>
@@ -349,7 +349,7 @@ export default function SettingsPage() {
                     <div className="bg-primary text-primary-foreground p-1.5 rounded">
                       <FalconLogo className="w-5 h-5" />
                     </div>
-                    <span>{brandName || 'AutoParts'}</span>
+                    <span>{brandName || 'SVOM'}</span>
                   </div>
                 </div>
               </>

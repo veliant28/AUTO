@@ -111,7 +111,7 @@ export default function FooterPage() {
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* Column 1: AutoParts + Contacts + Delivery */}
+          {/* Column 1: SVOM + Contacts + Delivery */}
           <div className="space-y-6">
             <Card>
               <CardHeader>

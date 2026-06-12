@@ -23,7 +23,7 @@ export type ProductTileItem = {
 
 type ProductTileProps = {
   product: ProductTileItem;
-  onToggleFavorite: (article: string, isFavorite: boolean) => void;
+  onToggleFavorite: (article: string) => void;
   onAddToCart: (product: ProductTileItem) => void;
 };
 
@@ -61,8 +61,8 @@ function getBrandColor(brand: string | null): string {
   return BRAND_COLORS[first] || 'from-primary/40 to-primary/20';
 }
 
-function getBrandInitial(brand: string | null): string {
-  return brand?.charAt(0)?.toUpperCase() || '?';
+function getBrandInitial(_brand: string | null): string {
+  return 'S';
 }
 
 export default function ProductTile({ product, onToggleFavorite, onAddToCart }: ProductTileProps) {
@@ -84,7 +84,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
       <Link href={`/catalog/${product.article}`} onClick={handleClick} className="block">
         <div className={`aspect-square relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(product.brand)}`}>
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="object-contain w-full h-full" />
+            <img src={product.image_url} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <span className="text-5xl font-bold text-white/40 select-none">
               {getBrandInitial(product.brand)}
@@ -97,9 +97,9 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
         <Link href={`/catalog/${product.article}`} onClick={handleClick} className="block">
           <div className="flex items-center gap-1.5 flex-wrap">
             {product.brand && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.brand}</Badge>
+              <Badge variant="secondary" className="text-sm px-1.5">{product.brand}</Badge>
             )}
-            <span className="text-[11px] font-mono text-muted-foreground">{product.article}</span>
+            <span className="text-sm font-mono text-muted-foreground">{product.article}</span>
           </div>
           <p className="text-sm font-medium leading-snug line-clamp-2 mt-1 min-h-[2.5em]">
             {product.name}
@@ -110,25 +110,25 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
           <div className="min-w-0 flex-1">
             {product.price != null ? (
               <span className="font-bold text-base">
-                {product.price.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">₴</span>
+                {product.price.toLocaleString()} <span className="text-base font-normal text-muted-foreground">₴</span>
               </span>
             ) : (
               <span className="text-xs text-muted-foreground">—</span>
             )}
           </div>
-          <Badge variant={inStock ? "default" : "secondary"} className="text-[10px] h-4 shrink-0">
+          <Badge className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}>
             {inStock ? "В наличии" : "Нет"}
           </Badge>
         </div>
 
-        <div className="flex items-center gap-1 pt-1">
+        <div className="flex items-center gap-2 pt-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8"
-                onClick={(e) => { e.preventDefault(); onToggleFavorite(product.article, product.isFavorite); }}
+                className="h-9 w-9"
+                onClick={(e) => { e.preventDefault(); onToggleFavorite(product.article); }}
               >
                 <Heart className={`h-4 w-4 ${product.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
@@ -138,9 +138,8 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-9 w-9 bg-green-500 text-white hover:bg-green-600"
                 onClick={(e) => { e.preventDefault(); onAddToCart(product); }}
               >
                 <ShoppingCart className="h-4 w-4" />

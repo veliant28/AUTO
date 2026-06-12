@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   AUTH: 'auth-storage',
   VEHICLE: 'vehicle-storage',
   LAST_ORDER_CHECK: 'lastOrderCheck',
+  FAVORITES: 'favorites-storage',
 } as const;
 
 // Validation

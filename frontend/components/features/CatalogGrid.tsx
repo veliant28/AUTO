@@ -9,28 +9,30 @@ import ProductTile, { ProductTileItem } from './ProductTile';
 type CatalogGridProps = {
   products: ProductTileItem[];
   isLoading: boolean;
-  onToggleFavorite: (article: string, isFavorite: boolean) => void;
+  onToggleFavorite: (article: string) => void;
   onAddToCart: (product: ProductTileItem) => void;
 };
 
 function TileSkeleton() {
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      <Skeleton className="aspect-square w-full" />
+      <Skeleton className="aspect-square w-full rounded-none" />
       <div className="p-3 space-y-2">
-        <div className="flex gap-1.5">
-          <Skeleton className="h-4 w-12 rounded" />
-          <Skeleton className="h-4 w-20 rounded" />
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-5 w-14 rounded-sm" />
+          <Skeleton className="h-4 w-16 rounded-sm" />
         </div>
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex justify-between items-center">
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+        <div className="flex items-center justify-between gap-2">
           <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-4 w-14 rounded" />
+          <Skeleton className="h-5 w-16 rounded-sm" />
         </div>
-        <div className="flex gap-1 pt-1">
-          <Skeleton className="h-8 w-8 rounded-md" />
-          <Skeleton className="h-8 w-8 rounded-md" />
+        <div className="flex items-center gap-2 pt-1">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
         </div>
       </div>
     </div>

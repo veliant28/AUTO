@@ -90,7 +90,7 @@ export default function ProfilePage() {
   const [confirmPass, setConfirmPass] = useState('');
 
   const [code, setCode] = useState<string | null>(null);
-  const [botUsername, setBotUsername] = useState('AutoPartsBot');
+  const [botUsername, setBotUsername] = useState('SVOMBot');
   const [tgConnected, setTgConnected] = useState(false);
   const [tgUsername, setTgUsername] = useState<string | null>(null);
   const [tgLoading, setTgLoading] = useState(false);

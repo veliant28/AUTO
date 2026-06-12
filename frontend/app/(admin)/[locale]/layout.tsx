@@ -10,7 +10,7 @@ import '@/app/globals.css';
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = await params;
   const API = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000/api/v1';
-  let brandName = 'AutoParts';
+  let brandName = 'SVOM';
   try {
     const res = await fetch(`${API}/settings`, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
     if (res.ok) {
@@ -34,7 +34,7 @@ async function fetchBrandName(): Promise<string> {
       if (data?.brand_name) return data.brand_name;
     }
   } catch {}
-  return 'AutoParts';
+  return 'SVOM';
 }
 
 export default async function AdminRootLayout(props: any) {

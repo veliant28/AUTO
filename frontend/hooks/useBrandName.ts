@@ -10,5 +10,5 @@ export function useBrandName() {
     },
     staleTime: 60000,
   });
-  return data?.brand_name || 'AutoParts';
+  return data?.brand_name || 'SVOM';
 }

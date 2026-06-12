@@ -16,8 +16,8 @@ export function useParts(
   return useQuery({
     queryKey: ['parts', categoryId, options],
     queryFn: async () => {
-      if (!categoryId) return { items: [], total: 0, page: 1, page_size: 25 };
-      const params: Record<string, any> = { page: options?.page ?? 1, page_size: options?.page_size ?? 25 };
+      if (!categoryId) return { items: [], total: 0, page: 1, page_size: 24 };
+      const params: Record<string, any> = { page: options?.page ?? 1, page_size: options?.page_size ?? 24 };
       if (options?.in_stock_only) params.in_stock_only = true;
       if (options?.min_price) params.min_price = options.min_price;
       if (options?.max_price) params.max_price = options.max_price;
