@@ -1,3 +1,4 @@
+import ast
 import io
 import os
 from datetime import datetime
@@ -146,12 +147,34 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
 
         stock_total = 0
         stock_regions = {}
+
+        # Handle stock_regions column: parse dict string from JSON/XLSX
+        sr_val = values.get("stock_regions")
+        if sr_val and isinstance(sr_val, str) and sr_val.strip().startswith("{"):
+            try:
+                parsed = ast.literal_eval(sr_val)
+                if isinstance(parsed, dict):
+                    stock_regions.update(parsed)
+            except (ValueError, SyntaxError):
+                pass
+
+        # Handle stock_total column: use directly as total
+        st_val = values.get("stock_total")
+        if st_val is not None:
+            try:
+                stock_total = int(float(str(st_val).replace(">", "").replace("<", "").strip()))
+            except (ValueError, TypeError):
+                pass
+
+        # Scan for individual warehouse columns (from manual XLSX uploads)
         for k, v in values.items():
-            if any(kw in k for kw in ["count", "stock", "remain", "warehouse", "склад"]):
+            if k in ("stock_total", "stock_regions"):
+                continue
+            if any(kw in k for kw in ["count", "remain", "warehouse", "склад"]):
                 try:
                     qty = int(float(str(v).replace(">", "").replace("<", "").strip()))
-                    stock_total += qty
-                    stock_regions[k] = qty
+                    if k not in stock_regions:
+                        stock_regions[k] = qty
                 except (ValueError, TypeError):
                     pass
 

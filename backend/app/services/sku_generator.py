@@ -8,13 +8,15 @@ def generate_sku(db: Session) -> str:
     brand = "SVOM"
     for _ in range(100):
         parts = []
-        parts.append(''.join(random.choices(string.digits, k=random.randint(1, 3))))
+        parts.append(''.join(random.choices(string.digits, k=random.randint(1, 2))))
         for i, letter in enumerate(brand):
             parts.append(letter)
             if i < len(brand) - 1:
-                parts.append(''.join(random.choices(string.digits, k=random.randint(1, 3))))
-        parts.append(''.join(random.choices(string.digits, k=random.randint(1, 3))))
+                parts.append(''.join(random.choices(string.digits, k=random.randint(1, 2))))
+        parts.append(''.join(random.choices(string.digits, k=random.randint(1, 2))))
         sku = ''.join(parts)
+        if len(sku) > 16:
+            continue
         exists = db.query(SupplierPrice).filter(SupplierPrice.sku == sku).first()
         if not exists:
             return sku
