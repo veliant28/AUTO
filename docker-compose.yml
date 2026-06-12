@@ -50,9 +50,16 @@ services:
   celery_beat:
     build: ./backend
     command: celery -A app.workers beat --loglevel=info
+    environment:
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      TZ: Europe/Kyiv
     depends_on:
       - redis
       - postgres
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
