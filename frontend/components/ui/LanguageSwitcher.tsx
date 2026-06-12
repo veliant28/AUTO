@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Globe } from 'lucide-react';
 import {
@@ -21,6 +21,7 @@ const languages = [
 
 export default function LanguageSwitcher() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const locale = useLocale();
   const tc = useTranslations('common');
@@ -32,7 +33,8 @@ export default function LanguageSwitcher() {
     if (['ru', 'en', 'ua'].includes(segments[0])) {
       segments[0] = code;
     }
-    router.replace('/' + segments.join('/'));
+    const qs = searchParams.toString();
+    router.replace('/' + segments.join('/') + (qs ? '?' + qs : ''));
   };
 
   return (

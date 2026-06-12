@@ -49,7 +49,7 @@ export default function CatalogPage() {
   const handleToggleFavorite = useCallback(async (article: string) => {
     const wasFav = favoriteArticles.includes(article);
     toggleFavorite(article);
-    toast.success(wasFav ? 'Убрано из избранного' : 'Добавлено в избранное');
+    toast.success(wasFav ? t('removed_from_favorites') : t('added_to_favorites'));
   }, [toggleFavorite, favoriteArticles]);
 
   const handleAddToCart = useCallback((product: any) => {
@@ -84,7 +84,7 @@ export default function CatalogPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center py-20 space-y-4">
-          <p className="text-lg font-medium">Выберите категорию из каталога в шапке сайта</p>
+          <p className="text-lg font-medium">{t('select_category')}</p>
         </div>
       </div>
     );

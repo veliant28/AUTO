@@ -4,6 +4,8 @@ from typing import Optional, List
 class PartCategorySchema(BaseModel):
     id: int
     name: str
+    name_ua: Optional[str] = None
+    name_en: Optional[str] = None
     tecdoc_id: Optional[int] = None
     parent_id: Optional[int] = None
     depth: int = 0
@@ -13,10 +15,14 @@ class PartCategorySchema(BaseModel):
 
 class CategoryCreate(BaseModel):
     name: str
+    name_ua: Optional[str] = None
+    name_en: Optional[str] = None
     parent_id: Optional[int] = None
 
 class CategoryUpdate(BaseModel):
     name: Optional[str] = None
+    name_ua: Optional[str] = None
+    name_en: Optional[str] = None
     parent_id: Optional[int] = None
 
 class CategoryListResponse(BaseModel):

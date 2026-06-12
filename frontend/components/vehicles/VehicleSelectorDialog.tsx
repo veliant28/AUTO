@@ -16,10 +16,10 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/lib/toast';
 import { useVehicleYears, useVehicleMakes, useVehicleModels, useVehicleCars, useVehicleVolumes, useVehicleEngines } from '@/hooks/useVehicleCascade';
 
-const TYPE_BUTTONS: { value: VehicleType; label: string; icon: React.ElementType }[] = [
-  { value: 'passenger', label: 'Легковой', icon: Car },
-  { value: 'commercial', label: 'Грузовой', icon: Truck },
-  { value: 'motorbike', label: 'Мотоцикл', icon: Bike },
+const TYPE_BUTTONS: { value: VehicleType; labelKey: string; icon: React.ElementType }[] = [
+  { value: 'passenger', labelKey: 'vehicle_type_passenger', icon: Car },
+  { value: 'commercial', labelKey: 'vehicle_type_commercial', icon: Truck },
+  { value: 'motorbike', labelKey: 'vehicle_type_motorbike', icon: Bike },
 ];
 
 interface Props {
@@ -94,7 +94,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                       const match = store.power.match(/^([\d.]+)/);
                       const kw = match ? parseFloat(match[1]) : null;
                       const hp = kw ? Math.round(kw * 1.34102) : null;
-                      return hp ? <span className="text-muted-foreground"> / {hp} л.с.</span> : null;
+                      return hp ? <span className="text-muted-foreground"> / {hp} {t('horsepower')}</span> : null;
                     })()}
                     {(store.yearFrom || store.yearTo) && (
                       <span className="text-muted-foreground"> / {store.yearFrom || '?'}–{store.yearTo || '?'}</span>
@@ -123,7 +123,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
           <div>
             <p className="text-sm font-medium mb-2">{t('vehicle_type')}</p>
             <div className="flex gap-2">
-              {TYPE_BUTTONS.map(({ value, label, icon: Icon }) => (
+              {TYPE_BUTTONS.map(({ value, labelKey, icon: Icon }) => (
                 <Button
                   key={value}
                   variant={store.type === value ? 'default' : 'outline'}
@@ -131,7 +131,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                   onClick={() => store.setType(value)}
                 >
                   <Icon className="w-4 h-4" />
-                  {label}
+                  {t(labelKey)}
                 </Button>
               ))}
             </div>

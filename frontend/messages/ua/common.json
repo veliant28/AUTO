@@ -23,7 +23,12 @@
     "add_to_cart": "В кошик",
     "added_to_cart": "Додано в кошик",
     "in_stock": "В наявності",
+    "out_of_stock": "Немає в наявності",
     "on_order": "Під замовлення",
+    "add_to_favorites": "В обране",
+    "remove_from_favorites": "Прибрати з обраного",
+    "added_to_favorites": "Додано в обране",
+    "select_category": "Оберіть категорію з каталогу в шапці сайту",
     "prev_page": "Назад",
     "next_page": "Вперед",
     "page_of": "Сторінка {page} з {total}",
@@ -161,7 +166,11 @@
     "avatar_style": "Стиль аватара",
     "confirm_password": "Повторіть пароль",
     "password_label": "Пароль",
-    "name_label": "Ім'я"
+    "name_label": "Ім'я",
+    "vehicle_type_passenger": "Легковий",
+    "vehicle_type_commercial": "Вантажний",
+    "vehicle_type_motorbike": "Мотоцикл",
+    "horsepower": "к.с."
   },
   "header": {
     "catalog": "Каталог",
@@ -171,7 +180,8 @@
     "profile_link": "Профіль",
     "my_garage": "Мій гараж",
     "my_account": "Акаунт",
-    "admin_panel": "Адмін-панель"
+    "admin_panel": "Адмін-панель",
+    "maintenance_parts": "Запчастини для ТО"
   },
   "footer": {
     "description": "Найбільший інтернет-магазин автозапчастин з інтеграцією TecDoc. Миттєвий пошук і точна застосовність.",

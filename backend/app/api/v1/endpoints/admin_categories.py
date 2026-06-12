@@ -36,7 +36,11 @@ async def list_categories(
     query = db.query(PartCategory)
     if search:
         like = f"%{search}%"
-        query = query.filter(PartCategory.name.ilike(like))
+        query = query.filter(
+            PartCategory.name.ilike(like)
+            | PartCategory.name_ua.ilike(like)
+            | PartCategory.name_en.ilike(like)
+        )
     total = query.count()
     # For tree display, we fetch all and flatten with depth ordering
     # But paginate the flat list
@@ -46,7 +50,7 @@ async def list_categories(
     end = start + page_size
     paginated = flat[start:end]
     return CategoryListResponse(
-        items=[PartCategorySchema(id=c.id, name=c.name, tecdoc_id=c.tecdoc_id, parent_id=c.parent_id, depth=d) for c, d in paginated],
+        items=[PartCategorySchema(id=c.id, name=c.name, name_ua=c.name_ua, name_en=c.name_en, tecdoc_id=c.tecdoc_id, parent_id=c.parent_id, depth=d) for c, d in paginated],
         total=total,
         page=page,
         page_size=page_size,
@@ -59,7 +63,7 @@ async def create_category(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
-    cat = PartCategory(name=data.name, parent_id=data.parent_id)
+    cat = PartCategory(name=data.name, name_ua=data.name_ua, name_en=data.name_en, parent_id=data.parent_id)
     db.add(cat)
     db.commit()
     db.refresh(cat)
@@ -78,6 +82,10 @@ async def update_category(
         raise HTTPException(404, "Category not found")
     if data.name is not None:
         cat.name = data.name
+    if data.name_ua is not None:
+        cat.name_ua = data.name_ua
+    if data.name_en is not None:
+        cat.name_en = data.name_en
     if data.parent_id is not None:
         # Prevent setting self as parent or creating cycle
         if data.parent_id == cat_id:

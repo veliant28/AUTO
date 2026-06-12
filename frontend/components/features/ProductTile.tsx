@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,7 @@ function getBrandInitial(_brand: string | null): string {
 }
 
 export default function ProductTile({ product, onToggleFavorite, onAddToCart }: ProductTileProps) {
+  const t = useTranslations('common');
   const inStock = product.quantity > 0;
 
   const handleClick = () => {
@@ -117,7 +119,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
             )}
           </div>
           <Badge className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}>
-            {inStock ? "В наличии" : "Нет"}
+            {inStock ? t('in_stock') : t('out_of_stock')}
           </Badge>
         </div>
 
@@ -133,7 +135,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
                 <Heart className={`h-4 w-4 ${product.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{product.isFavorite ? 'Убрать из избранного' : 'В избранное'}</TooltipContent>
+            <TooltipContent>{product.isFavorite ? t('remove_from_favorites') : t('add_to_favorites')}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -145,7 +147,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
                 <ShoppingCart className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>В корзину</TooltipContent>
+            <TooltipContent>{t('add_to_cart')}</TooltipContent>
           </Tooltip>
         </div>
       </div>

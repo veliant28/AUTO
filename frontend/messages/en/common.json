@@ -23,7 +23,12 @@
     "add_to_cart": "Add to Cart",
     "added_to_cart": "Added to Cart",
     "in_stock": "In Stock",
+    "out_of_stock": "Out of stock",
     "on_order": "On Order",
+    "add_to_favorites": "Add to favorites",
+    "remove_from_favorites": "Remove from favorites",
+    "added_to_favorites": "Added to favorites",
+    "select_category": "Select a category from the header catalog",
     "prev_page": "Prev",
     "next_page": "Next",
     "page_of": "Page {page} of {total}",
@@ -161,7 +166,11 @@
     "avatar_style": "Avatar Style",
     "confirm_password": "Confirm Password",
     "password_label": "Password",
-    "name_label": "Name"
+    "name_label": "Name",
+    "vehicle_type_passenger": "Passenger",
+    "vehicle_type_commercial": "Commercial",
+    "vehicle_type_motorbike": "Motorcycle",
+    "horsepower": "hp"
   },
   "header": {
     "catalog": "Catalog",
@@ -171,7 +180,8 @@
     "profile_link": "Profile",
     "my_garage": "My Garage",
     "my_account": "Account",
-    "admin_panel": "Admin Panel"
+    "admin_panel": "Admin Panel",
+    "maintenance_parts": "Maintenance Parts"
   },
   "footer": {
     "description": "The largest online auto parts store with TecDoc integration. Instant search and precise applicability.",

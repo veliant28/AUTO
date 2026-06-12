@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Wrench, ArrowUpDown, CircleStop, Thermometer, Fuel, Settings, Lightbulb, Car, FlaskConical } from 'lucide-react';
 import api from '@/lib/api';
@@ -20,17 +21,20 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 interface ChildCat {
   id: number;
   name: string;
+  name_ru: string;
   product_count: number;
 }
 
 interface Group {
   name: string;
+  name_ru: string;
   children: ChildCat[];
 }
 
 interface HeaderCat {
   id: number;
   name: string;
+  name_ru: string;
   groups: Group[];
 }
 
@@ -55,10 +59,13 @@ export default function CategoryNav() {
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const activeRef = useRef<number | null>(null);
 
+  const locale = useLocale();
+  const t = useTranslations('header');
+
   const { data } = useQuery({
-    queryKey: ['categories-header'],
+    queryKey: ['categories-header', locale],
     queryFn: async () => {
-      const { data } = await api.get('/categories/header');
+      const { data } = await api.get(`/categories/header?locale=${locale}`);
       return data as { categories: HeaderCat[]; zapchasti_dlya_to: TosSection[] | null };
     },
     staleTime: 300_000,
@@ -189,7 +196,7 @@ export default function CategoryNav() {
           className={`flex items-center gap-1.5 h-10 text-sm font-medium text-foreground/80 hover:text-primary transition-colors px-1 cursor-pointer ${activeIdx === idx ? 'text-primary' : ''}`}
         >
           <span className="w-5 h-5 shrink-0 flex items-center justify-center">
-            {CATEGORY_ICONS[cat.name]}
+            {CATEGORY_ICONS[cat.name_ru]}
           </span>
           <span className="leading-tight line-clamp-2">{cat.name}</span>
         </button>
@@ -204,7 +211,7 @@ export default function CategoryNav() {
           <span className="w-5 h-5 shrink-0 flex items-center justify-center">
             <Wrench className="w-5 h-5" />
           </span>
-          <span className="leading-tight line-clamp-2">Запчасти для ТО</span>
+          <span className="leading-tight line-clamp-2">{t('maintenance_parts')}</span>
         </button>
       )}
 

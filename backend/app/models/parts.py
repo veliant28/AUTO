@@ -9,6 +9,8 @@ class PartCategory(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     parent_id = Column(Integer, ForeignKey("part_categories.id"), nullable=True)
     name = Column(String, nullable=False)
+    name_ua = Column(String, nullable=True)
+    name_en = Column(String, nullable=True)
     tecdoc_id = Column(Integer, unique=True, index=True, nullable=True)
 
     children = relationship("PartCategory")

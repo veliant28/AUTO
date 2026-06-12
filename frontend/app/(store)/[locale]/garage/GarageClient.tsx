@@ -20,7 +20,7 @@ function formatPower(power: string | null | undefined): string | null {
   if (!power) return null;
   const match = power.match(/^([\d.]+)/);
   const kw = match ? parseFloat(match[1]) : null;
-  return kw ? `${Math.round(kw * 1.34102)} л.с.` : null;
+  return kw ? `${Math.round(kw * 1.34102)}` : null;
 }
 
 export default function GaragePage() {
@@ -84,6 +84,7 @@ export default function GaragePage() {
               : vehicle.vehicle_type === 'commercial' ? 'selected_commercial'
               : 'selected_car';
             const hp = formatPower(vehicle.power);
+            const hpLabel = hp ? `${hp} ${t('horsepower')}` : null;
             const yearStr = vehicle.year_from != null || vehicle.year_to != null
               ? `${vehicle.year_from ?? '?'}–${vehicle.year_to ?? '?'}`
               : null;
@@ -113,7 +114,7 @@ export default function GaragePage() {
                   {vehicle.brand_name && <span className="font-medium">{vehicle.brand_name} </span>}
                   {vehicle.model_name && <span className="text-muted-foreground">{vehicle.model_name}</span>}
                   {vehicle.name && <span className="text-muted-foreground"> / {vehicle.name}</span>}
-                  {hp && <span className="text-muted-foreground"> / {hp}</span>}
+                  {hpLabel && <span className="text-muted-foreground"> / {hpLabel}</span>}
                   {yearStr && <span className="text-muted-foreground"> / {yearStr}</span>}
                 </div>
 
