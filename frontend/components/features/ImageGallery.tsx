@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface ImageGalleryProps {
-  images: { url: string; type: string }[];
+  images: { url?: string; name?: string }[];
   article: string;
 }
 
@@ -21,27 +21,30 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
   const [open, setOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!images || images.length === 0) {
+  const validImages = images.filter((img) => img.url || img.name);
+
+  if (validImages.length === 0) {
     return (
-      <p className="col-span-3 text-center text-sm text-muted-foreground py-8">
-        {t('no_images')}
-      </p>
+      <div className="aspect-square rounded-md bg-muted flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">{t('no_images')}</p>
+      </div>
     );
   }
 
-  const current = images[currentIndex];
+  const imgUrl = (img: { url?: string; name?: string }) =>
+    img.url || `https://auto-db.pro/images/${img.name}`;
 
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
-        {images.map((img, idx) => (
+        {validImages.map((img, idx) => (
           <button
             key={idx}
             onClick={() => { setCurrentIndex(idx); setOpen(true); }}
             className="aspect-square rounded-md overflow-hidden border bg-muted relative hover:ring-2 ring-primary transition-all"
           >
             <Image
-              src={img.url}
+              src={imgUrl(img)}
               alt={`${article} - ${idx + 1}`}
               fill
               className="object-contain p-2"
@@ -60,13 +63,13 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
             </Button>
           </DialogClose>
 
-          {images.length > 1 && (
+          {validImages.length > 1 && (
             <>
               <Button
                 variant="ghost"
                 size="icon"
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20 h-12 w-12"
-                onClick={() => setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                onClick={() => setCurrentIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1))}
               >
                 <ChevronLeft className="w-8 h-8" />
               </Button>
@@ -74,7 +77,7 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
                 variant="ghost"
                 size="icon"
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-50 text-white hover:bg-white/20 h-12 w-12"
-                onClick={() => setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                onClick={() => setCurrentIndex((prev) => (prev === validImages.length - 1 ? 0 : prev + 1))}
               >
                 <ChevronRight className="w-8 h-8" />
               </Button>
@@ -83,7 +86,7 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
 
           <div className="relative w-full h-full flex items-center justify-center p-8">
             <Image
-              src={current.url}
+              src={imgUrl(validImages[currentIndex])}
               alt={`${article} - ${currentIndex + 1}`}
               fill
               className="object-contain"
@@ -94,7 +97,7 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
           </div>
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 rounded-full px-4 py-2">
-            {images.map((_, idx) => (
+            {validImages.map((_, idx) => (
               <button
                 key={idx}
                 className={`w-2 h-2 rounded-full transition-all ${

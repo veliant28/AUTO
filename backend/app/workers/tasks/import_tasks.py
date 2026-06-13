@@ -333,7 +333,7 @@ def scheduler_tick(self):
 
                 if s.last_run_at:
                     last_kyiv = s.last_run_at.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
-                    if last_kyiv.date() == now_tz.date():
+                    if last_kyiv.date() == now_tz.date() and last_kyiv >= target:
                         continue
 
                 pimport = PriceImport(supplier=s.supplier, format="xlsx", status="in_queue")

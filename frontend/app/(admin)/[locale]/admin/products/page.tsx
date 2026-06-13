@@ -257,7 +257,7 @@ export default function AdminProductsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-3 border-t">
               <span className="text-sm text-muted-foreground">
-                {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, data?.total || 0)} of {data?.total || 0}
+                {t('page_of', { page, total: totalPages })}
               </span>
               <div className="flex items-center gap-1">
                 <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>{t('prev_page')}</Button>

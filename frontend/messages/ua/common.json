@@ -551,7 +551,10 @@
     "workers_restart_error": "Помилка перезапуску",
     "workers_refresh": "Оновити",
     "workers_no_tasks": "Немає активних задач",
-    "workers_stuck_empty": "Немає завислих задач"
+    "workers_stuck_empty": "Немає завислих задач",
+    "prev_page": "Назад",
+    "next_page": "Вперед",
+    "page_of": "Сторінка {page} з {total}"
   },
   "catalog": {
     "title": "Каталог",
@@ -569,7 +572,24 @@
     "sort_price_desc": "Цена ↓",
     "sort_name_asc": "Название А-Я",
     "status": "Статус",
-    "no_price": "Ціна не вказана"
+    "no_price": "Ціна не вказана",
+    "analogs": "Аналоги / Крос-номери",
+    "oem": "ОЕМ номери",
+    "attributes": "Характеристики",
+    "applicability_make": "Марка",
+    "applicability_model": "Модель",
+    "applicability_modification": "Модифікація",
+    "applicability_years": "Роки випуску",
+    "select_make": "Всі марки",
+    "select_model": "Всі моделі",
+    "no_applicability": "Немає даних про застосовність",
+    "no_attributes": "Характеристики відсутні",
+    "no_analogs": "Аналоги не знайдено",
+    "no_oem": "ОЕМ номери не знайдено",
+    "applicability": "Застосовність",
+    "applicability_compatible": "Сумісно",
+    "collapse": "Згорнути",
+    "show_all": "Показати всі"
   },
   "orders": {
     "my_orders": "Мої замовлення",

@@ -551,7 +551,10 @@
     "workers_restart_error": "Restart error",
     "workers_refresh": "Refresh",
     "workers_no_tasks": "No active tasks",
-    "workers_stuck_empty": "No stuck tasks"
+    "workers_stuck_empty": "No stuck tasks",
+    "prev_page": "Prev",
+    "next_page": "Next",
+    "page_of": "Page {page} of {total}"
   },
   "catalog": {
     "title": "Catalog",
@@ -569,7 +572,24 @@
     "sort_price_desc": "Price ↓",
     "sort_name_asc": "Name A-Z",
     "status": "Status",
-    "no_price": "No price"
+    "no_price": "No price",
+    "analogs": "Cross References",
+    "oem": "OEM Numbers",
+    "attributes": "Attributes",
+    "applicability_make": "Make",
+    "applicability_model": "Model",
+    "applicability_modification": "Modification",
+    "applicability_years": "Years",
+    "select_make": "All Makes",
+    "select_model": "All Models",
+    "no_applicability": "No applicability data",
+    "no_attributes": "No attributes",
+    "no_analogs": "No cross references",
+    "no_oem": "No OEM numbers",
+    "applicability": "Applicability",
+    "applicability_compatible": "Compatible",
+    "collapse": "Collapse",
+    "show_all": "Show All"
   },
   "orders": {
     "my_orders": "My Orders",

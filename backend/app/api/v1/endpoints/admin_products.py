@@ -1,12 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, selectinload
 from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.models import User, Part, SupplierOffer, Supplier
+from app.models.pricing import PriceRule
 from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse
-from app.services.pricing_service import resolve_margin
 
 router = APIRouter()
+
+
+def _load_margins(db: Session) -> dict[int | None, float | None]:
+    rules = db.query(PriceRule).filter(PriceRule.is_active == True).all()
+    margins: dict[int | None, float | None] = {}
+    general = None
+    for r in rules:
+        if r.type == "general":
+            general = float(r.margin_percent) if r.margin_percent else None
+        elif r.type == "category" and r.category_id and r.margin_percent and r.margin_percent > 0:
+            margins[r.category_id] = float(r.margin_percent)
+    for cat_id in list(margins.keys()):
+        if margins[cat_id] is None:
+            margins[cat_id] = general
+    margins[None] = general
+    return margins
 
 
 @router.get("/products", response_model=AdminProductListResponse)
@@ -39,19 +55,20 @@ async def list_products(
 
     items = (
         query
-        .options(joinedload(Part.offers).joinedload(SupplierOffer.supplier))
+        .options(selectinload(Part.offers).selectinload(SupplierOffer.supplier))
         .order_by(Part.id)
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
 
+    margins = _load_margins(db)
     result = []
     for part in items:
         offers_data = []
         total_stock = 0
         best_offer = None
-        margin = resolve_margin(db, part.category_id)
+        margin = margins.get(part.category_id) or margins.get(None)
         for offer in part.offers:
             qty = offer.quantity or 0
             total_stock += qty

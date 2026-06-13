@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, text as sa_text
@@ -5,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from app.core.db import get_db, get_tecdoc_db
 from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, SupplierOffer, Supplier
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
-from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse, PartDetailSchema
+from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse
 from app.services.sync_service import sync_service
 from app.services.tecdoc_client import tecdoc_client
 
@@ -72,6 +73,215 @@ async def get_sections(mod_id: int, db: Session = Depends(get_db)):
         await sync_service.sync_sections(db, mod_id=mod_id)
         sections = db.query(PartCategory).all()
     return sections
+
+
+@router.get("/parts/{article}/applicability/makes")
+async def get_part_applicability_makes(
+    article: str,
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+):
+    art = article.lower()
+    rows = tecdoc_db.execute(
+        sa_text("""SELECT DISTINCT man.id, man."description"
+                   FROM article_li li
+                   JOIN passanger_cars pc ON pc.id = li."linkageId"
+                   JOIN models m ON m.id = pc.modelid
+                   JOIN manufacturers man ON man.id = m.manufacturerid
+                   WHERE LOWER(li."DataSupplierArticleNumber") = :art
+                   ORDER BY man."description" ASC"""),
+        {"art": art},
+    ).fetchall()
+    return [{"id": r[0], "name": r[1]} for r in rows]
+
+
+@router.get("/parts/{article}/applicability/models")
+async def get_part_applicability_models(
+    article: str,
+    make_id: int = Query(...),
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+):
+    art = article.lower()
+    rows = tecdoc_db.execute(
+        sa_text("""SELECT DISTINCT m.id, m."description"
+                   FROM article_li li
+                   JOIN passanger_cars pc ON pc.id = li."linkageId"
+                   JOIN models m ON m.id = pc.modelid
+                   JOIN manufacturers man ON man.id = m.manufacturerid
+                   WHERE LOWER(li."DataSupplierArticleNumber") = :art
+                   AND man.id = :make_id
+                   ORDER BY m."description" ASC"""),
+        {"art": art, "make_id": make_id},
+    ).fetchall()
+    return [{"id": r[0], "name": r[1]} for r in rows]
+
+
+@router.get("/parts/{article}/applicability")
+async def get_part_applicability(
+    article: str,
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    make_id: Optional[int] = Query(None),
+    model_id: Optional[int] = Query(None),
+):
+    art = article.lower()
+
+    where = 'WHERE LOWER(li."DataSupplierArticleNumber") = :art'
+    params: dict = {"art": art}
+
+    if make_id:
+        where += ' AND man.id = :make_id'
+        params["make_id"] = make_id
+    if model_id:
+        where += ' AND m.id = :model_id'
+        params["model_id"] = model_id
+
+    ct = sa_text(f"""
+        SELECT COUNT(DISTINCT li."linkageId")
+        FROM article_li li
+        JOIN passanger_cars pc ON pc.id = li."linkageId"
+        JOIN models m ON m.id = pc.modelid
+        JOIN manufacturers man ON man.id = m.manufacturerid
+        {where}
+    """)
+    total = tecdoc_db.execute(ct, params).scalar() or 0
+
+    offset = (page - 1) * limit
+    t = sa_text(f"""
+        SELECT DISTINCT li."linkageId",
+               man."description" as brand,
+               m."description" as model,
+               pc."description" as mod_name,
+               pc."constructioninterval" as years
+        FROM article_li li
+        JOIN passanger_cars pc ON pc.id = li."linkageId"
+        JOIN models m ON m.id = pc.modelid
+        JOIN manufacturers man ON man.id = m.manufacturerid
+        {where}
+        ORDER BY man."description" ASC, m."description" ASC
+        LIMIT :limit OFFSET :offset
+    """)
+    rows = tecdoc_db.execute(t, {**params, "limit": limit, "offset": offset}).fetchall()
+
+    vehicles = [{
+        "mod_id": r[0],
+        "brand_name": r[1],
+        "model_name": r[2],
+        "mod_name": r[3],
+        "years": r[4] or "",
+    } for r in rows]
+
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "vehicles": vehicles,
+    }
+
+
+@router.get("/parts/{article}/details")
+async def get_part_details(
+    article: str,
+    db: Session = Depends(get_db),
+    tecdoc_db: Session = Depends(get_tecdoc_db),
+):
+    # 1. Part + best offer from main DB
+    parts = db.query(Part).filter(Part.article == article).all()
+    part_data = None
+    price_data = None
+    if parts:
+        part = parts[0]
+        offers = db.query(SupplierOffer).options(
+            joinedload(SupplierOffer.supplier)
+        ).filter(SupplierOffer.part_id == part.id).all()
+        best = _best_offer(offers)
+        part_data = {
+            "id": part.id,
+            "article": part.article,
+            "name": part.name,
+            "brand": part.brand,
+            "brand_id": part.brand_id,
+            "tecdoc_id": part.tecdoc_id,
+        }
+        if best:
+            price_data = {
+                "price": best["price"],
+                "original_price": best["original_price"],
+                "quantity": best["quantity"],
+                "supplier_name": best["supplier_name"],
+                "currency": best["currency"],
+            }
+
+    # 2. Article info from tecdoc_db (original tables)
+    info_row = tecdoc_db.execute(
+        sa_text("""SELECT "InformationText", "InformationType"
+                   FROM article_inf
+                   WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 1"""),
+        {"art": article},
+    ).fetchone()
+
+    # 3. Attributes
+    attr_rows = tecdoc_db.execute(
+        sa_text("""SELECT "displaytitle", "displayvalue"
+                   FROM article_attributes
+                   WHERE LOWER("datasupplierarticlenumber") = LOWER(:art) LIMIT 30"""),
+        {"art": article},
+    ).fetchall()
+    attributes = [{"name": r[0] or "", "value": r[1] or ""} for r in attr_rows]
+
+    info_data = None
+    if info_row:
+        info_data = {
+            "description": info_row[0] or "",
+            "type": info_row[1] or "",
+            "attributes": attributes,
+        }
+    elif attributes:
+        info_data = {
+            "description": "",
+            "type": "",
+            "attributes": attributes,
+        }
+
+    # 4. Images
+    images = tecdoc_db.execute(
+        sa_text("""SELECT "PictureName", "Description"
+                   FROM article_images
+                   WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 10"""),
+        {"art": article},
+    ).fetchall()
+
+    # 5. Crosses
+    crosses = tecdoc_db.execute(
+        sa_text("""SELECT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
+                   WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
+        {"art": article},
+    ).fetchall()
+
+    # 6. OEM
+    oems = tecdoc_db.execute(
+        sa_text("""SELECT "OENbr", "manufacturerId" FROM article_oe
+                   WHERE LOWER("OENbr") = LOWER(:art)
+                   AND "OENbr" IS NOT NULL AND "OENbr" != ''
+                   LIMIT 20"""),
+        {"art": article},
+    ).fetchall()
+
+    # 7. Applicability count
+    app_count = tecdoc_db.execute(
+        sa_text("""SELECT COUNT(*) FROM article_li WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art)"""),
+        {"art": article},
+    ).scalar() or 0
+
+    return {
+        "part": part_data,
+        "price": price_data,
+        "info": info_data,
+        "images": [{"name": r[0], "description": r[1] or ""} for r in images],
+        "crosses": [{"article": r[0], "brand_id": r[1]} for r in crosses],
+        "oem": [{"number": r[0], "manufacturer_id": r[1]} for r in oems],
+        "applicability_count": app_count,
+    }
 
 
 @router.get("/parts/{mod_id}/{sec_id}", response_model=PartListResponse)
@@ -193,66 +403,6 @@ async def autocomplete(
         {"id": p.id, "label": f"{p.article} — {p.name} [{p.brand or ''}]", "article": p.article}
         for p in results
     ]
-
-
-@router.get("/parts/{article}/applicability")
-async def get_part_applicability(
-    article: str,
-    db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=50),
-):
-    parts = db.query(Part).filter(Part.article == article).all()
-    if not parts:
-        raise HTTPException(404, "Part not found")
-
-    part_ids = [p.id for p in parts]
-    total = db.query(PartApplicability).filter(
-        PartApplicability.part_id.in_(part_ids)
-    ).count()
-
-    apps = db.query(PartApplicability).filter(
-        PartApplicability.part_id.in_(part_ids)
-    ).offset((page - 1) * limit).limit(limit).all()
-
-    vehicles = []
-    for app in apps:
-        mod = db.query(VehicleModification).filter(VehicleModification.id == app.mod_id).first()
-        if mod:
-            model = db.query(VehicleModel).filter(VehicleModel.id == mod.model_id).first()
-            brand = db.query(VehicleBrand).filter(VehicleBrand.id == model.brand_id).first() if model else None
-            vehicles.append({
-                "mod_id": mod.id,
-                "mod_name": mod.name,
-                "model_name": model.name if model else "",
-                "brand_name": brand.name if brand else "",
-            })
-
-    return {
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "vehicles": vehicles,
-    }
-
-
-@router.get("/parts/{article}/details", response_model=PartDetailSchema)
-async def get_part_details(article: str, db: Session = Depends(get_db)):
-    parts = db.query(Part).filter(Part.article == article).all()
-    if not parts:
-        raise HTTPException(status_code=404, detail="Part not found in local database")
-
-    # Use the first part's brand_id for TecDoc lookup
-    part = parts[0]
-    info_data = await tecdoc_client.request("getArtInfo", {"number": article, "brand": part.brand_id})
-    cross_data = await tecdoc_client.request("getCross", {"number": article, "brand": part.brand_id})
-    image_data = await tecdoc_client.request("getImages", {"number": article, "brand": part.brand_id})
-
-    return {
-        "info": info_data,
-        "crosses": cross_data,
-        "images": image_data,
-    }
 
 
 @router.post("/sync/vehicles")

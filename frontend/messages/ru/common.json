@@ -551,7 +551,10 @@
     "workers_restart_error": "Ошибка перезапуска",
     "workers_refresh": "Обновить",
     "workers_no_tasks": "Нет активных задач",
-    "workers_stuck_empty": "Нет зависших задач"
+    "workers_stuck_empty": "Нет зависших задач",
+    "prev_page": "Назад",
+    "next_page": "Вперёд",
+    "page_of": "Страница {page} из {total}"
   },
   "catalog": {
     "title": "Каталог",
@@ -569,7 +572,24 @@
     "sort_price_desc": "Цена ↓",
     "sort_name_asc": "Название А-Я",
     "status": "Статус",
-    "no_price": "Цена не указана"
+    "no_price": "Цена не указана",
+    "analogs": "Аналоги / Кросс-номера",
+    "oem": "ОЕМ номера",
+    "attributes": "Характеристики",
+    "applicability_make": "Марка",
+    "applicability_model": "Модель",
+    "applicability_modification": "Модификация",
+    "applicability_years": "Годы выпуска",
+    "select_make": "Все марки",
+    "select_model": "Все модели",
+    "no_applicability": "Нет данных о применимости",
+    "no_attributes": "Характеристики отсутствуют",
+    "no_analogs": "Аналоги не найдены",
+    "no_oem": "ОЕМ номера не найдены",
+    "applicability": "Применимость",
+    "applicability_compatible": "Совместимо",
+    "collapse": "Свернуть",
+    "show_all": "Показать все"
   },
   "orders": {
     "my_orders": "Мои заказы",
