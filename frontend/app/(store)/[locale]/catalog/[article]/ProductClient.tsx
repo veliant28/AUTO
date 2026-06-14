@@ -13,6 +13,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useCartStore } from '@/store/cartStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
+import api from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { ApplicabilityTable } from '@/components/features/ApplicabilityTable';
 
@@ -79,29 +80,63 @@ export default function ProductClient({ article }: { article: string }) {
     toast.success(tc('added_to_cart'));
   };
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
+    const wasFav = isFavorite;
     toggleFavorite(article);
-    toast.success(isFavorite ? tc('removed_from_favorites') : tc('added_to_favorites'));
+    try {
+      if (wasFav && data?.part?.id) {
+        await api.delete(`/favorites/${data.part.id}`);
+      } else if (data?.part?.id) {
+        await api.post('/favorites/add', { part_id: data.part.id });
+      }
+    } catch {}
+    toast.success(wasFav ? tc('removed_from_favorites') : tc('added_to_favorites'));
   };
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-8 px-4 animate-pulse">
         <Skeleton className="h-9 w-28 rounded-md mb-6" />
         <div className="grid md:grid-cols-3 gap-8">
-          <Skeleton className="aspect-square rounded-md" />
-          <Skeleton className="h-40 rounded-md" />
-          <div className="space-y-4">
-            <Skeleton className="h-5 w-20 rounded-sm" />
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-7 w-28" />
-            <Skeleton className="h-5 w-16" />
+          <Skeleton className="aspect-square rounded-lg" />
+          <div className="rounded-lg border bg-card p-4 space-y-3">
+            <Skeleton className="h-5 w-24 rounded-sm" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-2">
+                <Skeleton className="h-4 w-1/2 rounded-sm" />
+                <Skeleton className="h-4 w-1/3 rounded-sm" />
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <div className="flex gap-1.5">
+              <Skeleton className="h-5 w-16 rounded-sm" />
+              <Skeleton className="h-4 w-20 rounded-sm" />
+            </div>
+            <Skeleton className="h-7 w-3/4 rounded-sm" />
+            <div className="flex items-center justify-between gap-4">
+              <Skeleton className="h-8 w-28 rounded-sm" />
+              <Skeleton className="h-6 w-20 rounded-sm" />
+            </div>
             <div className="flex gap-2 pt-1">
               <Skeleton className="h-9 w-9 rounded-md" />
               <Skeleton className="h-9 w-9 rounded-md" />
             </div>
           </div>
+        </div>
+        <Skeleton className="h-px my-6" />
+        <div className="grid md:grid-cols-3 gap-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-lg border bg-card p-4 space-y-3">
+              <Skeleton className="h-5 w-20 rounded-sm" />
+              {Array.from({ length: 4 }).map((_, j) => (
+                <div key={j} className="flex gap-2">
+                  <Skeleton className="h-4 w-1/3 rounded-sm" />
+                  <Skeleton className="h-4 w-1/4 rounded-sm" />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     );

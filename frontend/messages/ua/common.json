@@ -108,6 +108,7 @@
     "favorites_login_desc": "Авторизуйтесь, щоб зберігати та переглядати обрані запчастини",
     "favorites_empty_title": "В обраному поки що пусто",
     "favorites_empty_title_desc": "Додавайте запчастини в обране з каталогу",
+    "favorites_result_count": "Знайдено {count} запчастин",
     "add_to_cart_short": "В кошик",
     "checkout_title": "Оформлення замовлення",
     "personal_data": "Особисті дані",

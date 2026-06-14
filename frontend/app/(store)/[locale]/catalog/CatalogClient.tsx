@@ -9,6 +9,7 @@ import CatalogPagination from '@/components/features/CatalogPagination';
 import CatalogFilterDrawer from '@/components/features/CatalogFilterDrawer';
 import { useCartStore } from '@/store/cartStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
+import api from '@/lib/api';
 import { toast } from '@/lib/toast';
 import { readCatalogReturnState, clearCatalogReturnState, restoreCatalogScroll } from '@/lib/catalog-navigation-state';
 
@@ -48,9 +49,17 @@ export default function CatalogPage() {
 
   const handleToggleFavorite = useCallback(async (article: string) => {
     const wasFav = favoriteArticles.includes(article);
+    const product = products.find((p) => p.article === article);
     toggleFavorite(article);
+    try {
+      if (wasFav && product) {
+        await api.delete(`/favorites/${product.id}`);
+      } else if (product) {
+        await api.post('/favorites/add', { part_id: product.id });
+      }
+    } catch {}
     toast.success(wasFav ? t('removed_from_favorites') : t('added_to_favorites'));
-  }, [toggleFavorite, favoriteArticles]);
+  }, [toggleFavorite, favoriteArticles, products, t]);
 
   const handleAddToCart = useCallback((product: any) => {
     addItem({

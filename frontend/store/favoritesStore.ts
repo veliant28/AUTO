@@ -25,3 +25,11 @@ export const useFavoritesStore = create<FavoritesState>()(
     { name: STORAGE_KEYS.FAVORITES }
   )
 );
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEYS.FAVORITES) {
+      useFavoritesStore.persist.rehydrate();
+    }
+  });
+}

@@ -1,28 +1,46 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { Heart } from 'lucide-react';
 import Link from 'next/link';
-import { Heart, Trash2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/lib/toast';
 import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/cartStore';
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { toast } from '@/lib/toast';
+import CatalogGrid from '@/components/features/CatalogGrid';
+import CatalogPagination from '@/components/features/CatalogPagination';
+import type { ProductTileItem } from '@/components/features/ProductTile';
 
-export default function FavoritesPage() {
+const PAGE_SIZE = 24;
+
+export default function FavoritesClient() {
   const t = useTranslations('common');
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
+  const { addItem } = useCartStore();
 
-  const { data: favorites, isLoading } = useQuery({
-    queryKey: ['favorites'],
+  const page = useMemo(() => {
+    const value = Number(searchParams?.get('page') || '1');
+    return Number.isFinite(value) && value >= 1 ? Math.floor(value) : 1;
+  }, [searchParams]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['favorites', page],
     queryFn: async () => {
-      const { data } = await api.get('/favorites');
-      return data;
+      const { data } = await api.get('/favorites/', { params: { page, page_size: PAGE_SIZE } });
+      return data as { items: any[]; total: number; page: number; page_size: number };
     },
     enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const removeMutation = useMutation({
@@ -34,6 +52,61 @@ export default function FavoritesPage() {
       toast.success(t('removed_from_favorites'));
     },
   });
+
+  const toggleFavStore = useFavoritesStore((s) => s.toggleFavorite);
+
+  const handleToggleFavorite = useCallback(
+    (article: string) => {
+      if (!data?.items) return;
+      const item = data.items.find((p: any) => p.article === article);
+      if (item) {
+        toggleFavStore(article);
+        removeMutation.mutate(item.id);
+      }
+    },
+    [data, removeMutation, toggleFavStore],
+  );
+
+  const handleAddToCart = useCallback(
+    (product: ProductTileItem) => {
+      addItem({ id: product.id, article: product.article, name: product.name, brand: product.brand, price: product.price, quantity: 1, currency: product.currency, image_url: product.image_url });
+      toast.success(t('added_to_cart'));
+    },
+    [addItem, t],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      if (nextPage <= 1) {
+        params.delete('page');
+      } else {
+        params.set('page', String(nextPage));
+      }
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    },
+    [pathname, router, searchParams],
+  );
+
+  const products: ProductTileItem[] = useMemo(
+    () =>
+      (data?.items ?? []).map((item: any) => ({
+        id: item.id,
+        article: item.article,
+        name: item.name,
+        brand: item.brand,
+        price: item.price ?? null,
+        quantity: item.quantity ?? 0,
+        currency: item.currency ?? 'UAH',
+        image_url: item.image_url ?? null,
+        isFavorite: true,
+      })),
+    [data],
+  );
 
   if (!isAuthenticated) {
     return (
@@ -49,53 +122,28 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-8">
         <Heart className="w-7 h-7 text-primary" />
         <h1 className="text-3xl font-bold">{t('favorites')}</h1>
-        <Badge variant="secondary">{favorites?.length || 0}</Badge>
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-      ) : favorites?.length === 0 ? (
+        <CatalogGrid products={[]} isLoading={true} onToggleFavorite={handleToggleFavorite} onAddToCart={handleAddToCart} />
+      ) : products.length === 0 ? (
         <div className="text-center py-20 space-y-4">
           <Heart className="w-16 h-16 mx-auto text-muted-foreground/40" />
           <p className="text-lg font-medium">{t('favorites_empty_title')}</p>
           <p className="text-muted-foreground text-sm">{t('favorites_empty_title_desc')}</p>
-          <Link href="/catalog">
-            <Button variant="outline">{t('go_to_catalog')}</Button>
+          <Link href="/">
+            <Button>{t('go_home')}</Button>
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {favorites?.map((fav: any) => (
-            <div key={fav.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-muted-foreground">{fav.article}</span>
-                  <Badge variant="secondary" className="text-[10px]">{fav.brand_name}</Badge>
-                </div>
-                <p className="font-medium">{fav.part_name}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">{t('add_to_cart_short')}</Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-destructive"
-                  onClick={() => removeMutation.mutate(fav.part_id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <CatalogGrid products={products} isLoading={false} onToggleFavorite={handleToggleFavorite} onAddToCart={handleAddToCart} />
+          <CatalogPagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={handlePageChange} />
+        </>
       )}
     </div>
   );

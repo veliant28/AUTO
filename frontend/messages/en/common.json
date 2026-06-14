@@ -108,6 +108,7 @@
     "favorites_login_desc": "Log in to save and view your favorite parts",
     "favorites_empty_title": "No favorites yet",
     "favorites_empty_title_desc": "Add parts to favorites from the catalog",
+    "favorites_result_count": "Found {count} parts",
     "add_to_cart_short": "Add to cart",
     "checkout_title": "Checkout",
     "personal_data": "Personal data",
