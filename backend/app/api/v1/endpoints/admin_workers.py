@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from app.api.v1.deps import require_role
+from sqlalchemy.orm import Session
+from app.api.v1.deps import require_role, get_db
 from app.models import User
+from app.models.imports import PriceImport
 from app.workers import celery_app
 import time
 import logging
@@ -18,9 +20,9 @@ class TaskItem(BaseModel):
     runtime_seconds: float
     time_start: float | None = None
     slot_index: int = 0
-
-    class Config:
-        from_attributes = True
+    import_progress: int | None = None
+    import_status: str | None = None
+    import_stage: str | None = None
 
 
 class WorkerStatus(BaseModel):
@@ -66,6 +68,7 @@ def _collect_tasks(
     active_raw: dict | None,
     reserved_raw: dict | None,
     scheduled_raw: dict | None,
+    db: Session | None = None,
 ) -> tuple[list[TaskItem], list[TaskItem]]:
     now = time.time()
     stuck_threshold = 3600.0
@@ -85,6 +88,22 @@ def _collect_tasks(
                 tstart = task.get("time_start")
                 runtime = round(now - tstart, 0) if tstart else 0.0
                 si = slot_counter if assign_slot else -1
+                import_progress = None
+                import_status = None
+                import_stage = None
+                if db and tname == "process_price_import":
+                    try:
+                        args = task.get("args", [])
+                        if args:
+                            pi = db.query(PriceImport).filter(
+                                PriceImport.id == int(args[0])
+                            ).first()
+                            if pi:
+                                import_progress = pi.progress
+                                import_status = pi.status
+                                import_stage = pi.stage_name
+                    except Exception:
+                        pass
                 item = TaskItem(
                     id=tid,
                     name=tname,
@@ -93,6 +112,9 @@ def _collect_tasks(
                     runtime_seconds=runtime,
                     time_start=tstart,
                     slot_index=si,
+                    import_progress=import_progress,
+                    import_status=import_status,
+                    import_stage=import_stage,
                 )
                 tasks.append(item)
                 if status == "active" and tstart and now - tstart > stuck_threshold:
@@ -110,6 +132,7 @@ def _collect_tasks(
 @router.get("/workers", response_model=WorkersResponse)
 async def get_workers(
     current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
 ):
     inspect = celery_app.control.inspect()
     active_raw = inspect.active() or {}
@@ -139,7 +162,7 @@ async def get_workers(
 
     cpu_percent = _get_docker_cpu()
 
-    tasks, stuck = _collect_tasks(active_raw, reserved_raw, scheduled_raw)
+    tasks, stuck = _collect_tasks(active_raw, reserved_raw, scheduled_raw, db=db)
 
     worker = WorkerStatus(
         name=worker_name or "unknown",

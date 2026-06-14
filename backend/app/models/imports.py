@@ -27,6 +27,7 @@ class PriceImport(Base):
     format = Column(String, nullable=False, default="xlsx")
     status = Column(String, nullable=False, default="in_queue")
     progress = Column(Integer, nullable=False, default=0)
+    stage_name = Column(String, nullable=True)
     total_items = Column(Integer, nullable=False, default=0)
     matched_items = Column(Integer, nullable=False, default=0)
     file_size = Column(Integer, nullable=True)

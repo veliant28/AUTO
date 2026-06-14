@@ -11,10 +11,20 @@ from app.services.import_processor import (
     assign_gpl_categories, _ensure_import_dir, IMPORT_DIR
 )
 from app.services.pricing_service import apply_margins_bulk
+from app.services.sku_generator import bulk_generate_skus
 from app.models.pricing import PriceRule, PricingApplySnapshot
 import json
 import os
 import time
+
+
+LOG = lambda msg: print(f"[{datetime.utcnow().strftime('%H:%M:%S')}] {msg}")
+
+def _update_stage(pi, db, progress: int, stage: str = None):
+    pi.progress = progress
+    if stage is not None:
+        pi.stage_name = stage
+    db.commit()
 
 
 def _snapshot_margins(db):
@@ -104,11 +114,13 @@ def process_price_import(self, import_id: int):
         _ensure_import_dir()
 
         if pi.supplier.upper() == "GPL":
+            LOG("GPL: fetching prices from API...")
             gpl_client = GPLAPIClient(client.config)
             items = gpl_client.fetch_all_prices(token)
-            pi.progress = 25
-            db.commit()
+            LOG(f"GPL: fetched {len(items)} items")
+            _update_stage(pi, db, 25, "Загрузка цен с GPL API")
 
+            LOG("GPL: building XLSX...")
             xlsx_data = build_xlsx_from_json(items)
             file_name = f"gpl_{import_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = os.path.join(IMPORT_DIR, file_name)
@@ -116,19 +128,20 @@ def process_price_import(self, import_id: int):
                 f.write(xlsx_data)
             pi.file_path = file_path
             pi.file_size = len(xlsx_data)
-            pi.progress = 30
-            db.commit()
+            _update_stage(pi, db, 30, "Подготовка файла импорта")
+            LOG(f"GPL: XLSX saved ({len(xlsx_data)} bytes)")
 
+            LOG("GPL: parsing XLSX and upserting supplier_prices...")
             tecdb = TecDocSessionLocal()
             try:
                 count = parse_xlsx_to_prices(db, "GPL", xlsx_data, tecdoc_db=tecdb)
             finally:
                 tecdb.close()
-            pi.progress = 35
             pi.total_items = count
-            db.commit()
+            _update_stage(pi, db, 35, "Импорт остатков и цен в БД")
+            LOG(f"GPL: parsed {count} prices")
 
-            # Stage 1: promote to catalog first (creates/updates SupplierOffer rows with raw prices)
+            LOG("GPL: promoting to catalog (creating/updating Parts and SupplierOffers)...")
             def update_progress_gpl(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -141,48 +154,53 @@ def process_price_import(self, import_id: int):
             promoted = promote_all_to_catalog(db, "GPL", progress_cb=update_progress_gpl)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
-            pi.progress = 65
-            db.commit()
+            _update_stage(pi, db, 65, "Создание товаров в каталоге")
+            LOG(f"GPL: promoted {promoted} offers")
 
-            from app.services.sku_generator import bulk_generate_skus
+            LOG("GPL: generating SKUs...")
             bulk_generate_skus(db)
+            LOG("GPL: SKUs generated")
 
-            # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
+            LOG("GPL: applying margins...")
             apply_margins_bulk(db)
             _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            pi.progress = 85
-            db.commit()
+            _update_stage(pi, db, 85, "Применение наценок")
+            LOG("GPL: margins applied")
 
-            # Stage 3: assign GPL categories from category mapping
+            LOG("GPL: assigning categories...")
             cat_assigned = assign_gpl_categories(db, "GPL")
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            pi.progress = 90
-            db.commit()
+            _update_stage(pi, db, 90, "Назначение категорий")
+            LOG(f"GPL: categories assigned: {cat_assigned}")
 
             pi.progress = 100
             pi.status = "complete"
+            pi.stage_name = ""
             pi.finished_at = datetime.utcnow()
             db.commit()
+            LOG("GPL: import complete")
 
         elif pi.supplier.upper() == "UTR":
+            LOG("UTR: requesting export...")
             utr_client = UTRAPIClient(client.config)
             filters = pi.filters or {}
 
             result = utr_client.request_export(token, filters)
             pi.external_id = result.external_id
             pi.external_token = result.external_token or ""
-            pi.progress = 5
-            db.commit()
+            _update_stage(pi, db, 5, "Запрос экспорта с UTR API")
+            LOG(f"UTR: export requested, id={result.external_id}")
 
+            LOG("UTR: waiting for export completion...")
             for attempt in range(60):
                 status_result = utr_client.check_export_status(token, pi.external_id)
                 pi.progress = 5 + min(attempt, 20)
                 db.commit()
                 if status_result.status == "complete":
                     pi.external_token = status_result.external_token or pi.external_token
-                    pi.progress = 25
-                    db.commit()
+                    _update_stage(pi, db, 25, "Ожидание готовности экспорта UTR")
+                    LOG("UTR: export ready")
                     break
                 time.sleep(5)
             else:
@@ -191,6 +209,7 @@ def process_price_import(self, import_id: int):
                 db.commit()
                 return {"error": pi.error_message}
 
+            LOG("UTR: downloading export...")
             xlsx_data = utr_client.download_export(token, pi.external_token)
             file_name = f"utr_{import_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = os.path.join(IMPORT_DIR, file_name)
@@ -198,15 +217,16 @@ def process_price_import(self, import_id: int):
                 f.write(xlsx_data)
             pi.file_path = file_path
             pi.file_size = len(xlsx_data)
-            pi.progress = 30
-            db.commit()
+            _update_stage(pi, db, 30, "Загрузка и подготовка XLSX")
+            LOG(f"UTR: downloaded {len(xlsx_data)} bytes")
 
+            LOG("UTR: parsing XLSX and upserting supplier_prices...")
             count = parse_xlsx_to_prices(db, "UTR", xlsx_data)
-            pi.progress = 35
             pi.total_items = count
-            db.commit()
+            _update_stage(pi, db, 35, "Импорт остатков и цен в БД")
+            LOG(f"UTR: parsed {count} prices")
 
-            # Stage 1: promote to catalog first (creates/updates SupplierOffer rows with raw prices)
+            LOG("UTR: promoting to catalog...")
             def update_progress_utr(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -219,27 +239,32 @@ def process_price_import(self, import_id: int):
             promoted = promote_all_to_catalog(db, "UTR", progress_cb=update_progress_utr)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
-            pi.progress = 65
-            db.commit()
+            _update_stage(pi, db, 65, "Создание товаров в каталоге")
+            LOG(f"UTR: promoted {promoted} offers")
 
-            from app.services.sku_generator import bulk_generate_skus
+            LOG("UTR: generating SKUs...")
             bulk_generate_skus(db)
+            LOG("UTR: SKUs generated")
 
-            # Stage 2: apply margins on ALL SupplierOffer (both existing and newly created)
+            LOG("UTR: applying margins...")
             apply_margins_bulk(db)
             _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            pi.progress = 85
-            db.commit()
+            _update_stage(pi, db, 85, "Применение наценок")
+            LOG("UTR: margins applied")
 
             pi.progress = 100
             pi.status = "complete"
+            pi.stage_name = ""
             pi.finished_at = datetime.utcnow()
             db.commit()
+            LOG("UTR: import complete")
 
+        LOG("process_price_import: success")
         return {"status": pi.status, "items": pi.total_items, "matched": pi.matched_items}
 
     except Exception as e:
+        LOG(f"process_price_import: ERROR — {e}")
         db.rollback()
         try:
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -252,6 +277,7 @@ def process_price_import(self, import_id: int):
         return {"error": str(e)}
     finally:
         db.close()
+        LOG("process_price_import: finally — db closed")
 
 
 @celery_app.task(bind=True, name="promote_import_task")
@@ -276,19 +302,24 @@ def promote_import_task(self, import_id: int):
             except Exception:
                 db.rollback()
 
+        LOG(f"promote: promoting {pi.supplier} to catalog...")
         promoted = promote_all_to_catalog(db, pi.supplier, progress_cb=update_progress)
         pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
         pi.matched_items = promoted
         pi.progress = 90
         db.commit()
+        LOG(f"promote: promoted {promoted} offers")
 
-        from app.services.sku_generator import bulk_generate_skus
+        LOG("promote: generating SKUs...")
         bulk_generate_skus(db)
+        LOG("promote: SKUs generated")
 
+        LOG("promote: applying margins...")
         apply_margins_bulk(db)
         _snapshot_margins(db)
 
         cat_assigned = assign_gpl_categories(db, pi.supplier)
+        LOG(f"promote: categories assigned: {cat_assigned}")
 
         pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
         pi.progress = 100
@@ -297,6 +328,7 @@ def promote_import_task(self, import_id: int):
 
         return {"promoted": promoted, "categories_assigned": cat_assigned}
     except Exception as e:
+        LOG(f"promote: ERROR — {e}")
         db.rollback()
         try:
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -309,6 +341,7 @@ def promote_import_task(self, import_id: int):
         return {"error": str(e)}
     finally:
         db.close()
+        LOG("promote: finished")
 
 
 @celery_app.task(bind=True, name="scheduler_tick")

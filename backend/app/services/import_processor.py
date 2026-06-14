@@ -101,6 +101,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         return 0
 
     headers = [str(h).strip().lower() if h else f"col_{i}" for i, h in enumerate(rows[0])]
+    brand_cache = {}
     batch = []
     total = 0
 
@@ -148,7 +149,6 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         stock_total = 0
         stock_regions = {}
 
-        # Handle stock_regions column: parse dict string from JSON/XLSX
         sr_val = values.get("stock_regions")
         if sr_val and isinstance(sr_val, str) and sr_val.strip().startswith("{"):
             try:
@@ -158,7 +158,6 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             except (ValueError, SyntaxError):
                 pass
 
-        # Handle stock_total column: use directly as total
         st_val = values.get("stock_total")
         if st_val is not None:
             try:
@@ -166,7 +165,6 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             except (ValueError, TypeError):
                 pass
 
-        # Scan for individual warehouse columns (from manual XLSX uploads)
         for k, v in values.items():
             if k in ("stock_total", "stock_regions"):
                 continue
@@ -181,7 +179,10 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         currency = str(values.get("currency", values.get("currency_code", "UAH"))).upper()
 
         tecdoc_article = str(values.get("tecdoc_article", "")).strip() or None
-        tecdoc_brand_id = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
+
+        if brand not in brand_cache:
+            brand_cache[brand] = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
+        tecdoc_brand_id = brand_cache.get(brand)
         match_status = "matched" if tecdoc_brand_id else "pending"
 
         category = str(values.get("category", "")).strip() or None
@@ -319,28 +320,58 @@ def assign_gpl_categories(db: Session, supplier: str):
             continue
         cat_map.setdefault(tecdoc_id, []).append((sp.article, sp.brand or ""))
 
-    parts_to_update = []
-    for tecdoc_id, article_brands in cat_map.items():
-        for article, brand in article_brands:
-            parts_to_update.append((article, brand, tecdoc_id))
-
-    if not parts_to_update:
+    if not cat_map:
         return 0
 
-    updated = 0
-    for article, brand, tecdoc_id in parts_to_update:
-        part = db.query(Part).filter(
-            Part.article == article,
-            Part.brand == brand,
-        ).first()
-        if part:
-            cat_pc = db.execute(
-                text("SELECT id FROM part_categories WHERE tecdoc_id = :tid LIMIT 1"),
-                {"tid": tecdoc_id},
-            ).first()
-            if cat_pc and part.category_id != cat_pc[0]:
-                part.category_id = cat_pc[0]
-                updated += 1
+    all_tecdoc_ids = list(cat_map.keys())
+    tecdoc_to_cat = {}
+    for i in range(0, len(all_tecdoc_ids), 500):
+        chunk = all_tecdoc_ids[i:i + 500]
+        cat_rows = db.execute(
+            text(f"SELECT id, tecdoc_id FROM part_categories WHERE tecdoc_id IN ({','.join(str(t) for t in chunk)})"),
+        ).fetchall()
+        for r in cat_rows:
+            tecdoc_to_cat[r.tecdoc_id] = r.id
 
+    all_pairs = set()
+    for pairs in cat_map.values():
+        for article, brand in pairs:
+            all_pairs.add((article, brand))
+
+    parts_lookup = {}
+    pair_list = list(all_pairs)
+    for i in range(0, len(pair_list), 500):
+        chunk = pair_list[i:i + 500]
+        conditions = []
+        params = {}
+        for j, (article, brand) in enumerate(chunk):
+            conditions.append(f"(article = :art_{j} AND COALESCE(brand, '') = :br_{j})")
+            params[f"art_{j}"] = article
+            params[f"br_{j}"] = brand
+        p_rows = db.execute(
+            text(f"SELECT id, article, COALESCE(brand, '') AS brand, category_id FROM parts WHERE {' OR '.join(conditions)}"),
+            params,
+        ).fetchall()
+        for r in p_rows:
+            parts_lookup[(r.article, r.brand)] = (r.id, r.category_id)
+
+    updates = []
+    for tecdoc_id, article_brands in cat_map.items():
+        cat_id = tecdoc_to_cat.get(tecdoc_id)
+        if cat_id is None:
+            continue
+        for article, brand in article_brands:
+            part_info = parts_lookup.get((article, brand))
+            if part_info and part_info[1] != cat_id:
+                updates.append({"id": part_info[0], "category_id": cat_id})
+
+    if not updates:
+        db.commit()
+        return 0
+
+    db.execute(
+        text("UPDATE parts SET category_id = :category_id WHERE id = :id"),
+        updates,
+    )
     db.commit()
-    return updated
+    return len(updates)

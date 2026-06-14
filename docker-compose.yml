@@ -36,6 +36,8 @@ services:
     build: ./backend
     container_name: celery_worker
     command: celery -A app.workers worker --loglevel=info
+    volumes:
+      - ./backend:/app
     environment:
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
@@ -50,6 +52,8 @@ services:
   celery_beat:
     build: ./backend
     command: celery -A app.workers beat --loglevel=info
+    volumes:
+      - ./backend:/app
     environment:
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432

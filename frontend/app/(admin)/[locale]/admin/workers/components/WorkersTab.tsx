@@ -38,6 +38,9 @@ interface TaskItem {
   runtime_seconds: number;
   time_start: number | null;
   slot_index: number;
+  import_progress: number | null;
+  import_status: string | null;
+  import_stage: string | null;
 }
 
 interface WorkerStatus {
@@ -399,9 +402,18 @@ export default function WorkersTab() {
     columnHelper.accessor('name', {
       header: t('workers_task_name'),
       cell: (info) => {
-        const name = info.getValue() || '';
+        const task = info.row.original;
+        const name = task.name || '';
+        const stage = task.import_stage;
+        if (stage) {
+          return (
+            <span className="text-sm truncate max-w-[200px] block" title={stage}>
+              {stage}
+            </span>
+          );
+        }
         return (
-          <span className="text-sm truncate max-w-[180px] block" title={name}>
+          <span className="text-sm truncate max-w-[200px] block" title={name}>
             {taskNameLabel(t, name)}
           </span>
         );
@@ -409,18 +421,53 @@ export default function WorkersTab() {
     }),
     columnHelper.accessor('status', {
       header: t('workers_status'),
-      cell: (info) => (
-        <div className="flex items-center gap-2">
-          {statusBadge(t, info.getValue(), info.row.original.runtime_seconds, info.row.original.slot_index)}
-        </div>
-      ),
+      cell: (info) => {
+        const task = info.row.original;
+        return (
+          <div className="flex items-center gap-2">
+            {statusBadge(t, task.status, task.runtime_seconds, task.slot_index)}
+            {task.import_status && task.import_status !== task.status && (
+              <Badge className={`border-0 gap-1 text-xs ${
+                task.import_status === 'complete' ? 'bg-green-500 text-white' :
+                task.import_status === 'failed' ? 'bg-red-500 text-white' :
+                task.import_status === 'processing' ? 'bg-blue-500 text-white animate-pulse' :
+                'bg-yellow-500 text-white'
+              }`}>
+                {task.import_status === 'complete' ? <CheckCircle2 className="w-3 h-3" /> :
+                 task.import_status === 'failed' ? <XCircle className="w-3 h-3" /> :
+                 <Loader2 className="w-3 h-3 animate-spin" />}
+                <span className="font-mono">{task.import_progress ?? '?'}%</span>
+              </Badge>
+            )}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor('runtime_seconds', {
       header: t('workers_runtime'),
       cell: (info) => {
         const task = info.row.original;
-        const pct = Math.min(100, Math.round((task.runtime_seconds / PROGRESS_THRESHOLD) * 100));
         const isStuck = task.runtime_seconds > STUCK_THRESHOLD;
+        if (task.import_progress !== null && task.import_progress !== undefined) {
+          const ip = task.import_progress;
+          const isFailed = task.import_status === 'failed';
+          return (
+            <div className="flex items-center gap-2 min-w-[180px]">
+              <Badge className={`border-0 gap-1 text-sm font-mono ${isFailed ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+                <Clock className="w-3.5 h-3.5" />
+                {task.time_start ? <RuntimeTimer timeStart={task.time_start} /> : formatRuntime(task.runtime_seconds)}
+              </Badge>
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${isFailed ? 'bg-red-500' : 'bg-blue-500'}`}
+                  style={{ width: `${ip}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground w-8 text-right">{ip}%</span>
+            </div>
+          );
+        }
+        const pct = Math.min(100, Math.round((task.runtime_seconds / PROGRESS_THRESHOLD) * 100));
         return (
           <div className="flex items-center gap-2 min-w-[180px]">
             <Badge className={`border-0 gap-1 text-sm font-mono ${isStuck ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
