@@ -34,15 +34,15 @@ export default function RegisterPage() {
           <label className="text-sm font-medium">{t('name_label')}</label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('name_placeholder')} className="pl-10" />
-          </div>
-        </div>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('name_placeholder')} className="h-10 pl-10" />
+           </div>
+         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t('email_label')}</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email_placeholder')} className="pl-10" required />
+         <div className="space-y-2">
+           <label className="text-sm font-medium">{t('email_label')}</label>
+           <div className="relative">
+             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email_placeholder')} className="h-10 pl-10" required />
           </div>
         </div>
 
@@ -50,7 +50,7 @@ export default function RegisterPage() {
           <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password_placeholder')} className="pl-10 pr-10" required minLength={PASSWORD_MIN_LENGTH} />
+            <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password_placeholder')} className="h-10 pl-10 pr-10" required minLength={PASSWORD_MIN_LENGTH} />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>

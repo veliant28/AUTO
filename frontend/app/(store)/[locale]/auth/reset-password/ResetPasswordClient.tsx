@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
           <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password_placeholder')} className="pl-10 pr-10" required minLength={PASSWORD_MIN_LENGTH} />
+            <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('password_placeholder')} className="h-10 pl-10 pr-10" required minLength={PASSWORD_MIN_LENGTH} />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
           <label className="text-sm font-medium">{t('confirm_password')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type={showPassword ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={t('password_placeholder')} className="pl-10" required minLength={PASSWORD_MIN_LENGTH} />
+            <Input type={showPassword ? 'text' : 'password'} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={t('password_placeholder')} className="h-10 pl-10" required minLength={PASSWORD_MIN_LENGTH} />
           </div>
         </div>
         <Button type="submit" className="w-full gap-2" size="lg" disabled={resetLoading || password !== confirm}>

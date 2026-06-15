@@ -33,9 +33,9 @@ export default function VehicleSelector() {
       <div className="space-y-2">
         <label className="text-sm font-medium">{t('select_brand')}</label>
         <Select value={brandId || ""} onValueChange={(val) => setBrand(val, brands?.find(b => b.id === parseInt(val))?.name || "")}>
-          <SelectTrigger>
-            <SelectValue placeholder={t('select_brand')} />
-          </SelectTrigger>
+<SelectTrigger className="h-10">
+             <SelectValue placeholder={t('select_brand')} />
+           </SelectTrigger>
           <SelectContent>
             {brands?.map((brand) => (
               <SelectItem key={brand.id} value={brand.id.toString()}>{brand.name}</SelectItem>
@@ -47,8 +47,8 @@ export default function VehicleSelector() {
       <div className="space-y-2">
         <label className="text-sm font-medium">{t('select_model')}</label>
         <Select disabled={!brandId || loadingModels} value={modelId || ""} onValueChange={(val) => setModel(val, models?.find(m => m.id === parseInt(val))?.name || "")}>
-          <SelectTrigger>
-            <SelectValue placeholder={t('select_model')} />
+          <SelectTrigger className="h-10">
+             <SelectValue placeholder={t('select_model')} />
           </SelectTrigger>
           <SelectContent>
             {models?.map((model) => (
@@ -61,8 +61,8 @@ export default function VehicleSelector() {
       <div className="space-y-2">
         <label className="text-sm font-medium">{t('select_mod')}</label>
         <Select disabled={!modelId || loadingMods} value={modId || ""} onValueChange={(val) => setMod(val, mods?.find(m => m.id === parseInt(val))?.name || "")}>
-          <SelectTrigger>
-            <SelectValue placeholder={t('select_mod')} />
+          <SelectTrigger className="h-10">
+             <SelectValue placeholder={t('select_mod')} />
           </SelectTrigger>
           <SelectContent>
             {mods?.map((mod) => (
@@ -75,7 +75,7 @@ export default function VehicleSelector() {
       {modId && (
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs">{t('selected_car')}</Badge>
+            <Badge variant="outline" className="text-sm">{t('selected_car')}</Badge>
             <button 
               onClick={() => useVehicleStore.getState().clearVehicle()}
               className="text-xs text-destructive hover:underline"
@@ -85,6 +85,7 @@ export default function VehicleSelector() {
           </div>
           <Button 
             variant="default" 
+            size="lg"
             className="w-full gap-2" 
             onClick={handleSaveToGarage}
             disabled={isAdding}

@@ -95,13 +95,13 @@ export default function GaragePage() {
                 className="bg-card border rounded-lg p-3 hover:border-primary transition-colors space-y-2"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <Badge variant="outline" className="text-xs">{t(badgeKey)}</Badge>
+                  <Badge variant="outline" className="text-sm">{t(badgeKey)}</Badge>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="h-8 w-8 shrink-0"
+                        className="h-10 w-10 shrink-0"
                         onClick={() => setDeleteTarget(vehicle)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -119,6 +119,7 @@ export default function GaragePage() {
                 </div>
 
                 <Button
+                  size="lg"
                   className="w-full gap-1.5"
                   onClick={() => handleSelectVehicle(vehicle)}
                 >
@@ -152,8 +153,8 @@ export default function GaragePage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
-            <Button variant="destructive" onClick={confirmRemove} disabled={isRemoving} className="gap-2">
+            <Button variant="outline" size="lg" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
+            <Button variant="destructive" size="lg" onClick={confirmRemove} disabled={isRemoving} className="gap-2">
               {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               {t('delete')}
             </Button>

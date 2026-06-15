@@ -137,7 +137,7 @@ export default function CartPage() {
             <h1 className="text-3xl font-bold">{t('cart')}</h1>
             <Badge variant="secondary" className="text-sm px-3 py-1 border-0">{totalItems()} {t('pcs')}</Badge>
           </div>
-          <Button variant="outline" className="h-9 gap-2" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
+          <Button variant="outline" size="lg" className="gap-2" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
             {t('clear_cart')}
           </Button>
         </div>
@@ -191,7 +191,7 @@ export default function CartPage() {
                       </div>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-9 w-9 shrink-0" onClick={handleRemove}>
+                          <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0" onClick={handleRemove}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>

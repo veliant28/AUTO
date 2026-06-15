@@ -112,13 +112,14 @@ export default function ProductClient({ article }: { article: string }) {
   if (!data?.info && !data?.part) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <Button variant="outline" className="h-9 gap-2 mb-6" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4" /> {t('title')}
+<Button variant="outline" size="lg" className="gap-2 mb-6" onClick={() => router.back()}>
+          <ArrowLeft className="w-4 h-4" />
+          {tc('back')}
         </Button>
         <div className="text-center py-20 space-y-4">
           <Package className="w-16 h-16 mx-auto text-muted-foreground/40" />
           <p className="text-lg font-medium">{t('no_results')}</p>
-          <Button variant="outline" onClick={() => router.back()}>{t('title')}</Button>
+          <Button variant="outline" size="lg" onClick={() => router.back()}>{t('title')}</Button>
         </div>
       </div>
     );
@@ -139,8 +140,9 @@ export default function ProductClient({ article }: { article: string }) {
 
   return (
     <div className="container mx-auto py-8 px-4">
-        <Button variant="outline" className="h-9 gap-2 mb-6" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4" /> {t('title')}
+<Button variant="outline" size="lg" className="gap-2 mb-6" onClick={() => router.back()}>
+          <ArrowLeft className="w-4 h-4" />
+          {tc('back')}
         </Button>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -207,7 +209,7 @@ export default function ProductClient({ article }: { article: string }) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9"
+                  className="h-10 w-10"
                   onClick={handleToggleFavorite}
                 >
                   <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
@@ -219,7 +221,7 @@ export default function ProductClient({ article }: { article: string }) {
               <TooltipTrigger asChild>
                 <Button
                   size="icon"
-                  className="h-9 w-9 bg-green-500 text-white hover:bg-green-600"
+                  className="h-10 w-10 bg-green-500 text-white hover:bg-green-600"
                   onClick={handleAddToCart}
                 >
                   <ShoppingCart className="h-4 w-4" />

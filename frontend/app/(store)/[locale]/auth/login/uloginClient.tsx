@@ -34,7 +34,7 @@ export default function LoginPage() {
           <label className="text-sm font-medium">{t('email_label')}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input {...register('email')} type="email" placeholder={t('email_placeholder')} className="pl-10" />
+            <Input {...register('email')} type="email" placeholder={t('email_placeholder')} className="h-10 pl-10" />
           </div>
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
@@ -43,7 +43,7 @@ export default function LoginPage() {
           <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="pl-10 pr-10" />
+            <Input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="h-10 pl-10 pr-10" />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>

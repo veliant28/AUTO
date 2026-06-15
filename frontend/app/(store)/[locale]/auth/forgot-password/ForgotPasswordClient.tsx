@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
         <h1 className="text-3xl font-bold">{t('check_email')}</h1>
         <p className="text-muted-foreground">{t('email_sent')} <strong>{email}</strong></p>
         <Link href="/auth/login">
-          <Button variant="outline" className="gap-2"><ArrowLeft className="w-4 h-4" /> {t('back_to_login')}</Button>
+          <Button variant="outline" size="lg" className="gap-2"><ArrowLeft className="w-4 h-4" /> {t('back_to_login')}</Button>
         </Link>
       </div>
     );
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
           <label className="text-sm font-medium">{t('email_label')}</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email_placeholder')} className="pl-10" required />
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('email_placeholder')} className="h-10 pl-10" required />
           </div>
         </div>
         <Button type="submit" className="w-full gap-2" size="lg" disabled={forgotLoading}>

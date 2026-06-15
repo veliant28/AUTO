@@ -22,7 +22,7 @@ export default function CatalogPagination({ page, pageSize, total, onPageChange 
     <div className="flex items-center justify-center gap-4 py-6">
       <Button
         variant="outline"
-        className="h-9 gap-1 text-sm"
+        size="lg" className="gap-1"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
@@ -36,7 +36,7 @@ export default function CatalogPagination({ page, pageSize, total, onPageChange 
 
       <Button
         variant="outline"
-        className="h-9 gap-1 text-sm"
+        size="lg" className="gap-1"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >

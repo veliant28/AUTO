@@ -158,8 +158,8 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold">{tc('login_title')}</h1>
           <p className="text-muted-foreground">{tc('login_desc')}</p>
           <div className="flex gap-4 justify-center">
-            <Link href="/auth/login"><Button>{tc('login')}</Button></Link>
-            <Link href="/auth/register"><Button variant="outline">{tc('register')}</Button></Link>
+            <Link href="/auth/login"><Button size="lg">{tc('login')}</Button></Link>
+            <Link href="/auth/register"><Button variant="outline" size="lg">{tc('register')}</Button></Link>
           </div>
         </div>
       </div>
@@ -293,7 +293,7 @@ export default function ProfilePage() {
                 {editing && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="default" size="icon" onClick={handleSaveProfile} disabled={updating}>
+                      <Button variant="default" size="icon" className="h-10 w-10" onClick={handleSaveProfile} disabled={updating}>
                         {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       </Button>
                     </TooltipTrigger>
@@ -302,7 +302,7 @@ export default function ProfilePage() {
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => setEditing(!editing)}>
+                    <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setEditing(!editing)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
@@ -323,15 +323,15 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">{t('last_name')}</label>
-                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={!editing} placeholder={t('last_name')} />
+                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={!editing} placeholder={t('last_name')} className="h-10" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">{t('first_name')}</label>
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={!editing} placeholder={t('first_name')} />
+                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={!editing} placeholder={t('first_name')} className="h-10" />
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">{t('middle_name')}</label>
-                  <Input value={middleName} onChange={(e) => setMiddleName(e.target.value)} disabled={!editing} placeholder={t('middle_name')} />
+                  <Input value={middleName} onChange={(e) => setMiddleName(e.target.value)} disabled={!editing} placeholder={t('middle_name')} className="h-10" />
                 </div>
               </div>
               <div>
@@ -376,12 +376,12 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_city')}</label>
-                <Input value={deliveryCity} onChange={(e) => setDeliveryCity(e.target.value)} disabled={!editing} placeholder={t('city_placeholder')} />
+                <Input value={deliveryCity} onChange={(e) => setDeliveryCity(e.target.value)} disabled={!editing} placeholder={t('city_placeholder')} className="h-10" />
               </div>
               {deliveryType !== 'courier' && (
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_warehouse_number')}</label>
-                  <Input value={deliveryWarehouse} onChange={(e) => setDeliveryWarehouse(e.target.value)} disabled={!editing} placeholder="№ 1" />
+                  <Input value={deliveryWarehouse} onChange={(e) => setDeliveryWarehouse(e.target.value)} disabled={!editing} placeholder="№ 1" className="h-10" />
                 </div>
               )}
             </CardContent>
@@ -403,7 +403,7 @@ export default function ProfilePage() {
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('current_password')}</label>
                 <div className="relative">
-                  <Input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="pr-10" placeholder={t('current_password')} />
+                  <Input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-10 pr-10" placeholder={t('current_password')} />
                   <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
                     {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -412,7 +412,7 @@ export default function ProfilePage() {
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t('new_password')}</label>
                 <div className="relative">
-                  <Input type={showNew ? 'text' : 'password'} value={newPass} onChange={(e) => setNewPass(e.target.value)} className="pr-10" placeholder={t('new_password')} />
+                  <Input type={showNew ? 'text' : 'password'} value={newPass} onChange={(e) => setNewPass(e.target.value)} className="h-10 pr-10" placeholder={t('new_password')} />
                   <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
                     {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -421,13 +421,13 @@ export default function ProfilePage() {
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{tc('confirm_password')}</label>
                 <div className="relative">
-                  <Input type={showConfirm ? 'text' : 'password'} value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="pr-10" placeholder={tc('confirm_password')} />
+                  <Input type={showConfirm ? 'text' : 'password'} value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="h-10 pr-10" placeholder={tc('confirm_password')} />
                   <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-              <Button onClick={handleChangePassword} disabled={changingPassword}>
+              <Button size="lg" onClick={handleChangePassword} disabled={changingPassword}>
                 {changingPassword ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
                 {t('change_password')}
               </Button>
@@ -451,9 +451,9 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <span className="font-medium">{tg('connected')}</span>
-                    {tgUsername && <Badge variant="outline">@{tgUsername}</Badge>}
+                    {tgUsername && <Badge variant="outline" className="text-sm">@{tgUsername}</Badge>}
                   </div>
-                  <Button variant="outline" size="sm" className="text-destructive" onClick={handleDisconnectTelegram}>
+                  <Button variant="outline" size="lg" className="text-destructive" onClick={handleDisconnectTelegram}>
                     <XCircle className="w-4 h-4 mr-1" /> {tg('disconnect')}
                   </Button>
                 </div>
@@ -464,21 +464,21 @@ export default function ProfilePage() {
                     <span>{tg('send_code')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Input value={code} readOnly className="w-32 font-mono text-lg text-center" />
+                    <Input value={code} readOnly className="w-32 font-mono text-lg text-center h-10" />
                     <span className="text-sm text-muted-foreground">→ @{botUsername}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{tg('check_after_send')}</p>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={checkTelegramStatus}>
+                    <Button size="lg" onClick={checkTelegramStatus}>
                       <Loader2 className="w-3 h-3 mr-1" /> {tg('check')}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setCode(null)}>
+                    <Button variant="outline" size="lg" onClick={() => setCode(null)}>
                       {tc('cancel')}
                     </Button>
                   </div>
                 </div>
               ) : (
-                <Button onClick={handleConnectTelegram} disabled={tgLoading}>
+                <Button size="lg" onClick={handleConnectTelegram} disabled={tgLoading}>
                   {tgLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
                   {tg('connect')}
                 </Button>

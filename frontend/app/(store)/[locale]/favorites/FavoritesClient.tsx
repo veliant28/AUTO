@@ -115,7 +115,7 @@ export default function FavoritesClient() {
         <h1 className="text-3xl font-bold">{t('favorites')}</h1>
         <p className="text-muted-foreground">{t('favorites_login_desc')}</p>
         <Link href="/auth/login">
-          <Button>{t('login')}</Button>
+          <Button size="lg">{t('login')}</Button>
         </Link>
       </div>
     );
@@ -136,7 +136,7 @@ export default function FavoritesClient() {
           <p className="text-lg font-medium">{t('favorites_empty_title')}</p>
           <p className="text-muted-foreground text-sm">{t('favorites_empty_title_desc')}</p>
           <Link href="/">
-            <Button>{t('go_home')}</Button>
+            <Button size="lg">{t('go_home')}</Button>
           </Link>
         </div>
       ) : (

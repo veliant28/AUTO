@@ -35,11 +35,11 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
     <VaulDrawer.Root>
       <DrawerTrigger asChild>
         <div>
-          <Button variant="outline" className="h-9 gap-2">
+          <Button variant="outline" size="lg" className="gap-2">
             <SlidersHorizontal className="w-4 h-4" />
             {t('filters')}
             {activeCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-xs">{activeCount}</Badge>
+              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-sm">{activeCount}</Badge>
             )}
           </Button>
         </div>
@@ -50,7 +50,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
             <h3 className="font-semibold text-lg">{t('filters_sort')}</h3>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="destructive" size="icon" className="h-9 w-9" onClick={onClear}>
+                <Button variant="destructive" size="icon" className="h-10 w-10" onClick={onClear}>
                   <RotateCcw className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -63,14 +63,16 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
             <div className="flex gap-2">
               <Button
                 variant={filters.sort_by === '' ? 'default' : 'outline'}
-                className="h-9 text-sm flex-1 justify-center"
+                size="lg"
+                className="flex-1 justify-center"
                 onClick={() => set({ sort_by: '', sort_order: 'asc' })}
               >
                 {t('sort_default')}
               </Button>
               <Button
                 variant={filters.sort_by === 'name' ? 'default' : 'outline'}
-                className="h-9 text-sm flex-1 justify-center"
+                size="lg"
+                className="flex-1 justify-center"
                 onClick={() => set({ sort_by: 'name' })}
               >
                 <ArrowDownAZ className="h-4 w-4 shrink-0" />
@@ -87,7 +89,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
                 placeholder={`0`}
                 value={filters.min_price}
                 onChange={(e) => set({ min_price: e.target.value })}
-                className="h-9 text-sm"
+                className="h-10 text-sm"
               />
               <span className="text-muted-foreground shrink-0">—</span>
               <Input
@@ -95,7 +97,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
                 placeholder={`99999`}
                 value={filters.max_price}
                 onChange={(e) => set({ max_price: e.target.value })}
-                className="h-9 text-sm"
+                className="h-10 text-sm"
               />
             </div>
           </div>
