@@ -498,7 +498,7 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-5 gap-2 max-h-[600px] overflow-y-auto">
+              <div className="grid grid-cols-5 gap-2 max-h-[700px] overflow-y-auto">
                 {Array.from({ length: 100 }, (_, i) => i + 1).map((index) => (
                   <button
                     key={index}
