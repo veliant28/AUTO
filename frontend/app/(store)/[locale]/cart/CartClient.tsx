@@ -80,7 +80,7 @@ export default function CartPage() {
       todo.map(async (item) => {
         try {
           const res = await api.get('/catalog/search', { params: { q: item.article, limit: 1 } });
-          const product = res.data?.items?.[0];
+          const product = Array.isArray(res.data) ? res.data[0] : (res.data as any)?.items?.[0];
           if (product?.brand) return { article: item.article, brand: product.brand };
         } catch {}
         return null;
