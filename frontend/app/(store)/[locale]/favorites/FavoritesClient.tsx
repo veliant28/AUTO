@@ -25,7 +25,7 @@ export default function FavoritesClient() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
-  const { addItem, setReturnPath } = useCartStore();
+  const { addItem } = useCartStore();
 
   const page = useMemo(() => {
     const value = Number(searchParams?.get('page') || '1');
@@ -69,11 +69,10 @@ export default function FavoritesClient() {
 
   const handleAddToCart = useCallback(
     (product: ProductTileItem) => {
-      setReturnPath(window.location.pathname + window.location.search);
       addItem({ id: `cart-${product.article}-${Date.now()}`, part_id: product.id, article: product.article, part_name: product.name, quantity: 1, price: product.price, supplier_name: null, brand: product.brand, image_url: product.image_url });
       toast.success(t('added_to_cart'));
     },
-    [addItem, t, setReturnPath],
+    [addItem, t],
   );
 
   const handlePageChange = useCallback(

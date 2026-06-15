@@ -103,7 +103,7 @@ export default function CartPage() {
   }
 
   const linkPath = typeof window !== 'undefined'
-    ? (localStorage.getItem('cartReturnPath') || sessionStorage.getItem('cartReturnPath') || '/')
+    ? (localStorage.getItem('cartReturnPath') || '/')
     : '/';
 
   if (items.length === 0) {

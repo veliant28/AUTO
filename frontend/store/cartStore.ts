@@ -15,13 +15,11 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
-  returnPath: string;
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   replaceItems: (items: CartItem[]) => void;
-  setReturnPath: (path: string) => void;
   totalItems: () => number;
   totalPrice: () => number;
 }
@@ -30,7 +28,6 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      returnPath: '',
 
       addItem: (item) => {
         const existing = get().items.find((i) => i.part_id === item.part_id);
@@ -66,8 +63,6 @@ export const useCartStore = create<CartState>()(
       clearCart: () => set({ items: [] }),
 
       replaceItems: (items) => set({ items }),
-
-      setReturnPath: (path) => set({ returnPath: path }),
 
       totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 
