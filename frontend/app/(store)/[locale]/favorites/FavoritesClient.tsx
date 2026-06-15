@@ -69,7 +69,7 @@ export default function FavoritesClient() {
 
   const handleAddToCart = useCallback(
     (product: ProductTileItem) => {
-      addItem({ id: product.id, article: product.article, name: product.name, brand: product.brand, price: product.price, quantity: 1, currency: product.currency, image_url: product.image_url });
+      addItem({ id: `cart-${product.article}-${Date.now()}`, part_id: product.id, article: product.article, part_name: product.name, quantity: 1, price: product.price, supplier_name: null, brand: product.brand, image_url: product.image_url });
       toast.success(t('added_to_cart'));
     },
     [addItem, t],

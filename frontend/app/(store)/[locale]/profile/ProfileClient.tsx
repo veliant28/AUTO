@@ -19,6 +19,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { PhoneInput, phoneToApi, apiToPhone, formatPhone } from '@/components/ui/PhoneInput';
 import { toast } from '@/lib/toast';
 import api from '@/lib/api';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 const roleBadgeColors: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -159,6 +160,91 @@ export default function ProfilePage() {
           <div className="flex gap-4 justify-center">
             <Link href="/auth/login"><Button>{tc('login')}</Button></Link>
             <Link href="/auth/register"><Button variant="outline">{tc('register')}</Button></Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="w-[120px] h-[120px] rounded-full shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-7 w-40" />
+                    <Skeleton className="h-4 w-56" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Skeleton className="h-10 w-full rounded-lg" />
+                  <Skeleton className="h-10 w-full rounded-lg" />
+                  <Skeleton className="h-10 w-full rounded-lg" />
+                </div>
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-24" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 w-28 rounded-lg" />
+                  <Skeleton className="h-10 w-32 rounded-lg" />
+                  <Skeleton className="h-10 w-24 rounded-lg" />
+                </div>
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-28" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-44 rounded-lg" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-10 w-40 rounded-lg" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-28" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-5 gap-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

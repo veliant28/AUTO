@@ -70,6 +70,8 @@ export default function CatalogPage() {
       quantity: 1,
       price: product.price,
       supplier_name: product.brand,
+      brand: product.brand,
+      image_url: product.image_url,
     });
     toast.success(t('added_to_cart'));
   }, [addItem, t]);

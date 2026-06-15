@@ -22,6 +22,8 @@
     "back_to_profile": "Вернуться в профиль",
     "add_to_cart": "В кошик",
     "added_to_cart": "Додано в кошик",
+    "removed_from_cart": "Видалено з кошика",
+    "quantity_updated": "Кількість змінено",
     "in_stock": "В наявності",
     "out_of_stock": "Немає в наявності",
     "on_order": "Під замовлення",
@@ -42,6 +44,8 @@
     "reset": "Скинути",
     "delete": "Видалити",
     "remove": "Видалити",
+    "decrease_quantity": "Зменшити кількість",
+    "increase_quantity": "Збільшити кількість",
     "save_to_garage": "Зберегти в гараж",
     "saved_to_garage": "Автомобіль збережено в гараж!",
     "vehicle_selected": "Автомобіль обрано",
@@ -604,12 +608,12 @@
   },
   "cart": {
     "title": "Кошик",
-    "empty": "Корзина пуста",
-    "your_order": "Ваш заказ",
-    "summary_items": "Товаров",
+    "empty": "Кошик порожній",
+    "your_order": "Ваше замовлення",
+    "summary_items": "Товари",
     "summary_total": "Разом",
     "items_count": "шт",
-    "checkout": "Оформить заказ"
+    "checkout": "Оформити замовлення"
   },
   "checkout": {
     "title": "Оформление",
