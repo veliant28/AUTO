@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
 import { getBrandColor, getBrandInitial } from '@/lib/brand';
+import api from '@/lib/api';
 
 function CartSkeleton() {
   return (
@@ -64,11 +65,37 @@ function CartSkeleton() {
 
 export default function CartPage() {
   const t = useTranslations('common');
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Migrate old cart items without brand: fetch from catalog API
+  useEffect(() => {
+    const todo = items.filter((i) => !i.brand && i.article);
+    if (todo.length === 0) return;
+    Promise.all(
+      todo.map(async (item) => {
+        try {
+          const res = await api.get('/catalog/search', { params: { q: item.article, limit: 1 } });
+          const product = res.data?.items?.[0];
+          if (product?.brand) return { article: item.article, brand: product.brand };
+        } catch {}
+        return null;
+      })
+    ).then((results) => {
+      const updates = results.filter(Boolean) as { article: string; brand: string }[];
+      if (updates.length > 0) {
+        replaceItems(
+          items.map((item) => {
+            const found = updates.find((u) => u.article === item.article);
+            return found ? { ...item, brand: found.brand } : item;
+          })
+        );
+      }
+    });
   }, []);
 
   if (!mounted) {
