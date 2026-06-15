@@ -90,7 +90,7 @@ export default function VehicleSelector() {
             onClick={handleSaveToGarage}
             disabled={isAdding}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className="w-5 h-5" />
             {t('save_to_garage')}
           </Button>
         </div>

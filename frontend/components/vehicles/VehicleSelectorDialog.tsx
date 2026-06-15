@@ -105,7 +105,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="destructive" size="icon" className="h-10 w-10" onClick={handleReset} tabIndex={-1}>
-                        <RotateCcw className="w-4 h-4" />
+                        <RotateCcw className="w-5 h-5" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">{t('reset')}</TooltipContent>
@@ -131,7 +131,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                   className="flex-1 gap-1.5"
                   onClick={() => store.setType(value)}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                   {t(labelKey)}
                 </Button>
               ))}
@@ -280,7 +280,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
           {/* Подобрать запчасти */}
           {hasSelection && (
             <Button size="lg" className="w-full gap-2" onClick={handleSelectVehicle}>
-              <Car className="w-4 h-4" />
+              <Car className="w-5 h-5" />
               {t('vehicle_find_parts')}
             </Button>
           )}
@@ -294,7 +294,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
               onClick={handleSaveToGarage}
               disabled={isAdding}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className="w-5 h-5" />
               {t('save_to_garage')}
             </Button>
           )}

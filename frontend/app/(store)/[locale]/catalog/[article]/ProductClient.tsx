@@ -113,7 +113,7 @@ export default function ProductClient({ article }: { article: string }) {
     return (
       <div className="container mx-auto py-8 px-4">
 <Button variant="outline" size="lg" className="gap-2 mb-6" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
           {tc('back')}
         </Button>
         <div className="text-center py-20 space-y-4">
@@ -141,7 +141,7 @@ export default function ProductClient({ article }: { article: string }) {
   return (
     <div className="container mx-auto py-8 px-4">
 <Button variant="outline" size="lg" className="gap-2 mb-6" onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
           {tc('back')}
         </Button>
 
@@ -212,7 +212,7 @@ export default function ProductClient({ article }: { article: string }) {
                   className="h-10 w-10"
                   onClick={handleToggleFavorite}
                 >
-                  <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                  <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{isFavorite ? tc('remove_from_favorites') : tc('add_to_favorites')}</TooltipContent>
@@ -224,7 +224,7 @@ export default function ProductClient({ article }: { article: string }) {
                   className="h-10 w-10 bg-green-500 text-white hover:bg-green-600"
                   onClick={handleAddToCart}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{tc('add_to_cart')}</TooltipContent>

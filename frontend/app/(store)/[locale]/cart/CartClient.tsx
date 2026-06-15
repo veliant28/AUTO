@@ -119,7 +119,7 @@ export default function CartPage() {
           </p>
           <Link href={linkPath}>
             <Button size="lg">
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-2 h-5 w-5" />
               {t('go_to_catalog')}
             </Button>
           </Link>
@@ -192,7 +192,7 @@ export default function CartPage() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0" onClick={handleRemove}>
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom">{t('remove')}</TooltipContent>

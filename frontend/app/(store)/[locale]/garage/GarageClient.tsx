@@ -104,7 +104,7 @@ export default function GaragePage() {
                         className="h-10 w-10 shrink-0"
                         onClick={() => setDeleteTarget(vehicle)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">{t('remove')}</TooltipContent>
@@ -123,7 +123,7 @@ export default function GaragePage() {
                   className="w-full gap-1.5"
                   onClick={() => handleSelectVehicle(vehicle)}
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-5 h-5" />
                   {t('vehicle_find_parts')}
                 </Button>
               </div>
@@ -155,7 +155,7 @@ export default function GaragePage() {
           <DialogFooter>
             <Button variant="outline" size="lg" onClick={() => setDeleteTarget(null)}>{t('cancel')}</Button>
             <Button variant="destructive" size="lg" onClick={confirmRemove} disabled={isRemoving} className="gap-2">
-              {isRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {isRemoving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
               {t('delete')}
             </Button>
           </DialogFooter>

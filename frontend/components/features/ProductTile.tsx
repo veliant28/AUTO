@@ -95,7 +95,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
                 className="h-10 w-10"
                 onClick={(e) => { e.preventDefault(); onToggleFavorite(product.article); }}
               >
-                <Heart className={`h-4 w-4 ${product.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                <Heart className={`h-5 w-5 ${product.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{product.isFavorite ? t('remove_from_favorites') : t('add_to_favorites')}</TooltipContent>
@@ -107,7 +107,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
                 className="h-10 w-10 bg-green-500 text-white hover:bg-green-600"
                 onClick={(e) => { e.preventDefault(); onAddToCart(product); }}
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t('add_to_cart')}</TooltipContent>

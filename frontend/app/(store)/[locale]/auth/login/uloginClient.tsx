@@ -33,7 +33,7 @@ export default function LoginPage() {
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('email_label')}</label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input {...register('email')} type="email" placeholder={t('email_placeholder')} className="h-10 pl-10" />
           </div>
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
@@ -42,10 +42,10 @@ export default function LoginPage() {
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('password_label')}</label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="h-10 pl-10 pr-10" />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
@@ -56,7 +56,7 @@ export default function LoginPage() {
         </div>
 
         <Button type="submit" className="w-full gap-2" size="lg" disabled={loginLoading}>
-          <LogIn className="w-4 h-4" /> {loginLoading ? '...' : t('login_btn')}
+          <LogIn className="w-5 h-5" /> {loginLoading ? '...' : t('login_btn')}
         </Button>
       </form>
 

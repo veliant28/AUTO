@@ -26,7 +26,7 @@ export default function CatalogPagination({ page, pageSize, total, onPageChange 
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-5 w-5" />
         {t('prev_page')}
       </Button>
 
@@ -41,7 +41,7 @@ export default function CatalogPagination({ page, pageSize, total, onPageChange 
         onClick={() => onPageChange(page + 1)}
       >
         {t('next_page')}
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-5 w-5" />
       </Button>
     </div>
   );

@@ -36,7 +36,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
       <DrawerTrigger asChild>
         <div>
           <Button variant="outline" size="lg" className="gap-2">
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-5 h-5" />
             {t('filters')}
             {activeCount > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-sm">{activeCount}</Badge>
@@ -51,7 +51,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="destructive" size="icon" className="h-10 w-10" onClick={onClear}>
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{t('reset')}</TooltipContent>
@@ -75,7 +75,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
                 className="flex-1 justify-center"
                 onClick={() => set({ sort_by: 'name' })}
               >
-                <ArrowDownAZ className="h-4 w-4 shrink-0" />
+                <ArrowDownAZ className="h-5 w-5 shrink-0" />
                 {t('sort_by_name')}
               </Button>
             </div>

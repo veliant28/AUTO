@@ -276,12 +276,12 @@ export default function ProfilePage() {
                     <h1 className="text-2xl font-bold">{name}</h1>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                    <Mail className="w-4 h-4 shrink-0" />
+                    <Mail className="w-5 h-5 shrink-0" />
                     <span className="text-sm truncate">{profile?.email || user?.email}</span>
                   </div>
                   {(profile?.phone) && (
                     <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                      <Phone className="w-4 h-4 shrink-0" />
+                      <Phone className="w-5 h-5 shrink-0" />
                       <span className="text-sm">{formatPhone(profile.phone)}</span>
                     </div>
                   )}
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="default" size="icon" className="h-10 w-10" onClick={handleSaveProfile} disabled={updating}>
-                        {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {updating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">{t('save')}</TooltipContent>
@@ -303,7 +303,7 @@ export default function ProfilePage() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setEditing(!editing)}>
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">{t('edit')}</TooltipContent>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-10 pr-10" placeholder={t('current_password')} />
                   <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Input type={showNew ? 'text' : 'password'} value={newPass} onChange={(e) => setNewPass(e.target.value)} className="h-10 pr-10" placeholder={t('new_password')} />
                   <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -423,12 +423,12 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Input type={showConfirm ? 'text' : 'password'} value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="h-10 pr-10" placeholder={tc('confirm_password')} />
                   <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
               <Button size="lg" onClick={handleChangePassword} disabled={changingPassword}>
-                {changingPassword ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+                {changingPassword ? <Loader2 className="w-5 h-5 mr-1 animate-spin" /> : null}
                 {t('change_password')}
               </Button>
             </CardContent>
@@ -444,7 +444,7 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               {tgStatusLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" /> {tg('checking')}
+                  <Loader2 className="w-5 h-5 animate-spin" /> {tg('checking')}
                 </div>
               ) : tgConnected ? (
                 <div className="space-y-3">
@@ -454,13 +454,13 @@ export default function ProfilePage() {
                     {tgUsername && <Badge variant="outline" className="text-sm">@{tgUsername}</Badge>}
                   </div>
                   <Button variant="outline" size="lg" className="text-destructive" onClick={handleDisconnectTelegram}>
-                    <XCircle className="w-4 h-4 mr-1" /> {tg('disconnect')}
+                    <XCircle className="w-5 h-5 mr-1" /> {tg('disconnect')}
                   </Button>
                 </div>
               ) : code ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
-                    <Send className="w-4 h-4 text-primary" />
+                    <Send className="w-5 h-5 text-primary" />
                     <span>{tg('send_code')}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <Button size="lg" onClick={handleConnectTelegram} disabled={tgLoading}>
-                  {tgLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+                  {tgLoading ? <Loader2 className="w-5 h-5 mr-1 animate-spin" /> : null}
                   {tg('connect')}
                 </Button>
               )}
