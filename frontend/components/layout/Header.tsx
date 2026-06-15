@@ -83,7 +83,7 @@ export default function Header() {
 
             <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link href="/cart">
+                  <Link href="/cart" onClick={() => localStorage.setItem('cartReturnPath', window.location.pathname + window.location.search)}>
                     <Button variant="ghost" size="icon" className="relative">
                       <ShoppingCart className="h-5 w-5" />
                       {cartCount > 0 && (

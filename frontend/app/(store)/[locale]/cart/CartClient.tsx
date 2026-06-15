@@ -65,7 +65,7 @@ function CartSkeleton() {
 
 export default function CartPage() {
   const t = useTranslations('common');
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems, returnPath } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -102,7 +102,9 @@ export default function CartPage() {
     return <CartSkeleton />;
   }
 
-  const linkPath = returnPath || '/';
+  const linkPath = typeof window !== 'undefined'
+    ? (localStorage.getItem('cartReturnPath') || sessionStorage.getItem('cartReturnPath') || '/')
+    : '/';
 
   if (items.length === 0) {
     return (
