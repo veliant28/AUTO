@@ -135,7 +135,7 @@ export default function CartPage() {
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-7 h-7 text-primary" />
             <h1 className="text-3xl font-bold">{t('cart')}</h1>
-            <Badge variant="secondary" className="text-sm px-3 py-1 border-0">{totalItems()} {t('pcs')}</Badge>
+            <Badge variant="secondary" className="text-sm px-1.5">{totalItems()} {t('pcs')}</Badge>
           </div>
           <Button variant="outline" size="lg" className="gap-2" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
             {t('clear_cart')}
