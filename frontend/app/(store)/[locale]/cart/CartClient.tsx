@@ -65,7 +65,7 @@ function CartSkeleton() {
 
 export default function CartPage() {
   const t = useTranslations('common');
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems } = useCartStore();
+  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems, returnPath } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -102,12 +102,7 @@ export default function CartPage() {
     return <CartSkeleton />;
   }
 
-  const returnPath = (() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('cartReturnPath') || '/';
-    }
-    return '/';
-  })();
+  const linkPath = returnPath || '/';
 
   if (items.length === 0) {
     return (
@@ -120,7 +115,7 @@ export default function CartPage() {
           <p className="text-muted-foreground max-w-md">
             {t('cart_empty_desc')}
           </p>
-          <Link href={returnPath}>
+          <Link href={linkPath}>
             <Button size="lg">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('go_to_catalog')}
@@ -253,7 +248,7 @@ export default function CartPage() {
               <Button className="w-full gap-2 bg-green-500 text-white hover:bg-green-600" size="lg" asChild>
                 <Link href="/checkout">{t('checkout')}</Link>
               </Button>
-              <Link href={returnPath} className="block">
+              <Link href={linkPath} className="block">
                 <Button variant="outline" className="w-full" size="lg">
                   {t('continue_shopping')}
                 </Button>

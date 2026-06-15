@@ -18,6 +18,7 @@ export default function CatalogPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addItem = useCartStore((s) => s.addItem);
+  const setReturnPath = useCartStore((s) => s.setReturnPath);
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const favoriteArticles = useFavoritesStore((s) => s.articles);
 
@@ -62,7 +63,7 @@ export default function CatalogPage() {
   }, [toggleFavorite, favoriteArticles, products, t]);
 
   const handleAddToCart = useCallback((product: any) => {
-    sessionStorage.setItem('cartReturnPath', window.location.pathname + window.location.search);
+    setReturnPath(window.location.pathname + window.location.search);
     addItem({
       id: `cart-${product.article}-${Date.now()}`,
       part_id: product.id,
@@ -75,7 +76,7 @@ export default function CatalogPage() {
       image_url: product.image_url,
     });
     toast.success(t('added_to_cart'));
-  }, [addItem, t]);
+  }, [addItem, t, setReturnPath]);
 
   // Scroll restoration: on mount, check for saved scroll state
   useEffect(() => {

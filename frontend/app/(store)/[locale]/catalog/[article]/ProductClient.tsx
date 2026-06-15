@@ -23,6 +23,7 @@ export default function ProductClient({ article }: { article: string }) {
   const tc = useTranslations('common');
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
+  const setReturnPath = useCartStore((s) => s.setReturnPath);
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const favoriteArticles = useFavoritesStore((s) => s.articles);
 
@@ -31,7 +32,7 @@ export default function ProductClient({ article }: { article: string }) {
   const isFavorite = favoriteArticles.includes(article);
 
   const handleAddToCart = () => {
-    sessionStorage.setItem('cartReturnPath', window.location.pathname + window.location.search);
+    setReturnPath(window.location.pathname + window.location.search);
     const imgs = data?.images || [];
     const imgUrl = imgs.length > 0 ? imgs[0].url || `https://auto-db.pro/images/${imgs[0].name}` : null;
     addItem({
