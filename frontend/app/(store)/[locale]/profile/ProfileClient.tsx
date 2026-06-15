@@ -238,7 +238,7 @@ export default function ProfilePage() {
                 <Skeleton className="h-6 w-28" />
               </CardHeader>
               <CardContent>
-              <div className="grid grid-cols-5 gap-2 max-h-[400px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <Skeleton key={i} className="aspect-square w-full rounded-lg" />
                   ))}
@@ -498,7 +498,7 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-2 max-h-[400px] overflow-y-auto pr-1">
                 {Array.from({ length: 100 }, (_, i) => i + 1).map((index) => (
                   <button
                     key={index}
