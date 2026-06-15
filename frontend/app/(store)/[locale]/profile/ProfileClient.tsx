@@ -263,6 +263,9 @@ export default function ProfilePage() {
           {/* Avatar header */}
           <Card className="relative">
             <CardContent className="p-4">
+              <Badge className={`absolute top-3 right-3 ${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}>
+                {ta(profile?.role || user?.role || 'retail')}
+              </Badge>
               <div className="flex items-center gap-4">
                 <Avatar className="w-[120px] h-[120px] ring-4 ring-border shrink-0">
                   <AvatarImage src={getAvatarUrl(profile?.avatar_index)} />
@@ -271,11 +274,6 @@ export default function ProfilePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold">{name}</h1>
-                    <div className="flex gap-1 flex-wrap">
-                      <Badge className={`${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}>
-                        {ta(profile?.role || user?.role || 'retail')}
-                      </Badge>
-                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground mt-1">
                     <Mail className="w-4 h-4 shrink-0" />
