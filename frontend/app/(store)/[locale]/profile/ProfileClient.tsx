@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
-  User, Mail, Phone, Package, Lock, Camera, Send, Pencil,
+  User, Mail, Phone, Package, Lock, Camera, Send, Pencil, Save,
   CheckCircle, XCircle, Loader2, Eye, EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/store/authStore';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
-import type { AvatarStyle } from '@/lib/avatar';
 import { useProfile } from '@/hooks/useProfile';
 import { PhoneInput, phoneToApi, apiToPhone, formatPhone } from '@/components/ui/PhoneInput';
 import { toast } from '@/lib/toast';
@@ -29,38 +28,6 @@ const roleBadgeColors: Record<string, string> = {
   retail: 'bg-gray-500 text-white',
 };
 
-const avatarStyles: { value: AvatarStyle; label: string }[] = [
-  { value: 'initials', label: 'Init' },
-  { value: 'identicon', label: 'Ident' },
-  { value: 'avataaars', label: 'Avata' },
-  { value: 'avataaars-neutral', label: 'Av N' },
-  { value: 'bottts', label: 'Bottts' },
-  { value: 'bottts-neutral', label: 'Bot N' },
-  { value: 'lorelei', label: 'Lorel' },
-  { value: 'lorelei-neutral', label: 'Lor N' },
-  { value: 'thumbs', label: 'Thumbs' },
-  { value: 'adventurer', label: 'Adven' },
-  { value: 'adventurer-neutral', label: 'Adv N' },
-  { value: 'big-ears', label: 'Big E' },
-  { value: 'big-ears-neutral', label: 'BE N' },
-  { value: 'big-smile', label: 'Smile' },
-  { value: 'croodles', label: 'Crodl' },
-  { value: 'croodles-neutral', label: 'Cr N' },
-  { value: 'dylan', label: 'Dylan' },
-  { value: 'fun-emoji', label: 'Emoji' },
-  { value: 'glass', label: 'Glass' },
-  { value: 'icons', label: 'Icons' },
-  { value: 'micah', label: 'Micah' },
-  { value: 'miniavs', label: 'Miniv' },
-  { value: 'notionists', label: 'Notio' },
-  { value: 'notionists-neutral', label: 'No N' },
-  { value: 'open-peeps', label: 'Peeps' },
-  { value: 'personas', label: 'Perso' },
-  { value: 'pixel-art', label: 'Pixel' },
-  { value: 'rings', label: 'Rings' },
-  { value: 'shapes', label: 'Shape' },
-];
-
 const deliveryTypes = ['warehouse', 'parcel_locker', 'courier'] as const;
 
 export default function ProfilePage() {
@@ -69,7 +36,7 @@ export default function ProfilePage() {
   const tg = useTranslations('telegram');
   const ta = useTranslations('admin');
 
-  const { user, isAuthenticated, avatarStyle, setAvatarStyle } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { profile, isLoading, updateProfile, updating, changePassword, changingPassword } = useProfile();
 
   const [editing, setEditing] = useState(false);
@@ -89,6 +56,8 @@ export default function ProfilePage() {
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
 
+  const [selectedAvatar, setSelectedAvatar] = useState<number>(profile?.avatar_index || 1);
+
   const [code, setCode] = useState<string | null>(null);
   const [botUsername, setBotUsername] = useState('SVOMBot');
   const [tgConnected, setTgConnected] = useState(false);
@@ -105,6 +74,7 @@ export default function ProfilePage() {
       setDeliveryType(profile.delivery_type || '');
       setDeliveryCity(profile.delivery_city || '');
       setDeliveryWarehouse(profile.delivery_warehouse || '');
+      setSelectedAvatar(profile.avatar_index || 1);
     }
   }, [profile]);
 
@@ -209,14 +179,14 @@ export default function ProfilePage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <Avatar className="w-[120px] h-[120px] ring-4 ring-border shrink-0">
-                  <AvatarImage src={getAvatarUrl(user?.full_name || user?.email || 'user', avatarStyle)} />
+                  <AvatarImage src={getAvatarUrl(profile?.avatar_index)} />
                   <AvatarFallback className="text-3xl">{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold">{name}</h1>
                     <div className="flex gap-1 flex-wrap">
-                      <Badge className={`${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0`}>
+                      <Badge className={`${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}>
                         {ta(profile?.role || user?.role || 'retail')}
                       </Badge>
                     </div>
@@ -235,16 +205,26 @@ export default function ProfilePage() {
               </div>
             </CardContent>
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={() => setEditing(!editing)} className="absolute top-4 right-4">
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <span>{t('edit')}</span>
-                </TooltipContent>
-              </Tooltip>
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                {editing && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="default" size="icon" onClick={handleSaveProfile} disabled={updating}>
+                        {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">{t('save')}</TooltipContent>
+                  </Tooltip>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={() => setEditing(!editing)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{t('edit')}</TooltipContent>
+                </Tooltip>
+              </div>
             </TooltipProvider>
           </Card>
 
@@ -280,15 +260,6 @@ export default function ProfilePage() {
                   className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              {editing && (
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleSaveProfile} disabled={updating}>
-                    {updating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
-                    {t('save')}
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditing(false)}>{tc('cancel')}</Button>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -327,15 +298,6 @@ export default function ProfilePage() {
                 <div>
                   <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_warehouse_number')}</label>
                   <Input value={deliveryWarehouse} onChange={(e) => setDeliveryWarehouse(e.target.value)} disabled={!editing} placeholder="№ 1" />
-                </div>
-              )}
-              {editing && (
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleSaveProfile} disabled={updating}>
-                    {updating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
-                    {t('save')}
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditing(false)}>{tc('cancel')}</Button>
                 </div>
               )}
             </CardContent>
@@ -442,7 +404,7 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* Column 3: Avatar Styles */}
+        {/* Column 3: Avatar Selection */}
         <div className="space-y-6">
 
           <Card>
@@ -452,22 +414,23 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                {avatarStyles.map((style) => (
+              <div className="grid grid-cols-5 gap-2">
+                {Array.from({ length: 40 }, (_, i) => i + 1).map((index) => (
                   <button
-                    key={style.value}
-                    onClick={() => setAvatarStyle(style.value)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors cursor-pointer ${
-                      avatarStyle === style.value
-                        ? 'border-primary bg-primary/10'
+                    key={index}
+                    onClick={() => {
+                      setSelectedAvatar(index);
+                      updateProfile({ avatar_index: index });
+                    }}
+                    className={`flex items-center justify-center aspect-square p-1 rounded-lg border transition-colors cursor-pointer overflow-hidden ${
+                      (profile?.avatar_index || selectedAvatar) === index
+                        ? 'border-primary ring-2 ring-primary/30'
                         : 'hover:border-primary/50'
                     }`}
                   >
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={getAvatarUrl(user?.full_name || user?.email || 'user', style.value)} />
-                      <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
+                    <Avatar className="w-full h-full">
+                      <AvatarImage src={getAvatarUrl(index)} className="w-full h-full object-cover" />
                     </Avatar>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">{style.label}</span>
                   </button>
                 ))}
               </div>

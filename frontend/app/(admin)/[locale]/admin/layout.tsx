@@ -36,7 +36,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, avatarStyle } = useAuthStore();
+  const { user } = useAuthStore();
   const { activeLocale, setActiveLocale } = useAdminLocale();
   const ta = useTranslations('admin');
   const isTecDoc = pathname.includes('/admin/tecdoc');
@@ -375,7 +375,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <div className="border-l pl-2 flex items-center gap-1">
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
-            <AvatarImage src={getAvatarUrl(user?.full_name || user?.email || 'user', avatarStyle)} />
+            <AvatarImage src={getAvatarUrl(user?.avatar_index)} />
             <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
           </Avatar>
           <ThemeToggle />

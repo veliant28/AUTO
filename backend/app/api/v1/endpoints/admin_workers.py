@@ -23,6 +23,8 @@ class TaskItem(BaseModel):
     import_progress: int | None = None
     import_status: str | None = None
     import_stage: str | None = None
+    stage_progress_start: int | None = None
+    stage_started_at: float | None = None
 
 
 class WorkerStatus(BaseModel):
@@ -91,6 +93,8 @@ def _collect_tasks(
                 import_progress = None
                 import_status = None
                 import_stage = None
+                stage_progress_start = None
+                stage_started_at = None
                 if db and tname == "process_price_import":
                     try:
                         args = task.get("args", [])
@@ -102,6 +106,8 @@ def _collect_tasks(
                                 import_progress = pi.progress
                                 import_status = pi.status
                                 import_stage = pi.stage_name
+                                stage_progress_start = pi.stage_progress_start
+                                stage_started_at = pi.stage_started_at.timestamp() if pi.stage_started_at else None
                     except Exception:
                         pass
                 item = TaskItem(
@@ -115,6 +121,8 @@ def _collect_tasks(
                     import_progress=import_progress,
                     import_status=import_status,
                     import_stage=import_stage,
+                    stage_progress_start=stage_progress_start,
+                    stage_started_at=stage_started_at,
                 )
                 tasks.append(item)
                 if status == "active" and tstart and now - tstart > stuck_threshold:

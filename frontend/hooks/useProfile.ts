@@ -6,13 +6,14 @@ import { toast } from '@/lib/toast';
 import { useTranslations } from 'next-intl';
 
 export function useProfile() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const t = useTranslations('profile');
 
   const { data: profile, isLoading, refetch } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data } = await api.get('/users/me');
+      setUser(data);
       return data;
     },
     enabled: !!user,

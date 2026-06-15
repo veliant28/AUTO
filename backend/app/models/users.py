@@ -17,6 +17,7 @@ class User(Base):
     delivery_type = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     delivery_warehouse = Column(String, nullable=True)
+    avatar_index = Column(Integer, nullable=True, default=None)
     created_at = Column(String, nullable=True)
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     

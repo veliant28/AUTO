@@ -540,6 +540,7 @@
     "workers_task_promote_import_task": "Import promote",
     "workers_task_scheduler_tick": "Scheduler",
     "workers_runtime": "Runtime",
+    "workers_progress": "Progress",
     "workers_status": "Status",
     "workers_revoke": "Revoke task",
     "workers_revoke_confirm": "Revoke task {taskId}?",

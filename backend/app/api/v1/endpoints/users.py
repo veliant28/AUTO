@@ -23,6 +23,7 @@ def _user_to_schema(user: User) -> UserSchema:
         last_name=user.last_name,
         first_name=user.first_name,
         middle_name=user.middle_name,
+        avatar_index=user.avatar_index,
         delivery_type=user.delivery_type,
         delivery_city=user.delivery_city,
         delivery_warehouse=user.delivery_warehouse,

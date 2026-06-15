@@ -20,10 +20,15 @@ import time
 
 LOG = lambda msg: print(f"[{datetime.utcnow().strftime('%H:%M:%S')}] {msg}")
 
-def _update_stage(pi, db, progress: int, stage: str = None):
+def set_stage(pi, db, stage: str):
+    pi.stage_progress_start = pi.progress
+    pi.stage_started_at = datetime.utcnow()
+    pi.stage_name = stage
+    db.commit()
+
+
+def set_progress(pi, db, progress: int):
     pi.progress = progress
-    if stage is not None:
-        pi.stage_name = stage
     db.commit()
 
 
@@ -116,11 +121,13 @@ def process_price_import(self, import_id: int):
         if pi.supplier.upper() == "GPL":
             LOG("GPL: fetching prices from API...")
             gpl_client = GPLAPIClient(client.config)
+            set_stage(pi, db, "Загрузка цен с GPL API")
             items = gpl_client.fetch_all_prices(token)
             LOG(f"GPL: fetched {len(items)} items")
-            _update_stage(pi, db, 25, "Загрузка цен с GPL API")
+            set_progress(pi, db, 25)
 
             LOG("GPL: building XLSX...")
+            set_stage(pi, db, "Подготовка файла импорта")
             xlsx_data = build_xlsx_from_json(items)
             file_name = f"gpl_{import_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = os.path.join(IMPORT_DIR, file_name)
@@ -128,20 +135,22 @@ def process_price_import(self, import_id: int):
                 f.write(xlsx_data)
             pi.file_path = file_path
             pi.file_size = len(xlsx_data)
-            _update_stage(pi, db, 30, "Подготовка файла импорта")
+            set_progress(pi, db, 30)
             LOG(f"GPL: XLSX saved ({len(xlsx_data)} bytes)")
 
             LOG("GPL: parsing XLSX and upserting supplier_prices...")
+            set_stage(pi, db, "Импорт остатков и цен в БД")
             tecdb = TecDocSessionLocal()
             try:
                 count = parse_xlsx_to_prices(db, "GPL", xlsx_data, tecdoc_db=tecdb)
             finally:
                 tecdb.close()
             pi.total_items = count
-            _update_stage(pi, db, 35, "Импорт остатков и цен в БД")
+            set_progress(pi, db, 35)
             LOG(f"GPL: parsed {count} prices")
 
             LOG("GPL: promoting to catalog (creating/updating Parts and SupplierOffers)...")
+            set_stage(pi, db, "Обновление каталога")
             def update_progress_gpl(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -154,10 +163,11 @@ def process_price_import(self, import_id: int):
             promoted = promote_all_to_catalog(db, "GPL", progress_cb=update_progress_gpl)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
-            _update_stage(pi, db, 65, "Создание товаров в каталоге")
+            set_progress(pi, db, 65)
             LOG(f"GPL: promoted {promoted} offers")
 
             LOG("GPL: generating SKUs...")
+            set_stage(pi, db, "Создание товаров в каталоге")
             bulk_generate_skus(db)
             LOG("GPL: SKUs generated")
 
@@ -165,13 +175,14 @@ def process_price_import(self, import_id: int):
             apply_margins_bulk(db)
             _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            _update_stage(pi, db, 85, "Применение наценок")
+            set_progress(pi, db, 85)
             LOG("GPL: margins applied")
 
             LOG("GPL: assigning categories...")
+            set_stage(pi, db, "Назначение категорий")
             cat_assigned = assign_gpl_categories(db, "GPL")
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            _update_stage(pi, db, 90, "Назначение категорий")
+            set_progress(pi, db, 90)
             LOG(f"GPL: categories assigned: {cat_assigned}")
 
             pi.progress = 100
@@ -186,20 +197,22 @@ def process_price_import(self, import_id: int):
             utr_client = UTRAPIClient(client.config)
             filters = pi.filters or {}
 
+            set_stage(pi, db, "Запрос экспорта с UTR API")
             result = utr_client.request_export(token, filters)
             pi.external_id = result.external_id
             pi.external_token = result.external_token or ""
-            _update_stage(pi, db, 5, "Запрос экспорта с UTR API")
+            set_progress(pi, db, 5)
             LOG(f"UTR: export requested, id={result.external_id}")
 
             LOG("UTR: waiting for export completion...")
+            set_stage(pi, db, "Ожидание готовности экспорта UTR")
             for attempt in range(60):
                 status_result = utr_client.check_export_status(token, pi.external_id)
                 pi.progress = 5 + min(attempt, 20)
                 db.commit()
                 if status_result.status == "complete":
                     pi.external_token = status_result.external_token or pi.external_token
-                    _update_stage(pi, db, 25, "Ожидание готовности экспорта UTR")
+                    set_progress(pi, db, 25)
                     LOG("UTR: export ready")
                     break
                 time.sleep(5)
@@ -210,6 +223,7 @@ def process_price_import(self, import_id: int):
                 return {"error": pi.error_message}
 
             LOG("UTR: downloading export...")
+            set_stage(pi, db, "Загрузка и подготовка XLSX")
             xlsx_data = utr_client.download_export(token, pi.external_token)
             file_name = f"utr_{import_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = os.path.join(IMPORT_DIR, file_name)
@@ -217,16 +231,18 @@ def process_price_import(self, import_id: int):
                 f.write(xlsx_data)
             pi.file_path = file_path
             pi.file_size = len(xlsx_data)
-            _update_stage(pi, db, 30, "Загрузка и подготовка XLSX")
+            set_progress(pi, db, 30)
             LOG(f"UTR: downloaded {len(xlsx_data)} bytes")
 
             LOG("UTR: parsing XLSX and upserting supplier_prices...")
+            set_stage(pi, db, "Импорт остатков и цен в БД")
             count = parse_xlsx_to_prices(db, "UTR", xlsx_data)
             pi.total_items = count
-            _update_stage(pi, db, 35, "Импорт остатков и цен в БД")
+            set_progress(pi, db, 35)
             LOG(f"UTR: parsed {count} prices")
 
             LOG("UTR: promoting to catalog...")
+            set_stage(pi, db, "Обновление каталога")
             def update_progress_utr(pct: int):
                 try:
                     pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -239,10 +255,11 @@ def process_price_import(self, import_id: int):
             promoted = promote_all_to_catalog(db, "UTR", progress_cb=update_progress_utr)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
-            _update_stage(pi, db, 65, "Создание товаров в каталоге")
+            set_progress(pi, db, 65)
             LOG(f"UTR: promoted {promoted} offers")
 
             LOG("UTR: generating SKUs...")
+            set_stage(pi, db, "Создание товаров в каталоге")
             bulk_generate_skus(db)
             LOG("UTR: SKUs generated")
 
@@ -250,7 +267,7 @@ def process_price_import(self, import_id: int):
             apply_margins_bulk(db)
             _snapshot_margins(db)
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            _update_stage(pi, db, 85, "Применение наценок")
+            set_progress(pi, db, 85)
             LOG("UTR: margins applied")
 
             pi.progress = 100

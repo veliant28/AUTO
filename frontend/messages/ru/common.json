@@ -540,6 +540,7 @@
     "workers_task_promote_import_task": "Продвижение импорта",
     "workers_task_scheduler_tick": "Планировщик",
     "workers_runtime": "Время",
+    "workers_progress": "Прогресс",
     "workers_status": "Статус",
     "workers_revoke": "Отменить задачу",
     "workers_revoke_confirm": "Отменить задачу {taskId}?",

@@ -16,6 +16,7 @@ class UserSchema(UserBase):
     last_name: Optional[str] = None
     first_name: Optional[str] = None
     middle_name: Optional[str] = None
+    avatar_index: Optional[int] = None
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
@@ -28,6 +29,7 @@ class ProfileUpdate(BaseModel):
     first_name: Optional[str] = None
     middle_name: Optional[str] = None
     phone: Optional[str] = None
+    avatar_index: Optional[int] = None
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None

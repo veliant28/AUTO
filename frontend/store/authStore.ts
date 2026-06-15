@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '@/lib/constants';
-import type { AvatarStyle } from '@/lib/avatar';
 
 export interface AuthUser {
   id: number;
@@ -9,17 +8,16 @@ export interface AuthUser {
   role: string;
   full_name: string | null;
   first_name: string | null;
+  avatar_index: number | null;
 }
 
 interface UserState {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  avatarStyle: AvatarStyle;
   
   setUser: (user: any) => void;
   logout: () => void;
   initializeFromToken: () => void;
-  setAvatarStyle: (style: AvatarStyle) => void;
 }
 
 export const useAuthStore = create<UserState>()(
@@ -27,7 +25,6 @@ export const useAuthStore = create<UserState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      avatarStyle: 'initials' as AvatarStyle,
       
       setUser: (user) => {
         set({
@@ -37,6 +34,7 @@ export const useAuthStore = create<UserState>()(
             role: user.role || 'retail',
             full_name: user.full_name || null,
             first_name: user.first_name || null,
+            avatar_index: user.avatar_index ?? null,
           } : null,
           isAuthenticated: !!user,
         });
@@ -53,8 +51,6 @@ export const useAuthStore = create<UserState>()(
           set({ user: null, isAuthenticated: false });
         }
       },
-
-      setAvatarStyle: (avatarStyle) => set({ avatarStyle }),
     }),
     {
       name: STORAGE_KEYS.AUTH,

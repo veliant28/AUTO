@@ -41,6 +41,8 @@ interface TaskItem {
   import_progress: number | null;
   import_status: string | null;
   import_stage: string | null;
+  stage_progress_start: number | null;
+  stage_started_at: number | null;
 }
 
 interface WorkerStatus {
@@ -194,12 +196,6 @@ function statusLabel(t: (k: string) => string, status: string): string {
   return map[status] || status;
 }
 
-function taskNameLabel(t: (k: string) => string, name: string): string {
-  const key = `workers_task_${name}`;
-  const translated = t(key);
-  return translated !== key ? translated : name.split('.').pop() || name;
-}
-
 function statusBadge(t: (k: string) => string, status: string, runtimeSec: number, slotIdx: number) {
   const isStuck = status === 'active' && runtimeSec > STUCK_THRESHOLD;
   const errorStatuses = ['error', 'failure', 'revoked', 'stopped'];
@@ -225,13 +221,22 @@ export default function WorkersTab() {
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const [activeHistory, setActiveHistory] = useState<{ time: string; value: number }[]>(() => {
-    const now = new Date();
-    return Array.from({ length: 20 }, (_, i) => {
-      const d = new Date(now.getTime() - (19 - i) * 3000);
-      return { time: d.toTimeString().slice(0, 5), value: 0 };
-    });
+  const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>(() => {
+    const now = Date.now();
+    return Array.from({ length: 50 }, (_, i) => ({
+      time: now - (49 - i) * 3000,
+      value: 0,
+    }));
   });
+  const [clock, setClock] = useState(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setClock(Date.now());
+      setActiveHistory((prev) => prev.map(p => ({ ...p, time: p.time + 1000 })));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const { data, isLoading, refetch } = useQuery<WorkersData>({
     queryKey: ['admin-workers'],
@@ -252,7 +257,7 @@ export default function WorkersTab() {
   useEffect(() => {
     if (!data?.worker) return;
     setActiveHistory((prev) => {
-      const next = [...prev, { time: new Date().toTimeString().slice(0, 5), value: data.worker.active_count }];
+      const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
       return next.length > 50 ? next.slice(-50) : next;
     });
   }, [data]);
@@ -356,27 +361,37 @@ export default function WorkersTab() {
     }],
   };
 
+  const dataMin = activeHistory[0]?.time ?? Date.now();
+  const dataMax = activeHistory[activeHistory.length - 1]?.time ?? Date.now();
   const activeSlotsOption = {
     backgroundColor: chartBg,
     xAxis: {
-      type: 'category' as const,
-      data: activeHistory.map(p => p.time),
-      axisLabel: { color: axisTextColor },
+      type: 'time' as const,
+      min: dataMin - 3000,
+      max: dataMax + 3000,
+      axisLabel: {
+        color: axisTextColor,
+        formatter: (v: number) => {
+          const d = new Date(v);
+          return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        },
+      },
       axisLine: { lineStyle: { color: borderColor } },
     },
     yAxis: {
       type: 'value' as const,
+      min: 0,
       max: 4,
       axisLabel: { color: axisTextColor },
       splitLine: { lineStyle: { color: borderColor } },
     },
     series: [{
-      data: activeHistory.map(p => p.value),
+      data: activeHistory.map(p => [p.time, p.value]),
       type: 'line' as const,
       smooth: true,
+      symbol: 'none',
       areaStyle: { opacity: 0.15, color: '#0ea5e9' },
       lineStyle: { color: '#0ea5e9', width: 2 },
-      itemStyle: { color: '#0ea5e9' },
     }],
     grid: { top: 20, right: 20, bottom: 40, left: 50 },
   };
@@ -402,49 +417,20 @@ export default function WorkersTab() {
     columnHelper.accessor('name', {
       header: t('workers_task_name'),
       cell: (info) => {
-        const task = info.row.original;
-        const name = task.name || '';
-        const stage = task.import_stage;
-        if (stage) {
-          return (
-            <span className="text-sm truncate max-w-[200px] block" title={stage}>
-              {stage}
-            </span>
-          );
-        }
+        const stage = info.row.original.import_stage;
         return (
-          <span className="text-sm truncate max-w-[200px] block" title={name}>
-            {taskNameLabel(t, name)}
+          <span className="text-sm truncate max-w-[200px] block" title={stage || undefined}>
+            {stage || '—'}
           </span>
         );
       },
     }),
     columnHelper.accessor('status', {
       header: t('workers_status'),
-      cell: (info) => {
-        const task = info.row.original;
-        return (
-          <div className="flex items-center gap-2">
-            {statusBadge(t, task.status, task.runtime_seconds, task.slot_index)}
-            {task.import_status && task.import_status !== task.status && (
-              <Badge className={`border-0 gap-1 text-xs ${
-                task.import_status === 'complete' ? 'bg-green-500 text-white' :
-                task.import_status === 'failed' ? 'bg-red-500 text-white' :
-                task.import_status === 'processing' ? 'bg-blue-500 text-white animate-pulse' :
-                'bg-yellow-500 text-white'
-              }`}>
-                {task.import_status === 'complete' ? <CheckCircle2 className="w-3 h-3" /> :
-                 task.import_status === 'failed' ? <XCircle className="w-3 h-3" /> :
-                 <Loader2 className="w-3 h-3 animate-spin" />}
-                <span className="font-mono">{task.import_progress ?? '?'}%</span>
-              </Badge>
-            )}
-          </div>
-        );
-      },
+      cell: (info) => statusBadge(t, info.row.original.status, info.row.original.runtime_seconds, info.row.original.slot_index),
     }),
     columnHelper.accessor('runtime_seconds', {
-      header: t('workers_runtime'),
+      header: t('workers_progress'),
       cell: (info) => {
         const task = info.row.original;
         const isStuck = task.runtime_seconds > STUCK_THRESHOLD;
@@ -607,7 +593,7 @@ export default function WorkersTab() {
                   <tr className="border-b bg-red-50 dark:bg-red-950/30">
                     <th className="text-left p-3 font-medium text-muted-foreground">{t('workers_task_id')}</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">{t('workers_task_name')}</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">{t('workers_runtime')}</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">{t('workers_progress')}</th>
                     <th className="text-left p-3 font-medium text-muted-foreground">{t('actions')}</th>
                   </tr>
                 </thead>
@@ -615,7 +601,7 @@ export default function WorkersTab() {
                   {stuck.map((task) => (
                     <tr key={task.id} className="border-b last:border-0 hover:bg-red-50 dark:hover:bg-red-950/20">
                       <td className="p-3 font-mono text-xs">{task.id.slice(0, 8)}...</td>
-                      <td className="p-3 text-sm">{taskNameLabel(t, task.name)}</td>
+                      <td className="p-3 text-sm">{task.import_stage || '—'}</td>
                       <td className="p-3">
                         <Badge className="bg-red-500 text-white border-0 gap-1 text-sm font-mono animate-pulse">
                           <Clock className="w-3.5 h-3.5" />

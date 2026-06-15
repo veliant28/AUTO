@@ -540,6 +540,7 @@
     "workers_task_promote_import_task": "Просування імпорту",
     "workers_task_scheduler_tick": "Планувальник",
     "workers_runtime": "Час",
+    "workers_progress": "Прогрес",
     "workers_status": "Статус",
     "workers_revoke": "Скасувати задачу",
     "workers_revoke_confirm": "Скасувати задачу {taskId}?",

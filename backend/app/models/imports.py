@@ -28,6 +28,8 @@ class PriceImport(Base):
     status = Column(String, nullable=False, default="in_queue")
     progress = Column(Integer, nullable=False, default=0)
     stage_name = Column(String, nullable=True)
+    stage_progress_start = Column(Integer, nullable=True)
+    stage_started_at = Column(DateTime, nullable=True)
     total_items = Column(Integer, nullable=False, default=0)
     matched_items = Column(Integer, nullable=False, default=0)
     file_size = Column(Integer, nullable=True)

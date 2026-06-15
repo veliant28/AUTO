@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import secrets
 import hashlib
 import hmac
+import random
 from app.core.db import get_db
 from app.core.config import settings
 from app.schemas.auth_schemas import (
@@ -66,6 +67,7 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
         email=data.email, 
         password_hash=hashed, 
         first_name=data.first_name,
+        avatar_index=random.randint(1, 40),
         role_id=retail_role.id,
     )
     db.add(user)
@@ -130,7 +132,7 @@ async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
         retail_role = db.query(Role).filter(Role.name == "retail").first()
         if not retail_role:
             raise HTTPException(500, "Default role not found")
-        user = User(email=email, full_name="Google User", password_hash="", role_id=retail_role.id)
+        user = User(email=email, full_name="Google User", password_hash="", avatar_index=random.randint(1, 40), role_id=retail_role.id)
         db.add(user)
         db.commit()
         db.refresh(user)
