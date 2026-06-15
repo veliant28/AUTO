@@ -31,6 +31,7 @@ export default function ProductClient({ article }: { article: string }) {
   const isFavorite = favoriteArticles.includes(article);
 
   const handleAddToCart = () => {
+    sessionStorage.setItem('cartReturnPath', window.location.pathname + window.location.search);
     const imgs = data?.images || [];
     const imgUrl = imgs.length > 0 ? imgs[0].url || `https://auto-db.pro/images/${imgs[0].name}` : null;
     addItem({

@@ -102,6 +102,13 @@ export default function CartPage() {
     return <CartSkeleton />;
   }
 
+  const returnPath = (() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('cartReturnPath') || '/';
+    }
+    return '/';
+  })();
+
   if (items.length === 0) {
     return (
       <div className="container mx-auto py-20 px-4">
@@ -113,7 +120,7 @@ export default function CartPage() {
           <p className="text-muted-foreground max-w-md">
             {t('cart_empty_desc')}
           </p>
-          <Link href="/catalog">
+          <Link href={returnPath}>
             <Button size="lg">
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('go_to_catalog')}
@@ -246,7 +253,7 @@ export default function CartPage() {
               <Button className="w-full gap-2 bg-green-500 text-white hover:bg-green-600" size="lg" asChild>
                 <Link href="/checkout">{t('checkout')}</Link>
               </Button>
-              <Link href="/catalog" className="block">
+              <Link href={returnPath} className="block">
                 <Button variant="outline" className="w-full" size="lg">
                   {t('continue_shopping')}
                 </Button>

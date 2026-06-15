@@ -62,6 +62,7 @@ export default function CatalogPage() {
   }, [toggleFavorite, favoriteArticles, products, t]);
 
   const handleAddToCart = useCallback((product: any) => {
+    sessionStorage.setItem('cartReturnPath', window.location.pathname + window.location.search);
     addItem({
       id: `cart-${product.article}-${Date.now()}`,
       part_id: product.id,
