@@ -17,7 +17,7 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useApplicabilityMakes, useApplicabilityModels, useApplicability } from '@/hooks/usePartDetail';

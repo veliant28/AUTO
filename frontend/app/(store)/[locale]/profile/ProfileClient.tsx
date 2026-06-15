@@ -19,7 +19,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { PhoneInput, phoneToApi, apiToPhone, formatPhone } from '@/components/ui/PhoneInput';
 import { toast } from '@/lib/toast';
 import api from '@/lib/api';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const roleBadgeColors: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -238,7 +238,7 @@ export default function ProfilePage() {
                 <Skeleton className="h-6 w-28" />
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-2 max-h-[400px] overflow-y-auto pr-1">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <Skeleton key={i} className="aspect-square w-full rounded-lg" />
                   ))}
@@ -499,7 +499,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: 40 }, (_, i) => i + 1).map((index) => (
+                {Array.from({ length: 100 }, (_, i) => i + 1).map((index) => (
                   <button
                     key={index}
                     onClick={() => {

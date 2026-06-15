@@ -1,6 +1,6 @@
 export function getAvatarUrl(avatarIndex?: number | null): string {
-  const index = avatarIndex ?? Math.floor(Math.random() * 30) + 1
-  const clamped = Math.max(1, Math.min(40, index))
+  const index = avatarIndex ?? Math.floor(Math.random() * 100) + 1
+  const clamped = Math.max(1, Math.min(100, index))
   return `/avatars/${clamped}.svg`
 }
 
