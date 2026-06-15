@@ -113,7 +113,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                 </div>
               </>
             ) : (
-              <span className="text-xs text-muted-foreground">{t('vehicle_no_selection')}</span>
+              <span className="text-sm text-muted-foreground">{t('vehicle_no_selection')}</span>
             )}
           </div>
 
