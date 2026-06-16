@@ -90,13 +90,13 @@ body {
 
 /* Dialog animations */
 @keyframes dialog-in {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes dialog-out {
-  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Overlay animations */
@@ -112,13 +112,13 @@ body {
 
 /* Dropdown animations */
 @keyframes dropdown-in {
-  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes dropdown-out {
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Fade-only animation */
@@ -129,6 +129,6 @@ body {
 
 /* Category nav animation */
 @keyframes nav-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
