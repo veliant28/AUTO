@@ -23,8 +23,10 @@ const DrawerContent = React.forwardRef<
     <VaulDrawer.Content
       ref={ref}
       className="fixed bottom-0 left-0 right-0 z-50 mx-auto mt-24 flex h-auto max-h-[80vh] flex-col rounded-t-[10px] border bg-background"
+      aria-describedby={null}
       {...props}
     >
+      <VaulDrawer.Title className="sr-only">Drawer</VaulDrawer.Title>
       <div className="mx-auto mt-3 h-1.5 w-[40px] shrink-0 rounded-full bg-muted" />
       {children}
     </VaulDrawer.Content>

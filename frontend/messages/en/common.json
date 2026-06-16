@@ -200,7 +200,8 @@
     "order_shipped": "Shipped",
     "order_delivered": "Delivered",
     "order_cancelled": "Cancelled",
-    "sku": "SKU"
+    "sku": "SKU",
+    "image_gallery": "Image gallery"
   },
   "header": {
     "catalog": "Catalog",

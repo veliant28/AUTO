@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { toast } from '@/lib/toast';
+import api from '@/lib/api';
 import { STORAGE_KEYS, ORDER_POLL_INTERVAL } from '@/lib/constants';
 
 export function useOrderNotifications() {
@@ -11,10 +12,7 @@ export function useOrderNotifications() {
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
 
-        const res = await fetch(`/api/v1/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+        const { data } = await api.get('/orders');
         const orders = data?.items ?? [];
 
         const lastCheck = localStorage.getItem(STORAGE_KEYS.LAST_ORDER_CHECK);

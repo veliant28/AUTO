@@ -200,7 +200,8 @@
     "order_shipped": "Відправлено",
     "order_delivered": "Доставлено",
     "order_cancelled": "Скасовано",
-    "sku": "SKU"
+    "sku": "SKU",
+    "image_gallery": "Галерея зображень"
   },
   "header": {
     "catalog": "Каталог",
