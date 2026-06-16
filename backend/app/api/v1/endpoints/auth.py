@@ -73,9 +73,9 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
+
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginSchema, db: Session = Depends(get_db)):
@@ -86,9 +86,9 @@ async def login(data: LoginSchema, db: Session = Depends(get_db)):
     hashed = hashlib.sha256(data.password.encode()).hexdigest()
     if user.password_hash != hashed:
         raise HTTPException(401, "Invalid credentials")
-    
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
+
 
 @router.post("/forgot-password")
 async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
@@ -138,4 +138,4 @@ async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
         db.refresh(user)
     
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user))
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)

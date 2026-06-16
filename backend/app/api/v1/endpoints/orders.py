@@ -36,6 +36,13 @@ async def get_orders(user_id: int = Depends(get_optional_user), db: Session = De
             "full_name": order.full_name,
             "phone": order.phone,
             "address": order.address,
+            "last_name": order.last_name,
+            "first_name": order.first_name,
+            "middle_name": order.middle_name,
+            "delivery_type": order.delivery_type,
+            "delivery_city": order.delivery_city,
+            "delivery_warehouse": order.delivery_warehouse,
+            "payment_method": order.payment_method,
             "created_at": order.created_at,
             "items": items,
         })
@@ -70,6 +77,13 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
         "full_name": order.full_name,
         "phone": order.phone,
         "address": order.address,
+        "last_name": order.last_name,
+        "first_name": order.first_name,
+        "middle_name": order.middle_name,
+        "delivery_type": order.delivery_type,
+        "delivery_city": order.delivery_city,
+        "delivery_warehouse": order.delivery_warehouse,
+        "payment_method": order.payment_method,
         "created_at": order.created_at,
         "items": items,
     }
@@ -80,14 +94,21 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         raise HTTPException(401, "Unauthorized")
     
     total = sum(item["price"] * item["quantity"] for item in data.items)
+    full_name = ' '.join(filter(None, [data.last_name, data.first_name, data.middle_name]))
     
     order = Order(
         user_id=user_id,
         status=OrderStatus.PENDING,
         total=total,
-        full_name=data.full_name,
+        full_name=full_name,
         phone=data.phone,
-        address=data.address,
+        last_name=data.last_name,
+        first_name=data.first_name,
+        middle_name=data.middle_name,
+        delivery_type=data.delivery_type,
+        delivery_city=data.delivery_city,
+        delivery_warehouse=data.delivery_warehouse,
+        payment_method=data.payment_method,
     )
     db.add(order)
     db.flush()

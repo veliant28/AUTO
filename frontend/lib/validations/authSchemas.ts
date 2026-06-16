@@ -22,9 +22,14 @@ export interface ResetPasswordFormData {
 }
 
 export interface CheckoutFormData {
-  full_name: string;
-  phone?: string;
-  address?: string;
+  last_name: string;
+  first_name: string;
+  middle_name?: string;
+  phone: string;
+  delivery_type: string;
+  delivery_city?: string;
+  delivery_warehouse?: string;
+  payment_method: string;
 }
 
 export const loginSchema = (t: (key: string, values?: any) => string) => z.object({
@@ -51,9 +56,14 @@ export const resetPasswordSchema = (t: (key: string, values?: any) => string) =>
 });
 
 export const checkoutSchema = (t: (key: string, values?: any) => string) => z.object({
-  full_name: z.string().min(2, t('name_min_length', { min: 2 })),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  last_name: z.string().min(1, t('last_name_required')),
+  first_name: z.string().min(1, t('first_name_required')),
+  middle_name: z.string().optional(),
+  phone: z.string().min(10, t('phone_required')).regex(/^\+380/, t('phone_format')),
+  delivery_type: z.string().min(1, t('delivery_required')),
+  delivery_city: z.string().optional(),
+  delivery_warehouse: z.string().optional(),
+  payment_method: z.string().min(1, t('payment_required')),
 });
 
 export interface ProfileFormData {

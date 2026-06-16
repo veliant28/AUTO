@@ -23,7 +23,7 @@ export function useAuth() {
       return res.data;
     },
     onSuccess: (res, variables) => {
-      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '' });
+      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '', avatar_index: res.avatar_index });
       localStorage.setItem('token', res.access_token);
       toast.success(t('login_success'));
       router.push('/');
@@ -37,7 +37,7 @@ export function useAuth() {
       return res.data;
     },
     onSuccess: (res, variables) => {
-      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '', first_name: res.first_name || '' });
+      setUser({ id: res.user_id, email: variables.email, role: res.role, full_name: '', first_name: res.first_name || '', avatar_index: res.avatar_index });
       localStorage.setItem('token', res.access_token);
       toast.success(t('register_success'));
       router.push('/');
@@ -74,7 +74,7 @@ export function useAuth() {
       return res.data;
     },
     onSuccess: (res) => {
-      setUser({ id: res.user_id, email: '', role: res.role, full_name: '' });
+      setUser({ id: res.user_id, email: '', role: res.role, full_name: '', avatar_index: res.avatar_index });
       localStorage.setItem('token', res.access_token);
       toast.success(t('google_success'));
       router.push('/');

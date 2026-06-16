@@ -16,6 +16,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user_id: int
     role: str
+    avatar_index: Optional[int] = None
 
 class ForgotPasswordSchema(BaseModel):
     email: EmailStr

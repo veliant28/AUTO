@@ -138,7 +138,7 @@ export default function CartPage() {
             <Badge variant="secondary" className="text-sm px-1.5">{totalItems()} {t('pcs')}</Badge>
           </div>
           <Button variant="outline" size="lg" className="gap-2" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
-            {t('clear_cart')}
+            <Trash2 className="w-4 h-4" /> {t('clear_cart')}
           </Button>
         </div>
 
@@ -234,7 +234,7 @@ export default function CartPage() {
 
           <div className="lg:col-span-1">
             <div className="rounded-lg border bg-card p-6 space-y-5 sticky top-24">
-              <h3 className="font-semibold text-lg">{t('your_order')}</h3>
+              <h3 className="font-semibold text-2xl">{t('your_order')}</h3>
               <Separator />
               <div className="space-y-2 text-base">
                 <div className="flex justify-between">
