@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { SlidersHorizontal, RotateCcw, ArrowDownAZ } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface FilterState {
   in_stock_only: boolean;
@@ -42,13 +43,18 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
           </Button>
         </div>
       </DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="mx-auto w-full max-w-md px-5 py-5 space-y-4 overflow-y-auto">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">{t('filters_sort')}</h3>
-            <Button variant="destructive" size="icon" className="h-10 w-10" onClick={onClear}>
-              <RotateCcw className="w-5 h-5" />
-            </Button>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <Button variant="destructive" size="icon" className="h-10 w-10" onClick={onClear}>
+                  <RotateCcw className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('reset')}</TooltipContent>
+            </Tooltip>
           </div>
 
           <div className="space-y-1.5">
