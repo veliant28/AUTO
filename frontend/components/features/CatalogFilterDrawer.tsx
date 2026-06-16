@@ -33,15 +33,13 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <div>
-          <Button variant="outline" size="lg" className="gap-2">
-            <SlidersHorizontal className="w-5 h-5" />
-            {t('filters')}
-            {activeCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-sm">{activeCount}</Badge>
-            )}
-          </Button>
-        </div>
+        <Button variant="outline" size="lg" className="gap-2">
+          <SlidersHorizontal className="w-5 h-5" />
+          {t('filters')}
+          {activeCount > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-sm">{activeCount}</Badge>
+          )}
+        </Button>
       </DrawerTrigger>
       <DrawerContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <div className="mx-auto w-full max-w-md px-5 py-5 space-y-4 overflow-y-auto">
