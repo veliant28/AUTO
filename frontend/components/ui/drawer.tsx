@@ -28,7 +28,7 @@ const DrawerContent = React.forwardRef<
         'fixed z-50 flex flex-col bg-background border shadow-lg',
         'bottom-0 left-0 right-0 top-auto max-w-full',
         'rounded-t-lg',
-        'data-[state=open]:drawer-slide-in data-[state=closed]:drawer-slide-out',
+        'data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
         className,
       )}
       aria-describedby={null}
