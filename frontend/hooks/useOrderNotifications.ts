@@ -11,10 +11,11 @@ export function useOrderNotifications() {
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
         if (!token) return;
 
-        const res = await fetch(`/api/v1/orders?status=updated`, {
+        const res = await fetch(`/api/v1/orders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const orders = await res.json();
+        const data = await res.json();
+        const orders = data?.items ?? [];
 
         const lastCheck = localStorage.getItem(STORAGE_KEYS.LAST_ORDER_CHECK);
         const now = Date.now();

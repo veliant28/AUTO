@@ -30,6 +30,8 @@ import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { useBrandName } from '@/hooks/useBrandName';
 
 export default function Header() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { totalItems } = useCartStore();
@@ -75,7 +77,7 @@ export default function Header() {
             <VehicleSelectorDialog>
               <Button variant="ghost" size="icon" className="relative">
                 <Car className="h-5 w-5" />
-                {modId && (
+                {mounted && modId && (
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-green-500 rounded-full ring-2 ring-background" />
                 )}
               </Button>
@@ -86,7 +88,7 @@ export default function Header() {
                   <Link href="/cart" onClick={() => localStorage.setItem('cartReturnPath', window.location.pathname + window.location.search)}>
                     <Button variant="ghost" size="icon" className="relative">
                       <ShoppingCart className="h-5 w-5" />
-                      {cartCount > 0 && (
+                      {mounted && cartCount > 0 && (
                         <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
                         {cartCount > CART_MAX_DISPLAY ? '99+' : cartCount}
                       </Badge>
