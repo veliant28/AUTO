@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
-import { DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
-import { VaulDrawer } from '@/components/ui/drawer';
+import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +31,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
   const set = (patch: Partial<FilterState>) => onChange({ ...filters, ...patch });
 
   return (
-    <VaulDrawer.Root>
+    <Drawer>
       <DrawerTrigger asChild>
         <div>
           <Button variant="outline" size="lg" className="gap-2">
@@ -113,6 +112,6 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
           </label>
         </div>
       </DrawerContent>
-    </VaulDrawer.Root>
+    </Drawer>
   );
 }
