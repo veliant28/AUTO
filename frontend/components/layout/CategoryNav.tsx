@@ -219,7 +219,7 @@ export default function CategoryNav() {
         <div
           onMouseEnter={() => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }}
           onMouseLeave={handleMouseLeave}
-          className="fixed z-50 left-0 right-0 bg-popover border-b rounded-b-lg shadow-xl py-6 max-h-[70vh] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150"
+          className="fixed z-50 left-0 right-0 bg-popover border-b rounded-b-lg shadow-xl py-6 max-h-[70vh] overflow-y-auto category-nav-animate-in"
           style={{ top: popupTop }}
         >
           <div className="container mx-auto px-4">

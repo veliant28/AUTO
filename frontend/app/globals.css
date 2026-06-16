@@ -65,3 +65,78 @@ body {
   width: 384px !important;
   max-width: 384px !important;
 }
+
+@keyframes slideInUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideOutDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes dialogOut {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideInFromTop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.drawer-slide-in {
+  animation: slideInUp 500ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.drawer-slide-out {
+  animation: slideOutDown 500ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.dialog-animate-in {
+  animation: dialogIn 200ms ease-out both;
+}
+
+.dialog-animate-out {
+  animation: dialogOut 200ms ease-in both;
+}
+
+.overlay-fade-in {
+  animation: fadeIn 200ms ease-out both;
+}
+
+.overlay-fade-out {
+  animation: fadeOut 200ms ease-in both;
+}
+
+.tooltip-animate-in {
+  animation: fadeIn 150ms ease-out both;
+}
+
+.dropdown-animate-in {
+  animation: fadeIn 150ms ease-out both;
+}
+
+.dropdown-animate-out {
+  animation: fadeOut 150ms ease-in both;
+}
+
+.category-nav-animate-in {
+  animation: slideInFromTop 150ms ease-out both;
+}
