@@ -167,13 +167,14 @@ export default function DashboardTab() {
           ) : (
             <div className="divide-y text-sm">
               {orders?.map((order: any) => {
-                const variant = ORDER_STATUS_LABELS[order.status]?.variant || 'secondary';
+                const statusInfo = ORDER_STATUS_LABELS[order.status];
+                const className = statusInfo?.className || 'bg-gray-500 text-white';
                 return (
                   <div key={order.id} className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
                       <span className="font-mono font-medium">#{order.id}</span>
                       <span className="text-muted-foreground">{order.full_name}</span>
-                      <Badge variant={variant}>{t('order_' + order.status)}</Badge>
+                      <Badge className={`${className} border-0 text-sm`}>{t('order_' + order.status)}</Badge>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-medium">{Number(order.total).toLocaleString()} ₴</span>

@@ -32,14 +32,14 @@ export default function OrderConfirmedPage() {
         </div>
       )}
 
-      <div className="space-y-3 pt-4">
+      <div className="flex flex-col gap-3 pt-4">
         <Link href="/orders">
           <Button className="w-full gap-2" size="lg">
             {t('my_orders')} <ArrowRight className="w-4 h-4" />
           </Button>
         </Link>
-        <Link href="/catalog">
-          <Button variant="outline" className="w-full">
+        <Link href="/">
+          <Button variant="outline" size="lg" className="w-full gap-2">
             {t('continue_shopping')}
           </Button>
         </Link>

@@ -31,6 +31,7 @@ async def get_cart(user_id: int = Depends(get_current_user), db: Session = Depen
             "supplier_name": supplier.name if supplier else None,
             "brand": part.brand if part else None,
             "image_url": None,
+            "sku": part.sku if part else None,
         })
     return result
 

@@ -42,6 +42,7 @@ export default function ProductClient({ article }: { article: string }) {
       price: data?.price?.price ?? null,
       supplier_name: data?.price?.supplier_name || null,
       brand: data?.part?.brand,
+      sku: data?.part?.sku ?? null,
       image_url: imgUrl,
     });
     toast.success(tc('added_to_cart'));
@@ -181,11 +182,21 @@ export default function ProductClient({ article }: { article: string }) {
         </div>
 
         <div className="rounded-lg border bg-card p-4 space-y-4">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {brand && (
-              <Badge variant="secondary" className="text-sm px-1.5">{brand}</Badge>
+          <div className="flex items-center justify-between gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              {brand && (
+                <Badge variant="secondary" className="text-sm px-1.5">{brand}</Badge>
+              )}
+              <span className="text-sm font-mono text-muted-foreground">{article}</span>
+            </div>
+            {data?.part?.sku && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="bg-blue-500 text-white border-0 text-sm px-1.5 cursor-pointer">{data.part.sku}</Badge>
+                </TooltipTrigger>
+                <TooltipContent>{tc('sku')}</TooltipContent>
+              </Tooltip>
             )}
-            <span className="text-sm font-mono text-muted-foreground">{article}</span>
           </div>
 
           <h1 className="text-2xl font-bold leading-snug">{name}</h1>

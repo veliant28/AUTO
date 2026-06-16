@@ -202,6 +202,7 @@ async def get_part_details(
             "brand": part.brand,
             "brand_id": part.brand_id,
             "tecdoc_id": part.tecdoc_id,
+            "sku": part.sku,
         }
         if best:
             price_data = {
@@ -382,6 +383,7 @@ async def search_parts(
             "quantity": best["quantity"] if best else None,
             "supplier_name": best["supplier_name"] if best else None,
             "currency": best["currency"] if best else "UAH",
+            "sku": part.sku,
         })
     return enriched
 

@@ -44,6 +44,7 @@ class PartSchema(BaseModel):
     supplier_name: Optional[str] = None
     currency: Optional[str] = 'UAH'
     image_url: Optional[str] = None
+    sku: Optional[str] = None
 
     class Config:
         from_attributes = True

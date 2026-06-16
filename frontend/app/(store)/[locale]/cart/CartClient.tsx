@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft } from 'lucide-react';
@@ -72,31 +72,37 @@ export default function CartPage() {
     setMounted(true);
   }, []);
 
-  // Migrate old cart items without brand: fetch from catalog API
+  // Migrate old cart items without brand/sku: fetch from catalog API
+  const migrationRun = useRef(false);
   useEffect(() => {
-    const todo = items.filter((i) => !i.brand && i.article);
-    if (todo.length === 0) return;
+    if (migrationRun.current || items.length === 0) return;
+    const todo = items.filter((i) => (!i.brand || !i.sku) && i.article);
+    if (todo.length === 0) {
+      migrationRun.current = true;
+      return;
+    }
     Promise.all(
       todo.map(async (item) => {
         try {
           const res = await api.get('/catalog/search', { params: { q: item.article, limit: 1 } });
           const product = Array.isArray(res.data) ? res.data[0] : (res.data as any)?.items?.[0];
-          if (product?.brand) return { article: item.article, brand: product.brand };
+          if (product) return { article: item.article, brand: product.brand, sku: product.sku || null };
         } catch {}
         return null;
       })
     ).then((results) => {
-      const updates = results.filter(Boolean) as { article: string; brand: string }[];
+      migrationRun.current = true;
+      const updates = results.filter(Boolean) as { article: string; brand?: string; sku?: string | null }[];
       if (updates.length > 0) {
         replaceItems(
           items.map((item) => {
             const found = updates.find((u) => u.article === item.article);
-            return found ? { ...item, brand: found.brand } : item;
+            return found ? { ...item, brand: found.brand ?? item.brand, sku: found.sku ?? item.sku } : item;
           })
         );
       }
     });
-  }, []);
+  }, [items]);
 
   if (!mounted) {
     return <CartSkeleton />;
@@ -189,14 +195,24 @@ export default function CartPage() {
                         </div>
                         <p className="font-medium text-sm line-clamp-2">{item.part_name}</p>
                       </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0" onClick={handleRemove}>
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">{t('remove')}</TooltipContent>
-                      </Tooltip>
+                      <div className="flex items-center shrink-0">
+                        {item.sku && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge className="bg-blue-500 text-white border-0 text-sm px-1.5 cursor-pointer mr-10">{item.sku}</Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('sku')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0" onClick={handleRemove}>
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">{t('remove')}</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-2">

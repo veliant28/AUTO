@@ -11,6 +11,7 @@ class CartItemSchema(BaseModel):
     supplier_name: Optional[str]
     brand: Optional[str] = None
     image_url: Optional[str] = None
+    sku: Optional[str] = None
 
     class Config:
         from_attributes = True

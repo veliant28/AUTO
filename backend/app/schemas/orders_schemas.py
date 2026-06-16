@@ -7,8 +7,10 @@ class OrderItemSchema(BaseModel):
     part_id: int
     article: str
     part_name: str
+    brand: Optional[str] = None
     quantity: int
     price: float
+    sku: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -32,6 +34,12 @@ class OrderSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class OrderListResponse(BaseModel):
+    items: List[OrderSchema]
+    total: int
+    page: int
+    page_size: int
 
 class CheckoutSchema(BaseModel):
     last_name: str

@@ -11,6 +11,7 @@ export interface CartItem {
   supplier_name: string | null;
   brand?: string | null;
   image_url?: string | null;
+  sku?: string | null;
 }
 
 interface CartState {
@@ -35,7 +36,7 @@ export const useCartStore = create<CartState>()(
           set({
             items: get().items.map((i) =>
               i.part_id === item.part_id
-                ? { ...i, quantity: i.quantity + item.quantity }
+                ? { ...i, quantity: i.quantity + item.quantity, sku: item.sku ?? i.sku }
                 : i
             ),
           });

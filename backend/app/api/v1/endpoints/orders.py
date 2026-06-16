@@ -1,63 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.db import get_db
-from app.schemas.orders_schemas import OrderSchema, CheckoutSchema
+from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutSchema
 from app.models import Order, OrderItem, OrderStatus, Part
 from app.api.v1.endpoints.auth import get_optional_user
 
 router = APIRouter()
 
-@router.get("/", response_model=List[OrderSchema])
-async def get_orders(user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
-    if not user_id:
-        raise HTTPException(401, "Unauthorized")
-    
-    orders = db.query(Order).filter(Order.user_id == user_id).order_by(Order.created_at.desc()).all()
-    
-    result = []
-    for order in orders:
-        items = []
-        for item in order.items:
-            part = db.query(Part).filter(Part.id == item.part_id).first()
-            items.append({
-                "id": item.id,
-                "part_id": item.part_id,
-                "article": part.article if part else "",
-                "part_name": part.name if part else "",
-                "quantity": item.quantity,
-                "price": float(item.price),
-            })
-        
-        result.append({
-            "id": order.id,
-            "status": order.status.value,
-            "total": float(order.total),
-            "full_name": order.full_name,
-            "phone": order.phone,
-            "address": order.address,
-            "last_name": order.last_name,
-            "first_name": order.first_name,
-            "middle_name": order.middle_name,
-            "delivery_type": order.delivery_type,
-            "delivery_city": order.delivery_city,
-            "delivery_warehouse": order.delivery_warehouse,
-            "payment_method": order.payment_method,
-            "created_at": order.created_at,
-            "items": items,
-        })
-    
-    return result
-
-@router.get("/{order_id}", response_model=OrderSchema)
-async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
-    if not user_id:
-        raise HTTPException(401, "Unauthorized")
-    
-    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
-    if not order:
-        raise HTTPException(404, "Order not found")
-    
+def _items_with_brand(order, db):
     items = []
     for item in order.items:
         part = db.query(Part).filter(Part.id == item.part_id).first()
@@ -66,10 +17,14 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
             "part_id": item.part_id,
             "article": part.article if part else "",
             "part_name": part.name if part else "",
+            "brand": part.brand if part else None,
             "quantity": item.quantity,
             "price": float(item.price),
+            "sku": part.sku if part else None,
         })
-    
+    return items
+
+def _order_to_dict(order, db):
     return {
         "id": order.id,
         "status": order.status.value,
@@ -85,8 +40,46 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
         "delivery_warehouse": order.delivery_warehouse,
         "payment_method": order.payment_method,
         "created_at": order.created_at,
-        "items": items,
+        "items": _items_with_brand(order, db),
     }
+
+@router.get("/", response_model=OrderListResponse)
+async def get_orders(
+    user_id: int = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    status: str = Query(None, description="Comma-separated statuses to filter by"),
+):
+    if not user_id:
+        raise HTTPException(401, "Unauthorized")
+    
+    base = db.query(Order).filter(Order.user_id == user_id)
+    if status:
+        status_list = [s.strip() for s in status.split(",") if s.strip()]
+        if status_list:
+            base = base.filter(Order.status.in_([OrderStatus(s) for s in status_list]))
+    base = base.order_by(Order.created_at.desc())
+    total = base.count()
+    orders = base.offset((page - 1) * page_size).limit(page_size).all()
+    
+    return {
+        "items": [_order_to_dict(o, db) for o in orders],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+@router.get("/{order_id}", response_model=OrderSchema)
+async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+    if not user_id:
+        raise HTTPException(401, "Unauthorized")
+    
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+    
+    return _order_to_dict(order, db)
 
 @router.post("/checkout")
 async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):

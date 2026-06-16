@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PhoneInput, apiToPhone } from '@/components/ui/PhoneInput';
+import { PhoneInput, apiToPhone, phoneToApi } from '@/components/ui/PhoneInput';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
@@ -99,7 +99,7 @@ export default function CheckoutPage() {
         last_name: formData.last_name,
         first_name: formData.first_name,
         middle_name: formData.middle_name || '',
-        phone: formData.phone,
+        phone: phoneToApi(formData.phone),
         delivery_type: formData.delivery_type,
         delivery_city: formData.delivery_city || '',
         delivery_warehouse: formData.delivery_warehouse || '',

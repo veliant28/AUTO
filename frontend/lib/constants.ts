@@ -46,13 +46,13 @@ export const COLUMN_WIDTHS = {
 export const DEFAULT_CURRENCY = 'UAH';
 
 // Order status labels
-export const ORDER_STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  pending: { label: 'Ожидает', variant: 'secondary' },
-  confirmed: { label: 'Подтвержден', variant: 'default' },
-  processing: { label: 'В обработке', variant: 'default' },
-  shipped: { label: 'Отправлен', variant: 'outline' },
-  delivered: { label: 'Доставлен', variant: 'outline' },
-  cancelled: { label: 'Отменен', variant: 'destructive' },
+export const ORDER_STATUS_LABELS: Record<string, { labelKey: string; className: string }> = {
+  pending:    { labelKey: 'order_pending',     className: 'bg-gray-500 text-white' },
+  confirmed:  { labelKey: 'order_confirmed',   className: 'bg-background text-foreground border' },
+  processing: { labelKey: 'order_processing',  className: 'bg-blue-500 text-white' },
+  shipped:    { labelKey: 'order_shipped',     className: 'bg-orange-500 text-white' },
+  delivered:  { labelKey: 'order_delivered',   className: 'bg-green-500 text-white' },
+  cancelled:  { labelKey: 'order_cancelled',   className: 'bg-red-500 text-white' },
 };
 
 // User roles

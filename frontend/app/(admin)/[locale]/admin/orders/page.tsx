@@ -88,8 +88,9 @@ export default function AdminOrdersPage() {
     columnHelper.accessor('status', {
       header: t('filter_status'),
       cell: (info) => {
-        const variant = ORDER_STATUS_LABELS[info.getValue()]?.variant || 'secondary';
-        return <Badge variant={variant}>{t('order_' + info.getValue())}</Badge>;
+        const statusInfo = ORDER_STATUS_LABELS[info.getValue()];
+        const className = statusInfo?.className || 'bg-gray-500 text-white';
+        return <Badge className={`${className} border-0 text-sm`}>{t('order_' + info.getValue())}</Badge>;
       },
     }),
     columnHelper.accessor('total', {
