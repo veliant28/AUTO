@@ -29,6 +29,8 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 interface AdminOrder {
   id: number;
   user_id: number;
@@ -95,7 +97,7 @@ export default function AdminOrdersPage() {
     }),
     columnHelper.accessor('total', {
       header: t('order_total'),
-      cell: (info) => `${Number(info.getValue()).toLocaleString()} ₴`,
+      cell: (info) => `${fmt(info.getValue())} ₴`,
     }),
     columnHelper.accessor('items_count', {
       header: t('order_items'),

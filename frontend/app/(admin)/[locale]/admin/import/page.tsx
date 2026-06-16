@@ -38,6 +38,8 @@ const statusColors: Record<string, string> = {
   in_queue: 'bg-yellow-500 text-white',
 };
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null) return '—';
   if (bytes < 1024) return `${bytes} B`;
@@ -257,7 +259,7 @@ export default function ImportPage() {
                           <span className="text-sm font-mono text-muted-foreground w-8 text-right">{item.progress || 0}%</span>
                         </div>
                       </td>
-                       <td className="p-3 text-right text-sm">{item.total_items > 0 ? item.total_items.toLocaleString() : '—'}</td>
+                       <td className="p-3 text-right text-sm">{item.total_items > 0 ? fmt(item.total_items) : '—'}</td>
                       <td className="p-3 text-right text-sm text-muted-foreground">{formatBytes(item.file_size)}</td>
                       <td className="p-3 text-sm text-muted-foreground">{formatDate(item.created_at, tz)}</td>
                       <td className="p-3">

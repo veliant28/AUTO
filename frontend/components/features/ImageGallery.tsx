@@ -56,7 +56,7 @@ export default function ImageGallery({ images, article }: ImageGalleryProps) {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[80vh] p-0 bg-black/95 border-none">
+        <DialogContent className="max-w-4xl w-[95vw] h-[80vh] p-0 bg-black/95 border-none" aria-describedby={null}>
           <DialogClose className="absolute top-4 right-4 z-50">
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
               <X className="w-5 h-5" />

@@ -68,7 +68,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto" aria-describedby={null}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Car className="w-5 h-5" />

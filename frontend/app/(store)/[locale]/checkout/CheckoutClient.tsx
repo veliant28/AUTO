@@ -23,6 +23,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '@/hooks/useProfile';
 import { checkoutSchema, CheckoutFormData } from '@/lib/validations/authSchemas';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 const inputLg = 'h-10 text-base';
 
 function CheckoutSkeleton() {
@@ -362,7 +364,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('total_label')}:</span>
-                  <span className="font-bold text-2xl">{totalPrice().toLocaleString()} ₴</span>
+                  <span className="font-bold text-2xl">{fmt(totalPrice())} ₴</span>
                 </div>
               </div>
 

@@ -241,7 +241,7 @@ export default function AdminUsersPage() {
   return (
     <div className="p-6">
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogContent aria-describedby={undefined}>
+          <DialogContent aria-describedby={null}>
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">{t('create_user')}</DialogTitle>
             </DialogHeader>
@@ -326,7 +326,7 @@ export default function AdminUsersPage() {
 
       {editUser && (
         <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
-          <DialogContent aria-describedby={undefined}>
+          <DialogContent aria-describedby={null}>
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">{t('edit_user')}</DialogTitle>
             </DialogHeader>
@@ -361,7 +361,7 @@ export default function AdminUsersPage() {
       )}
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby={null}>
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">

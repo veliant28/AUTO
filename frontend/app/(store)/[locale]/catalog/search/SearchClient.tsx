@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { SearchSkeleton } from '@/components/ui/Skeletons';
 import PageTransition from '@/components/ui/PageTransition';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 export default function SearchPage() {
   const t = useTranslations('common');
   const searchParams = useSearchParams();
@@ -78,7 +80,7 @@ export default function SearchPage() {
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 {part.price && (
-                  <span className="font-semibold text-sm whitespace-nowrap">{part.price.toLocaleString()} ₴</span>
+                  <span className="font-semibold text-sm whitespace-nowrap">{fmt(part.price)} ₴</span>
                 )}
                 <Button variant="outline" size="sm">{t('details')}</Button>
               </div>

@@ -11,6 +11,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { saveCatalogReturnState } from '@/lib/catalog-navigation-state';
 import { getBrandColor, getBrandInitial } from '@/lib/brand';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 export type ProductTileItem = {
   id: number;
   article: string;
@@ -75,7 +77,7 @@ export default function ProductTile({ product, onToggleFavorite, onAddToCart }: 
           <div className="min-w-0 flex-1">
             {product.price != null ? (
               <span className="font-bold text-base">
-                {product.price.toLocaleString()} <span className="text-base font-normal text-muted-foreground">₴</span>
+                {fmt(product.price)} <span className="text-base font-normal text-muted-foreground">₴</span>
               </span>
             ) : (
               <span className="text-xs text-muted-foreground">—</span>

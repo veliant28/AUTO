@@ -14,6 +14,8 @@ import { toast } from '@/lib/toast';
 import { getBrandColor, getBrandInitial } from '@/lib/brand';
 import api from '@/lib/api';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 function CartSkeleton() {
   return (
     <div className="container mx-auto py-8 px-4">
@@ -235,11 +237,11 @@ export default function CartPage() {
                           <TooltipContent side="bottom">{t('increase_quantity')}</TooltipContent>
                         </Tooltip>
                         {item.price && (
-                          <span className="text-sm text-muted-foreground ml-2">× {item.price.toLocaleString()} ₴</span>
+                          <span className="text-sm text-muted-foreground ml-2">× {fmt(item.price)} ₴</span>
                         )}
                       </div>
                       <p className="font-semibold text-base">
-                        {itemTotalPrice.toLocaleString()} ₴
+                        {fmt(itemTotalPrice)} ₴
                       </p>
                     </div>
                   </div>
@@ -259,7 +261,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('total_label')}:</span>
-                  <span className="font-bold text-2xl">{totalPrice().toLocaleString()} ₴</span>
+                  <span className="font-bold text-2xl">{fmt(totalPrice())} ₴</span>
                 </div>
               </div>
               <Separator />

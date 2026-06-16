@@ -18,6 +18,8 @@ import { toast } from '@/lib/toast';
 import { ApplicabilityTable } from '@/components/features/ApplicabilityTable';
 import { getBrandColor, getBrandInitial } from '@/lib/brand';
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 export default function ProductClient({ article }: { article: string }) {
   const t = useTranslations('catalog');
   const tc = useTranslations('common');
@@ -204,7 +206,7 @@ export default function ProductClient({ article }: { article: string }) {
           {price ? (
             <div className="flex items-center justify-between gap-4">
               <span className="text-3xl font-bold">
-                {price.price.toLocaleString()} ₴
+                {fmt(price.price)} ₴
               </span>
               <Badge className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}>
                 {inStock ? tc('in_stock') : tc('out_of_stock')}

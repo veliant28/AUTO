@@ -15,6 +15,8 @@ import { ORDER_STATUS_LABELS } from '@/lib/constants';
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+
 export default function DashboardTab() {
   const { user, isAuthenticated } = useAuthStore();
   const t = useTranslations('admin');
@@ -42,8 +44,8 @@ export default function DashboardTab() {
   const stats = [
     { icon: ShoppingCart, label: t('orders_count'), value: dashboard?.total_orders ?? 0, color: 'text-blue-600' },
     { icon: Users, label: t('users_count'), value: dashboard?.total_users ?? 0, color: 'text-green-600' },
-    { icon: Package, label: t('parts_count'), value: dashboard?.total_parts?.toLocaleString() ?? 0, color: 'text-purple-600' },
-    { icon: TrendingUp, label: t('total_revenue'), value: dashboard?.total_revenue ? `${Number(dashboard.total_revenue).toLocaleString()} ₴` : '0', color: 'text-orange-600' },
+    { icon: Package, label: t('parts_count'), value: fmt(dashboard?.total_parts ?? 0), color: 'text-purple-600' },
+    { icon: TrendingUp, label: t('total_revenue'), value: dashboard?.total_revenue ? `${fmt(dashboard.total_revenue)} ₴` : '0', color: 'text-orange-600' },
   ];
 
   const barChartOption = {
@@ -78,7 +80,7 @@ export default function DashboardTab() {
   };
 
   const lineChartOption = {
-    tooltip: { trigger: 'axis', valueFormatter: (v: any) => `${Number(v).toLocaleString()} ₴` },
+    tooltip: { trigger: 'axis', valueFormatter: (v: any) => `${fmt(v)} ₴` },
     grid: { left: 60, right: 20, top: 30, bottom: 30 },
     xAxis: {
       type: 'category',
@@ -177,7 +179,7 @@ export default function DashboardTab() {
                       <Badge className={`${className} border-0 text-sm`}>{t('order_' + order.status)}</Badge>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-medium">{Number(order.total).toLocaleString()} ₴</span>
+                      <span className="font-medium">{fmt(order.total)} ₴</span>
                       <Link href={`/orders/${order.id}`}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <ExternalLink className="w-4 h-4" />
