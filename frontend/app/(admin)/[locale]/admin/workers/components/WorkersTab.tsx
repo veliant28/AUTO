@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
@@ -237,8 +237,6 @@ export default function WorkersTab() {
     return () => clearInterval(id);
   }, []);
 
-  const isFirstFetch = useRef(true);
-
   const { data, isLoading, refetch } = useQuery<WorkersData>({
     queryKey: ['admin-workers'],
     queryFn: async () => {
@@ -257,19 +255,17 @@ export default function WorkersTab() {
 
   useEffect(() => {
     if (!data?.worker) return;
-    if (isFirstFetch.current) {
-      isFirstFetch.current = false;
-      const now = Date.now();
-      setActiveHistory(Array.from({ length: 50 }, (_, i) => ({
-        time: now - (49 - i) * 3000,
-        value: data.worker.active_count,
-      })));
-    } else {
-      setActiveHistory((prev) => {
-        const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
-        return next.length > 50 ? next.slice(-50) : next;
-      });
-    }
+    setActiveHistory((prev) => {
+      if (prev.every(p => p.value === 0)) {
+        const now = Date.now();
+        return Array.from({ length: 50 }, (_, i) => ({
+          time: now - (49 - i) * 3000,
+          value: data.worker.active_count,
+        }));
+      }
+      const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
+      return next.length > 50 ? next.slice(-50) : next;
+    });
   }, [data]);
 
   useEffect(() => {
