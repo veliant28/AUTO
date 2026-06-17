@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
@@ -221,7 +221,13 @@ export default function WorkersTab() {
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>([]);
+  const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>(() => {
+    const now = Date.now();
+    return Array.from({ length: 50 }, (_, i) => ({
+      time: now - (49 - i) * 3000,
+      value: 0,
+    }));
+  });
   const [clock, setClock] = useState(Date.now());
 
   useEffect(() => {
@@ -230,6 +236,8 @@ export default function WorkersTab() {
     }, 1000);
     return () => clearInterval(id);
   }, []);
+
+  const isFirstFetch = useRef(true);
 
   const { data, isLoading, refetch } = useQuery<WorkersData>({
     queryKey: ['admin-workers'],
@@ -249,10 +257,19 @@ export default function WorkersTab() {
 
   useEffect(() => {
     if (!data?.worker) return;
-    setActiveHistory((prev) => {
-      const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
-      return next.length > 50 ? next.slice(-50) : next;
-    });
+    if (isFirstFetch.current) {
+      isFirstFetch.current = false;
+      const now = Date.now();
+      setActiveHistory(Array.from({ length: 50 }, (_, i) => ({
+        time: now - (49 - i) * 3000,
+        value: data.worker.active_count,
+      })));
+    } else {
+      setActiveHistory((prev) => {
+        const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
+        return next.length > 50 ? next.slice(-50) : next;
+      });
+    }
   }, [data]);
 
   useEffect(() => {
@@ -356,15 +373,37 @@ export default function WorkersTab() {
 
   const windowStart = clock - 156000;
   const windowEnd = clock;
-  const chartData: [number, number][] = activeHistory.length === 0
-    ? [[windowStart, 0], [windowEnd, 0]]
-    : [
-        [windowStart, activeHistory[0].value],
-        ...activeHistory.map(p => [p.time, p.value] as [number, number]),
-        [windowEnd, activeHistory[activeHistory.length - 1].value],
-      ];
+  const chartData: [number, number][] = [
+    [windowStart, activeHistory[0].value],
+    ...activeHistory.map(p => [p.time, p.value] as [number, number]),
+    [windowEnd, activeHistory[activeHistory.length - 1].value],
+  ];
   const activeSlotsOption = {
     backgroundColor: chartBg,
+    tooltip: {
+      trigger: 'axis' as const,
+      backgroundColor: isDark ? '#1f2937' : '#ffffff',
+      borderColor: isDark ? '#374151' : '#e5e7eb',
+      textStyle: { color: isDark ? '#e5e7eb' : '#1f2937', fontSize: 12 },
+      formatter: (params: any) => {
+        const time = params[0]?.value?.[0];
+        if (!time) return '';
+        const d = new Date(time);
+        const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        let html = `<div style="font-size:13px;font-weight:600;margin-bottom:4px">${timeStr}</div>`;
+        html += `<div>${t('workers_active')}: ${activeCount} / ${concurrency}</div>`;
+        if (activeSlots.length > 0) {
+          html += `<div style="margin-top:6px;font-size:11px;color:${isDark ? '#9ca3af' : '#6b7280'}">${t('workers_task_id')}:</div>`;
+          activeSlots.forEach(task => {
+            const truncatedId = task.id.slice(0, 8);
+            const stage = task.import_stage || '—';
+            const color = SLOT_COLORS[task.slot_index % 4];
+            html += `<div style="font-size:11px;margin-top:2px"><span style="color:${color}">■</span> ${t('workers_slot')} ${task.slot_index + 1}: ${truncatedId}... (${stage})</div>`;
+          });
+        }
+        return html;
+      },
+    },
     xAxis: {
       type: 'time' as const,
       min: windowStart,
