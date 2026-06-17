@@ -437,7 +437,7 @@ export default function AdminOrdersPage() {
       </Card>
 
       <Dialog open={!!viewOrderId} onOpenChange={(open) => { if (!open) { setViewOrderId(null); setEditMode(false); setShowHistory(false); } }}>
-        <DialogContent className="!w-[98vw] !max-w-[1800px] min-h-[750px] max-h-[92vh] overflow-hidden flex flex-col !p-0 !gap-0" aria-describedby={null}>
+        <DialogContent className="w-[98vw] max-w-[1800px] min-h-[750px] max-h-[92vh] overflow-hidden flex flex-col !p-0 !gap-0" aria-describedby={null}>
           {detailLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -709,35 +709,31 @@ export default function AdminOrdersPage() {
                 )}
               </div>
 
-              {!showHistory && (
-                <>
-                  <Separator className="flex-shrink-0" />
-                  <div className="flex-shrink-0 p-4 pt-3">
-                    {editMode ? (
-                      <div className="flex gap-2">
-                        <Button variant="outline" className="h-9" onClick={() => { setEditMode(false); }}>
-                          {t('cancel')}
-                        </Button>
-                          <Button className="h-9 gap-2" onClick={handleSave} disabled={updateMutation.isPending}>
-                            {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            {t('save')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button variant="outline" className="gap-1.5 h-9" onClick={() => setShowHistory(true)}>
-                          <History className="w-4 h-4" /> {t('order_history')}
-                        </Button>
-                        <Button variant="outline" className="gap-1.5 h-9" onClick={enterEditMode}>
-                          <Pencil className="w-4 h-4" /> {t('edit_order')}
-                        </Button>
-                      </div>
-                    )}
+              <Separator className="flex-shrink-0" />
+              <div className="flex-shrink-0 p-4 pt-3">
+                {showHistory ? <div className="h-9" /> : editMode ? (
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="h-9" onClick={() => { setEditMode(false); }}>
+                      {t('cancel')}
+                    </Button>
+                      <Button className="h-9 gap-2" onClick={handleSave} disabled={updateMutation.isPending}>
+                        {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {t('save')}
+                    </Button>
                   </div>
-                </>
-              )}
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="gap-1.5 h-9" onClick={() => setShowHistory(true)}>
+                      <History className="w-4 h-4" /> {t('order_history')}
+                    </Button>
+                    <Button variant="outline" className="gap-1.5 h-9" onClick={enterEditMode}>
+                      <Pencil className="w-4 h-4" /> {t('edit_order')}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </>
-          )}
+            )}
         </DialogContent>
       </Dialog>
     </div>
