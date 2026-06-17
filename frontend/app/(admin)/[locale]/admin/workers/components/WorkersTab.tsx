@@ -233,7 +233,6 @@ export default function WorkersTab() {
   useEffect(() => {
     const id = setInterval(() => {
       setClock(Date.now());
-      setActiveHistory((prev) => prev.map(p => ({ ...p, time: p.time + 1000 })));
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -361,14 +360,13 @@ export default function WorkersTab() {
     }],
   };
 
-  const dataMin = activeHistory[0]?.time ?? Date.now();
-  const dataMax = activeHistory[activeHistory.length - 1]?.time ?? Date.now();
+  const now = Date.now();
   const activeSlotsOption = {
     backgroundColor: chartBg,
     xAxis: {
       type: 'time' as const,
-      min: dataMin - 3000,
-      max: dataMax + 3000,
+      min: now - 153000,
+      max: now + 3000,
       axisLabel: {
         color: axisTextColor,
         formatter: (v: number) => {
