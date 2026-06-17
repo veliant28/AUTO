@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { useMessages } from 'next-intl';
+import { useMessages, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Package, ChevronRight, ArrowLeft } from 'lucide-react';
@@ -13,10 +13,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import CatalogPagination from '@/components/features/CatalogPagination';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
+import { useOrderSync } from '@/lib/orderSync';
 
 const PAGE_SIZE = 10;
 
-const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+const LOCALE_MAP: Record<string, string> = { ru: 'ru-RU', ua: 'uk-UA', en: 'en-US' };
 
 function OrdersSkeleton() {
   return (
@@ -42,11 +43,14 @@ function OrdersSkeleton() {
 }
 
 export default function OrdersPage() {
+  useOrderSync();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const messages = useMessages();
   const msgs = messages as Record<string, any>;
   const t = (key: string) => msgs?.common?.[key] ?? key;
+  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
+  const fmt = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -154,8 +158,8 @@ export default function OrdersPage() {
             <div className="divide-y">
               {data.items.map((order: any) => {
                 const statusInfo = ORDER_STATUS_LABELS[order.status] || { labelKey: 'order_pending', className: 'bg-gray-500 text-white' };
-                const date = new Date(order.created_at).toLocaleDateString('uk-UA', {
-                  day: 'numeric', month: 'long', year: 'numeric',
+                const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
+                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
                 });
                 return (
                   <Link key={order.id} href={`/orders/${order.id}`} className="grid grid-cols-5 gap-4 px-6 py-4 items-center hover:bg-muted/50 transition-colors">

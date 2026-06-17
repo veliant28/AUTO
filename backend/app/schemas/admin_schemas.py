@@ -61,6 +61,68 @@ class AdminUserListResponse(BaseModel):
 class UpdateOrderStatusSchema(BaseModel):
     status: str
 
+class AdminOrderItemSchema(BaseModel):
+    id: int
+    part_id: int
+    article: str
+    part_name: str
+    brand: Optional[str] = None
+    quantity: int
+    price: float
+    sku: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AdminOrderDetailResponse(BaseModel):
+    id: int
+    user_id: int
+    status: str
+    total: float
+    full_name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    last_name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    delivery_type: Optional[str] = None
+    delivery_city: Optional[str] = None
+    delivery_warehouse: Optional[str] = None
+    payment_method: Optional[str] = None
+    created_at: datetime
+    updated_by_name: Optional[str] = None
+    updated_by_group: Optional[str] = None
+    updated_at: Optional[datetime] = None
+    items: List[AdminOrderItemSchema]
+
+    class Config:
+        from_attributes = True
+
+class AdminOrderUpdateItem(BaseModel):
+    id: int
+    quantity: int
+
+class AdminOrderUpdateSchema(BaseModel):
+    items: Optional[List[AdminOrderUpdateItem]] = None
+    last_name: Optional[str] = None
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    phone: Optional[str] = None
+    delivery_type: Optional[str] = None
+    delivery_city: Optional[str] = None
+    delivery_warehouse: Optional[str] = None
+
+class OrderChangeLogResponse(BaseModel):
+    id: int
+    user_name: Optional[str] = None
+    user_group: Optional[str] = None
+    action: str
+    details: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # Role schemas
 class PermissionResponse(BaseModel):
     id: int

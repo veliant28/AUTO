@@ -48,7 +48,7 @@ export const DEFAULT_CURRENCY = 'UAH';
 // Order status labels
 export const ORDER_STATUS_LABELS: Record<string, { labelKey: string; className: string }> = {
   pending:    { labelKey: 'order_pending',     className: 'bg-gray-500 text-white' },
-  confirmed:  { labelKey: 'order_confirmed',   className: 'bg-background text-foreground border' },
+  confirmed:  { labelKey: 'order_confirmed',   className: 'bg-black dark:bg-white text-white dark:text-black' },
   processing: { labelKey: 'order_processing',  className: 'bg-blue-500 text-white' },
   shipped:    { labelKey: 'order_shipped',     className: 'bg-orange-500 text-white' },
   delivered:  { labelKey: 'order_delivered',   className: 'bg-green-500 text-white' },

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useMessages } from 'next-intl';
+import { useMessages, useLocale } from 'next-intl';
 import { ArrowLeft, Package, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
+import { useOrderSync } from '@/lib/orderSync';
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '—';
@@ -41,9 +42,10 @@ const PAYMENT_LABELS: Record<string, string> = {
   liqpay: 'payment_liqpay',
 };
 
-const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+const LOCALE_MAP: Record<string, string> = { ru: 'ru-RU', ua: 'uk-UA', en: 'en-US' };
 
 export default function OrderDetailPage() {
+  useOrderSync();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
@@ -100,8 +102,10 @@ export default function OrderDetailPage() {
     );
   }
 
+  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
+  const fmt = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n);
   const statusInfo = ORDER_STATUS_LABELS[order.status] || { labelKey: 'order_pending', className: 'bg-gray-500 text-white' };
-  const date = new Date(order.created_at).toLocaleString('ru-RU', {
+  const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 
@@ -168,7 +172,7 @@ export default function OrderDetailPage() {
             {/* Right: Items + Total */}
             <div className="space-y-4">
               <h3 className="font-semibold text-base">{t('order_contents')}</h3>
-              <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 items-start">
+              <div className="grid grid-cols-[1fr_auto_100px] gap-x-4 items-start">
                 {order.items?.map((item: any, index: number) => (
                   <React.Fragment key={item.id}>
                     <div className={`min-w-0 space-y-1 py-3 ${index > 0 ? 'border-t pt-3' : ''}`}>

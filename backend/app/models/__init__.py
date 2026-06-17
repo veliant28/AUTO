@@ -6,7 +6,7 @@ from .suppliers import Supplier, SupplierOffer
 from .cart import CartItem
 from .auth import PasswordReset, OAuthAccount
 from .favorites import Favorite
-from .orders import Order, OrderItem, OrderStatus
+from .orders import Order, OrderItem, OrderStatus, OrderChangeLog
 from .footer import FooterContent
 from .role import Role, Permission, RolePermission
 from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
@@ -24,7 +24,7 @@ __all__ = [
     "CartItem",
     "PasswordReset", "OAuthAccount",
     "Favorite",
-    "Order", "OrderItem", "OrderStatus",
+    "Order", "OrderItem", "OrderStatus", "OrderChangeLog",
     "FooterContent",
     "Role", "Permission", "RolePermission",
     "TecDocConfig", "TecDocRateLog", "SupplierPrice",
