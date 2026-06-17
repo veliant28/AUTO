@@ -437,7 +437,7 @@ export default function AdminOrdersPage() {
       </Card>
 
       <Dialog open={!!viewOrderId} onOpenChange={(open) => { if (!open) { setViewOrderId(null); setEditMode(false); setShowHistory(false); } }}>
-        <DialogContent className="w-[98vw] max-w-[1800px] min-h-[750px] max-h-[92vh] overflow-hidden flex flex-col !p-0 !gap-0" aria-describedby={null}>
+        <DialogContent className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0" aria-describedby={null}>
           {detailLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
