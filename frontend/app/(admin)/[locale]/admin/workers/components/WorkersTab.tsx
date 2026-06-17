@@ -221,19 +221,12 @@ export default function WorkersTab() {
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>(() => {
-    const now = Date.now();
-    return Array.from({ length: 50 }, (_, i) => ({
-      time: now - (49 - i) * 3000,
-      value: 0,
-    }));
-  });
+  const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>([]);
   const [clock, setClock] = useState(Date.now());
 
   useEffect(() => {
     const id = setInterval(() => {
       setClock(Date.now());
-      setActiveHistory((prev) => prev.map(p => ({ ...p, time: p.time + 1000 })));
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -257,8 +250,7 @@ export default function WorkersTab() {
   useEffect(() => {
     if (!data?.worker) return;
     setActiveHistory((prev) => {
-      const lastTime = prev[prev.length - 1]?.time ?? Date.now();
-      const next = [...prev, { time: lastTime + 1, value: data.worker.active_count }];
+      const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
       return next.length > 50 ? next.slice(-50) : next;
     });
   }, [data]);
@@ -362,14 +354,21 @@ export default function WorkersTab() {
     }],
   };
 
-  const dataMin = activeHistory[0]?.time ?? Date.now();
-  const dataMax = activeHistory[activeHistory.length - 1]?.time ?? Date.now();
+  const windowStart = clock - 156000;
+  const windowEnd = clock;
+  const chartData: [number, number][] = activeHistory.length === 0
+    ? [[windowStart, 0], [windowEnd, 0]]
+    : [
+        [windowStart, activeHistory[0].value],
+        ...activeHistory.map(p => [p.time, p.value] as [number, number]),
+        [windowEnd, activeHistory[activeHistory.length - 1].value],
+      ];
   const activeSlotsOption = {
     backgroundColor: chartBg,
     xAxis: {
       type: 'time' as const,
-      min: dataMin - 3000,
-      max: dataMax + 3000,
+      min: windowStart,
+      max: windowEnd,
       axisLabel: {
         color: axisTextColor,
         formatter: (v: number) => {
@@ -387,9 +386,9 @@ export default function WorkersTab() {
       splitLine: { lineStyle: { color: borderColor } },
     },
     series: [{
-      data: activeHistory.map(p => [p.time, p.value]),
+      data: chartData,
       type: 'line' as const,
-      smooth: true,
+      step: 'end' as const,
       symbol: 'none',
       areaStyle: { opacity: 0.15, color: '#0ea5e9' },
       lineStyle: { color: '#0ea5e9', width: 2 },
