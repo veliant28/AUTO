@@ -11,7 +11,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { Eye, Search, Pencil, History, X, Plus, Minus, ArrowLeft, Loader2, Package, CreditCard, Clock, Trash2, Save, Building2, Container, Truck, Map, User } from 'lucide-react';
+import { Eye, Search, Pencil, History, X, Plus, Minus, ArrowLeft, Loader2, Package, CreditCard, Clock, Trash2, Save, Building2, Container, Truck, MapPin, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -538,12 +538,12 @@ export default function AdminOrdersPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6">
-                    <div className="border rounded-lg p-3 space-y-3">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 min-h-full">
+                    <div className="border rounded-lg p-3 flex flex-col h-full">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
                         <Package className="w-4 h-4" /> {t('order_items')}
                       </h4>
-                      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                      <div className="space-y-3 flex-1 overflow-y-auto pr-1 mt-3">
                         {orderDetail.items.map((item) => {
                           const qty = editQuantities[item.id] ?? item.quantity;
                           const itemTotal = qty * item.price;
@@ -613,19 +613,19 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <div className="border rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <div className="border rounded-lg p-4 flex flex-col h-full">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
                         <CreditCard className="w-4 h-4" /> {t('payment_method')}
                       </h4>
-                      <div className="flex items-center justify-center min-h-[120px]">
+                      <div className="flex-1 flex items-center justify-center">
                         <p className="text-sm text-muted-foreground text-center">{t('payment_placeholder')}</p>
                       </div>
                     </div>
 
-                    <div className="border rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <div className="border rounded-lg p-4 flex flex-col h-full">
+                      <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
                         <User className="w-4 h-4" /> {t('recipient_data')}</h4>
-                      <div className="space-y-2 text-sm">
+                      <div className="flex-1 space-y-2 text-sm overflow-y-auto mt-3">
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground shrink-0">{t('phone_label')}</span>
                           {editMode ? (
@@ -636,7 +636,7 @@ export default function AdminOrdersPage() {
                           )}
                         </div>
                         {['last_name', 'first_name', 'middle_name'].map((field) => (
-                          <div key={field} className="flex justify-between">
+                          <div key={field} className="flex justify-between items-center">
                             <span className="text-muted-foreground">{t(field)}</span>
                             {editMode ? (
                               <Input className="h-9 w-40 text-sm" value={editRecipient[field]} maxLength={100}
@@ -647,7 +647,7 @@ export default function AdminOrdersPage() {
                           </div>
                         ))}
                         <Separator />
-                        <h5 className="font-semibold text-sm flex items-center gap-2"><Map className="w-4 h-4" /> {t('delivery_info')}</h5>
+                        <h5 className="font-semibold text-sm flex items-center gap-2"><MapPin className="w-4 h-4" /> {t('delivery_info')}</h5>
                         <RadioGroup value={editRecipient.delivery_type} onValueChange={(v) => setEditRecipient((p) => ({ ...p, delivery_type: v }))}
                           disabled={!editMode} className="grid grid-cols-3 gap-2">
                           <Tooltip>
@@ -692,9 +692,9 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <div className="border rounded-lg p-4 space-y-3">
-                      <h4 className="font-semibold text-sm">{t('order_summary')}</h4>
-                      <div className="space-y-2 text-sm">
+                    <div className="border rounded-lg p-4 flex flex-col h-full">
+                      <h4 className="font-semibold text-sm flex-shrink-0">{t('order_summary')}</h4>
+                      <div className="flex-1 space-y-2 text-sm mt-3">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">{t('total_items')}</span>
                           <span>{orderDetail.items.length} шт.</span>

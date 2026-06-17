@@ -249,30 +249,24 @@ export default function CheckoutPage() {
                   name="delivery_type"
                   control={control}
                   render={({ field }) => (
-                    <RadioGroup
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      className="grid grid-cols-3 gap-3"
-                    >
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="warehouse" id="warehouse" />
-                        <Label htmlFor="warehouse" className="font-normal cursor-pointer">
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="grid grid-cols-3 gap-3"
+                      >
+                        <Label htmlFor="warehouse" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="warehouse" id="warehouse" className="cursor-pointer" />
                           {tc('delivery_type_warehouse')}
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="parcel_locker" id="parcel_locker" />
-                        <Label htmlFor="parcel_locker" className="font-normal cursor-pointer">
+                        <Label htmlFor="parcel_locker" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="parcel_locker" id="parcel_locker" className="cursor-pointer" />
                           {tc('delivery_type_parcel_locker')}
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="courier" id="courier" />
-                        <Label htmlFor="courier" className="font-normal cursor-pointer">
+                        <Label htmlFor="courier" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="courier" id="courier" className="cursor-pointer" />
                           {tc('delivery_type_courier')}
                         </Label>
-                      </div>
-                    </RadioGroup>
+                      </RadioGroup>
                   )}
                 />
                 {errors.delivery_type && (
@@ -313,36 +307,28 @@ export default function CheckoutPage() {
                   name="payment_method"
                   control={control}
                   render={({ field }) => (
-                    <RadioGroup
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      className="grid grid-cols-4 gap-3"
-                    >
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="cod" id="cod" />
-                        <Label htmlFor="cod" className="font-normal cursor-pointer">
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        className="grid grid-cols-4 gap-3"
+                      >
+                        <Label htmlFor="cod" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="cod" id="cod" className="cursor-pointer" />
                           {tc('payment_cod')}
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="monobank" id="monobank" />
-                        <Label htmlFor="monobank" className="font-normal cursor-pointer">
+                        <Label htmlFor="monobank" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="monobank" id="monobank" className="cursor-pointer" />
                           {tc('payment_monobank')}
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="novapay" id="novapay" />
-                        <Label htmlFor="novapay" className="font-normal cursor-pointer">
+                        <Label htmlFor="novapay" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="novapay" id="novapay" className="cursor-pointer" />
                           {tc('payment_novapay')}
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary">
-                        <RadioGroupItem value="liqpay" id="liqpay" />
-                        <Label htmlFor="liqpay" className="font-normal cursor-pointer">
+                        <Label htmlFor="liqpay" className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
+                          <RadioGroupItem value="liqpay" id="liqpay" className="cursor-pointer" />
                           {tc('payment_liqpay')}
                         </Label>
-                      </div>
-                    </RadioGroup>
+                      </RadioGroup>
                   )}
                 />
                 {errors.payment_method && (
