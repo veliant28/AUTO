@@ -222,6 +222,10 @@ export default function WorkersTab() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const [activeHistory, setActiveHistory] = useState<{ time: number; value: number }[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('workers-active-history');
+      if (saved) return JSON.parse(saved);
+    } catch {}
     const now = Date.now();
     return Array.from({ length: 50 }, (_, i) => ({
       time: now - (49 - i) * 3000,
@@ -256,17 +260,16 @@ export default function WorkersTab() {
   useEffect(() => {
     if (!data?.worker) return;
     setActiveHistory((prev) => {
-      if (prev.every(p => p.value === 0)) {
-        const now = Date.now();
-        return Array.from({ length: 50 }, (_, i) => ({
-          time: now - (49 - i) * 3000,
-          value: data.worker.active_count,
-        }));
-      }
       const next = [...prev, { time: Date.now(), value: data.worker.active_count }];
       return next.length > 50 ? next.slice(-50) : next;
     });
   }, [data]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('workers-active-history', JSON.stringify(activeHistory));
+    } catch {}
+  }, [activeHistory]);
 
   useEffect(() => {
     (window as any).__refreshWorkers = () => refetch();
