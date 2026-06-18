@@ -375,7 +375,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <div className="border-l pl-2 flex items-center gap-1">
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
-            <AvatarImage src={getAvatarUrl(user?.avatar_index)} />
+            <AvatarImage src={getAvatarUrl(user?.avatar_index, user?.full_name || user?.email)} />
             <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
           </Avatar>
           <ThemeToggle />

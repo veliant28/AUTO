@@ -22,7 +22,7 @@ export function useOrderNotifications() {
           orders.forEach((order: any) => {
             const updated = new Date(order.updated_at || order.created_at).getTime();
             if (updated > parseInt(lastCheck) && order.status !== 'pending') {
-              toast(`Статус заказа #${order.id} изменён`, {
+              toast.info(`Статус заказа #${order.id} изменён`, {
                 description: `Текущий статус: ${order.status}`,
                 action: {
                   label: 'Открыть',

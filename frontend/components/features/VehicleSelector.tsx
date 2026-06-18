@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
+/** Компактный выбор авто: бренд → модель → модификация + сохранение в гараж */
 export default function VehicleSelector() {
   const t = useTranslations('common');
   const { brandId, modelId, modId, setBrand, setModel, setMod } = useVehicleStore();
@@ -22,7 +23,7 @@ export default function VehicleSelector() {
 
   const handleSaveToGarage = () => {
     if (!modId) return;
-    addToGarage(parseInt(modId));
+    addToGarage({ modId: parseInt(modId) });
     toast.success(t('saved_to_garage'));
   };
 

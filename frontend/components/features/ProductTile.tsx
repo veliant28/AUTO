@@ -31,6 +31,7 @@ type ProductTileProps = {
   onAddToCart: (product: ProductTileItem) => void;
 };
 
+/** Карточка товара с ценой, бейджем поставщика и кнопками избранного/корзины */
 export default function ProductTile({ product, onToggleFavorite, onAddToCart }: ProductTileProps) {
   const t = useTranslations('common');
   const inStock = product.quantity > 0;

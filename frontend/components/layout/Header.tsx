@@ -29,6 +29,7 @@ import { CART_MAX_DISPLAY } from '@/lib/constants';
 import { getAvatarUrl, getInitials } from '@/lib/avatar';
 import { useBrandName } from '@/hooks/useBrandName';
 
+/** Шапка сайта: логотип, поиск, навигация, корзина, профиль */
 export default function Header() {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -107,7 +108,7 @@ export default function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="rounded-full">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={getAvatarUrl(user?.avatar_index)} />
+                          <AvatarImage src={getAvatarUrl(user?.avatar_index, user?.full_name || user?.email)} />
                           <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
                         </Avatar>
                       </Button>
@@ -118,7 +119,7 @@ export default function Header() {
                     <>
                       <DropdownMenuLabel className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
-                      <AvatarImage src={getAvatarUrl(user?.avatar_index)} />
+                      <AvatarImage src={getAvatarUrl(user?.avatar_index, user?.full_name || user?.email)} />
                           <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
                         </Avatar>
                         <div>

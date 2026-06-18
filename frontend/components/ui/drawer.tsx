@@ -31,7 +31,7 @@ const DrawerContent = React.forwardRef<
         'data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
         className,
       )}
-      aria-describedby={null}
+      aria-describedby={undefined}
       {...props}
     >
       <DialogTitle className="sr-only">Drawer</DialogTitle>
@@ -41,5 +41,7 @@ const DrawerContent = React.forwardRef<
   </DialogPrimitive.Portal>
 ));
 DrawerContent.displayName = "DrawerContent";
+
+const DrawerOverlay = DialogOverlay;
 
 export { Drawer, DrawerTrigger, DrawerClose, DrawerOverlay, DrawerContent };

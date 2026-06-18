@@ -26,6 +26,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+/** Диалог выбора авто с пошаговым каскадом: тип → год → марка → модель → модификация */
 export default function VehicleSelectorDialog({ children }: Props) {
   const router = useRouter();
   const t = useTranslations('common');
@@ -68,7 +69,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto" aria-describedby={null}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Car className="w-5 h-5" />
@@ -163,7 +164,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                <p className="text-sm font-medium">{t('vehicle_make')}</p>
                <Select
                  disabled={!store.year || loadingMakes}
-                 value={makes?.some(m => String(m.id) === store.brandId) ? store.brandId : undefined}
+                 value={makes?.some(m => String(m.id) === store.brandId) ? store.brandId ?? undefined : undefined}
                  onValueChange={(val) => store.setBrand(val, makes?.find(m => m.id === parseInt(val))?.name || '')}
                >
                  <SelectTrigger className="h-10">
@@ -184,7 +185,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                <p className="text-sm font-medium">{t('vehicle_model')}</p>
                <Select
                  disabled={!store.brandId || loadingModels || !models}
-                 value={models?.some(m => String(m.id) === store.modelId) ? store.modelId : undefined}
+                 value={models?.some(m => String(m.id) === store.modelId) ? store.modelId ?? undefined : undefined}
                  onValueChange={(val) => store.setModel(val, models?.find(m => m.id === parseInt(val))?.name || '')}
                >
                  <SelectTrigger className="h-10">
@@ -203,7 +204,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                <p className="text-sm font-medium">{t('vehicle_modification')}</p>
                <Select
                  disabled={!store.modelId || loadingCars || !cars}
-                 value={carOptions?.some(c => String(c.id) === store.modId) ? store.modId : undefined}
+                 value={carOptions?.some(c => String(c.id) === store.modId) ? store.modId ?? undefined : undefined}
                  onValueChange={(val) => {
                    const car = carOptions.find(c => c.id === parseInt(val));
                    if (car) {

@@ -13,6 +13,7 @@ type CatalogGridProps = {
   onAddToCart: (product: ProductTileItem) => void;
 };
 
+/** Сетка карточек товаров каталога с поддержкой избранного и корзины */
 function TileSkeleton() {
   return (
     <div className="rounded-lg border bg-card overflow-hidden">

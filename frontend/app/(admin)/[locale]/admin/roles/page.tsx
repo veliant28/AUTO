@@ -235,7 +235,7 @@ export default function AdminRolesPage() {
   return (
     <div className="p-6">
         <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) resetForm(); }}>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={null}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">{t('roles_create')}</DialogTitle>
             </DialogHeader>
@@ -325,7 +325,7 @@ export default function AdminRolesPage() {
 
       {editRole && (
         <Dialog open={!!editRole} onOpenChange={(open) => { if (!open) setEditRole(null); }}>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={null}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">{t('roles_edit')}</DialogTitle>
             </DialogHeader>

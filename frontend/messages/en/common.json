@@ -765,6 +765,9 @@
       "p3": "Our mission is to make auto parts search and purchase fast, convenient and reliable."
     },
     "terms": {
+      "admin_panel": "Admin Panel",
+      "p2": "All website materials are protected by copyright.",
+      "p3": "We reserve the right to change terms at any time.",
       "h2_1": "General Provisions",
       "p2_1": "By using the site, you agree to the terms.",
       "h2_2": "Copyright",
@@ -779,6 +782,9 @@
       "p1": "By using SVOM, you agree to these terms."
     },
     "contacts": {
+      "p1": "Email: info@autoparts.local",
+      "p2": "Phone: +380 (44) 123-45-67",
+      "p3": "Address: Ukraine, Kyiv",
       "phone_title": "Phone",
       "phone": "+380 (44) 123-45-67",
       "email_title": "Email",
@@ -790,6 +796,9 @@
       "meta_desc": "Contact SVOM"
     },
     "delivery": {
+      "p1": "Delivery throughout Ukraine.",
+      "p2": "Pickup from delivery points.",
+      "p3": "Free delivery for orders over 3000 ₴.",
       "courier_title": "Courier Delivery",
       "courier_desc": "Courier delivery in Kyiv — 1 day. Ukraine — 2+ days.",
       "pickup_title": "Pickup",
@@ -801,6 +810,9 @@
       "timing_desc": "Standard delivery — 1-3 business days. Express — next day."
     },
     "faq": {
+      "p1": "How to find a part? Use article search or TecDoc catalog.",
+      "p2": "How to place an order? Add parts to cart and fill out the form.",
+      "p3": "How to track an order? Check My Orders section after logging in.",
       "q1": "How to find a part?",
       "a1": "Use article search or TecDoc catalog.",
       "q2": "How to place an order?",
@@ -816,6 +828,9 @@
       "meta_desc": "Frequently asked questions"
     },
     "support": {
+      "p1": "Our support team is ready to help you.",
+      "p2": "Working hours: Mon-Fri 9:00-18:00.",
+      "p3": "Average response time — 2 hours.",
       "desc": "Our support team is ready to help you with any questions.",
       "chat_title": "Online Chat",
       "chat_desc": "Available Mon-Fri 9:00-18:00. Avg response — 2 min.",

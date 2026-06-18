@@ -268,7 +268,7 @@ export default function ProfilePage() {
               </Badge>
               <div className="flex items-center gap-4">
                 <Avatar className="w-[120px] h-[120px] ring-4 ring-border shrink-0">
-                  <AvatarImage src={getAvatarUrl(profile?.avatar_index)} />
+                  <AvatarImage src={getAvatarUrl(profile?.avatar_index, profile?.full_name || profile?.email || profile?.full_name)} />
                   <AvatarFallback className="text-3xl">{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">

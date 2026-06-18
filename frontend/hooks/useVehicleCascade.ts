@@ -40,7 +40,7 @@ export function useVehicleCars(type: VehicleType, year: string | null, modelId: 
     queryKey: ['vehicle-cars', type, year, modelId],
     queryFn: async () => {
       const { data } = await api.get('/catalog/vehicle/cars', { params: { type, year, model_id: modelId } });
-      return data as { id: number; name: string; capacity?: string; engine?: string }[];
+      return data as { id: number; name: string; capacity?: string; engine?: string; power?: string; year_from?: number; year_to?: number }[];
     },
     enabled: !!type && !!year && !!modelId,
   });

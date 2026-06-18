@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import { useBrandName } from '@/hooks/useBrandName';
 import FalconLogo from '@/components/ui/FalconLogo';
 
+/** Подвал сайта: контакты, ссылки, выбор языка, копирайт */
 export default function Footer() {
   const t = useTranslations('footer');
   const { user } = useAuthStore();
