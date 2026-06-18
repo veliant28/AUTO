@@ -25,14 +25,27 @@ services:
     ports:
       - "8080:8000"
     environment:
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      AUTO_PARTS_POSTGRES_USER: ${AUTO_PARTS_POSTGRES_USER:-postgres}
+      AUTO_PARTS_POSTGRES_PASSWORD: ${AUTO_PARTS_POSTGRES_PASSWORD}
+      AUTO_PARTS_POSTGRES_SERVER: postgres
+      AUTO_PARTS_POSTGRES_PORT: 5432
+      AUTO_PARTS_POSTGRES_DB: ${AUTO_PARTS_POSTGRES_DB:-autoparts}
+      AUTO_PARTS_REDIS_HOST: redis
+      AUTO_PARTS_REDIS_PORT: 6379
+      AUTO_PARTS_TECDOC_API_KEY: ${AUTO_PARTS_TECDOC_API_KEY}
+      AUTO_PARTS_TECDOC_API_SECRET: ${AUTO_PARTS_TECDOC_API_SECRET}
+      AUTO_PARTS_TELEGRAM_BOT_TOKEN: ${AUTO_PARTS_TELEGRAM_BOT_TOKEN}
+      AUTO_PARTS_SECRET_KEY: ${AUTO_PARTS_SECRET_KEY}
       TZ: Europe/Kyiv
     volumes:
       - ./backend:/app
       - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     depends_on:
       - postgres
       - redis
@@ -45,10 +58,17 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      AUTO_PARTS_POSTGRES_USER: ${AUTO_PARTS_POSTGRES_USER:-postgres}
+      AUTO_PARTS_POSTGRES_PASSWORD: ${AUTO_PARTS_POSTGRES_PASSWORD}
+      AUTO_PARTS_POSTGRES_SERVER: postgres
+      AUTO_PARTS_POSTGRES_PORT: 5432
+      AUTO_PARTS_POSTGRES_DB: ${AUTO_PARTS_POSTGRES_DB:-autoparts}
+      AUTO_PARTS_REDIS_HOST: redis
+      AUTO_PARTS_REDIS_PORT: 6379
+      AUTO_PARTS_TECDOC_API_KEY: ${AUTO_PARTS_TECDOC_API_KEY}
+      AUTO_PARTS_TECDOC_API_SECRET: ${AUTO_PARTS_TECDOC_API_SECRET}
+      AUTO_PARTS_TELEGRAM_BOT_TOKEN: ${AUTO_PARTS_TELEGRAM_BOT_TOKEN}
+      AUTO_PARTS_SECRET_KEY: ${AUTO_PARTS_SECRET_KEY}
       TZ: Europe/Kyiv
     depends_on:
       - redis
@@ -61,10 +81,17 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      POSTGRES_SERVER: postgres
-      POSTGRES_PORT: 5432
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      AUTO_PARTS_POSTGRES_USER: ${AUTO_PARTS_POSTGRES_USER:-postgres}
+      AUTO_PARTS_POSTGRES_PASSWORD: ${AUTO_PARTS_POSTGRES_PASSWORD}
+      AUTO_PARTS_POSTGRES_SERVER: postgres
+      AUTO_PARTS_POSTGRES_PORT: 5432
+      AUTO_PARTS_POSTGRES_DB: ${AUTO_PARTS_POSTGRES_DB:-autoparts}
+      AUTO_PARTS_REDIS_HOST: redis
+      AUTO_PARTS_REDIS_PORT: 6379
+      AUTO_PARTS_TECDOC_API_KEY: ${AUTO_PARTS_TECDOC_API_KEY}
+      AUTO_PARTS_TECDOC_API_SECRET: ${AUTO_PARTS_TECDOC_API_SECRET}
+      AUTO_PARTS_TELEGRAM_BOT_TOKEN: ${AUTO_PARTS_TELEGRAM_BOT_TOKEN}
+      AUTO_PARTS_SECRET_KEY: ${AUTO_PARTS_SECRET_KEY}
       TZ: Europe/Kyiv
     depends_on:
       - redis
@@ -80,6 +107,7 @@ services:
     environment:
       - INTERNAL_API_URL=http://backend:8000/api/v1
       - TZ=Europe/Kyiv
+    restart: unless-stopped
 
 volumes:
   pgdata:

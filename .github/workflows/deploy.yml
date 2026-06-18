@@ -1,0 +1,16 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to server
+        run: |
+          echo "TODO: Настроить SSH для деплоя"
+          echo "ssh user@server 'cd /path/to/project && docker compose pull && docker compose up -d'"
