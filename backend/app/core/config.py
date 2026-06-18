@@ -1,9 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
-import os
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        env_prefix="AUTO_PARTS_",
+    )
 
     PROJECT_NAME: str = "Auto Parts Store"
     API_V1_STR: str = "/api/v1"
@@ -34,6 +38,9 @@ class Settings(BaseSettings):
 
     # Rate Limiting
     TECDOC_MAX_ACTIONS_PER_HOUR: int = Field(default=3300, ge=1, le=10000)
+
+    # Sentry
+    SENTRY_DSN: str = ""
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""

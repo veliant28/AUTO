@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from .vehicles import Base
 
@@ -12,14 +12,18 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     middle_name = Column(String, nullable=True)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True, index=True)
     phone = Column(String, nullable=True)
     delivery_type = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     delivery_warehouse = Column(String, nullable=True)
     avatar_index = Column(Integer, nullable=True, default=None)
-    created_at = Column(String, nullable=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    created_at = Column(String, nullable=True, index=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)
+
+    __table_args__ = (
+        Index("idx_user_email_active", "email", "is_active"),
+    )
     
     garage = relationship("UserGarage", back_populates="user")
     role = relationship("Role", back_populates="users")

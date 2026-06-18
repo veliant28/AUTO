@@ -10,7 +10,7 @@ class VehicleBrand(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, index=True)
     tecdoc_id = Column(Integer, unique=True, index=True, nullable=True)
-    group = Column(String, nullable=False)  # passenger, commercial, motorbike
+    group = Column(String, nullable=False, index=True)  # passenger, commercial, motorbike
     
     models = relationship("VehicleModel", back_populates="brand")
 

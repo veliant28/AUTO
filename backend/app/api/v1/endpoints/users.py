@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text as sa_text
 from typing import List
-import hashlib
 from app.core.db import get_db, get_tecdoc_db
+from app.core.security import get_password_hash, verify_password
 from app.schemas.user_schemas import UserSchema, ProfileUpdate, ChangePasswordSchema, GarageVehicleSchema, GarageAddSchema
 from app.services.user_service import user_service
 from app.models import User, UserGarage, VehicleModification, VehicleModel, VehicleBrand
@@ -32,6 +32,7 @@ def _user_to_schema(user: User) -> UserSchema:
 
 @router.get("/me", response_model=UserSchema)
 async def get_me(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Получить профиль текущего пользователя."""
     user = user_service.get_user_profile(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -40,6 +41,7 @@ async def get_me(user_id: int = Depends(get_current_user), db: Session = Depends
 
 @router.put("/me", response_model=UserSchema)
 async def update_me(data: ProfileUpdate, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Обновить профиль текущего пользователя (имя, телефон и т.д.)."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -53,19 +55,20 @@ async def update_me(data: ProfileUpdate, user_id: int = Depends(get_current_user
 
 @router.post("/change-password")
 async def change_password(data: ChangePasswordSchema, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Сменить пароль. Требует текущий пароль для подтверждения."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    current_hash = hashlib.sha256(data.current_password.encode()).hexdigest()
-    if user.password_hash != current_hash:
+    if not verify_password(data.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    user.password_hash = hashlib.sha256(data.new_password.encode()).hexdigest()
+    user.password_hash = get_password_hash(data.new_password)
     db.commit()
     return {"message": "Password changed"}
 
 
 @router.get("/garage", response_model=List[GarageVehicleSchema])
 async def get_garage(user_id: int = Depends(get_current_user), db: Session = Depends(get_db), tecdb: Session = Depends(get_tecdoc_db)):
+    """Получить список сохранённых автомобилей в гараже пользователя."""
     entries = user_service.get_user_garage(db, user_id)
     
     result = []
@@ -123,12 +126,14 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
 
 @router.post("/garage/add")
 async def add_to_garage(data: GarageAddSchema, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Добавить автомобиль в гараж пользователя."""
     user_service.add_to_garage(db, user_id, data)
     return {"message": "Vehicle added to garage"}
 
 
 @router.delete("/garage/{entry_id}")
 async def remove_from_garage(entry_id: int, user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Удалить автомобиль из гаража."""
     if user_service.remove_from_garage(db, user_id, entry_id):
         return {"message": "Vehicle removed from garage"}
     raise HTTPException(status_code=404, detail="Entry not found")

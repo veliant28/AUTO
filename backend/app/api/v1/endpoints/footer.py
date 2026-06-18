@@ -13,6 +13,7 @@ LOCALES = ['ru', 'en', 'ua']
 
 @router.get("/footer", response_model=FooterResponse)
 async def get_footer(locale: str = "ru", db: Session = Depends(get_db)):
+    """Получить содержимое подвала для указанной локали."""
     if locale not in LOCALES:
         locale = "ru"
     entry = db.query(FooterContent).filter(FooterContent.locale == locale).first()
@@ -22,11 +23,13 @@ async def get_footer(locale: str = "ru", db: Session = Depends(get_db)):
 
 @router.get("/admin/footer", response_model=List[FooterResponse])
 async def get_all_footer(current_user: User = Depends(require_role("admin")), db: Session = Depends(get_db)):
+    """Получить содержимое подвала для всех локалей."""
     entries = db.query(FooterContent).all()
     return [FooterResponse(locale=e.locale, data=e.data) for e in entries]
 
 @router.put("/admin/footer/{locale}", response_model=FooterResponse)
 async def update_footer(locale: str, body: FooterUpdate, current_user: User = Depends(require_role("admin")), db: Session = Depends(get_db)):
+    """Обновить содержимое подвала для указанной локали."""
     if locale not in LOCALES:
         raise HTTPException(400, f"Invalid locale: {locale}")
     entry = db.query(FooterContent).filter(FooterContent.locale == locale).first()

@@ -142,6 +142,7 @@ async def get_workers(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Получить статус Celery воркеров и активных задач."""
     inspect = celery_app.control.inspect()
     active_raw = inspect.active() or {}
     reserved_raw = inspect.reserved() or {}
@@ -189,6 +190,7 @@ async def revoke_task(
     task_id: str,
     current_user: User = Depends(require_role("admin")),
 ):
+    """Отменить задачу Celery."""
     try:
         celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
         return {"status": "revoked", "task_id": task_id}
@@ -201,6 +203,7 @@ async def revoke_task(
 async def restart_worker(
     current_user: User = Depends(require_role("admin")),
 ):
+    """Перезапустить Celery воркер."""
     try:
         import docker
         client = docker.from_env()

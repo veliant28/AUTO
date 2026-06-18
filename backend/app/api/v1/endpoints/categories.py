@@ -97,6 +97,7 @@ async def categories_header(
     locale: str = Query("ru", regex="^(ru|ua|en)$"),
     db: Session = Depends(get_db),
 ):
+    """Получить категории и секции ТО для шапки сайта."""
     all_cats = db.query(PartCategory).all()
     by_id = {c.id: c for c in all_cats}
 

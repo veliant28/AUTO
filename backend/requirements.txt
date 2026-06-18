@@ -5,6 +5,10 @@ psycopg[binary]==3.2.*
 alembic==1.14.*
 redis==5.2.*
 httpx==0.28.*
+pytest==8.3.*
+pytest-asyncio==0.25.*
+pytest-cov==6.0.*
+pytest-mock==3.14.*
 pydantic>=2.13,<3
 deep-translator
 pydantic-settings>=2.7
@@ -16,3 +20,5 @@ email-validator==2.2.*
 bcrypt==4.*
 openpyxl==3.1.*
 cryptography==44.*
+sentry-sdk[fastapi]==2.0.*
+passlib[bcrypt]==1.7.4

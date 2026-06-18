@@ -78,6 +78,7 @@ async def list_schedules(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список расписаний импорта."""
     schedules = db.query(ImportSchedule).order_by(ImportSchedule.supplier).all()
     result = []
     for s in schedules:
@@ -98,6 +99,7 @@ async def update_schedule(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить расписание импорта для поставщика."""
     s = db.query(ImportSchedule).filter(ImportSchedule.supplier == supplier).first()
     if not s:
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -123,6 +125,7 @@ async def run_schedule_now(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запустить импорт по расписанию немедленно."""
     s = db.query(ImportSchedule).filter(ImportSchedule.supplier == supplier).first()
     if not s:
         raise HTTPException(status_code=404, detail="Schedule not found")

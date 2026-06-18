@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import secrets
 import hashlib
 import hmac
+from app.core.security import get_password_hash, verify_password
 import random
 from app.core.db import get_db
 from app.core.config import settings
@@ -54,6 +55,7 @@ def get_user_role(user: User) -> str:
 
 @router.post("/register", response_model=TokenResponse)
 async def register(data: RegisterSchema, db: Session = Depends(get_db)):
+    """Регистрация нового пользователя. Возвращает JWT токен и данные пользователя."""
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(400, "Email already registered")
@@ -62,12 +64,12 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
     if not retail_role:
         raise HTTPException(500, "Default role not found")
     
-    hashed = hashlib.sha256(data.password.encode()).hexdigest()
+    hashed = get_password_hash(data.password)
     user = User(
-        email=data.email, 
-        password_hash=hashed, 
+        email=data.email,
+        password_hash=hashed,
         first_name=data.first_name,
-        avatar_index=random.randint(1, 40),
+        avatar_index=random.randint(1, 100),
         role_id=retail_role.id,
     )
     db.add(user)
@@ -79,12 +81,12 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginSchema, db: Session = Depends(get_db)):
+    """Аутентификация пользователя по email и паролю. Возвращает JWT токен."""
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
         raise HTTPException(401, "Invalid credentials")
     
-    hashed = hashlib.sha256(data.password.encode()).hexdigest()
-    if user.password_hash != hashed:
+    if not verify_password(data.password, user.password_hash):
         raise HTTPException(401, "Invalid credentials")
     access_token = create_token(user.id)
     return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
@@ -92,6 +94,7 @@ async def login(data: LoginSchema, db: Session = Depends(get_db)):
 
 @router.post("/forgot-password")
 async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
+    """Запрос сброса пароля. Отправляет токен сброса на email пользователя."""
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
         return {"message": "If the email exists, a recovery link has been sent"}
@@ -107,6 +110,7 @@ async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_
 
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db)):
+    """Сброс пароля с использованием токена, полученного через forgot-password."""
     reset = db.query(PasswordReset).filter(
         PasswordReset.token == data.token, 
         PasswordReset.used == False
@@ -115,7 +119,7 @@ async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db
     if not reset or reset.expires_at < datetime.utcnow():
         raise HTTPException(400, "Invalid or expired token")
     
-    hashed = hashlib.sha256(data.password.encode()).hexdigest()
+    hashed = get_password_hash(data.password)
     user = db.query(User).filter(User.id == reset.user_id).first()
     user.password_hash = hashed
     reset.used = True
@@ -125,6 +129,7 @@ async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db
 
 @router.post("/google", response_model=TokenResponse)
 async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
+    """Вход/регистрация через Google. Принимает Google ID токен, возвращает JWT."""
     email = f"{data.token}@gmail.com"
     
     user = db.query(User).filter(User.email == email).first()
@@ -132,7 +137,7 @@ async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
         retail_role = db.query(Role).filter(Role.name == "retail").first()
         if not retail_role:
             raise HTTPException(500, "Default role not found")
-        user = User(email=email, full_name="Google User", password_hash="", avatar_index=random.randint(1, 40), role_id=retail_role.id)
+        user = User(email=email, full_name="Google User", password_hash="", avatar_index=random.randint(1, 100), role_id=retail_role.id)
         db.add(user)
         db.commit()
         db.refresh(user)

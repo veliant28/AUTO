@@ -4,15 +4,13 @@ from typing import List
 from app.core.db import get_db
 from app.models import CartItem, Part, SupplierOffer, Supplier
 from app.schemas.cart_schemas import CartItemSchema, CartAddSchema, CartUpdateSchema
+from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
 
-# Mock current user (for dev)
-def get_current_user():
-    return 1
-
 @router.get("/", response_model=List[CartItemSchema])
 async def get_cart(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Получить содержимое корзины текущего пользователя."""
     items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
     
     result = []
@@ -41,6 +39,7 @@ async def add_to_cart(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Добавить товар в корзину. Если товар уже есть — увеличивает количество."""
     existing = db.query(CartItem).filter(
         CartItem.user_id == user_id,
         CartItem.part_id == data.part_id,
@@ -67,6 +66,7 @@ async def update_cart_item(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Изменить количество товара в корзине."""
     item = db.query(CartItem).filter(CartItem.id == item_id, CartItem.user_id == user_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -80,6 +80,7 @@ async def remove_from_cart(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Удалить товар из корзины."""
     item = db.query(CartItem).filter(CartItem.id == item_id, CartItem.user_id == user_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -89,6 +90,7 @@ async def remove_from_cart(
 
 @router.delete("/")
 async def clear_cart(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Очистить корзину — удалить все товары текущего пользователя."""
     db.query(CartItem).filter(CartItem.user_id == user_id).delete()
     db.commit()
     return {"message": "Cart cleared"}

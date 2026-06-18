@@ -33,6 +33,7 @@ async def list_categories(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список категорий с поиском и плоским деревом с отступами."""
     query = db.query(PartCategory)
     if search:
         like = f"%{search}%"
@@ -63,6 +64,7 @@ async def create_category(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Создать новую категорию."""
     cat = PartCategory(name=data.name, name_ua=data.name_ua, name_en=data.name_en, parent_id=data.parent_id)
     db.add(cat)
     db.commit()
@@ -77,6 +79,7 @@ async def update_category(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Обновить категорию по ID."""
     cat = db.query(PartCategory).filter(PartCategory.id == cat_id).first()
     if not cat:
         raise HTTPException(404, "Category not found")
@@ -102,6 +105,7 @@ async def delete_category(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Удалить категорию по ID (только без дочерних)."""
     cat = db.query(PartCategory).filter(PartCategory.id == cat_id).first()
     if not cat:
         raise HTTPException(404, "Category not found")

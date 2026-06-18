@@ -29,6 +29,7 @@ async def get_favorites(
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
 ):
+    """Получить список избранных товаров пользователя с пагинацией."""
     if not user_id:
         return {"items": [], "total": 0, "page": page, "page_size": page_size}
 
@@ -61,6 +62,7 @@ async def get_favorites(
 
 @router.post("/add")
 async def add_favorite(data: FavoriteAddSchema, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Добавить товар в избранное."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
     
@@ -78,6 +80,7 @@ async def add_favorite(data: FavoriteAddSchema, user_id: int = Depends(get_optio
 
 @router.delete("/{part_id}")
 async def remove_favorite(part_id: int, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Удалить товар из избранного."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
     

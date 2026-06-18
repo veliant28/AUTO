@@ -51,6 +51,7 @@ async def get_orders(
     page_size: int = Query(10, ge=1, le=50),
     status: str = Query(None, description="Comma-separated statuses to filter by"),
 ):
+    """Получить список заказов текущего пользователя с пагинацией и фильтром по статусу."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
     
@@ -72,6 +73,7 @@ async def get_orders(
 
 @router.get("/{order_id}", response_model=OrderSchema)
 async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Получить детальную информацию о заказе по ID."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
     
@@ -83,6 +85,7 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
 
 @router.post("/checkout")
 async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Оформить заказ. Принимает список товаров и данные доставки, создаёт заказ со статусом pending."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
     

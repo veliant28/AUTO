@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
 from .vehicles import Base
 
@@ -21,13 +21,17 @@ class Part(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     article = Column(String, nullable=False, index=True)
-    brand = Column(String, nullable=True)
-    brand_id = Column(Integer, nullable=False)
+    brand = Column(String, nullable=True, index=True)
+    brand_id = Column(Integer, nullable=False, index=True)
     name = Column(String, nullable=False)
     sku = Column(String, unique=True, nullable=True, index=True)
-    category_id = Column(Integer, ForeignKey("part_categories.id"), nullable=True)
+    category_id = Column(Integer, ForeignKey("part_categories.id"), nullable=True, index=True)
     tecdoc_id = Column(Integer, unique=True, index=True, nullable=True)
     description = Column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("idx_part_article_brand", "article", "brand"),
+    )
 
     category = relationship("PartCategory")
     offers = relationship("SupplierOffer", back_populates="part")

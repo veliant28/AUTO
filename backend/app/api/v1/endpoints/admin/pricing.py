@@ -67,6 +67,7 @@ async def get_general_margin(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить общую маржу."""
     rule = db.query(PriceRule).filter(PriceRule.type == "general").first()
     if not rule:
         return PriceRuleResponse(
@@ -88,6 +89,7 @@ async def update_general_margin(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить общую маржу."""
     rule = get_or_create_general_rule(db)
     new_margin = Decimal(str(data.margin_percent))
     update_rule(db, rule, new_margin)
@@ -107,6 +109,7 @@ async def get_category_margins(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить маржу по категориям с поиском."""
     q = db.query(PartCategory)
     if search:
         q = q.filter(PartCategory.name.ilike(f"%{search}%"))
@@ -147,6 +150,7 @@ async def update_category_margin(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить маржу для конкретной категории."""
     category = db.query(PartCategory).filter(PartCategory.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -176,6 +180,7 @@ async def update_category_margins_bulk(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Массово обновить маржу по категориям."""
     for item in data.rules:
         cat_id = item.get("category_id")
         margin = item.get("margin_percent")
@@ -212,6 +217,7 @@ async def get_pricing_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить историю изменений маржи."""
     query = db.query(PriceRuleHistory).join(PriceRule)
     
     if type == "general":
@@ -244,6 +250,7 @@ async def apply_pricing(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запустить применение маржи ко всем товарам."""
     from app.workers.tasks.pricing_tasks import apply_margins_task
     task = apply_margins_task.delay()
     return {"task_id": task.id, "status": "queued"}
@@ -254,6 +261,7 @@ async def get_task_status(
     task_id: str,
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить статус задачи применения маржи."""
     from celery.result import AsyncResult
     from app.workers import celery_app
     result = AsyncResult(task_id, app=celery_app)
@@ -269,6 +277,7 @@ async def get_applied_pricing_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить историю применений маржи."""
     items = db.query(PricingApplySnapshot).order_by(
         PricingApplySnapshot.applied_at.desc()
     ).limit(100).all()

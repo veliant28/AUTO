@@ -53,21 +53,25 @@ def _part_to_result(part, db) -> dict:
 
 @router.get("/makes", response_model=List[BrandSchema])
 async def get_makes(db: Session = Depends(get_db)):
+    """Получить список всех брендов автомобилей."""
     return db.query(VehicleBrand).all()
 
 
 @router.get("/models/{brand_id}", response_model=List[ModelSchema])
 async def get_models(brand_id: int, db: Session = Depends(get_db)):
+    """Получить список моделей по ID бренда."""
     return db.query(VehicleModel).filter(VehicleModel.brand_id == brand_id).all()
 
 
 @router.get("/modifications/{model_id}", response_model=List[ModSchema])
 async def get_modifications(model_id: int, db: Session = Depends(get_db)):
+    """Получить список модификаций по ID модели."""
     return db.query(VehicleModification).filter(VehicleModification.model_id == model_id).all()
 
 
 @router.get("/sections/{mod_id}", response_model=List[PartCategorySchema])
 async def get_sections(mod_id: int, db: Session = Depends(get_db)):
+    """Получить список категорий запчастей для модификации."""
     sections = db.query(PartCategory).all()
     if not sections:
         await sync_service.sync_sections(db, mod_id=mod_id)
@@ -185,6 +189,7 @@ async def get_part_details(
     db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
+    """Получить детальную информацию о запчасти по артикулу."""
     # 1. Part + best offer from main DB
     parts = db.query(Part).filter(Part.article == article).all()
     part_data = None
@@ -299,6 +304,8 @@ async def get_parts(
     sort_by: Optional[str] = Query(None),
     sort_order: Optional[str] = Query("asc"),
 ):
+    """Получить список запчастей для модификации и категории с пагинацией и фильтрами."""
+):
     if mod_id == 0:
         base_query = db.query(Part).filter(Part.category_id == sec_id)
     else:
@@ -353,10 +360,13 @@ async def get_parts(
 
 @router.get("/search", response_model=List[PartSchema])
 async def search_parts(
-    q: str = Query(..., min_length=1),
+    q: str = Query(""),
+    brand: str = Query(""),
+    limit: int = Query(30, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    limit: int = Query(20, ge=1, le=100),
 ):
+    """Поиск запчастей по названию, артикулу и бренду."""
     results = db.query(Part).filter(
         or_(
             Part.article.ilike(f"%{q}%"),

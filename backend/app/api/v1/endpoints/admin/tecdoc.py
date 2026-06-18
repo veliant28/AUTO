@@ -27,6 +27,7 @@ async def get_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить настройки подключения к TecDoc."""
     config = db.query(TecDocConfig).first()
     if not config:
         config = TecDocConfig()
@@ -51,6 +52,7 @@ async def update_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить настройки подключения к TecDoc."""
     config = db.query(TecDocConfig).first()
     if not config:
         config = TecDocConfig()
@@ -79,6 +81,7 @@ async def test_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Проверить подключение к TecDoc."""
     gateway = get_gateway(db)
     result = await gateway.test_connection()
     return result
@@ -91,6 +94,7 @@ async def get_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить статистику использования лимитов TecDoc."""
     used = rate_limiter.current_hour_usage(db)
     remaining = max(0, TECDOC_HOURLY_LIMIT - used)
     hourly = rate_limiter.hourly_stats(db, hours=24)
@@ -115,6 +119,7 @@ async def list_articles(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список артикулов поставщиков с фильтрацией."""
     query = db.query(SupplierPrice)
     if status:
         query = query.filter(SupplierPrice.match_status == status)
@@ -142,6 +147,7 @@ async def batch_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить статус текущего пакетного сопоставления."""
     return batch_manager.status()
 
 
@@ -151,6 +157,7 @@ async def set_batch_size(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Установить размер пакета для сопоставления."""
     return {"size": data.size}
 
 
@@ -160,6 +167,7 @@ async def start_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запустить пакетное сопоставление всех артикулов."""
     gateway = get_gateway(db)
     if gateway.remaining() <= 0:
         raise HTTPException(429, "TecDoc hourly limit reached")
@@ -172,6 +180,7 @@ async def start_selected_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запустить пакетное сопоставление для выбранных артикулов."""
     gateway = get_gateway(db)
     if gateway.remaining() <= 0:
         raise HTTPException(429, "TecDoc hourly limit reached")
@@ -183,6 +192,7 @@ async def stop_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Остановить текущее пакетное сопоставление."""
     return batch_manager.stop()
 
 
@@ -191,6 +201,7 @@ async def list_brand_names(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить список уникальных брендов поставщиков."""
     rows = db.query(SupplierPrice.brand).filter(SupplierPrice.brand.isnot(None), SupplierPrice.brand != "").distinct().order_by(SupplierPrice.brand).all()
     return [{"value": r[0], "label": r[0]} for r in rows]
 
@@ -216,6 +227,7 @@ async def manual_search(
     tecdoc_db: Session = Depends(get_tecdoc_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Ручной поиск артикула в базе TecDoc."""
     t = sa_text("""
         SELECT s.name, a.article_number, a.supplier_id, a.normalized_article
         FROM autodb_articles a
@@ -234,6 +246,7 @@ async def manual_details(
     tecdoc_db: Session = Depends(get_tecdoc_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить детальную информацию об артикуле (кроссы, OEM, изображения, применимость)."""
     art = data.article.lower()
 
     info = tecdoc_db.execute(
@@ -289,6 +302,7 @@ async def manual_bind(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Вручную привязать артикул поставщика к артикулу TecDoc."""
     sp = db.query(SupplierPrice).filter(SupplierPrice.id == data.supplier_price_id).first()
     if not sp:
         raise HTTPException(404, "Product not found")
@@ -313,6 +327,7 @@ async def manual_search_remote(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Поиск артикула через удалённое API TecDoc."""
     gateway = get_gateway(db)
     try:
         result = await gateway.search(data.article)

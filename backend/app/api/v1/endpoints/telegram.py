@@ -12,6 +12,7 @@ router = APIRouter()
 
 @router.post("/start")
 async def start_connection(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Начать привязку Telegram аккаунта (генерирует код)."""
     existing = db.query(TelegramLink).filter(
         TelegramLink.user_id == user_id,
         TelegramLink.connected == True
@@ -43,6 +44,7 @@ async def start_connection(user_id: int = Depends(get_current_user), db: Session
 
 @router.get("/status")
 async def connection_status(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Получить статус подключения Telegram."""
     link = db.query(TelegramLink).filter(
         TelegramLink.user_id == user_id,
         TelegramLink.connected == True
@@ -54,6 +56,7 @@ async def connection_status(user_id: int = Depends(get_current_user), db: Sessio
 
 @router.post("/disconnect")
 async def disconnect(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Отключить Telegram аккаунт."""
     link = db.query(TelegramLink).filter(
         TelegramLink.user_id == user_id,
         TelegramLink.connected == True
@@ -68,6 +71,7 @@ async def disconnect(user_id: int = Depends(get_current_user), db: Session = Dep
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
+    """Обработчик вебхука от Telegram Bot API."""
     body = await request.json()
     message = body.get("message", {})
     chat = message.get("chat", {})

@@ -32,6 +32,7 @@ def attr_exists(attr_type: str, param: str) -> str:
 
 @router.get('/catalog/types')
 async def get_types():
+    """Получить типы транспортных средств."""
     return [
         {'id': 'passenger', 'name': 'Легковые'},
         {'id': 'commercial', 'name': 'Коммерческие'},
@@ -41,6 +42,7 @@ async def get_types():
 
 @router.get('/catalog/years')
 async def get_years(type: str = 'passenger', tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить доступные года выпуска ТС."""
     if type not in VEHICLE_TYPES:
         return []
     table = VEHICLE_TYPES[type]['table']
@@ -67,6 +69,7 @@ async def get_years(type: str = 'passenger', tecdoc_db: Session = Depends(get_te
 
 @router.get('/catalog/makes')
 async def get_makes(type: str = 'passenger', year: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить производителей ТС по типу и году."""
     if type not in VEHICLE_TYPES:
         return []
     table = VEHICLE_TYPES[type]['table']
@@ -83,6 +86,7 @@ async def get_makes(type: str = 'passenger', year: int = Query(...), tecdoc_db: 
 
 @router.get('/catalog/models')
 async def get_models(type: str = 'passenger', year: int = Query(...), make_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить модели ТС по производителю и году."""
     if type not in VEHICLE_TYPES:
         return []
     table = VEHICLE_TYPES[type]['table']
@@ -103,6 +107,7 @@ async def get_models(type: str = 'passenger', year: int = Query(...), make_id: i
 
 @router.get('/catalog/cars')
 async def get_cars(type: str = 'passenger', year: int = Query(...), model_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить модификации ТС по модели и году."""
     if type not in VEHICLE_TYPES:
         return []
     table = VEHICLE_TYPES[type]['table']
@@ -141,6 +146,7 @@ async def get_cars(type: str = 'passenger', year: int = Query(...), model_id: in
 
 @router.get('/catalog/volumes')
 async def get_volumes(year: int = Query(...), model_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить объёмы двигателей для модели."""
     rows = tecdoc_db.execute(sa_text(f"""
         SELECT DISTINCT attr.displayvalue FROM autodb_passenger_cars pc
         JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
@@ -154,6 +160,7 @@ async def get_volumes(year: int = Query(...), model_id: int = Query(...), tecdoc
 
 @router.get('/catalog/engines')
 async def get_engines(year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить коды двигателей для модели."""
     vol_cond = f"AND {attr_exists('Capacity', 'volume')}" if volume else ''
     rows = tecdoc_db.execute(sa_text(f"""
         SELECT DISTINCT attr.displayvalue FROM autodb_passenger_cars pc
@@ -181,6 +188,7 @@ async def get_catalog_items(
     page_size: int = Query(25, ge=1, le=100),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
+    """Поиск ТС по параметрам с пагинацией."""
     if type not in VEHICLE_TYPES:
         return {'items': [], 'total': 0, 'page': page, 'page_size': page_size}
 

@@ -19,6 +19,7 @@ def _get_settings(db: Session) -> SiteSettings:
 
 @router.get("/settings", response_model=SettingsResponse)
 async def get_public_settings(db: Session = Depends(get_db)):
+    """Получить публичные настройки сайта."""
     s = _get_settings(db)
     return SettingsResponse(brand_name=s.brand_name, timezone=s.timezone)
 
@@ -27,6 +28,7 @@ async def get_admin_settings(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Получить настройки сайта для админа."""
     s = _get_settings(db)
     return SettingsResponse(brand_name=s.brand_name, timezone=s.timezone)
 
@@ -36,6 +38,7 @@ async def update_settings(
     current_user: User = Depends(require_role("admin")),
     db: Session = Depends(get_db),
 ):
+    """Обновить настройки сайта."""
     s = _get_settings(db)
     if body.brand_name is not None:
         s.brand_name = body.brand_name

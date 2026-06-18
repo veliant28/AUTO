@@ -35,6 +35,7 @@ async def list_products(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список товаров с фильтрацией и расчётом маржи."""
     query = db.query(Part)
 
     # Apply filters
@@ -127,6 +128,7 @@ async def delete_product(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Удалить товар вместе с предложениями."""
     part = db.query(Part).filter(Part.id == product_id).first()
     if not part:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -142,6 +144,7 @@ async def generate_skus(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Сгенерировать SKU для товаров без артикула."""
     from app.services.sku_generator import bulk_generate_skus
     count = bulk_generate_skus(db)
     return {"generated": count}

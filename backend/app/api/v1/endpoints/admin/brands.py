@@ -18,6 +18,7 @@ async def list_brands(
     tecdoc_db: Session = Depends(get_tecdoc_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список брендов с агрегированной статистикой по наличию, сопоставлению и применимости."""
     agg_rows = db.query(
         SupplierPrice.tecdoc_brand_id,
         func.count(SupplierPrice.id).label("total"),

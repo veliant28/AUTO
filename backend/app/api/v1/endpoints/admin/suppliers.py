@@ -40,6 +40,7 @@ async def list_suppliers(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список поставщиков с их конфигурацией."""
     configs = db.query(SupplierConfig).all()
     return [_config_to_response(c) for c in configs]
 
@@ -51,6 +52,7 @@ async def update_supplier(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить конфигурацию поставщика (логин/пароль)."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")
@@ -70,6 +72,7 @@ async def authenticate_supplier(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Аутентифицироваться в API поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")
@@ -102,6 +105,7 @@ async def get_token_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить статус токена поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")
@@ -126,6 +130,7 @@ async def refresh_supplier_token(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Обновить токен поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")

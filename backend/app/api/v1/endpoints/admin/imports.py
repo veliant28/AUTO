@@ -25,6 +25,7 @@ async def list_imports(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Список импортов с фильтрацией по поставщику и статусу."""
     query = db.query(PriceImport)
     if supplier:
         query = query.filter(PriceImport.supplier == supplier)
@@ -56,6 +57,7 @@ async def get_export_params(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Получить параметры экспорта для поставщика (форматы, бренды, категории)."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config or not config.token:
         raise HTTPException(status_code=400, detail=f"No valid config/token for supplier: {supplier}")
@@ -83,6 +85,7 @@ async def request_export(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запросить выгрузку прайс-листа от поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == body.supplier).first()
     if not config or not config.token:
         raise HTTPException(status_code=400, detail="Supplier not configured or no valid token")
@@ -114,6 +117,7 @@ async def download_import(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Скачать файл импорта."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()
     if not pimport:
         raise HTTPException(status_code=404, detail="Import not found")
@@ -132,6 +136,7 @@ async def promote_import(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Запустить продвижение импорта в каталог."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()
     if not pimport:
         raise HTTPException(status_code=404, detail="Import not found")
@@ -152,6 +157,7 @@ async def delete_import(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
+    """Удалить импорт вместе с файлом."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()
     if not pimport:
         raise HTTPException(status_code=404, detail="Import not found")
