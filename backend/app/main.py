@@ -8,7 +8,7 @@ from app.core.exceptions import (
     app_exception_handler,
     http_exception_handler,
 )
-from app.core.middleware import LoggingMiddleware
+from app.core.middleware import LoggingMiddleware, LocaleMiddleware
 from app.core.logger import logger
 from app.core.health import router as health_router
 
@@ -31,6 +31,9 @@ app = FastAPI(
 # Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(LoggingMiddleware)
+# Locale middleware must be added LAST so it runs FIRST (outermost layer)
+# and sets request.state.locale before route handlers read it.
+app.add_middleware(LocaleMiddleware)
 
 # CORS
 app.add_middleware(

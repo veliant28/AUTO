@@ -133,22 +133,41 @@ class GPLAPIClient(SupplierAPIClient):
             return SupplierAuthResult(success=False, message=f"Error: {str(e)}")
 
     def fetch_all_prices(self, token: str) -> list:
+        import time
         all_items = []
         page = 1
+        max_retries = 3
         while True:
-            resp = httpx.post(
-                f"{self.config.api_url}/api/prices?page={page}",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=30,
-            )
-            data = resp.json()
-            items = data.get("data", {}).get("items", [])
-            if not items:
-                break
-            all_items.extend(items)
-            if page >= data.get("last_page", 1):
-                break
-            page += 1
+            last_err = None
+            for attempt in range(max_retries):
+                try:
+                    resp = httpx.post(
+                        f"{self.config.api_url}/api/prices?page={page}",
+                        headers={"Authorization": f"Bearer {token}"},
+                        timeout=60,
+                    )
+                    data = resp.json()
+                    items = data.get("data", {}).get("items", [])
+                    if not items:
+                        return all_items
+                    all_items.extend(items)
+                    if page >= data.get("last_page", 1):
+                        return all_items
+                    page += 1
+                    last_err = None
+                    break
+                except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.PoolTimeout) as e:
+                    last_err = e
+                    wait = 5 * (attempt + 1)
+                    print(f"[GPL] page {page} timeout (attempt {attempt+1}/{max_retries}), retrying in {wait}s...")
+                    time.sleep(wait)
+                except httpx.HTTPStatusError as e:
+                    last_err = e
+                    wait = 10 * (attempt + 1)
+                    print(f"[GPL] page {page} HTTP {e.response.status_code} (attempt {attempt+1}/{max_retries}), retrying in {wait}s...")
+                    time.sleep(wait)
+            if last_err:
+                raise last_err
         return all_items
 
 

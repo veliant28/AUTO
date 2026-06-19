@@ -13,6 +13,7 @@ from .tecdoc import TecDocConfig, TecDocRateLog, SupplierPrice
 from .settings import SiteSettings
 from .imports import SupplierConfig, PriceImport, ImportSchedule
 from .pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
+from .nova_poshta import NovaPoshtaSenderProfile, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillEvent
 
 __all__ = [
     "Base", 
@@ -31,4 +32,5 @@ __all__ = [
     "SiteSettings",
     "SupplierConfig", "PriceImport", "ImportSchedule",
     "PriceRule", "PriceRuleHistory", "PricingApplySnapshot",
+    "NovaPoshtaSenderProfile", "OrderNovaPoshtaWaybill", "OrderNovaPoshtaWaybillEvent",
 ]

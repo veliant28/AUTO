@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
-  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play, RotateCcw, Activity, Clock, Minus, SlidersHorizontal,
-} from 'lucide-react';
+		  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play, RotateCcw, Activity, Clock, Minus, SlidersHorizontal, Truck,
+		} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -42,6 +42,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isTecDoc = pathname.includes('/admin/tecdoc');
   const isFooter = pathname.includes('/admin/footer');
   const isSettings = pathname.includes('/admin/settings');
+  const isNovaposhta = pathname.includes('/admin/novaposhta');
   const isImport = pathname.includes('/admin/import');
   const isPricing = pathname.includes('/admin/pricing');
   const isAdmin = pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname);
@@ -64,8 +65,9 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
     '/admin/import': { icon: FileDown, titleKey: 'import_title' },
-    '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
-  };
+	    '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
+	    '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
+	  };
 
   const pageMetaEntries = Object.entries(pageMeta).sort((a, b) => b[0].length - a[0].length);
   const currentMeta = pageMetaEntries.find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || pageMetaEntries.find(([route]) => pathname.includes(route));
@@ -114,6 +116,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     { key: 'settings', label: ta('tecdoc_settings') },
   ];
 
+  const settingsNavTabs = [
+    { key: 'settings', label: ta('settings_title') },
+    { key: 'novaposhta', label: ta('novaposhta_title') },
+  ];
+
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-card flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-3 min-w-0">
@@ -135,6 +142,23 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 const params = new URLSearchParams(searchParams.toString());
                 params.set('tab', t.key);
                 router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {t.label.toUpperCase()}
+            </button>
+          );
+        })}
+        {(isSettings || isNovaposhta) && settingsNavTabs.map((t) => {
+          const active = (t.key === 'settings' && isSettings) || (t.key === 'novaposhta' && isNovaposhta);
+          return (
+            <button
+              key={t.key}
+              onClick={() => {
+                const basePath = pathname.replace(/\/admin\/(settings|novaposhta).*/, '/admin');
+                router.push(`${basePath}/${t.key}`);
               }}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -254,6 +278,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('import_request')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {pathname.includes('/admin/novaposhta') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => (window as any).__openCreateSender?.()}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('novaposhta_sender_create')}</TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -474,8 +510,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     { href: '/admin/pricing', icon: TrendingUp, label: t('pricing_title'), roles: ['admin'] },
     { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
     { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
-    { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
-    { href: '/admin/import', icon: FileDown, label: t('import_title'), roles: ['admin'] },
+	    { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
+		    { href: '/admin/import', icon: FileDown, label: t('import_title'), roles: ['admin'] },
     { href: '/admin/settings', icon: Settings, label: t('settings_title'), roles: ['admin'] },
     { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
   ];

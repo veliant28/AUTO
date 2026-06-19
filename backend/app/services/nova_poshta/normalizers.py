@@ -1,0 +1,92 @@
+"""
+Data normalisers for Nova Poshta API values.
+"""
+import re
+from typing import Optional
+
+
+class NovaPoshtaDataNormalizer:
+    """Sanitise and standardise values before sending to NP API."""
+
+    @staticmethod
+    def phone(phone: str) -> str:
+        """
+        Normalise a phone number to NP format: +380XXXXXXXXX.
+
+        Accepts various formats and strips non-digit characters.
+        """
+        if not phone:
+            return ""
+        cleaned = re.sub(r"[^\d+]", "", phone)
+        cleaned = cleaned.removeprefix("+")
+        if cleaned.startswith("380") and len(cleaned) == 12:
+            return f"+{cleaned}"
+        if cleaned.startswith("80") and len(cleaned) == 11:
+            return f"+3{cleaned}"
+        if cleaned.startswith("0") and len(cleaned) == 10:
+            return f"+380{cleaned[1:]}"
+        # Already valid-ish
+        if cleaned.startswith("380") and len(cleaned) == 12:
+            return f"+{cleaned}"
+        return f"+{cleaned}" if not cleaned.startswith("+") else f"+{cleaned}"
+
+    @staticmethod
+    def weight(value: Optional[str]) -> str:
+        """Normalize weight to NP format (up to 3 decimal places)."""
+        if not value:
+            return "0.001"
+        value = value.replace(",", ".")
+        try:
+            w = float(value)
+            if w <= 0:
+                return "0.001"
+            return f"{w:.3f}"
+        except (ValueError, TypeError):
+            return "0.001"
+
+    @staticmethod
+    def cost(value: Optional[str]) -> str:
+        """Normalize cost to two decimal places."""
+        if not value:
+            return "0"
+        value = value.replace(",", ".")
+        try:
+            c = float(value)
+            return f"{c:.2f}"
+        except (ValueError, TypeError):
+            return "0"
+
+    @staticmethod
+    def seats_amount(value: Optional[int]) -> int:
+        """Normalize seats amount."""
+        if not value or value < 1:
+            return 1
+        return value
+
+    @staticmethod
+    def description(value: Optional[str]) -> str:
+        """Truncate description to NP max length (255 chars)."""
+        if not value:
+            return ""
+        return value[:255]
+
+    @staticmethod
+    def full_name_surname(value: Optional[str]) -> str:
+        """Capitalize first letter of surname."""
+        if not value:
+            return ""
+        return value.strip().capitalize()
+
+    @staticmethod
+    def full_name_first(value: Optional[str]) -> str:
+        """Capitalize first letter of first name."""
+        if not value:
+            return ""
+        return value.strip().capitalize()
+
+    @staticmethod
+    def full_name_middle(value: Optional[str]) -> str:
+        """Capitalize first letter of middle name."""
+        if not value:
+            return ""
+        return value.strip().capitalize()

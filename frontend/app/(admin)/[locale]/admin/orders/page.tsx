@@ -1,6 +1,6 @@
-'use client';
+ 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -45,6 +45,8 @@ import { ORDER_STATUS_LABELS } from '@/lib/constants';
 import { broadcastStatusChange } from '@/lib/orderSync';
 import { getBrandColor, getBrandInitial } from '@/lib/brand';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import OrderWaybillModal from '../components/OrderWaybillModal';
+import OrderWaybillTrackingModal from '../components/OrderWaybillTrackingModal';
 
 const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
 
@@ -139,6 +141,35 @@ export default function AdminOrdersPage() {
   const localeKey = useMemo(() => {
     try { const p = window.location.pathname.match(/^\/(ru|ua|en)/)?.[1]; return LOCALE_MAP[p || 'ru'] || 'ru-RU'; } catch { return 'ru-RU'; }
   }, []);
+   const [selectedNpOrderId, setSelectedNpOrderId] = useState<number | null>(null);
+   const [waybillModalOpen, setWaybillModalOpen] = useState(false);
+   const [trackingModalOpen, setTrackingModalOpen] = useState(false);
+
+   const handleWaybillOpen = useCallback((orderId: number) => {
+     setSelectedNpOrderId(orderId);
+     setWaybillModalOpen(true);
+     setTrackingModalOpen(false);
+   }, []);
+
+   const handleTrackingOpen = useCallback((orderId: number) => {
+     setSelectedNpOrderId(orderId);
+     setTrackingModalOpen(true);
+     setWaybillModalOpen(false);
+   }, []);
+
+    const handleWaybillClose = useCallback((open: boolean) => {
+      setWaybillModalOpen(open);
+      if (!open) {
+        setTimeout(() => setSelectedNpOrderId(null), 0);
+      }
+    }, []);
+
+    const handleTrackingClose = useCallback((open: boolean) => {
+      setTrackingModalOpen(open);
+      if (!open) {
+        setTimeout(() => setSelectedNpOrderId(null), 0);
+      }
+    }, []);
 
   const formatDate = (d: string) => new Date(d + 'Z').toLocaleString(localeKey, {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -350,6 +381,22 @@ export default function AdminOrdersPage() {
             </TooltipTrigger>
             <TooltipContent>{t('view_order')}</TooltipContent>
           </Tooltip>
+           <Tooltip>
+             <TooltipTrigger asChild>
+               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleWaybillOpen(row.original.id)}>
+                 <Truck className="w-4 h-4" />
+               </Button>
+             </TooltipTrigger>
+             <TooltipContent>{t('novaposhta_waybill')}</TooltipContent>
+           </Tooltip>
+           <Tooltip>
+             <TooltipTrigger asChild>
+               <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleTrackingOpen(row.original.id)}>
+                 <Clock className="w-4 h-4" />
+               </Button>
+             </TooltipTrigger>
+             <TooltipContent>{t('novaposhta_tracking')}</TooltipContent>
+           </Tooltip>
         </div>
       ),
     }),
@@ -736,6 +783,23 @@ export default function AdminOrdersPage() {
             )}
         </DialogContent>
       </Dialog>
+
+       {selectedNpOrderId !== null && waybillModalOpen && (
+        <OrderWaybillModal
+          key={selectedNpOrderId}
+          orderId={selectedNpOrderId}
+          open={waybillModalOpen}
+          onOpenChange={handleWaybillClose}
+        />
+      )}
+      {selectedNpOrderId !== null && trackingModalOpen && (
+        <OrderWaybillTrackingModal
+          key={selectedNpOrderId}
+          orderId={selectedNpOrderId}
+          open={trackingModalOpen}
+          onOpenChange={handleTrackingClose}
+        />
+      )}
     </div>
     </TooltipProvider>
   );

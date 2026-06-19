@@ -10,11 +10,16 @@ celery_app = Celery(
 import app.workers.tasks.tecdoc_tasks  # noqa: F401
 import app.workers.tasks.import_tasks  # noqa: F401
 import app.workers.tasks.pricing_tasks  # noqa: F401
+import app.workers.tasks.nova_poshta_tasks  # noqa: F401
 
 celery_app.conf.beat_schedule = {
     'scheduler-tick': {
         'task': 'scheduler_tick',
         'schedule': 60.0,
+    },
+    'sync-nova-poshta-waybill-statuses': {
+        'task': 'sync_nova_poshta_waybill_statuses',
+        'schedule': 1200.0,  # every 20 minutes
     },
 }
 
