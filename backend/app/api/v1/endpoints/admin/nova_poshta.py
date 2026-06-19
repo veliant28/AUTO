@@ -128,6 +128,7 @@ async def create_sender(
     """Create a new Nova Poshta sender profile."""
     service = NovaPoshtaSenderService(db)
     profile = service.create(data)
+    db.commit()
     return _sender_to_response(profile, service)
 
 
@@ -145,6 +146,7 @@ async def update_sender(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
 
+    db.commit()
     return _sender_to_response(profile, service)
 
 
@@ -160,6 +162,7 @@ async def delete_sender(
         service.delete(sender_id)
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
+    db.commit()
     return {"message": "Відправника деактивовано"}
 
 

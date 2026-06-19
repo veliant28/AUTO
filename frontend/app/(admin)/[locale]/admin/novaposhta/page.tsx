@@ -396,9 +396,11 @@ function SenderFormDialog({
       const npType = result.counterparty_type
       let senderType: 'private_person' | 'fop' | 'business' = 'private_person'
       if (npType === 'Organization') {
-        senderType = result.ownership_form_description?.includes('ФОП')
-          ? 'fop'
-          : 'business'
+        const ownershipDesc = result.ownership_form_description || ''
+        senderType =
+          ownershipDesc.includes('ФОП') || ownershipDesc.includes('ФІЗИЧНА')
+            ? 'fop'
+            : 'business'
       }
 
       // NP returns Description as company name (e.g. "СУХІНА ОЛЕНА ЮРІЇВНА ФОП")
