@@ -218,7 +218,7 @@ function SendersColumn({
                 <TableRow key={sender.id}>
                   {/* Тип */}
                   <TableCell>
-                    <Badge variant="outline" className="text-xs font-normal">
+                    <Badge variant="outline" className="text-sm font-normal">
                       {typeLabels[sender.sender_type] || sender.sender_type}
                     </Badge>
                   </TableCell>
