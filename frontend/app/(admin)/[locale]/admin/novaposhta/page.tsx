@@ -45,6 +45,7 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { PhoneInput, phoneToApi, formatPhone } from '@/components/ui/PhoneInput'
@@ -178,7 +179,7 @@ function SendersColumn({
   }
 
   return (
-    <>
+    <TooltipProvider>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -197,7 +198,7 @@ function SendersColumn({
                 <TableHead className="w-[100px]">
                   {t('novaposhta_status')}
                 </TableHead>
-                <TableHead className="w-[100px] text-right">
+                <TableHead className="w-[130px] text-right">
                   {t('actions')}
                 </TableHead>
               </TableRow>
@@ -239,11 +240,10 @@ function SendersColumn({
                   {/* Статус */}
                   <TableCell>
                     <Badge
-                      variant={sender.is_active ? 'default' : 'secondary'}
-                      className={`text-xs ${
+                      className={`border-0 text-sm ${
                         sender.is_active
-                          ? 'bg-blue-600 hover:bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-500 text-white'
                       }`}
                     >
                       {sender.is_active
@@ -258,7 +258,7 @@ function SendersColumn({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => setDefaultMutation.mutate(sender.id)}
@@ -279,9 +279,9 @@ function SendersColumn({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="ghost"
+                            variant="destructive"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-8 w-8"
                             onClick={() => {
                               if (confirm(t('novaposhta_confirm_delete')))
                                 deleteMutation.mutate(sender.id)
@@ -312,12 +312,9 @@ function SendersColumn({
           }}
         />
       )}
-    </>
+    </TooltipProvider>
   )
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Sender Form Dialog — Redesigned per NP API Documentation
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function SenderFormDialog({

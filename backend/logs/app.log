@@ -9081,3 +9081,21 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-06-19 22:56:36 - root - INFO - Health check called
 2026-06-19 22:57:06 - root - INFO - Health check called
 2026-06-19 22:57:38 - root - INFO - Health check called
+2026-06-19 22:58:08 - root - INFO - Health check called
+2026-06-19 22:58:39 - root - INFO - Health check called
+2026-06-19 22:59:09 - root - INFO - Health check called
+2026-06-19 22:59:27 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-19 22:59:27 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-19 22:59:31 - app.services.nova_poshta.sender_service - INFO - Created NP sender profile id=6 name=СУХІНА ОЛЕНА ЮРІЇВНА ФОП
+2026-06-19 22:59:39 - root - INFO - Health check called
+2026-06-19 23:00:09 - root - INFO - Health check called
+2026-06-19 23:00:39 - root - INFO - Health check called
+2026-06-19 23:00:39 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-19 23:00:42 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-19 23:00:45 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-19 23:01:09 - root - INFO - Health check called
+2026-06-19 23:01:39 - root - INFO - Health check called
+2026-06-19 23:02:10 - root - INFO - Health check called
+2026-06-19 23:02:40 - root - INFO - Health check called
+2026-06-19 23:03:10 - root - INFO - Health check called
+2026-06-19 23:03:40 - root - INFO - Health check called
