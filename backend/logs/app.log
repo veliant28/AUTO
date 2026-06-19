@@ -9009,3 +9009,34 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-06-19 22:24:57 - root - INFO - Health check called
 2026-06-19 22:25:27 - root - INFO - Health check called
 2026-06-19 22:25:57 - root - INFO - Health check called
+2026-06-19 22:26:27 - root - INFO - Health check called
+2026-06-19 22:26:57 - root - INFO - Health check called
+2026-06-19 22:27:27 - root - INFO - Health check called
+2026-06-19 22:27:57 - root - INFO - Health check called
+2026-06-19 22:28:28 - root - INFO - Health check called
+2026-06-19 22:28:58 - root - INFO - Health check called
+2026-06-19 22:29:28 - root - INFO - Health check called
+2026-06-19 22:29:58 - root - INFO - Health check called
+2026-06-19 22:30:28 - root - INFO - Health check called
+2026-06-19 22:30:59 - root - INFO - Health check called
+2026-06-19 22:31:29 - root - INFO - Health check called
+2026-06-19 22:31:59 - root - INFO - Health check called
+2026-06-19 22:32:29 - root - INFO - Health check called
+2026-06-19 22:32:59 - root - INFO - Health check called
+2026-06-19 22:33:29 - root - INFO - Health check called
+2026-06-19 22:34:00 - root - INFO - Health check called
+2026-06-19 22:34:30 - root - INFO - Health check called
+2026-06-19 22:35:00 - root - INFO - Health check called
+2026-06-19 22:35:30 - root - INFO - Health check called
+2026-06-19 22:35:45 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-19 22:35:46 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-19 22:35:53 - app.services.nova_poshta.sender_service - INFO - Created NP sender profile id=2 name=СУХІНА ОЛЕНА ЮРІЇВНА ФОП
+2026-06-19 22:36:00 - root - INFO - Health check called
+2026-06-19 22:36:30 - root - INFO - Health check called
+2026-06-19 22:37:01 - root - INFO - Health check called
+2026-06-19 22:37:31 - root - INFO - Health check called
+2026-06-19 22:38:01 - root - INFO - Health check called
+2026-06-19 22:38:31 - root - INFO - Health check called
+2026-06-19 22:39:01 - root - INFO - Health check called
+2026-06-19 22:39:31 - root - INFO - Health check called
+2026-06-19 22:40:01 - root - INFO - Health check called
