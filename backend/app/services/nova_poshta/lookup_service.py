@@ -31,13 +31,14 @@ from app.services.nova_poshta.client import NovaPoshtaApiClient
 from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.errors import NovaPoshtaSenderNotFoundError, NovaPoshtaApiError
 from app.services.nova_poshta.constants import (
-    MODEL_ADDRESS,
+    MODEL_ADDRESS_GENERAL,
     MODEL_COUNTERPARTY,
     MODEL_COMMON,
     METHOD_SEARCH_SETTLEMENTS,
-    METHOD_SEARCH_STREETS,
+    METHOD_SEARCH_SETTLEMENT_STREETS,
     METHOD_GET_WAREHOUSES,
     METHOD_GET_PACK_TYPES,
+    METHOD_GET_PACK_TYPES_SPECIAL,
     METHOD_GET_TIME_INTERVALS,
     METHOD_GET_DELIVERY_DATE,
     METHOD_GET_COUNTERPARTIES,
@@ -89,7 +90,7 @@ class NovaPoshtaLookupService:
         client = self._get_sender_client(sender_profile_id)
         try:
             response = await client.call(
-                MODEL_ADDRESS,
+                MODEL_ADDRESS_GENERAL,
                 METHOD_SEARCH_SETTLEMENTS,
                 {
                     "CityName": query,
@@ -114,9 +115,9 @@ class NovaPoshtaLookupService:
                     main_description=addr.get("MainDescription", ""),
                     area=addr.get("Area", ""),
                     region=addr.get("Region", ""),
-                    address_delivery_allowed=addr.get("AddressDeliveryAllowed", False) == "1",
-                    streets_available=addr.get("StreetsAvailability", False) == "1",
-                    warehouses_count=addr.get("Warehouses", "0"),
+                    address_delivery_allowed=addr.get("AddressDeliveryAllowed", False) in (True, "1", "true"),
+                    streets_available=addr.get("StreetsAvailability", False) in (True, "1", "true"),
+                    warehouses_count=str(addr.get("Warehouses", "0")),
                     locale=locale,
                 ))
 
@@ -136,8 +137,8 @@ class NovaPoshtaLookupService:
         client = self._get_sender_client(sender_profile_id)
         try:
             response = await client.call(
-                MODEL_ADDRESS,
-                METHOD_SEARCH_STREETS,
+                MODEL_ADDRESS_GENERAL,
+                METHOD_SEARCH_SETTLEMENT_STREETS,
                 {
                     "StreetName": query,
                     "SettlementRef": settlement_ref,
@@ -151,13 +152,15 @@ class NovaPoshtaLookupService:
         results: List[NovaPoshtaLookupStreet] = []
         data = response.get("data", []) if isinstance(response.get("data"), list) else []
         for item in data:
-            results.append(NovaPoshtaLookupStreet(
-                settlement_ref=item.get("SettlementRef", ""),
-                street_ref=item.get("Ref", ""),
-                label=item.get("Description", ""),
-                street_name=item.get("StreetName", "") or item.get("Description", ""),
-                street_type=item.get("StreetType", "") or item.get("StreetTypeDescription", ""),
-            ))
+            addresses = item.get("Addresses", []) or []
+            for addr in addresses:
+                results.append(NovaPoshtaLookupStreet(
+                    settlement_ref=addr.get("SettlementRef", ""),
+                    street_ref=addr.get("SettlementStreetRef", ""),
+                    label=addr.get("Present", "") or addr.get("SettlementStreetDescription", ""),
+                    street_name=addr.get("SettlementStreetDescription", ""),
+                    street_type=addr.get("StreetsTypeDescription", ""),
+                ))
 
         return results
 
@@ -185,7 +188,7 @@ class NovaPoshtaLookupService:
 
         try:
             response = await client.call(
-                MODEL_ADDRESS,
+                MODEL_ADDRESS_GENERAL,
                 METHOD_GET_WAREHOUSES,
                 props,
             )
@@ -221,19 +224,24 @@ class NovaPoshtaLookupService:
     ) -> List[NovaPoshtaLookupPackaging]:
         """Get available packaging types."""
         client = self._get_sender_client(sender_profile_id)
-        props: dict = {}
+
+        # Use getPackList (all types) when no dimensions, getPackListSpecial when filtering by size
         if length_mm and width_mm and height_mm:
+            method = METHOD_GET_PACK_TYPES_SPECIAL
             props = {
                 "Length": str(length_mm),
                 "Width": str(width_mm),
                 "Height": str(height_mm),
-                "TypeOfPacking": "CardboardBox",
+                "PackForSale": "1",
             }
+        else:
+            method = METHOD_GET_PACK_TYPES
+            props = {"PackForSale": "1"}
 
         try:
             response = await client.call(
                 MODEL_COMMON,
-                METHOD_GET_PACK_TYPES,
+                method,
                 props,
             )
         except NovaPoshtaApiError as e:
@@ -250,7 +258,7 @@ class NovaPoshtaLookupService:
                 length_mm=item.get("Length", "0"),
                 width_mm=item.get("Width", "0"),
                 height_mm=item.get("Height", "0"),
-                cost=item.get("PackingCost", "0"),
+                cost=str(item.get("Cost") or "0"),
             ))
 
         return results

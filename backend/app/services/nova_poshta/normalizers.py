@@ -46,13 +46,13 @@ class NovaPoshtaDataNormalizer:
 
     @staticmethod
     def cost(value: Optional[str]) -> str:
-        """Normalize cost to two decimal places."""
+        """Normalize cost to integer (ціле число) as required by NP API."""
         if not value:
             return "0"
         value = value.replace(",", ".")
         try:
             c = float(value)
-            return f"{c:.2f}"
+            return str(int(round(c)))
         except (ValueError, TypeError):
             return "0"
 

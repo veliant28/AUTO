@@ -10,6 +10,7 @@ Covers:
   - generateReport (print)
 """
 from typing import Optional, Dict, Any
+from datetime import datetime
 from app.schemas.nova_poshta_schemas import OrderNovaPoshtaWaybillUpsert
 from app.models.nova_poshta import NovaPoshtaSenderProfile
 from app.services.nova_poshta.normalizers import NovaPoshtaDataNormalizer
@@ -61,6 +62,7 @@ class NovaPoshtaWaybillPayloadBuilder:
             # ─── Delivery type ─────────────────────────────────────────
             "ServiceType": NovaPoshtaWaybillPayloadBuilder._delivery_type_to_service(data.delivery_type),
             "CargoType": data.cargo_type or "Parcel",
+            "DateTime": datetime.now().strftime("%d.%m.%Y"),
 
             # ─── Payment ───────────────────────────────────────────────
             "PaymentMethod": data.payment_method or "Cash",
@@ -214,12 +216,12 @@ class NovaPoshtaWaybillPayloadBuilder:
                 }
                 if seat.pack_ref:
                     seat_dict["packRef"] = seat.pack_ref
-                if seat.volumaticWidth:
-                    seat_dict["volumetricWidth"] = seat.volumaticWidth
-                if seat.volumaticLength:
-                    seat_dict["volumetricLength"] = seat.volumaticLength
-                if seat.volumaticHeight:
-                    seat_dict["volumetricHeight"] = seat.volumaticHeight
+                if seat.volumetric_width:
+                    seat_dict["volumetricWidth"] = seat.volumetric_width
+                if seat.volumetric_length:
+                    seat_dict["volumetricLength"] = seat.volumetric_length
+                if seat.volumetric_height:
+                    seat_dict["volumetricHeight"] = seat.volumetric_height
                 if seat.volumetric_volume:
                     seat_dict["volumetricVolume"] = seat.volumetric_volume
                 seats.append(seat_dict)
