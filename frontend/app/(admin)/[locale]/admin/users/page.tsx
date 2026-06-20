@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/lib/toast';
 import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput';
 import api from '@/lib/api';
@@ -349,7 +350,7 @@ export default function AdminUsersPage() {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="is_active" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="cursor-pointer" />
+                <Checkbox id="is_active" checked={form.is_active} onCheckedChange={(checked) => setForm({ ...form, is_active: checked === true })} />
                 <label htmlFor="is_active" className="cursor-pointer">{t('is_active_label')}</label>
               </div>
               <Button className="w-full" onClick={() => updateMutation.mutate({ id: editUser.id, payload: form })} disabled={updateMutation.isPending}>

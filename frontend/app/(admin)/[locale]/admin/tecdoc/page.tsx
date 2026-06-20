@@ -17,6 +17,7 @@ import {
 import { toast } from '@/lib/toast';
 import { toast as sonnerToast } from 'sonner';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Checkbox } from '@/components/ui/checkbox';
 import api from '@/lib/api';
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
@@ -511,9 +512,10 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               <thead>
                 <tr className="border-b bg-muted/50 whitespace-nowrap">
                   <th className="p-3 w-10">
-                    <input type="checkbox" className="cursor-pointer"
+                    <Checkbox
                       checked={data?.items && data.items.length > 0 && selected.size === data.items.length}
-                      onChange={toggleAll} />
+                      onCheckedChange={toggleAll}
+                    />
                   </th>
                   <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_article')}</th>
                   <th className="text-left p-3 font-medium text-muted-foreground">{t('tecdoc_col_name')}</th>
@@ -526,7 +528,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
               <tbody>
                 {data?.items?.map((a) => (
                   <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3"><input type="checkbox" className="cursor-pointer" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></td>
+                    <td className="p-3"><Checkbox checked={selected.has(a.id)} onCheckedChange={() => toggleSelect(a.id)} /></td>
                     <td className="p-3 font-mono text-sm">{a.article}</td>
                     <td className="p-3 text-sm max-w-[200px] truncate">{a.name || '—'}</td>
                     <td className="p-3 text-sm font-semibold">{a.brand || '—'}</td>

@@ -132,3 +132,26 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Marquee scroll for packaging button */
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 12s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Hide number input spinners (Chrome/Safari/Edge) */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Hide number input spinners (Firefox) */
+input[type='number'] {
+  -moz-appearance: textfield;
+}

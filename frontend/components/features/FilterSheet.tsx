@@ -14,6 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { SlidersHorizontal, X } from 'lucide-react';
 
 interface FilterState {
@@ -38,11 +42,9 @@ export default function FilterSheet({ filters, onChange, onClear, activeCount }:
   const controls = (
     <div className="space-y-5">
       <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={filters.in_stock_only}
-          onChange={(e) => update({ in_stock_only: e.target.checked })}
-          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+          onCheckedChange={(checked) => update({ in_stock_only: checked === true })}
         />
         <span className="text-sm font-medium">{t('in_stock_only')}</span>
       </label>
@@ -72,28 +74,36 @@ export default function FilterSheet({ filters, onChange, onClear, activeCount }:
 
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">{t('sort_by')}</Label>
-        <select
+        <Select
           value={filters.sort_by}
-          onChange={(e) => update({ sort_by: e.target.value })}
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+          onValueChange={(v) => update({ sort_by: v })}
         >
-          <option value="">{t('sort_default')}</option>
-          <option value="price">{t('sort_by_price')}</option>
-          <option value="name">{t('sort_by_name')}</option>
-        </select>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">{t('sort_default')}</SelectItem>
+            <SelectItem value="price">{t('sort_by_price')}</SelectItem>
+            <SelectItem value="name">{t('sort_by_name')}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {filters.sort_by && (
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">{t('sort_order')}</Label>
-          <select
+          <Select
             value={filters.sort_order}
-            onChange={(e) => update({ sort_order: e.target.value })}
-            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+            onValueChange={(v) => update({ sort_order: v })}
           >
-            <option value="asc">{t('sort_asc')}</option>
-            <option value="desc">{t('sort_desc')}</option>
-          </select>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">{t('sort_asc')}</SelectItem>
+              <SelectItem value="desc">{t('sort_desc')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
     </div>

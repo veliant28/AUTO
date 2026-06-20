@@ -56,6 +56,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
@@ -435,23 +436,6 @@ export default function AdminOrdersPage() {
         size: 100,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Select
-              value={row.original.status}
-              onValueChange={(val) =>
-                statusMutation.mutate({ orderId: row.original.id, status: val })
-              }
-            >
-              <SelectTrigger className="h-8 w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusKeys.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {t('order_' + s)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -558,8 +542,17 @@ export default function AdminOrdersPage() {
 
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            {isLoading && !data ? (
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-10 w-full" />
+                {[...Array(8)].map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
                 <thead>
                   {table.getHeaderGroups().map((hg) => (
                     <tr key={hg.id} className="border-b bg-muted/50">
@@ -623,6 +616,8 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
             )}
+            </>
+          )}
           </CardContent>
         </Card>
 

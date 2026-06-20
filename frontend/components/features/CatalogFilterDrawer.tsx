@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SlidersHorizontal, RotateCcw, ArrowDownAZ } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
@@ -100,11 +101,9 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
           </div>
 
           <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={filters.in_stock_only}
-              onChange={(e) => set({ in_stock_only: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              onCheckedChange={(checked) => set({ in_stock_only: checked === true })}
             />
             {t('in_stock_only')}
           </label>

@@ -8,6 +8,7 @@ import Providers from '@/components/Providers';
 import type { Metadata } from 'next';
 import SettingsHydrate from '@/components/layout/SettingsHydrate';
 import FooterHydrate from '@/components/layout/FooterHydrate';
+import HtmlLangSetter from '@/components/layout/HtmlLangSetter';
 import { QueryClient, dehydrate } from '@tanstack/react-query';
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -91,32 +92,31 @@ export default async function RootLayout(props: any) {
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider 
-            attribute="class" 
-            defaultTheme="system" 
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Providers dehydratedState={dehydratedState}>
-              <SettingsHydrate brandName={brandName} />
-              <FooterHydrate locale={locale} data={footerData} />
-              <Toaster position="bottom-right" offset={{ right: '48px' }} />
-              <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
-              <Header />
-              <main className="flex-1 pb-16 lg:pb-0">
-                <NotificationProvider>
-                  {children}
-                </NotificationProvider>
-              </main>
-              <Footer />
-            </div>
-            </Providers>
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <HtmlLangSetter />
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="system" 
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers dehydratedState={dehydratedState}>
+            <SettingsHydrate brandName={brandName} />
+            <FooterHydrate locale={locale} data={footerData} />
+            <Toaster position="bottom-right" offset={{ right: '48px' }} />
+            <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
+            <Header />
+            <main className="flex-1 pb-16 lg:pb-0">
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </main>
+            <Footer />
+          </div>
+          </Providers>
+        </ThemeProvider>
+      </NextIntlClientProvider>
+    </>
   );
 }

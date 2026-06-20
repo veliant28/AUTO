@@ -19,6 +19,7 @@ import {
   Star,
   Globe,
   Trash2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +34,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
   Table,
@@ -49,6 +51,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { PhoneInput, phoneToApi, formatPhone } from '@/components/ui/PhoneInput'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { toast } from '@/lib/toast'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type {
@@ -129,6 +132,8 @@ function SendersColumn({
   const queryClient = useQueryClient()
   const [editingSender, setEditingSender] =
     useState<NovaPoshtaSenderProfile | null>(null)
+  const [deleteTarget, setDeleteTarget] =
+    useState<NovaPoshtaSenderProfile | null>(null)
 
   const { data: senders = [], isLoading } = useQuery({
     queryKey: ['nova-poshta', 'senders'],
@@ -198,7 +203,7 @@ function SendersColumn({
                 <TableHead className="w-[100px]">
                   {t('novaposhta_status')}
                 </TableHead>
-                <TableHead className="w-[130px] text-right">
+                <TableHead className="w-[150px] text-right">
                   {t('actions')}
                 </TableHead>
               </TableRow>
@@ -254,7 +259,7 @@ function SendersColumn({
 
                   {/* Действия */}
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-2">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -282,10 +287,7 @@ function SendersColumn({
                             variant="destructive"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => {
-                              if (confirm(t('novaposhta_confirm_delete')))
-                                deleteMutation.mutate(sender.id)
-                            }}
+                            onClick={() => setDeleteTarget(sender)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -312,6 +314,58 @@ function SendersColumn({
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('novaposhta_delete_sender_title')}</DialogTitle>
+                <DialogDescription>{t('novaposhta_delete_sender_confirm')}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm min-w-0 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium truncate min-w-0">
+                  {senderDisplayName(deleteTarget)}
+                </span>
+                <Badge variant="outline" className="text-sm shrink-0">
+                  {typeLabels[deleteTarget.sender_type] || deleteTarget.sender_type}
+                </Badge>
+              </div>
+              {deleteTarget.phone && (
+                <p className="text-muted-foreground truncate">
+                  {formatPhone(deleteTarget.phone)}
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteMutation.mutate(deleteTarget!.id)}
+              disabled={deleteMutation.isPending}
+              className="gap-2"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   )
 }
@@ -402,25 +456,29 @@ function SenderFormDialog({
 
       // NP returns Description as company name (e.g. "СУХІНА ОЛЕНА ЮРІЇВНА ФОП")
       // For organizations, Description is the canonical name, NOT FirstName
-      const orgName =
-        npType === 'Organization'
-          ? result.description || result.first_name || prev.organization_name
-          : prev.organization_name
-
       setDataFetched(true)
-      setForm((prev) => ({
-        ...prev,
-        sender_type: senderType,
-        first_name: result.first_name || prev.first_name,
-        last_name: result.last_name || prev.last_name,
-        middle_name: result.middle_name || prev.middle_name,
-        phone: result.phone
-          ? '+' + result.phone.replace(/^\+/, '')
-          : prev.phone,
-        email: result.email || prev.email,
-        organization_name: orgName,
-        edrpou: result.edrpou || prev.edrpou,
-      }))
+      setForm((prev) => {
+        // NP returns Description as company name (e.g. "СУХІНА ОЛЕНА ЮРІЇВНА ФОП")
+        // For organizations, Description is the canonical name, NOT FirstName
+        const orgName =
+          npType === 'Organization'
+            ? result.description || result.first_name || prev.organization_name
+            : prev.organization_name
+
+        return {
+          ...prev,
+          sender_type: senderType,
+          first_name: result.first_name || prev.first_name,
+          last_name: result.last_name || prev.last_name,
+          middle_name: result.middle_name || prev.middle_name,
+          phone: result.phone
+            ? '+' + result.phone.replace(/^\+/, '')
+            : prev.phone,
+          email: result.email || prev.email,
+          organization_name: orgName,
+          edrpou: result.edrpou || prev.edrpou,
+        }
+      })
       toast.info(t('novaposhta_data_fetched'))
     },
     onError: (err: any) => {
@@ -723,13 +781,11 @@ function SenderFormDialog({
             </h4>
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={form.is_active}
-                  onChange={(e) =>
-                    setForm({ ...form, is_active: e.target.checked })
+                  onCheckedChange={(checked) =>
+                    setForm({ ...form, is_active: checked === true })
                   }
-                  className="h-4 w-4 rounded border-gray-300 cursor-pointer"
                 />
                 <span className="cursor-pointer">{t('novaposhta_active')}</span>
               </label>
@@ -777,9 +833,13 @@ function ReferenceColumn({ t }: { t: any }) {
 
   // Warehouses state
   const [warehouseQuery, setWarehouseQuery] = useState('')
+  const [selectedWarehouse, setSelectedWarehouse] =
+    useState<NovaPoshtaLookupWarehouse | null>(null)
 
   // Streets state
   const [streetQuery, setStreetQuery] = useState('')
+  const [selectedStreet, setSelectedStreet] =
+    useState<NovaPoshtaLookupStreet | null>(null)
 
   // Locale
   const locale = 'uk'
@@ -835,6 +895,18 @@ function ReferenceColumn({ t }: { t: any }) {
     staleTime: 30000,
   })
 
+  // Handle settlement selection — reset dependent fields
+  const handleSettlementChange = (s: NovaPoshtaLookupSettlement | null) => {
+    setSelectedSettlement(s)
+    if (s) {
+      setCityQuery(s.label)
+      setWarehouseQuery('')
+      setSelectedWarehouse(null)
+      setStreetQuery('')
+      setSelectedStreet(null)
+    }
+  }
+
   if (sendersLoading) {
     return (
       <Card>
@@ -877,15 +949,6 @@ function ReferenceColumn({ t }: { t: any }) {
 
   return (
     <div className="space-y-4">
-      {/* Default sender info badge */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg">
-        <Star className="w-3.5 h-3.5 text-amber-500" />
-        <span>{t('novaposhta_default_sender')}:</span>
-        <span className="font-medium text-foreground">
-          {defaultSender.name}
-        </span>
-      </div>
-
       {/* ── Settlements / City Search ── */}
       <Card>
         <CardHeader className="pb-3">
@@ -895,35 +958,23 @@ function ReferenceColumn({ t }: { t: any }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={t('novaposhta_search_city')}
-              value={cityQuery}
-              onChange={(e) => setCityQuery(e.target.value)}
-              className="pl-8"
-            />
-            {settlementsLoading && (
-              <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-          <div className="max-h-48 overflow-y-auto space-y-0.5">
-            {settlements.map((s: NovaPoshtaLookupSettlement) => (
-              <div
-                key={s.ref}
-                className={`px-3 py-2 rounded-md text-sm cursor-pointer transition-colors ${
-                  selectedSettlement?.ref === s.ref
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'hover:bg-muted'
-                }`}
-                onClick={() => {
-                  setSelectedSettlement(s)
-                  setWarehouseQuery('')
-                  setStreetQuery('')
-                }}
-              >
-                <div className="font-medium">{s.label}</div>
-                <div className="text-xs text-muted-foreground">
+          <SearchableSelect
+            items={settlements}
+            isLoading={settlementsLoading}
+            value={selectedSettlement}
+            onChange={handleSettlementChange}
+            placeholder={t('novaposhta_search_city')}
+            searchQuery={cityQuery}
+            onSearchChange={(q) => {
+              setCityQuery(q)
+              if (!q) setSelectedSettlement(null)
+            }}
+            getKey={(s: any) => s.ref}
+            getLabel={(s: any) => s.label}
+            renderItem={(s: any, _sel: boolean, _high: boolean) => (
+              <>
+                <div className="font-medium leading-tight">{s.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
                   {[s.area, s.region].filter(Boolean).join(' — ')}
                   {s.warehouses_count && s.warehouses_count !== '0' ? (
                     <span className="ml-2 inline-flex items-center gap-1">
@@ -931,21 +982,11 @@ function ReferenceColumn({ t }: { t: any }) {
                     </span>
                   ) : null}
                 </div>
-              </div>
-            ))}
-            {cityQuery.length >= 2 &&
-              settlements.length === 0 &&
-              !settlementsLoading && (
-                <div className="text-sm text-muted-foreground py-3 text-center">
-                  {t('novaposhta_no_results')}
-                </div>
-              )}
-            {cityQuery.length < 2 && (
-              <div className="text-xs text-muted-foreground py-3 text-center">
-                {t('novaposhta_type_to_search')}
-              </div>
+              </>
             )}
-          </div>
+            noResultsMessage={t('novaposhta_no_results')}
+            typeToSearchMessage={t('novaposhta_type_to_search')}
+          />
         </CardContent>
       </Card>
 
@@ -959,49 +1000,44 @@ function ReferenceColumn({ t }: { t: any }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {selectedSettlement ? (
-            <>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('novaposhta_search_warehouse')}
-                  value={warehouseQuery}
-                  onChange={(e) => setWarehouseQuery(e.target.value)}
-                  className="pl-8"
-                />
-                {warehousesLoading && (
-                  <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground" />
-                )}
-              </div>
-              <div className="max-h-48 overflow-y-auto space-y-0.5">
-                {warehouses.map((w: NovaPoshtaLookupWarehouse) => (
-                  <div
-                    key={w.ref}
-                    className="px-3 py-2 rounded-md text-sm hover:bg-muted cursor-pointer transition-colors"
-                  >
-                    <div className="font-medium flex items-center gap-2">
-                      {w.type === 'Postomat' ? (
-                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold">
-                          {t('novaposhta_postomat')}
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold">
-                          №{w.number}
-                        </span>
-                      )}
-                      {w.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {w.description}
-                    </div>
+            <SearchableSelect
+              items={warehouses}
+              isLoading={warehousesLoading}
+              value={selectedWarehouse}
+              onChange={(w) => {
+                setSelectedWarehouse(w)
+                if (w) setWarehouseQuery(w.label)
+              }}
+              placeholder={t('novaposhta_search_warehouse')}
+              searchQuery={warehouseQuery}
+              onSearchChange={(q) => {
+                setWarehouseQuery(q)
+                if (!q) setSelectedWarehouse(null)
+              }}
+              minSearchLength={1}
+              getKey={(w: any) => w.ref}
+              getLabel={(w: any) => w.label}
+              renderItem={(w: any, _sel: boolean, _high: boolean) => (
+                <>
+                  <div className="font-medium leading-tight flex items-center gap-2">
+                    {w.type === 'Postomat' ? (
+                      <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold">
+                        {t('novaposhta_postomat')}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold">
+                        №{w.number}
+                      </span>
+                    )}
+                    {w.label}
                   </div>
-                ))}
-                {warehouses.length === 0 && !warehousesLoading && (
-                  <div className="text-sm text-muted-foreground py-3 text-center">
-                    {t('novaposhta_no_results')}
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {w.description}
                   </div>
-                )}
-              </div>
-            </>
+                </>
+              )}
+              noResultsMessage={t('novaposhta_no_results')}
+            />
           ) : (
             <div className="text-sm text-muted-foreground py-3 text-center">
               {t('novaposhta_select_city_first')}
@@ -1020,45 +1056,32 @@ function ReferenceColumn({ t }: { t: any }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {selectedSettlement ? (
-            <>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('novaposhta_search_street')}
-                  value={streetQuery}
-                  onChange={(e) => setStreetQuery(e.target.value)}
-                  className="pl-8"
-                />
-                {streetsLoading && (
-                  <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground" />
-                )}
-              </div>
-              <div className="max-h-48 overflow-y-auto space-y-0.5">
-                {streets.map((s: NovaPoshtaLookupStreet) => (
-                  <div
-                    key={s.street_ref}
-                    className="px-3 py-2 rounded-md text-sm hover:bg-muted cursor-pointer transition-colors"
-                  >
-                    <div className="font-medium">
-                      {s.street_type ? `${s.street_type}. ` : ''}
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-                {streetQuery.length >= 2 &&
-                  streets.length === 0 &&
-                  !streetsLoading && (
-                    <div className="text-sm text-muted-foreground py-3 text-center">
-                      {t('novaposhta_no_results')}
-                    </div>
-                  )}
-                {streetQuery.length < 2 && (
-                  <div className="text-xs text-muted-foreground py-3 text-center">
-                    {t('novaposhta_type_to_search')}
-                  </div>
-                )}
-              </div>
-            </>
+            <SearchableSelect
+              items={streets}
+              isLoading={streetsLoading}
+              value={selectedStreet}
+              onChange={(s) => {
+                setSelectedStreet(s)
+                if (s) setStreetQuery(s.label)
+              }}
+              placeholder={t('novaposhta_search_street')}
+              searchQuery={streetQuery}
+              onSearchChange={(q) => {
+                setStreetQuery(q)
+                if (!q) setSelectedStreet(null)
+              }}
+              getKey={(s: any) => s.street_ref}
+              getLabel={(s: any) => s.label}
+              renderItem={(s: any, _sel: boolean, _high: boolean) => (
+                <div className="font-medium leading-tight">
+                  {s.street_type ? `${s.street_type}. ` : ''}
+                  {s.label}
+                </div>
+              )}
+              minSearchLength={2}
+              noResultsMessage={t('novaposhta_no_results')}
+              typeToSearchMessage={t('novaposhta_type_to_search')}
+            />
           ) : (
             <div className="text-sm text-muted-foreground py-3 text-center">
               {t('novaposhta_select_city_first')}

@@ -107,7 +107,13 @@ services:
     environment:
       - INTERNAL_API_URL=http://backend:8000/api/v1
       - TZ=Europe/Kyiv
+      - WATCHPACK_POLLING=true
+      - NODE_ENV=development
+    command: pnpm dev
     restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   pgdata:

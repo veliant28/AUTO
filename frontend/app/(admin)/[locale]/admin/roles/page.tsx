@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -256,11 +257,9 @@ export default function AdminRolesPage() {
                     <div className="grid grid-cols-2 gap-1">
                       {perms.map((p) => (
                         <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer py-0.5">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={form.permission_ids.includes(p.id)}
-                            onChange={() => togglePermission(p.id)}
-                            className="cursor-pointer"
+                            onCheckedChange={() => togglePermission(p.id)}
                           />
                           <span>{p.description || p.codename}</span>
                         </label>
@@ -346,11 +345,9 @@ export default function AdminRolesPage() {
                     <div className="grid grid-cols-2 gap-1">
                       {perms.map((p) => (
                         <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer py-0.5">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={form.permission_ids.includes(p.id)}
-                            onChange={() => togglePermission(p.id)}
-                            className="cursor-pointer"
+                            onCheckedChange={() => togglePermission(p.id)}
                           />
                           <span>{p.description || p.codename}</span>
                         </label>

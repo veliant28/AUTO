@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { use } from 'react';
 import Providers from '@/components/Providers';
 import SettingsHydrate from '@/components/layout/SettingsHydrate';
+import HtmlLangSetter from '@/components/layout/HtmlLangSetter';
 import '@/app/globals.css';
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -43,18 +44,17 @@ export default async function AdminRootLayout(props: any) {
   const locale = params.locale;
   const brandName = await fetchBrandName();
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Providers>
-              <SettingsHydrate brandName={brandName} />
-              <Toaster position="bottom-right" offset={{ right: '48px' }} />
-              {children}
-            </Providers>
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <HtmlLangSetter />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Providers>
+            <SettingsHydrate brandName={brandName} />
+            <Toaster position="bottom-right" offset={{ right: '48px' }} />
+            {children}
+          </Providers>
+        </ThemeProvider>
+      </NextIntlClientProvider>
+    </>
   );
 }

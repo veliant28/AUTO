@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -156,6 +157,15 @@ export default function AdminProductsPage() {
       </div>
       <Card className="overflow-hidden">
         <CardContent className="p-0">
+          {!data ? (
+            <div className="space-y-3 p-4">
+              <Skeleton className="h-10 w-full" />
+              {[...Array(8)].map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-sm table-fixed">
               <thead>
@@ -237,7 +247,7 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="p-3"><StockSnake offers={item.offers || []} /></td>
                     <td className="p-3">
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <Tooltip><TooltipTrigger asChild>
                           <Button variant="outline" size="icon" className="h-8 w-8"><Pencil className="w-4 h-4" /></Button>
                         </TooltipTrigger><TooltipContent>{t('edit')}</TooltipContent></Tooltip>
@@ -281,6 +291,8 @@ export default function AdminProductsPage() {
                 <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>{t('next_page')}</Button>
               </div>
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>

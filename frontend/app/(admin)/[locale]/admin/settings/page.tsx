@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -207,8 +208,16 @@ function SupplierCard({ supplier }: { supplier: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> {ta('loading')}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full rounded-lg" />
           </div>
         ) : (
           <>
@@ -323,8 +332,16 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" /> {t('loading')}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-28 w-full rounded-lg" />
               </div>
             ) : (
               <>
@@ -411,7 +428,23 @@ function ScheduleSection() {
     },
   });
 
-  if (isLoading || !schedules) return null;
+  if (isLoading || !schedules) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="space-y-2 p-3">
+            <Skeleton className="h-10 w-full" />
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mt-6">
@@ -543,7 +576,7 @@ function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
         </div>
       </td>
       <td className="p-3">
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-2 justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
