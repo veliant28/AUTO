@@ -296,6 +296,20 @@ class NovaPoshtaCounterpartyDetails(BaseModel):
     address_label: str = ""
 
 
+class NovaPoshtaServiceItem(BaseModel):
+    """Additional service item from NP API."""
+    ref: str = ""
+    description: str = ""
+    description_ru: str = ""
+    code: str = ""
+    price: str = "0"
+
+
+class NovaPoshtaServiceLookupQuery(BaseModel):
+    """Additional services query."""
+    sender_profile_id: Optional[int] = None
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Waybills (TTN)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -331,6 +345,9 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     recipient_counterparty_ref: Optional[str] = None
     recipient_contact_ref: Optional[str] = None
     recipient_name: str
+    recipient_first_name: Optional[str] = None
+    recipient_last_name: Optional[str] = None
+    recipient_middle_name: Optional[str] = None
     recipient_phone: str
     recipient_street_ref: Optional[str] = None
     recipient_street_label: Optional[str] = None
@@ -424,6 +441,9 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     recipient_counterparty_ref: str = ""
     recipient_contact_ref: str = ""
     recipient_name: str = ""
+    recipient_first_name: str = ""
+    recipient_last_name: str = ""
+    recipient_middle_name: str = ""
     recipient_phone: str = ""
     recipient_street_ref: str = ""
     recipient_street_label: str = ""
@@ -461,6 +481,15 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     tracking_events: List[WaybillTrackingEvent] = []
 
 
+class OrderRecipientInfo(BaseModel):
+    """Customer data from the Order model, used to pre-fill recipient fields."""
+    full_name: str = ""
+    phone: str = ""
+    first_name: str = ""
+    last_name: str = ""
+    middle_name: str = ""
+
+
 class NovaPoshtaWaybillSummary(BaseModel):
     exists: bool = False
     is_deleted: bool = False
@@ -473,6 +502,7 @@ class NovaPoshtaWaybillSummary(BaseModel):
 class OrderNovaPoshtaWaybillDetailResponse(BaseModel):
     waybill: Optional[OrderNovaPoshtaWaybillResponse] = None
     summary: NovaPoshtaWaybillSummary = NovaPoshtaWaybillSummary()
+    recipient_from_order: Optional[OrderRecipientInfo] = None
 
 
 class WaybillEventResponse(BaseModel):

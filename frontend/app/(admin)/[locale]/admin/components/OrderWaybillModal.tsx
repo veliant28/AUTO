@@ -20,6 +20,8 @@ import type {
   OrderNovaPoshtaWaybillUpsert,
   NovaPoshtaLookupSettlement,
   NovaPoshtaLookupWarehouse,
+  NovaPoshtaLookupCounterparty,
+  NovaPoshtaLookupStreet,
 } from '@/lib/types/nova-poshta'
 
 // ── Section components ──────────────────────────────────────────────────────
@@ -84,12 +86,22 @@ export default function OrderWaybillModal({
     recipient_address_ref: '',
     recipient_address_label: '',
     recipient_name: '',
+    recipient_first_name: '',
+    recipient_last_name: '',
+    recipient_middle_name: '',
     recipient_phone: '',
+    recipient_counterparty_ref: '',
+    recipient_contact_ref: '',
+    recipient_street_ref: '',
+    recipient_street_label: '',
+    recipient_house: '',
+    recipient_apartment: '',
     weight: '0.1',
     seats_amount: 1,
     cost: '0',
   })
   const [isPackagingMode, setIsPackagingMode] = useState(false)
+  const [isServicesMode, setIsServicesMode] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [activePlaceIndex, setActivePlaceIndex] = useState(0)
   const [isPlacesListMode, setIsPlacesListMode] = useState(false)
@@ -139,7 +151,16 @@ export default function OrderWaybillModal({
         recipient_address_ref: waybill.recipient_address_ref,
         recipient_address_label: waybill.recipient_address_label,
         recipient_name: waybill.recipient_name,
+        recipient_first_name: waybill.recipient_first_name,
+        recipient_last_name: waybill.recipient_last_name,
+        recipient_middle_name: waybill.recipient_middle_name,
         recipient_phone: waybill.recipient_phone,
+        recipient_counterparty_ref: waybill.recipient_counterparty_ref || '',
+        recipient_contact_ref: waybill.recipient_contact_ref || '',
+        recipient_street_ref: waybill.recipient_street_ref || '',
+        recipient_street_label: waybill.recipient_street_label || '',
+        recipient_house: waybill.recipient_house || '',
+        recipient_apartment: waybill.recipient_apartment || '',
         weight: waybill.weight || '1.000',
         seats_amount: waybill.seats_amount || 1,
         cost: waybill.cost || '0',
@@ -158,11 +179,19 @@ export default function OrderWaybillModal({
       })
       formInitialized.current = true
     } else if (!waybill && !formInitialized.current && senders.length > 0) {
-      // Set default sender only on first load
+      // Set default sender and pre-fill recipient from order data
       const defaultSender = senders.find((s) => s.is_default) || senders[0]
+      const orderData = detail?.recipient_from_order
       setForm((prev) => ({
         ...prev,
         sender_profile_id: defaultSender?.id || 0,
+        recipient_name: orderData?.full_name || prev.recipient_name,
+        recipient_phone: orderData?.phone || prev.recipient_phone,
+        recipient_first_name:
+          orderData?.first_name || prev.recipient_first_name,
+        recipient_last_name: orderData?.last_name || prev.recipient_last_name,
+        recipient_middle_name:
+          orderData?.middle_name || prev.recipient_middle_name,
       }))
       formInitialized.current = true
     }
@@ -171,7 +200,10 @@ export default function OrderWaybillModal({
 
   // ── Lookups ──────────────────────────────────────────────────────────────
   const [cityQuery, setCityQuery] = useState('')
-  const [warehouseQuery, setWarehouseQuery] = useState('')
+  const [addressQuery, setAddressQuery] = useState('')
+
+  const startsWithDigit = /^\d/.test(addressQuery)
+  const startsWithLetter = /^[a-zа-яіїєґ']/i.test(addressQuery)
 
   const { data: settlements = [], isLoading: settlementsLoading } = useQuery({
     queryKey: ['np-lookup', 'settlements', form.sender_profile_id, cityQuery],
@@ -186,6 +218,8 @@ export default function OrderWaybillModal({
     staleTime: 60000,
   })
 
+  // Warehouse search (digits → warehouse/postomat mode)
+  const warehouseQuery = startsWithDigit ? addressQuery : ''
   const { data: warehouses = [], isLoading: warehousesLoading } = useQuery({
     queryKey: [
       'np-lookup',
@@ -202,7 +236,10 @@ export default function OrderWaybillModal({
           query: warehouseQuery,
         })
         .then((r) => r.data),
-    enabled: !!form.recipient_city_ref && form.sender_profile_id > 0,
+    enabled:
+      startsWithDigit &&
+      !!form.recipient_city_ref &&
+      form.sender_profile_id > 0,
     staleTime: 60000,
   })
 
@@ -211,8 +248,63 @@ export default function OrderWaybillModal({
     settlements.find((s) => s.delivery_city_ref === form.recipient_city_ref) ||
     null
 
-  const selectedWarehouse =
-    warehouses.find((w) => w.ref === form.recipient_address_ref) || null
+  // Street search (letters → street mode)
+  const streetQuery = startsWithLetter ? addressQuery : ''
+  // Use settlement_ref (Ref from getSettlements), NOT delivery_city_ref
+  const settlementRefForStreet =
+    selectedSettlement?.settlement_ref ||
+    selectedSettlement?.ref ||
+    form.recipient_city_ref
+  const { data: streets = [], isLoading: streetsLoading } = useQuery({
+    queryKey: [
+      'np-lookup',
+      'streets',
+      form.sender_profile_id,
+      settlementRefForStreet,
+      streetQuery,
+    ],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchStreets({
+          sender_profile_id: form.sender_profile_id,
+          settlement_ref: settlementRefForStreet,
+          query: streetQuery,
+        })
+        .then((r) => r.data),
+    enabled:
+      startsWithLetter &&
+      !!settlementRefForStreet &&
+      addressQuery.length >= 2 &&
+      form.sender_profile_id > 0,
+    staleTime: 30000,
+  })
+
+  // ── Counterparty lookup ──────────────────────────────────────────────────
+  const [counterpartyQuery, setCounterpartyQuery] = useState('')
+
+  const { data: counterparties = [], isLoading: counterpartiesLoading } =
+    useQuery({
+      queryKey: [
+        'np-lookup',
+        'counterparties',
+        form.sender_profile_id,
+        counterpartyQuery,
+      ],
+      queryFn: () =>
+        novaPoshtaApi
+          .searchCounterparties({
+            sender_profile_id: form.sender_profile_id,
+            query: counterpartyQuery,
+          })
+          .then((r) => r.data),
+      enabled: counterpartyQuery.length >= 2 && form.sender_profile_id > 0,
+      staleTime: 30000,
+    })
+
+  const selectedCounterparty =
+    counterparties.find(
+      (c) => c.counterparty_ref === form.recipient_counterparty_ref,
+    ) || null
 
   // ── Mutations ────────────────────────────────────────────────────────────
   const createMutation = useMutation({
@@ -324,18 +416,32 @@ export default function OrderWaybillModal({
       ...prev,
       recipient_city_ref: item.delivery_city_ref,
       recipient_city_label: item.label,
+      // Reset address when city changes
+      recipient_address_ref: '',
+      recipient_address_label: '',
+      recipient_street_ref: '',
+      recipient_street_label: '',
+      recipient_house: '',
     }))
     setCityQuery(item.label)
+    setAddressQuery('')
   }, [])
 
   const handleWarehouseSelect = useCallback(
     (item: NovaPoshtaLookupWarehouse) => {
+      const deliveryType = item.type === 'Postomat' ? 'postomat' : 'warehouse'
       setForm((prev) => ({
         ...prev,
+        delivery_type: deliveryType,
         recipient_address_ref: item.ref,
         recipient_address_label: item.label,
+        // Clear street address when warehouse/postomat is selected
+        recipient_street_ref: '',
+        recipient_street_label: '',
+        recipient_house: '',
       }))
-      setWarehouseQuery(item.label)
+      // Reset search query — display is handled by addressDisplay in child
+      setAddressQuery('')
     },
     [],
   )
@@ -344,9 +450,44 @@ export default function OrderWaybillModal({
     setForm((prev) => ({ ...prev, sender_profile_id: id }))
   }, [])
 
-  const handleDeliveryTypeChange = useCallback(
-    (type: 'warehouse' | 'postomat' | 'address') => {
-      setForm((prev) => ({ ...prev, delivery_type: type }))
+  // ── Counterparty selection handlers ───────────────────────────────────────
+  const handleCounterpartyQueryChange = useCallback((query: string) => {
+    setCounterpartyQuery(query)
+  }, [])
+
+  const handleCounterpartySelect = useCallback(
+    (item: NovaPoshtaLookupCounterparty) => {
+      setForm((prev) => ({
+        ...prev,
+        recipient_counterparty_ref: item.counterparty_ref,
+        recipient_contact_ref: item.ref,
+        // Auto-fill FIO from counterparty data
+        recipient_name: item.full_name || item.label,
+        recipient_last_name: item.last_name,
+        recipient_first_name: item.first_name,
+        recipient_middle_name: item.middle_name,
+      }))
+      setCounterpartyQuery(item.label)
+    },
+    [],
+  )
+
+  // ── Street selection (for address delivery — comma in address field) ─────
+  const handleStreetSelect = useCallback(
+    (item: NovaPoshtaLookupStreet, house?: string, apartment?: string) => {
+      setForm((prev) => ({
+        ...prev,
+        delivery_type: 'address',
+        recipient_street_ref: item.street_ref,
+        recipient_street_label: item.label,
+        recipient_house: house || prev.recipient_house || '',
+        recipient_apartment: apartment || prev.recipient_apartment || '',
+        // Clear warehouse address when street is selected
+        recipient_address_ref: '',
+        recipient_address_label: '',
+      }))
+      // Reset search query — display is handled by addressDisplay in child
+      setAddressQuery('')
     },
     [],
   )
@@ -514,7 +655,7 @@ export default function OrderWaybillModal({
                 senderAddressDisplay={senderAddressDisplay}
                 senderPhone={senderPhone}
                 senderContactName={senderContactName}
-                disabled={isPending}
+                disabled={isPending || isPackagingMode || isServicesMode}
                 onSenderChange={handleSenderChange}
               />
 
@@ -550,7 +691,7 @@ export default function OrderWaybillModal({
                   onPlacesListModeChange={setIsPlacesListMode}
                   onCancel={handleCancel}
                   onSave={handleSave}
-                  disabled={isPending}
+                  disabled={isPending || isServicesMode}
                   isEdit={isEdit}
                   waybill={waybill}
                   form={form}
@@ -558,8 +699,8 @@ export default function OrderWaybillModal({
                 />
               </div>
 
-              {/* Column 3: Recipient (hidden in packaging mode) */}
-              {!isPackagingMode && (
+              {/* Column 3: Recipient (hidden in packaging/services mode) */}
+              {!isPackagingMode && !isServicesMode && (
                 <OrderWaybillRecipientSection
                   deliveryType={form.delivery_type}
                   recipientName={form.recipient_name}
@@ -568,35 +709,53 @@ export default function OrderWaybillModal({
                   recipientCityLabel={form.recipient_city_label}
                   recipientAddressRef={form.recipient_address_ref}
                   recipientAddressLabel={form.recipient_address_label}
+                  recipientStreetRef={form.recipient_street_ref}
+                  recipientStreetLabel={form.recipient_street_label}
                   recipientHouse={form.recipient_house}
                   recipientApartment={form.recipient_apartment}
+                  recipientCounterpartyRef={form.recipient_counterparty_ref}
+                  recipientContactRef={form.recipient_contact_ref}
                   cityQuery={cityQuery}
                   settlements={settlements}
                   settlementsLoading={settlementsLoading}
                   selectedSettlement={selectedSettlement}
-                  warehouseQuery={warehouseQuery}
+                  addressQuery={addressQuery}
                   warehouses={warehouses}
                   warehousesLoading={warehousesLoading}
-                  selectedWarehouse={selectedWarehouse}
+                  streets={streets}
+                  streetsLoading={streetsLoading}
+                  counterpartyQuery={counterpartyQuery}
+                  counterparties={counterparties}
+                  counterpartiesLoading={counterpartiesLoading}
+                  selectedCounterparty={selectedCounterparty}
                   disabled={isPending}
                   onFieldChange={handleFormChange}
                   onCityQueryChange={setCityQuery}
                   onCitySelect={handleCitySelect}
-                  onWarehouseQueryChange={setWarehouseQuery}
+                  onAddressQueryChange={setAddressQuery}
                   onWarehouseSelect={handleWarehouseSelect}
-                  onDeliveryTypeChange={handleDeliveryTypeChange}
+                  onStreetSelect={handleStreetSelect}
+                  onCounterpartyQueryChange={handleCounterpartyQueryChange}
+                  onCounterpartySelect={handleCounterpartySelect}
                 />
               )}
               {/* Column 4: Payment & Additional Services */}
-              <OrderWaybillPaymentSection
-                payerType={form.payer_type as any}
-                paymentMethod={form.payment_method as any}
-                afterpaymentAmount={form.afterpayment_amount}
-                cost={form.cost}
-                syncError={waybill?.last_sync_error || ''}
-                disabled={isPending}
-                onChange={handleFormChange}
-              />
+              <div
+                className={isServicesMode ? 'order-4 xl:col-span-2' : 'order-4'}
+              >
+                <OrderWaybillPaymentSection
+                  payerType={form.payer_type as any}
+                  paymentMethod={form.payment_method as any}
+                  afterpaymentAmount={form.afterpayment_amount}
+                  cost={form.cost}
+                  syncError={waybill?.last_sync_error || ''}
+                  disabled={isPending || isPackagingMode}
+                  isServicesMode={isServicesMode}
+                  onServicesModeChange={setIsServicesMode}
+                  senderProfileId={form.sender_profile_id}
+                  onChange={handleFormChange}
+                />
+              </div>
             </div>
           </div>
         )}

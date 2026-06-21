@@ -28,13 +28,19 @@ export interface SearchableSelectProps<T> {
   /** Return the label to put into the input when selected. */
   getLabel: (item: T) => string
   /** Custom render for each dropdown item. */
-  renderItem: (item: T, isSelected: boolean, isHighlighted: boolean) => React.ReactNode
+  renderItem: (
+    item: T,
+    isSelected: boolean,
+    isHighlighted: boolean,
+  ) => React.ReactNode
   minSearchLength?: number
   noResultsMessage?: string
   typeToSearchMessage?: string
   disabled?: boolean
   /** Max height of the dropdown list in px. Default 160. */
   dropdownMaxHeight?: number
+  /** If true, hides the search icon inside the input. */
+  hideSearchIcon?: boolean
 }
 
 function SearchableSelect<T>({
@@ -53,6 +59,7 @@ function SearchableSelect<T>({
   typeToSearchMessage = 'Type to search…',
   disabled = false,
   dropdownMaxHeight = 160,
+  hideSearchIcon = false,
 }: SearchableSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -124,7 +131,11 @@ function SearchableSelect<T>({
         break
       case 'Enter':
         e.preventDefault()
-        if (showDropdown && highlightedIndex >= 0 && highlightedIndex < items.length) {
+        if (
+          showDropdown &&
+          highlightedIndex >= 0 &&
+          highlightedIndex < items.length
+        ) {
           handleSelect(items[highlightedIndex])
         }
         break
@@ -139,7 +150,9 @@ function SearchableSelect<T>({
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+        {!hideSearchIcon && (
+          <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+        )}
         <Input
           placeholder={placeholder}
           value={searchQuery}
@@ -151,7 +164,7 @@ function SearchableSelect<T>({
             if (searchQuery.length >= minSearchLength) setIsOpen(true)
           }}
           onKeyDown={handleKeyDown}
-          className="pl-8"
+          className={hideSearchIcon ? 'pl-3' : 'pl-8'}
           disabled={disabled}
         />
         {isLoading && (
@@ -161,7 +174,11 @@ function SearchableSelect<T>({
 
       {showDropdown && (
         <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
-          <div ref={listRef} className="overflow-y-auto py-1" style={{ maxHeight: dropdownMaxHeight }}>
+          <div
+            ref={listRef}
+            className="overflow-y-auto py-1"
+            style={{ maxHeight: dropdownMaxHeight }}
+          >
             {items.length > 0 ? (
               items.map((item, index) => {
                 const isSelected =

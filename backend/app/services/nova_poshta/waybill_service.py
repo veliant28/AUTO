@@ -21,6 +21,7 @@ from app.schemas.nova_poshta_schemas import (
     OrderNovaPoshtaWaybillUpsert,
     OrderNovaPoshtaWaybillResponse,
     OrderNovaPoshtaWaybillDetailResponse,
+    OrderRecipientInfo,
     NovaPoshtaWaybillSummary,
     WaybillEventResponse,
     WaybillTrackingEvent,
@@ -28,7 +29,9 @@ from app.schemas.nova_poshta_schemas import (
     StaffActor,
     PrintResult,
 )
+from app.models import Order
 from app.services.nova_poshta.client import NovaPoshtaApiClient
+from app.services.nova_poshta.lookup_service import NovaPoshtaLookupService
 from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.waybill_payloads import NovaPoshtaWaybillPayloadBuilder
 from app.services.nova_poshta.payment_rules import NovaPoshtaPaymentRuleResolver
@@ -91,15 +94,30 @@ class NovaPoshtaWaybillService:
         """Get full waybill detail for an order, including tracking events."""
         wb = self.get_order_waybill(order_id)
         summary = NovaPoshtaWaybillSummary(exists=False)
+
+        # Fetch order data to pre-fill recipient fields
+        order = self.db.get(Order, order_id)
+        recipient_from_order = None
+        if order:
+            recipient_from_order = OrderRecipientInfo(
+                full_name=order.full_name or "",
+                phone=order.phone or "",
+                first_name=order.first_name or "",
+                last_name=order.last_name or "",
+                middle_name=order.middle_name or "",
+            )
+
         if not wb:
             return OrderNovaPoshtaWaybillDetailResponse(
                 waybill=None,
                 summary=summary,
+                recipient_from_order=recipient_from_order,
             )
 
         return OrderNovaPoshtaWaybillDetailResponse(
             waybill=self._waybill_to_response(wb),
             summary=self.get_order_summary(order_id),
+            recipient_from_order=recipient_from_order,
         )
 
     def list_events(self, waybill_id: int) -> List[OrderNovaPoshtaWaybillEvent]:
@@ -110,6 +128,55 @@ class NovaPoshtaWaybillService:
             .order_by(OrderNovaPoshtaWaybillEvent.created_at.desc())
         )
         return list(self.db.execute(stmt).scalars().all())
+
+    # ─── Counterparty auto-creation ─────────────────────────────────────────
+
+    async def _ensure_counterparty(
+        self,
+        data: OrderNovaPoshtaWaybillUpsert,
+        sender_profile_id: int,
+    ) -> None:
+        """
+        If no counterparty ref is set, auto-create a PrivatePerson/Recipient
+        via NP API and update data in-place.
+        """
+        if data.recipient_counterparty_ref:
+            return  # already selected
+
+        # Parse name parts: prefer parsed fields, fall back to full name
+        first_name = data.recipient_first_name or ""
+        middle_name = data.recipient_middle_name or ""
+        last_name = data.recipient_last_name or ""
+        if not last_name and data.recipient_name:
+            parts = data.recipient_name.strip().split(None, 2)
+            last_name = parts[0] if len(parts) > 0 else ""
+            first_name = parts[1] if len(parts) > 1 else ""
+            middle_name = parts[2] if len(parts) > 2 else ""
+
+        if not last_name or not first_name or not data.recipient_phone:
+            logger.warning(
+                "_ensure_counterparty: insufficient recipient data — "
+                "last=%r first=%r phone=%r",
+                last_name, first_name, data.recipient_phone,
+            )
+            return
+
+        lookup = NovaPoshtaLookupService(self.db)
+        result = await lookup.create_counterparty(
+            sender_profile_id=sender_profile_id,
+            first_name=first_name,
+            middle_name=middle_name,
+            last_name=last_name,
+            phone=data.recipient_phone,
+        )
+        if result:
+            counterparty_ref, contact_ref = result
+            data.recipient_counterparty_ref = counterparty_ref
+            data.recipient_contact_ref = contact_ref
+            logger.info(
+                "Auto-created counterparty ref=%s contact=%s for %s %s",
+                counterparty_ref, contact_ref, last_name, first_name,
+            )
 
     # ─── Create ───────────────────────────────────────────────────────────────
 
@@ -135,8 +202,15 @@ class NovaPoshtaWaybillService:
         # Build API client with sender's token
         client = NovaPoshtaApiClient(sender.api_token)
 
+        # Auto-create counterparty if not selected by user
+        await self._ensure_counterparty(data, sender.id)
+
         # Build payload
-        payload = self.payload_builder.build_save_payload(data, sender)
+        payload = self.payload_builder.build_save_payload(
+            data, sender,
+            recipient_counterparty_ref=data.recipient_counterparty_ref or "",
+            recipient_contact_ref=data.recipient_contact_ref or "",
+        )
 
         # Optionally check possibility first (catch errors early)
         try:
@@ -245,7 +319,14 @@ class NovaPoshtaWaybillService:
         sender = self.sender_service.get_by_id(data.sender_profile_id)
         client = NovaPoshtaApiClient(sender.api_token)
 
-        payload = self.payload_builder.build_update_payload(data, wb.np_ref, sender)
+        # Auto-create counterparty if not selected by user
+        await self._ensure_counterparty(data, sender.id)
+
+        payload = self.payload_builder.build_update_payload(
+            data, wb.np_ref, sender,
+            recipient_counterparty_ref=data.recipient_counterparty_ref or "",
+            recipient_contact_ref=data.recipient_contact_ref or "",
+        )
 
         try:
             response = await client.update("InternetDocument", payload)

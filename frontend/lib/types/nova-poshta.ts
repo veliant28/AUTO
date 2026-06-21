@@ -152,6 +152,18 @@ export interface NovaPoshtaCounterpartyDetailsQuery {
   locale?: string
 }
 
+export interface NovaPoshtaServiceItem {
+  ref: string
+  description: string
+  description_ru: string
+  code: string
+  price: string
+}
+
+export interface NovaPoshtaServiceLookupQuery {
+  sender_profile_id?: number
+}
+
 export interface NovaPoshtaLookupSettlement {
   ref: string
   delivery_city_ref: string
@@ -265,6 +277,9 @@ export interface OrderNovaPoshtaWaybillUpsert {
   recipient_counterparty_ref?: string
   recipient_contact_ref?: string
   recipient_name: string
+  recipient_first_name?: string
+  recipient_last_name?: string
+  recipient_middle_name?: string
   recipient_phone: string
   recipient_street_ref?: string
   recipient_street_label?: string
@@ -358,6 +373,9 @@ export interface OrderNovaPoshtaWaybillResponse {
   recipient_counterparty_ref: string
   recipient_contact_ref: string
   recipient_name: string
+  recipient_first_name: string
+  recipient_last_name: string
+  recipient_middle_name: string
   recipient_phone: string
   recipient_street_ref: string
   recipient_street_label: string
@@ -404,9 +422,18 @@ export interface NovaPoshtaWaybillSummary {
   has_sync_error: boolean
 }
 
+export interface OrderRecipientInfo {
+  full_name: string
+  phone: string
+  first_name: string
+  last_name: string
+  middle_name: string
+}
+
 export interface OrderNovaPoshtaWaybillDetailResponse {
   waybill: OrderNovaPoshtaWaybillResponse | null
   summary: NovaPoshtaWaybillSummary
+  recipient_from_order: OrderRecipientInfo | null
 }
 
 export interface WaybillEventResponse {

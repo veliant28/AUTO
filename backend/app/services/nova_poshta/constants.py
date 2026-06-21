@@ -84,3 +84,13 @@ METHOD_CHECKOUT_DOCUMENT = "checkoutDocument"
 METHOD_CHECK_POSSIBLE_CREATE = "checkPossibilityCreateDocument"
 METHOD_SAVE_COUNTERPARTY = "save"
 METHOD_UPDATE_COUNTERPARTY = "update"
+METHOD_GET_SERVICE_LIST = "getServiceList"
+
+
+# ─── NP API model names ────────────────────────────────────────────────────
+MODEL_COMMON = "Common"
+MODEL_INTERNET_DOCUMENT = "InternetDocument"
+MODEL_TRACKING = "TrackingDocument"
+MODEL_COUNTERPARTY = "Counterparty"
+MODEL_CONTACT_PERSON = "CounterpartyContactPerson"
+MODEL_ADDITIONAL_SERVICE = "AdditionalService"

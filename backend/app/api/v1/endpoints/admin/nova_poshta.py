@@ -40,6 +40,8 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaLookupDeliveryDate,
     NovaPoshtaLookupCounterparty,
     NovaPoshtaCounterpartyDetails,
+    NovaPoshtaServiceItem,
+    NovaPoshtaServiceLookupQuery,
     # Waybill
     OrderNovaPoshtaWaybillUpsert,
     OrderNovaPoshtaWaybillResponse,
@@ -283,6 +285,25 @@ async def lookup_pack_types(
             length_mm=data.length_mm,
             width_mm=data.width_mm,
             height_mm=data.height_mm,
+        )
+    except NovaPoshtaSenderNotFoundError as e:
+        raise HTTPException(404, str(e))
+    except NovaPoshtaApiError as e:
+        raise HTTPException(502, detail=e.message)
+    return results
+
+
+@router.post("/lookup/services", response_model=List[NovaPoshtaServiceItem])
+async def lookup_services(
+    data: NovaPoshtaServiceLookupQuery,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "manager", "operator")),
+):
+    """List available additional services."""
+    service = NovaPoshtaLookupService(db)
+    try:
+        results = await service.get_service_list(
+            sender_profile_id=data.sender_profile_id,
         )
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))

@@ -54,9 +54,9 @@ class NovaPoshtaWaybillPayloadBuilder:
             "RecipientCityRef": data.recipient_city_ref,
             "RecipientAddressRef": data.recipient_address_ref,
             "RecipientContactName": data.recipient_name,
-            "RecipientSurname": "",
-            "RecipientFirstname": "",
-            "RecipientMiddleName": "",
+            "RecipientSurname": data.recipient_last_name or "",
+            "RecipientFirstname": data.recipient_first_name or "",
+            "RecipientMiddleName": data.recipient_middle_name or "",
             "RecipientPhone": normalizer.phone(data.recipient_phone),
 
             # ─── Delivery type ─────────────────────────────────────────
@@ -133,13 +133,19 @@ class NovaPoshtaWaybillPayloadBuilder:
         data: OrderNovaPoshtaWaybillUpsert,
         waybill_ref: str,
         sender: NovaPoshtaSenderProfile,
+        recipient_counterparty_ref: str = "",
+        recipient_contact_ref: str = "",
     ) -> dict:
         """
         Build methodProperties for InternetDocument/update.
 
         Reuses save payload but adds Ref.
         """
-        props = NovaPoshtaWaybillPayloadBuilder.build_save_payload(data, sender)
+        props = NovaPoshtaWaybillPayloadBuilder.build_save_payload(
+            data, sender,
+            recipient_counterparty_ref=recipient_counterparty_ref,
+            recipient_contact_ref=recipient_contact_ref,
+        )
         props["Ref"] = waybill_ref
         return props
 
@@ -252,5 +258,8 @@ class NovaPoshtaWaybillPayloadBuilder:
             "RecipientCityRef": data.recipient_city_ref,
             "RecipientAddressRef": data.recipient_address_ref,
             "RecipientContactName": data.recipient_name,
+            "RecipientSurname": data.recipient_last_name or "",
+            "RecipientFirstname": data.recipient_first_name or "",
+            "RecipientMiddleName": data.recipient_middle_name or "",
             "RecipientPhone": data.recipient_phone,
         }

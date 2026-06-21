@@ -109,6 +109,7 @@ services:
       - TZ=Europe/Kyiv
       - WATCHPACK_POLLING=true
       - NODE_ENV=development
+      - CI=true
     command: pnpm dev
     restart: unless-stopped
     volumes:

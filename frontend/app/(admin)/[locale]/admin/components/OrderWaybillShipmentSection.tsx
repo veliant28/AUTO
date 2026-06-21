@@ -14,6 +14,7 @@ import {
   Trash2,
   Plus,
   MoreHorizontal,
+  Box,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -396,6 +397,20 @@ export default function OrderWaybillShipmentSection({
       .toFixed(1)
       .replace(/\.?0+$/, '')
   }, [])
+
+  // ── Volumetric weight only (W×L×H / 4000, without actual weight) ──
+  const volumetricWeight = useCallback((): string => {
+    const norm = (v: string | undefined) =>
+      parseFloat((v || '0').replace(',', '.'))
+    const w = norm(volumetricWidth)
+    const l = norm(volumetricLength)
+    const h = norm(volumetricHeight)
+    if (w > 0 && l > 0 && h > 0) {
+      const vw = (w * l * h) / 4000
+      return vw.toFixed(1).replace(/\.?0+$/, '')
+    }
+    return '0'
+  }, [volumetricWidth, volumetricLength, volumetricHeight])
 
   // ── Reset checkboxes when entering list mode ─────────────────────────
   useEffect(() => {
@@ -842,43 +857,53 @@ export default function OrderWaybillShipmentSection({
                 <Label className="text-xs text-muted-foreground">
                   {t('novaposhta_cost_label')}
                 </Label>
-                <Input
-                  type="number"
-                  step="1"
-                  min="0"
-                  value={cost}
-                  onChange={(e) =>
-                    onChange('cost', e.target.value.replace(/[^\d]/g, ''))
-                  }
-                  onBlur={() => !cost && onChange('cost', '0')}
-                  disabled={disabled}
-                  className="h-9 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
+                <div className="relative">
+                  <Input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={cost}
+                    onChange={(e) =>
+                      onChange('cost', e.target.value.replace(/[^\d]/g, ''))
+                    }
+                    onBlur={() => !cost && onChange('cost', '0')}
+                    disabled={disabled}
+                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    ₴
+                  </span>
+                </div>
               </div>
               <div className="grid gap-0.5">
                 <Label className="text-xs text-muted-foreground">
                   {t('novaposhta_weight')}
                 </Label>
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  value={weight}
-                  onChange={(e) => {
-                    let val = e.target.value
-                      .replace(/[^\d,.]/g, '') // allow digits, comma, dot
-                      .replace(/,+/g, ',') // only one comma
-                      .replace(/\.+/g, '.') // only one dot
-                      .replace(/,/g, '.') // normalize comma → dot
-                    if (val.includes('.')) {
-                      const [int, dec] = val.split('.')
-                      val = int + '.' + (dec || '').slice(0, 1)
-                    }
-                    onChange('weight', val)
-                  }}
-                  onBlur={() => !weight && onChange('weight', '0.1')}
-                  disabled={disabled}
-                  className="h-9 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={weight}
+                    onChange={(e) => {
+                      let val = e.target.value
+                        .replace(/[^\d,.]/g, '') // allow digits, comma, dot
+                        .replace(/,+/g, ',') // only one comma
+                        .replace(/\.+/g, '.') // only one dot
+                        .replace(/,/g, '.') // normalize comma → dot
+                      if (val.includes('.')) {
+                        const [int, dec] = val.split('.')
+                        val = int + '.' + (dec || '').slice(0, 1)
+                      }
+                      onChange('weight', val)
+                    }}
+                    onBlur={() => !weight && onChange('weight', '0.1')}
+                    disabled={disabled}
+                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    кг
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1005,6 +1030,19 @@ export default function OrderWaybillShipmentSection({
                     см
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Volumetric weight — read-only display */}
+            <div className="grid gap-0.5">
+              <Label className="text-xs text-muted-foreground">
+                {t('novaposhta_volume')}
+              </Label>
+              <div className="flex h-9 items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5">
+                <Box className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="font-medium">
+                  {t('novaposhta_volumetric_weight')} {volumetricWeight()} кг
+                </span>
               </div>
             </div>
 

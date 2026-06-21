@@ -12,7 +12,7 @@ Provides debounced searching for:
   - Delivery dates
 """
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -26,12 +26,14 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaLookupDeliveryDate,
     NovaPoshtaLookupCounterparty,
     NovaPoshtaCounterpartyDetails,
+    NovaPoshtaServiceItem,
 )
 from app.services.nova_poshta.client import NovaPoshtaApiClient
 from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.errors import NovaPoshtaSenderNotFoundError, NovaPoshtaApiError
 from app.services.nova_poshta.constants import (
     MODEL_ADDRESS_GENERAL,
+    MODEL_ADDITIONAL_SERVICE,
     MODEL_COUNTERPARTY,
     MODEL_COMMON,
     METHOD_SEARCH_SETTLEMENTS,
@@ -43,6 +45,8 @@ from app.services.nova_poshta.constants import (
     METHOD_GET_DELIVERY_DATE,
     METHOD_GET_COUNTERPARTIES,
     METHOD_GET_COUNTERPARTY_OPTIONS,
+    METHOD_SAVE,
+    METHOD_GET_SERVICE_LIST,
 )
 
 logger = logging.getLogger(__name__)
@@ -133,14 +137,21 @@ class NovaPoshtaLookupService:
         locale: str = "uk",
         limit: int = 20,
     ) -> List[NovaPoshtaLookupStreet]:
-        """Search streets within a settlement."""
+        """Search streets within a settlement.
+
+        The query may include a house number after a comma (e.g. "Хрещатик, 12").
+        Nova Poshta API expects only the street name, so we strip everything
+        after the last comma.
+        """
         client = self._get_sender_client(sender_profile_id)
+        # Strip house number part (everything after the last comma)
+        street_name = query.rsplit(",", 1)[0].strip() if "," in query else query
         try:
             response = await client.call(
                 MODEL_ADDRESS_GENERAL,
                 METHOD_SEARCH_SETTLEMENT_STREETS,
                 {
-                    "StreetName": query,
+                    "StreetName": street_name,
                     "SettlementRef": settlement_ref,
                     "Limit": str(limit),
                 },
@@ -263,6 +274,38 @@ class NovaPoshtaLookupService:
 
         return results
 
+    # ─── Additional Services ────────────────────────────────────────────────
+
+    async def get_service_list(
+        self,
+        sender_profile_id: Optional[int] = None,
+    ) -> List[NovaPoshtaServiceItem]:
+        """Get available additional services from NP API."""
+        client = self._get_sender_client(sender_profile_id)
+
+        try:
+            response = await client.call(
+                MODEL_ADDITIONAL_SERVICE,
+                METHOD_GET_SERVICE_LIST,
+                {},
+            )
+        except NovaPoshtaApiError as e:
+            logger.warning("Service list request failed: %s", e)
+            return []
+
+        results: List[NovaPoshtaServiceItem] = []
+        data = response.get("data", []) if isinstance(response.get("data"), list) else []
+        for item in data:
+            results.append(NovaPoshtaServiceItem(
+                ref=item.get("Ref", ""),
+                description=item.get("Description", ""),
+                description_ru=item.get("DescriptionRu", ""),
+                code=item.get("Code", ""),
+                price=str(item.get("Price") or "0"),
+            ))
+
+        return results
+
     # ─── Time intervals ────────────────────────────────────────────────────
 
     async def get_time_intervals(
@@ -380,7 +423,7 @@ class NovaPoshtaLookupService:
         for item in data:
             results.append(NovaPoshtaLookupCounterparty(
                 ref=item.get("Ref", ""),
-                counterparty_ref=item.get("Ref", ""),
+                counterparty_ref=item.get("Counterparty") or item.get("Ref", ""),
                 city_ref=item.get("CityRef", ""),
                 city_label=item.get("CityDescription", ""),
                 label=item.get("Description", ""),
@@ -395,6 +438,56 @@ class NovaPoshtaLookupService:
             ))
 
         return results
+
+    async def create_counterparty(
+        self,
+        sender_profile_id: Optional[int] = None,
+        first_name: str = "",
+        middle_name: str = "",
+        last_name: str = "",
+        phone: str = "",
+        counterparty_type: str = "PrivatePerson",
+        counterparty_property: str = "Recipient",
+    ) -> Optional[Tuple[str, str]]:
+        """
+        Create a counterparty via NP API (Counterparty/save).
+
+        Returns (counterparty_ref, contact_ref) or None on failure.
+        Used to auto-create a PrivatePerson recipient when no
+        counterparty was selected by the user.
+        """
+        if not all([first_name, last_name, phone]):
+            logger.warning("create_counterparty: missing required fields")
+            return None
+
+        client = self._get_sender_client(sender_profile_id)
+        props: dict = {
+            "FirstName": first_name,
+            "MiddleName": middle_name or "",
+            "LastName": last_name,
+            "Phone": phone,
+            "CounterpartyType": counterparty_type,
+            "CounterpartyProperty": counterparty_property,
+        }
+
+        try:
+            response = await client.call(
+                MODEL_COUNTERPARTY,
+                METHOD_SAVE,
+                props,
+            )
+        except NovaPoshtaApiError as e:
+            logger.warning("Counterparty creation failed: %s", e)
+            return None
+
+        data = response.get("data", [])
+        if not data:
+            return None
+
+        item = data[0]
+        counterparty_ref = item.get("Counterparty") or item.get("Ref", "")
+        contact_ref = item.get("Ref", "")
+        return (counterparty_ref, contact_ref)
 
     async def get_counterparty_details(
         self,
