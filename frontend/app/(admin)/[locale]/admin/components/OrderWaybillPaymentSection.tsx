@@ -92,7 +92,6 @@ export default function OrderWaybillPaymentSection({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const dropdownListRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const skipNextFocusRef = useRef(false)
 
   // ── Fetch services from NP API ───────────────────────────────────────────
   const { data: allServices = [], isLoading: isLoadingServices } = useQuery({
@@ -125,12 +124,8 @@ export default function OrderWaybillPaymentSection({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Focus search input when services mode activates
-  useEffect(() => {
-    if (isServicesMode) {
-      setTimeout(() => searchInputRef.current?.focus(), 50)
-    }
-  }, [isServicesMode])
+  // Don't auto-focus the search input — let the user click on it
+  // to open the dropdown only when they want to.
 
   // Scroll highlighted item into view in the dropdown
   useEffect(() => {
@@ -185,10 +180,6 @@ export default function OrderWaybillPaymentSection({
       })
       setServicesQuery('')
       setHighlightedIdx(-1)
-      // Focus input so user can keep typing, but prevent onFocus from
-      // re-opening the dropdown (would override setIsDropdownOpen(false)).
-      skipNextFocusRef.current = true
-      searchInputRef.current?.focus()
       setIsDropdownOpen(false)
 
       // If this service requires parameter editing, trigger the editor
@@ -349,12 +340,7 @@ export default function OrderWaybillPaymentSection({
                   setIsDropdownOpen(true)
                   setHighlightedIdx(-1)
                 }}
-                onFocus={() => {
-                  if (!skipNextFocusRef.current) {
-                    setIsDropdownOpen(true)
-                  }
-                  skipNextFocusRef.current = false
-                }}
+                onFocus={() => setIsDropdownOpen(true)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder={t('novaposhta_search_services')}
                 className="h-9 pl-8"
