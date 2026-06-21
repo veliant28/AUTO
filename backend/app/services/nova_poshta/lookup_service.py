@@ -12,6 +12,7 @@ Provides debounced searching for:
   - Delivery dates
 """
 import logging
+from datetime import datetime
 from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
@@ -33,9 +34,9 @@ from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.errors import NovaPoshtaSenderNotFoundError, NovaPoshtaApiError
 from app.services.nova_poshta.constants import (
     MODEL_ADDRESS_GENERAL,
-    MODEL_ADDITIONAL_SERVICE,
     MODEL_COUNTERPARTY,
     MODEL_COMMON,
+    ADDITIONAL_SERVICES,
     METHOD_SEARCH_SETTLEMENTS,
     METHOD_SEARCH_SETTLEMENT_STREETS,
     METHOD_GET_WAREHOUSES,
@@ -46,7 +47,6 @@ from app.services.nova_poshta.constants import (
     METHOD_GET_COUNTERPARTIES,
     METHOD_GET_COUNTERPARTY_OPTIONS,
     METHOD_SAVE,
-    METHOD_GET_SERVICE_LIST,
 )
 
 logger = logging.getLogger(__name__)
@@ -280,31 +280,26 @@ class NovaPoshtaLookupService:
         self,
         sender_profile_id: Optional[int] = None,
     ) -> List[NovaPoshtaServiceItem]:
-        """Get available additional services from NP API."""
-        client = self._get_sender_client(sender_profile_id)
+        """
+        Get available additional services.
 
-        try:
-            response = await client.call(
-                MODEL_ADDITIONAL_SERVICE,
-                METHOD_GET_SERVICE_LIST,
-                {},
+        The NP API does not provide a working getServiceList endpoint on the
+        AdditionalService model (confirmed by NP API error logs:
+        "Method AdditionalServiceGeneral_getServiceList not found"). Instead,
+        the list is hardcoded from the official NP API reference documentation
+        ("Сформувати запит на створення експрес-накладної з додатковими
+        послугами") which defines all supported additional services.
+        """
+        return [
+            NovaPoshtaServiceItem(
+                ref=item["Ref"],
+                description=item["Description"],
+                description_ru=item["DescriptionRu"],
+                code=item["Code"],
+                price=item["Price"],
             )
-        except NovaPoshtaApiError as e:
-            logger.warning("Service list request failed: %s", e)
-            return []
-
-        results: List[NovaPoshtaServiceItem] = []
-        data = response.get("data", []) if isinstance(response.get("data"), list) else []
-        for item in data:
-            results.append(NovaPoshtaServiceItem(
-                ref=item.get("Ref", ""),
-                description=item.get("Description", ""),
-                description_ru=item.get("DescriptionRu", ""),
-                code=item.get("Code", ""),
-                price=str(item.get("Price") or "0"),
-            ))
-
-        return results
+            for item in ADDITIONAL_SERVICES
+        ]
 
     # ─── Time intervals ────────────────────────────────────────────────────
 
@@ -321,7 +316,13 @@ class NovaPoshtaLookupService:
             "RecipientCityRef": recipient_city_ref,
         }
         if date_time:
-            props["DateTime"] = date_time
+            # NP API expects DD.MM.YYYY; frontend sends YYYY-MM-DD
+            try:
+                dt = datetime.strptime(date_time, "%Y-%m-%d")
+                props["DateTime"] = dt.strftime("%d.%m.%Y")
+            except ValueError:
+                logger.warning("Invalid date_time format for getTimeIntervals: %s, sending as-is", date_time)
+                props["DateTime"] = date_time
 
         try:
             response = await client.call(
@@ -367,7 +368,13 @@ class NovaPoshtaLookupService:
             "ServiceType": service_type_map.get(delivery_type, "WarehouseWarehouse"),
         }
         if date_time:
-            props["DateTime"] = date_time
+            # NP API expects DD.MM.YYYY; frontend sends YYYY-MM-DD
+            try:
+                dt = datetime.strptime(date_time, "%Y-%m-%d")
+                props["DateTime"] = dt.strftime("%d.%m.%Y")
+            except ValueError:
+                logger.warning("Invalid date_time format for getDeliveryDate: %s, sending as-is", date_time)
+                props["DateTime"] = date_time
 
         try:
             response = await client.call(

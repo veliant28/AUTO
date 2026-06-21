@@ -23,6 +23,8 @@ interface Props {
   isDeleting: boolean
   /** Loading state for print */
   isPrinting: boolean
+  /** Additional disabled state (e.g. packaging/services mode) */
+  disabled?: boolean
   /** Callbacks */
   onSave: () => void
   onDelete: () => void
@@ -45,9 +47,10 @@ export default function OrderWaybillFooter({
   onPrintHtml,
   onPrintPdf,
   onCancel,
+  disabled = false,
 }: Props) {
   const t = useTranslations('admin')
-  const isBusy = isPending || isSyncing || isDeleting || isPrinting
+  const isBusy = isPending || isSyncing || isDeleting || isPrinting || disabled
 
   return (
     <div className="border-t px-4 py-3 bg-muted/20 flex flex-wrap items-start justify-between gap-3">

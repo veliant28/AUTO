@@ -9,12 +9,15 @@ Covers:
   - getDocumentList
   - generateReport (print)
 """
+import logging
 from typing import Optional, Dict, Any
 from datetime import datetime
 from app.schemas.nova_poshta_schemas import OrderNovaPoshtaWaybillUpsert
 from app.models.nova_poshta import NovaPoshtaSenderProfile
 from app.services.nova_poshta.normalizers import NovaPoshtaDataNormalizer
 from app.services.nova_poshta.constants import MODEL_INTERNET_DOCUMENT
+
+logger = logging.getLogger(__name__)
 
 
 class NovaPoshtaWaybillPayloadBuilder:
@@ -102,7 +105,13 @@ class NovaPoshtaWaybillPayloadBuilder:
         if data.local_express:
             props["LocalDelivery"] = "1"
         if data.preferred_delivery_date:
-            props["PreferredDeliveryDate"] = data.preferred_delivery_date
+            # NP API expects DD.MM.YYYY; frontend sends YYYY-MM-DD
+            try:
+                dt = datetime.strptime(data.preferred_delivery_date, "%Y-%m-%d")
+                props["PreferredDeliveryDate"] = dt.strftime("%d.%m.%Y")
+            except ValueError:
+                logger.warning("Invalid preferred_delivery_date format: %s, sending as-is", data.preferred_delivery_date)
+                props["PreferredDeliveryDate"] = data.preferred_delivery_date
         if data.time_interval:
             props["TimeInterval"] = data.time_interval
         if data.info_reg_client_barcodes:
@@ -123,8 +132,10 @@ class NovaPoshtaWaybillPayloadBuilder:
                 props["DeliveryByHandRecipients"] = data.delivery_by_hand_recipients
         if data.special_cargo:
             props["SpecialCargo"] = "1"
-        if data.additional_information_snapshot:
-            props["AdditionalInformation"] = data.additional_information_snapshot
+        if data.packing_number:
+            props["PackingNumber"] = data.packing_number
+        if data.additional_information:
+            props["AdditionalInformation"] = data.additional_information
 
         return props
 

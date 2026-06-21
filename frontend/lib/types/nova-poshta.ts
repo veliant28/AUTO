@@ -160,6 +160,44 @@ export interface NovaPoshtaServiceItem {
   price: string
 }
 
+/** Parameters for additional services that require extra data. */
+export interface ServiceParamValue {
+  /** Контроль оплаты — сума */
+  afterpayment_amount?: string
+  /** Контроль оплаты — хто платить комісію */
+  afterpayment_payer?: 'Sender' | 'Recipient'
+  /** Номер пакування / Packing number */
+  packing_number?: string
+  /** Штрихкод / Barcode */
+  info_reg_client_barcodes?: string
+  /** Супровідні документи */
+  accompanying_documents?: string
+  /** Додаткова інформація */
+  additional_information?: string
+  /** Поверхів підйом */
+  number_of_floors_lifting?: string
+  /** Поверхів спуск */
+  number_of_floors_descent?: string
+  /** Кількість переадресацій */
+  forwarding_count?: string
+  /** Штрихкод червоної коробки */
+  red_box_barcode?: string
+  /** Час доставки / Time interval */
+  time_interval?: string
+  /** Бажана дата доставки */
+  preferred_delivery_date?: string
+  /** Доставка особисто в руки */
+  delivery_by_hand?: boolean
+  /** Список одержувачів для доставки в руки */
+  delivery_by_hand_recipients?: string
+  /** Локальний експрес */
+  local_express?: boolean
+  /** Суботня доставка */
+  saturday_delivery?: boolean
+  /** Ручне оброблення */
+  special_cargo?: boolean
+}
+
 export interface NovaPoshtaServiceLookupQuery {
   sender_profile_id?: number
 }
@@ -310,8 +348,15 @@ export interface OrderNovaPoshtaWaybillUpsert {
   delivery_by_hand?: boolean
   delivery_by_hand_recipients?: string
   special_cargo?: boolean
+  packing_number?: string
+  additional_information?: string
 
   options_seat?: WaybillSeatOptionPayload[]
+
+  /** Service refs for the new unified services approach */
+  service_refs?: string[]
+  /** Service params keyed by service ref */
+  service_params?: Record<string, ServiceParamValue>
 }
 
 export interface WaybillSeatOption {
@@ -396,6 +441,8 @@ export interface OrderNovaPoshtaWaybillResponse {
   number_of_floors_lifting?: string
   number_of_floors_descent?: string
   forwarding_count?: string
+  packing_number?: string
+  additional_information?: string
   error_codes: string[]
   warning_codes: string[]
   info_codes: string[]
@@ -411,6 +458,11 @@ export interface OrderNovaPoshtaWaybillResponse {
   events_count: number
   options_seat: WaybillSeatOption[]
   tracking_events: WaybillTrackingEvent[]
+
+  /** Service refs for the new unified services approach */
+  service_refs?: string[]
+  /** Service params keyed by service ref */
+  service_params?: Record<string, ServiceParamValue>
 }
 
 export interface NovaPoshtaWaybillSummary {

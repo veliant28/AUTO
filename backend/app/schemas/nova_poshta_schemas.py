@@ -378,8 +378,14 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     delivery_by_hand: bool = False
     delivery_by_hand_recipients: Optional[str] = None
     special_cargo: bool = False
+    packing_number: Optional[str] = None
+    additional_information: Optional[str] = None
 
     options_seat: Optional[List[WaybillSeatOptionPayload]] = None
+
+    # New unified services approach
+    service_refs: List[str] = []
+    service_params: Optional[dict] = None
 
 
 class WaybillSeatOption(BaseModel):
@@ -464,6 +470,8 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     number_of_floors_lifting: Optional[str] = None
     number_of_floors_descent: Optional[str] = None
     forwarding_count: Optional[str] = None
+    packing_number: str = ""
+    additional_information: str = ""
     error_codes: List[str] = []
     warning_codes: List[str] = []
     info_codes: List[str] = []
@@ -479,6 +487,10 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     events_count: int = 0
     options_seat: List[WaybillSeatOption] = []
     tracking_events: List[WaybillTrackingEvent] = []
+
+    # New unified services approach
+    service_refs: List[str] = []
+    service_params: Optional[dict] = None
 
 
 class OrderRecipientInfo(BaseModel):

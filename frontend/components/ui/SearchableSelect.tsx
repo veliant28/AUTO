@@ -97,7 +97,7 @@ function SearchableSelect<T>({
   }, [highlightedIndex])
 
   const showDropdown =
-    isOpen && searchQuery.length >= minSearchLength && !disabled && !isLoading
+    isOpen && searchQuery.length >= minSearchLength && !disabled
 
   const handleSelect = (item: T) => {
     onChange(item)
@@ -174,42 +174,49 @@ function SearchableSelect<T>({
 
       {showDropdown && (
         <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
-          <div
-            ref={listRef}
-            className="overflow-y-auto py-1"
-            style={{ maxHeight: dropdownMaxHeight }}
-          >
-            {items.length > 0 ? (
-              items.map((item, index) => {
-                const isSelected =
-                  value != null && getKey(value) === getKey(item)
-                const isHighlighted = index === highlightedIndex
-                return (
-                  <div
-                    key={getKey(item)}
-                    data-index={index}
-                    role="option"
-                    aria-selected={isSelected || isHighlighted}
-                    className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
-                      isHighlighted
-                        ? 'bg-accent'
-                        : isSelected
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'hover:bg-muted'
-                    }`}
-                    onClick={() => handleSelect(item)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                  >
-                    {renderItem(item, isSelected, isHighlighted)}
-                  </div>
-                )
-              })
-            ) : (
-              <div className="text-sm text-muted-foreground py-3 text-center">
-                {noResultsMessage}
-              </div>
-            )}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Loading…</span>
+            </div>
+          ) : (
+            <div
+              ref={listRef}
+              className="overflow-y-auto py-1"
+              style={{ maxHeight: dropdownMaxHeight }}
+            >
+              {items.length > 0 ? (
+                items.map((item, index) => {
+                  const isSelected =
+                    value != null && getKey(value) === getKey(item)
+                  const isHighlighted = index === highlightedIndex
+                  return (
+                    <div
+                      key={getKey(item)}
+                      data-index={index}
+                      role="option"
+                      aria-selected={isSelected || isHighlighted}
+                      className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                        isHighlighted
+                          ? 'bg-accent'
+                          : isSelected
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'hover:bg-muted'
+                      }`}
+                      onClick={() => handleSelect(item)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                    >
+                      {renderItem(item, isSelected, isHighlighted)}
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="text-sm text-muted-foreground py-3 text-center">
+                  {noResultsMessage}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

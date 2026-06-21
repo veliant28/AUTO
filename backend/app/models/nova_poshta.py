@@ -101,6 +101,8 @@ class OrderNovaPoshtaWaybill(Base):
     print_url_html = Column(String(1024), default="")
     print_url_pdf = Column(String(1024), default="")
 
+    service_params = Column(JSON, default=dict)
+
     can_edit = Column(Boolean, default=True)
     last_sync_error = Column(Text, default="")
 

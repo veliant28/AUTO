@@ -482,6 +482,7 @@ export default function OrderWaybillShipmentSection({
                   size="icon"
                   className="h-9 w-9"
                   onClick={onAddPlace}
+                  disabled={disabled || isPackagingMode}
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -497,6 +498,7 @@ export default function OrderWaybillShipmentSection({
               size="icon"
               className="h-9 w-9"
               onClick={() => onPlacesListModeChange?.(!isPlacesListMode)}
+              disabled={disabled || isPackagingMode}
             >
               <MoreHorizontal className="w-4 h-4" />
             </Button>
@@ -596,6 +598,7 @@ export default function OrderWaybillShipmentSection({
               variant="outline"
               className="h-9"
               onClick={() => onAddPlace?.()}
+              disabled={disabled || isPackagingMode}
             >
               {t('novaposhta_add_place_button')}
             </Button>

@@ -94,3 +94,112 @@ MODEL_TRACKING = "TrackingDocument"
 MODEL_COUNTERPARTY = "Counterparty"
 MODEL_CONTACT_PERSON = "CounterpartyContactPerson"
 MODEL_ADDITIONAL_SERVICE = "AdditionalService"
+
+
+# ─── Hardcoded additional services list ─────────────────────────────────────
+# Based on official NP API documentation:
+#   "Сформувати запит на створення експрес-накладної з додатковими послугами"
+#
+# Prices are set to "0" because they vary by sender contract and route.
+# The NP API does not provide a working getServiceList endpoint, so the list
+# is maintained from the official reference docs.
+ADDITIONAL_SERVICES: list[dict[str, str]] = [
+    {
+        "Ref": "SaturdayDelivery",
+        "Description": "Суботня доставка",
+        "DescriptionRu": "Субботняя доставка",
+        "Code": "SaturdayDelivery",
+        "Price": "0",
+    },
+    {
+        "Ref": "AfterpaymentOnGoodsCost",
+        "Description": "Контроль оплати",
+        "DescriptionRu": "Контроль оплаты",
+        "Code": "AfterpaymentOnGoodsCost",
+        "Price": "0",
+    },
+    {
+        "Ref": "LocalExpress",
+        "Description": "Локал Експрес",
+        "DescriptionRu": "Локал Экспресс",
+        "Code": "LocalExpress",
+        "Price": "0",
+    },
+    {
+        "Ref": "PreferredDeliveryDate",
+        "Description": "Бажана дата доставки",
+        "DescriptionRu": "Желаемая дата доставки",
+        "Code": "PreferredDeliveryDate",
+        "Price": "0",
+    },
+    {
+        "Ref": "PackingNumber",
+        "Description": "Номер паковання",
+        "DescriptionRu": "Номер упаковки",
+        "Code": "PackingNumber",
+        "Price": "0",
+    },
+    {
+        "Ref": "InfoRegClientBarcodes",
+        "Description": "Внутрішній номер замовлення",
+        "DescriptionRu": "Внутренний номер заказа",
+        "Code": "InfoRegClientBarcodes",
+        "Price": "0",
+    },
+    {
+        "Ref": "AccompanyingDocuments",
+        "Description": "Супровідні документи",
+        "DescriptionRu": "Сопроводительные документы",
+        "Code": "AccompanyingDocuments",
+        "Price": "0",
+    },
+    {
+        "Ref": "AdditionalInformation",
+        "Description": "Додаткова інформація",
+        "DescriptionRu": "Дополнительная информация",
+        "Code": "AdditionalInformation",
+        "Price": "0",
+    },
+    {
+        "Ref": "NumberOfFloorsLifting",
+        "Description": "Підйом на поверх",
+        "DescriptionRu": "Подъем на этаж",
+        "Code": "NumberOfFloorsLifting",
+        "Price": "0",
+    },
+    {
+        "Ref": "NumberOfFloorsDescent",
+        "Description": "Спуск з поверху",
+        "DescriptionRu": "Спуск с этажа",
+        "Code": "NumberOfFloorsDescent",
+        "Price": "0",
+    },
+    {
+        "Ref": "DeliveryByHand",
+        "Description": "Доставка особисто в руки",
+        "DescriptionRu": "Доставка лично в руки",
+        "Code": "DeliveryByHand",
+        "Price": "0",
+    },
+    {
+        "Ref": "ForwardingCount",
+        "Description": "Контроль поштучної передачі",
+        "DescriptionRu": "Контроль поштучной передачи",
+        "Code": "ForwardingCount",
+        "Price": "0",
+    },
+    {
+        "Ref": "RedBoxBarcode",
+        "Description": "Red Box",
+        "DescriptionRu": "Red Box",
+        "Code": "RedBoxBarcode",
+        "Price": "0",
+    },
+    {
+        "Ref": "SpecialCargo",
+        "Description": "Ручне оброблення",
+        "DescriptionRu": "Ручная обработка",
+        "Code": "SpecialCargo",
+        "Price": "0",
+    },
+]

@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 import { Loader2, Truck, BadgeCheck, X } from 'lucide-react'
 import {
   Dialog,
@@ -29,6 +34,7 @@ import OrderWaybillSenderSection from './OrderWaybillSenderSection'
 import OrderWaybillShipmentSection from './OrderWaybillShipmentSection'
 import OrderWaybillRecipientSection from './OrderWaybillRecipientSection'
 import OrderWaybillPaymentSection from './OrderWaybillPaymentSection'
+import OrderWaybillServiceEditorSection from './OrderWaybillServiceEditorSection'
 import OrderWaybillFooter from './OrderWaybillFooter'
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -99,12 +105,38 @@ export default function OrderWaybillModal({
     weight: '0.1',
     seats_amount: 1,
     cost: '0',
+    service_refs: [],
+    service_params: {},
+    packing_number: '',
+    additional_information: '',
+    info_reg_client_barcodes: '',
+    accompanying_documents: '',
+    red_box_barcode: '',
+    number_of_floors_lifting: '',
+    number_of_floors_descent: '',
+    forwarding_count: '',
+    time_interval: '',
+    preferred_delivery_date: '',
+    delivery_by_hand: false,
+    delivery_by_hand_recipients: '',
+    local_express: false,
+    saturday_delivery: false,
+    special_cargo: false,
   })
   const [isPackagingMode, setIsPackagingMode] = useState(false)
   const [isServicesMode, setIsServicesMode] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [activePlaceIndex, setActivePlaceIndex] = useState(0)
   const [isPlacesListMode, setIsPlacesListMode] = useState(false)
+  const [editingServiceRef, setEditingServiceRef] = useState<string | null>(
+    null,
+  )
+  const [editingServiceName, setEditingServiceName] = useState<string>('')
+  const [editingServiceParams, setEditingServiceParams] = useState<
+    Record<string, any>
+  >({})
+  /** Set to the canceled service ref — PaymentSection removes it from selection */
+  const [lastCanceledRef, setLastCanceledRef] = useState<string | null>(null)
 
   // ── Derived sender data ─────────────────────────────────────────────────
   const selectedSender = senders.find((s) => s.id === form.sender_profile_id)
@@ -165,6 +197,21 @@ export default function OrderWaybillModal({
         seats_amount: waybill.seats_amount || 1,
         cost: waybill.cost || '0',
         afterpayment_amount: waybill.afterpayment_amount || undefined,
+        packing_number: waybill.packing_number || '',
+        additional_information: waybill.additional_information || '',
+        info_reg_client_barcodes: waybill.info_reg_client_barcodes || '',
+        accompanying_documents: waybill.accompanying_documents || '',
+        red_box_barcode: waybill.red_box_barcode || '',
+        number_of_floors_lifting: waybill.number_of_floors_lifting || '',
+        number_of_floors_descent: waybill.number_of_floors_descent || '',
+        forwarding_count: waybill.forwarding_count || '',
+        time_interval: waybill.time_interval || '',
+        preferred_delivery_date: waybill.preferred_delivery_date || '',
+        delivery_by_hand: waybill.delivery_by_hand ?? false,
+        delivery_by_hand_recipients: waybill.delivery_by_hand_recipients || '',
+        local_express: waybill.local_express ?? false,
+        saturday_delivery: waybill.saturday_delivery ?? false,
+        special_cargo: waybill.special_cargo ?? false,
         options_seat:
           (waybill.options_seat?.map((s) => ({
             description: s.description,
@@ -176,6 +223,8 @@ export default function OrderWaybillModal({
             pack_refs: s.pack_refs,
             cargo_type: s.cargo_type,
           })) as any) || undefined,
+        service_refs: waybill.service_refs || [],
+        service_params: (waybill.service_params as any) || {},
       })
       formInitialized.current = true
     } else if (!waybill && !formInitialized.current && senders.length > 0) {
@@ -216,6 +265,8 @@ export default function OrderWaybillModal({
         .then((r) => r.data),
     enabled: cityQuery.length >= 2 && form.sender_profile_id > 0,
     staleTime: 60000,
+    retry: false,
+    placeholderData: keepPreviousData,
   })
 
   // Warehouse search (digits → warehouse/postomat mode)
@@ -241,6 +292,8 @@ export default function OrderWaybillModal({
       !!form.recipient_city_ref &&
       form.sender_profile_id > 0,
     staleTime: 60000,
+    retry: false,
+    placeholderData: keepPreviousData,
   })
 
   // ── Selected lookup items (for SearchableSelect value) ──────────────────
@@ -277,6 +330,8 @@ export default function OrderWaybillModal({
       addressQuery.length >= 2 &&
       form.sender_profile_id > 0,
     staleTime: 30000,
+    retry: false,
+    placeholderData: keepPreviousData,
   })
 
   // ── Counterparty lookup ──────────────────────────────────────────────────
@@ -299,6 +354,8 @@ export default function OrderWaybillModal({
           .then((r) => r.data),
       enabled: counterpartyQuery.length >= 2 && form.sender_profile_id > 0,
       staleTime: 30000,
+      retry: false,
+      placeholderData: keepPreviousData,
     })
 
   const selectedCounterparty =
@@ -590,6 +647,104 @@ export default function OrderWaybillModal({
     onOpenChange(false)
   }, [onOpenChange])
 
+  // ── Service editor handlers ────────────────────────────────────────────
+
+  const handleServiceEdit = useCallback(
+    (serviceRef: string, serviceName: string) => {
+      const params = form.service_params?.[serviceRef] || {}
+      setEditingServiceParams(params)
+      setEditingServiceRef(serviceRef)
+      setEditingServiceName(serviceName)
+    },
+    [form.service_params],
+  )
+
+  const SERVICE_SYNC_FIELD_MAP: Record<string, Record<string, string>> = {
+    AfterpaymentOnGoodsCost: {
+      afterpayment_amount: 'afterpayment_amount',
+    },
+    PackingNumber: {
+      packing_number: 'packing_number',
+    },
+    InfoRegClientBarcodes: {
+      info_reg_client_barcodes: 'info_reg_client_barcodes',
+    },
+    AccompanyingDocuments: {
+      accompanying_documents: 'accompanying_documents',
+    },
+    AdditionalInformation: {
+      additional_information: 'additional_information',
+    },
+    NumberOfFloorsLifting: {
+      number_of_floors_lifting: 'number_of_floors_lifting',
+    },
+    NumberOfFloorsDescent: {
+      number_of_floors_descent: 'number_of_floors_descent',
+    },
+    ForwardingCount: {
+      forwarding_count: 'forwarding_count',
+    },
+    RedBoxBarcode: {
+      red_box_barcode: 'red_box_barcode',
+    },
+    LocalExpress: {
+      time_interval: 'time_interval',
+      local_express: 'local_express',
+    },
+    PreferredDeliveryDate: {
+      preferred_delivery_date: 'preferred_delivery_date',
+      time_interval: 'time_interval',
+    },
+    DeliveryByHand: {
+      delivery_by_hand: 'delivery_by_hand',
+      delivery_by_hand_recipients: 'delivery_by_hand_recipients',
+    },
+    SaturdayDelivery: {
+      saturday_delivery: 'saturday_delivery',
+    },
+    SpecialCargo: {
+      special_cargo: 'special_cargo',
+    },
+  }
+
+  const handleServiceSave = useCallback(
+    (params: Record<string, any>) => {
+      if (!editingServiceRef) return
+      const fieldMapping = SERVICE_SYNC_FIELD_MAP[editingServiceRef]
+      const syncObj: Record<string, any> = {}
+      if (fieldMapping) {
+        for (const [paramKey, formField] of Object.entries(fieldMapping)) {
+          if (paramKey in params) {
+            syncObj[formField] = params[paramKey]
+          }
+        }
+      }
+      setForm((prev) => ({
+        ...prev,
+        service_params: {
+          ...prev.service_params,
+          [editingServiceRef]: params,
+        },
+        ...syncObj,
+      }))
+      setEditingServiceRef(null)
+      setEditingServiceParams({})
+      setEditingServiceName('')
+    },
+    [editingServiceRef],
+  )
+
+  const handleServiceCancel = useCallback(() => {
+    // Tell PaymentSection which service to remove from its local selection.
+    // We do NOT touch form.service_refs — that would delete existing services.
+    if (editingServiceRef) {
+      setLastCanceledRef(editingServiceRef)
+    }
+    setEditingServiceRef(null)
+    setEditingServiceParams({})
+    setEditingServiceName('')
+  }, [editingServiceRef])
+
   // ── Render ──────────────────────────────────────────────────────────────
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -659,44 +814,59 @@ export default function OrderWaybillModal({
                 onSenderChange={handleSenderChange}
               />
 
-              {/* Column 2: Shipment (spans columns 2-3 when in packaging mode) */}
+              {/* Column 2: Shipment or Service Editor */}
               <div
                 className={
                   isPackagingMode ? 'order-2 xl:col-span-2' : 'order-2'
                 }
               >
-                <OrderWaybillShipmentSection
-                  description={activeSeat?.description ?? form.description}
-                  cargoType={(activeSeat?.cargo_type ?? form.cargo_type) as any}
-                  weight={activeSeat?.weight ?? form.weight}
-                  cost={activeSeat?.cost ?? form.cost}
-                  volumetricWidth={
-                    activeSeat?.volumetric_width ?? form.volumetric_width
-                  }
-                  volumetricLength={
-                    activeSeat?.volumetric_length ?? form.volumetric_length
-                  }
-                  volumetricHeight={
-                    activeSeat?.volumetric_height ?? form.volumetric_height
-                  }
-                  senderProfileId={form.sender_profile_id}
-                  isPackagingMode={isPackagingMode}
-                  onPackagingModeChange={setIsPackagingMode}
-                  isPlacesListMode={isPlacesListMode}
-                  activePlaceIndex={activePlaceIndex}
-                  onAddPlace={handleAddPlace}
-                  onSwitchPlace={handleSwitchPlace}
-                  onDeletePlaces={handleDeletePlaces}
-                  onPlaceChange={handlePlaceFormChange}
-                  onPlacesListModeChange={setIsPlacesListMode}
-                  onCancel={handleCancel}
-                  onSave={handleSave}
-                  disabled={isPending || isServicesMode}
-                  isEdit={isEdit}
-                  waybill={waybill}
-                  form={form}
-                  onChange={handlePlaceFormChange}
-                />
+                {editingServiceRef ? (
+                  <OrderWaybillServiceEditorSection
+                    serviceRef={editingServiceRef}
+                    serviceName={editingServiceName}
+                    params={editingServiceParams}
+                    onSave={handleServiceSave}
+                    onCancel={handleServiceCancel}
+                    senderProfileId={form.sender_profile_id}
+                    recipientCityRef={form.recipient_city_ref}
+                    deliveryType={form.delivery_type}
+                  />
+                ) : (
+                  <OrderWaybillShipmentSection
+                    description={activeSeat?.description ?? form.description}
+                    cargoType={
+                      (activeSeat?.cargo_type ?? form.cargo_type) as any
+                    }
+                    weight={activeSeat?.weight ?? form.weight}
+                    cost={activeSeat?.cost ?? form.cost}
+                    volumetricWidth={
+                      activeSeat?.volumetric_width ?? form.volumetric_width
+                    }
+                    volumetricLength={
+                      activeSeat?.volumetric_length ?? form.volumetric_length
+                    }
+                    volumetricHeight={
+                      activeSeat?.volumetric_height ?? form.volumetric_height
+                    }
+                    senderProfileId={form.sender_profile_id}
+                    isPackagingMode={isPackagingMode}
+                    onPackagingModeChange={setIsPackagingMode}
+                    isPlacesListMode={isPlacesListMode}
+                    activePlaceIndex={activePlaceIndex}
+                    onAddPlace={handleAddPlace}
+                    onSwitchPlace={handleSwitchPlace}
+                    onDeletePlaces={handleDeletePlaces}
+                    onPlaceChange={handlePlaceFormChange}
+                    onPlacesListModeChange={setIsPlacesListMode}
+                    onCancel={handleCancel}
+                    onSave={handleSave}
+                    disabled={isPending || isServicesMode}
+                    isEdit={isEdit}
+                    waybill={waybill}
+                    form={form}
+                    onChange={handlePlaceFormChange}
+                  />
+                )}
               </div>
 
               {/* Column 3: Recipient (hidden in packaging/services mode) */}
@@ -749,11 +919,16 @@ export default function OrderWaybillModal({
                   afterpaymentAmount={form.afterpayment_amount}
                   cost={form.cost}
                   syncError={waybill?.last_sync_error || ''}
-                  disabled={isPending || isPackagingMode}
+                  disabled={isPending || isPackagingMode || !!editingServiceRef}
                   isServicesMode={isServicesMode}
                   onServicesModeChange={setIsServicesMode}
                   senderProfileId={form.sender_profile_id}
                   onChange={handleFormChange}
+                  initialServiceRefs={form.service_refs}
+                  initialServiceParams={form.service_params}
+                  onServiceEdit={handleServiceEdit}
+                  editingServiceRef={editingServiceRef}
+                  lastCanceledRef={lastCanceledRef}
                 />
               </div>
             </div>
@@ -783,6 +958,7 @@ export default function OrderWaybillModal({
               if (waybill) printPdfMutation.mutate(waybill.id)
             }}
             onCancel={() => onOpenChange(false)}
+            disabled={isPackagingMode || isServicesMode}
           />
         )}
       </DialogContent>

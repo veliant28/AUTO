@@ -278,6 +278,7 @@ class NovaPoshtaWaybillService:
             recipient_house=data.recipient_house or "",
             recipient_apartment=data.recipient_apartment or "",
             description_snapshot=data.description or "",
+            service_params=data.service_params or {},
             raw_request_json=payload,
             raw_response_json=np_data,
             created_by_id=user_id,
@@ -366,6 +367,7 @@ class NovaPoshtaWaybillService:
         wb.recipient_name = data.recipient_name or wb.recipient_name
         wb.recipient_phone = data.recipient_phone or wb.recipient_phone
         wb.description_snapshot = data.description or wb.description_snapshot
+        wb.service_params = data.service_params or {}
         wb.updated_by_id = user_id
         wb.updated_at = datetime.utcnow()
         wb.raw_request_json = payload
@@ -696,6 +698,8 @@ class NovaPoshtaWaybillService:
             updated_at=wb.updated_at,
             events_count=len(events),
             options_seat=[],  # NP doesn't persist options_seat separately
+            service_params=wb.service_params or {},
+            service_refs=list((wb.service_params or {}).keys()),
             tracking_events=tracking_events,
         )
 
