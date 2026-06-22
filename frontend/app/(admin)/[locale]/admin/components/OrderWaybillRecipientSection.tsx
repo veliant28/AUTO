@@ -175,6 +175,15 @@ export default function OrderWaybillRecipientSection({
 }: Props) {
   const t = useTranslations('admin')
 
+  function formatPhoneDisplay(phone: string): string {
+    const digits = phone.replace(/\D/g, '')
+    const normalized = digits.length >= 12 ? digits.slice(-10) : digits
+    if (normalized.length === 10) {
+      return `+38 (${normalized.slice(0, 3)}) ${normalized.slice(3, 6)}-${normalized.slice(6, 8)}-${normalized.slice(8, 10)}`
+    }
+    return phone
+  }
+
   // ── FIO input ────────────────────────────────────────────────────────────
   const handleFioBlur = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
@@ -392,12 +401,20 @@ export default function OrderWaybillRecipientSection({
           <Label className="text-xs text-muted-foreground">
             {t('novaposhta_recipient_phone_label')}
           </Label>
-          <PhoneInput
-            value={recipientPhone}
-            onChange={(v) => onFieldChange('recipient_phone', v)}
-            disabled={disabled}
-            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
+          {disabled ? (
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+              <span className={recipientPhone ? 'truncate' : 'truncate text-muted-foreground'}>
+                {formatPhoneDisplay(recipientPhone) || '—'}
+              </span>
+            </div>
+          ) : (
+            <PhoneInput
+              value={recipientPhone}
+              onChange={(v) => onFieldChange('recipient_phone', v)}
+              disabled={disabled}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          )}
         </div>
 
         {/* ── Counterparty ──────────────────────────────────────────────── */}
@@ -405,30 +422,38 @@ export default function OrderWaybillRecipientSection({
           <Label className="text-xs text-muted-foreground">
             {t('novaposhta_counterparty')}
           </Label>
-          <SearchableSelect
-            items={counterparties}
-            isLoading={counterpartiesLoading}
-            value={selectedCounterparty}
-            onChange={onCounterpartySelect}
-            placeholder={t('novaposhta_counterparty_placeholder')}
-            searchQuery={counterpartyQuery}
-            onSearchChange={onCounterpartyQueryChange}
-            getKey={(item) => item.ref}
-            getLabel={(item) => item.label}
-            renderItem={(item, isSelected, isHighlighted) => (
-              <div className="flex items-center justify-between">
-                <span>{item.label}</span>
-                <span className="text-xs text-muted-foreground ml-1 shrink-0">
-                  {item.phone}
-                </span>
-              </div>
-            )}
-            minSearchLength={2}
-            noResultsMessage={t('novaposhta_counterparty_not_found')}
-            typeToSearchMessage={t('novaposhta_type_to_search_city')}
-            disabled={disabled}
-            hideSearchIcon
-          />
+          {disabled ? (
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+              <span className={selectedCounterparty?.label ? 'truncate' : 'truncate text-muted-foreground'}>
+                {selectedCounterparty?.label || recipientCounterpartyRef || '—'}
+              </span>
+            </div>
+          ) : (
+            <SearchableSelect
+              items={counterparties}
+              isLoading={counterpartiesLoading}
+              value={selectedCounterparty}
+              onChange={onCounterpartySelect}
+              placeholder={t('novaposhta_counterparty_placeholder')}
+              searchQuery={counterpartyQuery}
+              onSearchChange={onCounterpartyQueryChange}
+              getKey={(item) => item.ref}
+              getLabel={(item) => item.label}
+              renderItem={(item, isSelected, isHighlighted) => (
+                <div className="flex items-center justify-between">
+                  <span>{item.label}</span>
+                  <span className="text-xs text-muted-foreground ml-1 shrink-0">
+                    {item.phone}
+                  </span>
+                </div>
+              )}
+              minSearchLength={2}
+              noResultsMessage={t('novaposhta_counterparty_not_found')}
+              typeToSearchMessage={t('novaposhta_type_to_search_city')}
+              disabled={disabled}
+              hideSearchIcon
+            />
+          )}
         </div>
 
         {/* ── FIO ────────────────────────────────────────────────────────── */}
@@ -436,13 +461,21 @@ export default function OrderWaybillRecipientSection({
           <Label className="text-xs text-muted-foreground">
             {t('novaposhta_recipient_name_label')}
           </Label>
-          <Input
-            value={recipientName}
-            onChange={handleFioChange}
-            onBlur={handleFioBlur}
-            disabled={disabled}
-            placeholder={t('novaposhta_fio_placeholder')}
-          />
+          {disabled ? (
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+              <span className={recipientName ? 'truncate' : 'truncate text-muted-foreground'}>
+                {recipientName || '—'}
+              </span>
+            </div>
+          ) : (
+            <Input
+              value={recipientName}
+              onChange={handleFioChange}
+              onBlur={handleFioBlur}
+              disabled={disabled}
+              placeholder={t('novaposhta_fio_placeholder')}
+            />
+          )}
         </div>
 
         {/* ── City ───────────────────────────────────────────────────────── */}
@@ -450,34 +483,42 @@ export default function OrderWaybillRecipientSection({
           <Label className="text-xs text-muted-foreground">
             {t('novaposhta_city')}
           </Label>
-          <SearchableSelect
-            items={settlements}
-            isLoading={settlementsLoading}
-            value={selectedSettlement}
-            onChange={onCitySelect}
-            placeholder={t('novaposhta_search_city_placeholder')}
-            searchQuery={cityQuery}
-            onSearchChange={onCityQueryChange}
-            getKey={(item) => item.ref}
-            getLabel={(item) => item.label}
-            renderItem={(item, isSelected, isHighlighted) => (
-              <>
-                <div className="font-medium leading-tight">{item.label}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {[item.area, item.region].filter(Boolean).join(' — ')}
-                  {item.warehouses_count && item.warehouses_count !== '0' ? (
-                    <span className="ml-2 inline-flex items-center gap-1">
-                      <Warehouse className="w-3 h-3" />×{item.warehouses_count}
-                    </span>
-                  ) : null}
-                </div>
-              </>
-            )}
-            minSearchLength={2}
-            noResultsMessage={t('novaposhta_cities_not_found')}
-            typeToSearchMessage={t('novaposhta_type_to_search_city')}
-            disabled={disabled}
-          />
+          {disabled ? (
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+              <span className={recipientCityLabel ? 'truncate' : 'truncate text-muted-foreground'}>
+                {recipientCityLabel || '—'}
+              </span>
+            </div>
+          ) : (
+            <SearchableSelect
+              items={settlements}
+              isLoading={settlementsLoading}
+              value={selectedSettlement}
+              onChange={onCitySelect}
+              placeholder={t('novaposhta_search_city_placeholder')}
+              searchQuery={cityQuery}
+              onSearchChange={onCityQueryChange}
+              getKey={(item) => item.ref}
+              getLabel={(item) => item.label}
+              renderItem={(item, isSelected, isHighlighted) => (
+                <>
+                  <div className="font-medium leading-tight">{item.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {[item.area, item.region].filter(Boolean).join(' — ')}
+                    {item.warehouses_count && item.warehouses_count !== '0' ? (
+                      <span className="ml-2 inline-flex items-center gap-1">
+                        <Warehouse className="w-3 h-3" />×{item.warehouses_count}
+                      </span>
+                    ) : null}
+                  </div>
+                </>
+              )}
+              minSearchLength={2}
+              noResultsMessage={t('novaposhta_cities_not_found')}
+              typeToSearchMessage={t('novaposhta_type_to_search_city')}
+              disabled={disabled}
+            />
+          )}
         </div>
 
         {/* ── Unified Address: warehouse / postomat / street ─────────────── */}
@@ -485,6 +526,13 @@ export default function OrderWaybillRecipientSection({
           <Label className="text-xs text-muted-foreground">
             {t('novaposhta_address_label')}
           </Label>
+          {disabled ? (
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+              <span className={addressDisplay ? 'truncate' : 'truncate text-muted-foreground'}>
+                {addressDisplay || '—'}
+              </span>
+            </div>
+          ) : (
           <div ref={addressContainerRef} className="relative">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -620,6 +668,7 @@ export default function OrderWaybillRecipientSection({
                 </div>
               )}
           </div>
+          )}
         </div>
       </div>
     </section>
