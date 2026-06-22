@@ -234,27 +234,31 @@ export default function OrderWaybillModal({
       })
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
-    } else if (
-      !waybill &&
-      !formInitialized.current &&
-      senders.length > 0 &&
-      detail !== undefined
-    ) {
-      // Set default sender and pre-fill recipient from order data
+    } else if (!waybill && !formInitialized.current && senders.length > 0) {
+      // Set default sender (doesn't need detail)
       const defaultSender = senders.find((s) => s.is_default) || senders[0]
-      const orderData = detail?.recipient_from_order
       setForm((prev) => ({
         ...prev,
         sender_profile_id: defaultSender?.id || 0,
-        recipient_name: orderData?.full_name || prev.recipient_name,
-        recipient_phone: orderData?.phone || prev.recipient_phone,
-        recipient_first_name:
-          orderData?.first_name || prev.recipient_first_name,
-        recipient_last_name: orderData?.last_name || prev.recipient_last_name,
-        recipient_middle_name:
-          orderData?.middle_name || prev.recipient_middle_name,
       }))
-      formInitialized.current = true
+      // If detail is also available, pre-fill recipient from order
+      if (detail) {
+        const orderData = detail.recipient_from_order
+        if (orderData) {
+          setForm((prev) => ({
+            ...prev,
+            recipient_name: orderData.full_name || prev.recipient_name,
+            recipient_phone: orderData.phone || prev.recipient_phone,
+            recipient_first_name:
+              orderData.first_name || prev.recipient_first_name,
+            recipient_last_name:
+              orderData.last_name || prev.recipient_last_name,
+            recipient_middle_name:
+              orderData.middle_name || prev.recipient_middle_name,
+          }))
+        }
+        formInitialized.current = true
+      }
     }
     return () => {}
   }, [waybill, senders, detail])
