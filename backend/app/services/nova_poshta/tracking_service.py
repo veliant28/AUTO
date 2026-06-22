@@ -111,7 +111,7 @@ class NovaPoshtaTrackingService:
             response = await client.get_status({"Documents": documents})
         except NovaPoshtaApiError as e:
             logger.error("Batch tracking sync failed: %s", e)
-            return {num: {"status_code": "", "status_text": f"Error: {e.message}"} for num in numbers}
+            return {num: {"status_code": "", "status_text": f"Error: {str(e)}"} for num in numbers}
 
         results: dict = {}
         data_list = response.get("data", [])

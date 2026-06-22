@@ -230,7 +230,7 @@ class NovaPoshtaWaybillService:
                 order_id=order_id,
                 waybill_id=0,
                 event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=e.message or "Помилка створення TTN",
+                message=str(e) or "Помилка створення TTN",
                 errors=[],
                 error_codes=e.errors or [],
                 user_id=user_id,
@@ -339,7 +339,7 @@ class NovaPoshtaWaybillService:
                 order_id=wb.order_id,
                 waybill_id=wb.id,
                 event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=e.message or "Помилка оновлення TTN",
+                message=str(e) or "Помилка оновлення TTN",
                 errors=[],
                 error_codes=e.errors or [],
                 user_id=user_id,
@@ -417,7 +417,7 @@ class NovaPoshtaWaybillService:
                 order_id=wb.order_id,
                 waybill_id=wb.id,
                 event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=e.message or "Помилка видалення TTN",
+                message=str(e) or "Помилка видалення TTN",
                 errors=[],
                 error_codes=e.errors or [],
                 user_id=user_id,
@@ -473,7 +473,7 @@ class NovaPoshtaWaybillService:
                 "Documents": [{"DocumentNumber": wb.np_number}],
             })
         except NovaPoshtaApiError as e:
-            wb.last_sync_error = e.message
+            wb.last_sync_error = str(e)
             wb.status_synced_at = datetime.utcnow()
             self.db.flush()
 
@@ -481,7 +481,7 @@ class NovaPoshtaWaybillService:
                 order_id=wb.order_id,
                 waybill_id=wb.id,
                 event_type=OrderNovaPoshtaWaybillEvent.EVENT_SYNC,
-                message=f"Помилка синхронізації: {e.message}",
+                message=f"Помилка синхронізації: {str(e)}",
                 errors=e.errors or [],
                 error_codes=[],
                 user_id=None,
@@ -544,7 +544,7 @@ class NovaPoshtaWaybillService:
                 order_id=wb.order_id,
                 waybill_id=wb.id,
                 event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=e.message or "Помилка друку TTN",
+                message=str(e) or "Помилка друку TTN",
                 user_id=user_id,
             )
             raise
