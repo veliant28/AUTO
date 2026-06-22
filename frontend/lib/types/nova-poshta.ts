@@ -143,6 +143,7 @@ export interface NovaPoshtaCounterpartyLookupQuery {
   sender_profile_id?: number
   query: string
   locale?: string
+  counterparty_property?: string
 }
 
 export interface NovaPoshtaCounterpartyDetailsQuery {
@@ -272,6 +273,7 @@ export interface NovaPoshtaLookupCounterparty {
   address: string
   edrpou: string
   counterparty_type: string
+  counterparty_property?: string
 }
 
 export interface NovaPoshtaCounterpartyDetails {
@@ -314,6 +316,7 @@ export interface OrderNovaPoshtaWaybillUpsert {
   recipient_address_label: string
   recipient_counterparty_ref?: string
   recipient_contact_ref?: string
+  third_person_ref?: string
   recipient_name: string
   recipient_first_name?: string
   recipient_last_name?: string
@@ -417,6 +420,7 @@ export interface OrderNovaPoshtaWaybillResponse {
   recipient_address_label: string
   recipient_counterparty_ref: string
   recipient_contact_ref: string
+  third_person_ref?: string
   recipient_name: string
   recipient_first_name: string
   recipient_last_name: string

@@ -406,43 +406,59 @@ class NovaPoshtaLookupService:
         locale: str = "uk",
         limit: int = 20,
     ) -> List[NovaPoshtaLookupCounterparty]:
-        """Search counterparties (recipients/senders) by name or phone."""
+        """
+        Search counterparties by name or phone.
+
+        Supports multiple counterparty_property values separated by comma
+        (e.g. "Recipient,ThirdPerson"). When multiple properties are given,
+        parallel API calls are made and results are merged (dedup by ref).
+        """
         client = self._get_sender_client(sender_profile_id)
-        props: dict = {
-            "CounterpartyProperty": counterparty_property,
-            "Page": "1",
-        }
-        if query:
-            props["FindByString"] = query
+        properties = [p.strip() for p in counterparty_property.split(",") if p.strip()]
 
-        try:
-            response = await client.call(
-                MODEL_COUNTERPARTY,
-                METHOD_GET_COUNTERPARTIES,
-                props,
-            )
-        except NovaPoshtaApiError as e:
-            logger.warning("Counterparty search failed: %s", e)
-            return []
-
+        seen: set = set()
         results: List[NovaPoshtaLookupCounterparty] = []
-        data = response.get("data", []) if isinstance(response.get("data"), list) else []
-        for item in data:
-            results.append(NovaPoshtaLookupCounterparty(
-                ref=item.get("Ref", ""),
-                counterparty_ref=item.get("Counterparty") or item.get("Ref", ""),
-                city_ref=item.get("CityRef", ""),
-                city_label=item.get("CityDescription", ""),
-                label=item.get("Description", ""),
-                full_name=item.get("FullName", "") or item.get("Description", ""),
-                first_name=item.get("FirstName", ""),
-                last_name=item.get("LastName", ""),
-                middle_name=item.get("MiddleName", ""),
-                phone=item.get("Phone", ""),
-                address=item.get("Address", ""),
-                edrpou=item.get("EDRPOU", ""),
-                counterparty_type=item.get("CounterpartyType", ""),
-            ))
+
+        for prop in properties:
+            props: dict = {
+                "CounterpartyProperty": prop,
+                "Page": "1",
+            }
+            if query:
+                props["FindByString"] = query
+
+            try:
+                response = await client.call(
+                    MODEL_COUNTERPARTY,
+                    METHOD_GET_COUNTERPARTIES,
+                    props,
+                )
+            except NovaPoshtaApiError as e:
+                logger.warning("Counterparty search failed for property %s: %s", prop, e)
+                continue
+
+            data = response.get("data", []) if isinstance(response.get("data"), list) else []
+            for item in data:
+                ref = item.get("Ref", "")
+                if ref in seen:
+                    continue
+                seen.add(ref)
+                results.append(NovaPoshtaLookupCounterparty(
+                    ref=ref,
+                    counterparty_ref=item.get("Counterparty") or ref,
+                    city_ref=item.get("CityRef", ""),
+                    city_label=item.get("CityDescription", ""),
+                    label=item.get("Description", ""),
+                    full_name=item.get("FullName", "") or item.get("Description", ""),
+                    first_name=item.get("FirstName", ""),
+                    last_name=item.get("LastName", ""),
+                    middle_name=item.get("MiddleName", ""),
+                    phone=item.get("Phone", ""),
+                    address=item.get("Address", ""),
+                    edrpou=item.get("EDRPOU", ""),
+                    counterparty_type=item.get("CounterpartyType", ""),
+                    counterparty_property=prop,
+                ))
 
         return results
 

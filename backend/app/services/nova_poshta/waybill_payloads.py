@@ -29,6 +29,7 @@ class NovaPoshtaWaybillPayloadBuilder:
         sender: NovaPoshtaSenderProfile,
         recipient_counterparty_ref: str = "",
         recipient_contact_ref: str = "",
+        third_person_ref: str = "",
     ) -> dict:
         """
         Build methodProperties dict for InternetDocument/save.
@@ -92,6 +93,10 @@ class NovaPoshtaWaybillPayloadBuilder:
         if recipient_contact_ref:
             props["RecipientContactRef"] = recipient_contact_ref
 
+        # ─── ThirdPerson ref (if payer is ThirdPerson) ──────────────────
+        if data.payer_type == "ThirdPerson" and third_person_ref:
+            props["ThirdPersonRef"] = third_person_ref
+
         # ─── Address delivery fields ────────────────────────────────────
         if data.delivery_type == "address":
             props["RecipientHouse"] = data.recipient_house or ""
@@ -146,6 +151,7 @@ class NovaPoshtaWaybillPayloadBuilder:
         sender: NovaPoshtaSenderProfile,
         recipient_counterparty_ref: str = "",
         recipient_contact_ref: str = "",
+        third_person_ref: str = "",
     ) -> dict:
         """
         Build methodProperties for InternetDocument/update.
@@ -156,6 +162,7 @@ class NovaPoshtaWaybillPayloadBuilder:
             data, sender,
             recipient_counterparty_ref=recipient_counterparty_ref,
             recipient_contact_ref=recipient_contact_ref,
+            third_person_ref=third_person_ref,
         )
         props["Ref"] = waybill_ref
         return props

@@ -284,6 +284,7 @@ class NovaPoshtaLookupCounterparty(BaseModel):
     address: str = ""
     edrpou: str = ""
     counterparty_type: str = ""
+    counterparty_property: str = ""
 
 
 class NovaPoshtaCounterpartyDetails(BaseModel):
@@ -344,6 +345,7 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     recipient_address_label: str = ""
     recipient_counterparty_ref: Optional[str] = None
     recipient_contact_ref: Optional[str] = None
+    third_person_ref: Optional[str] = None
     recipient_name: str
     recipient_first_name: Optional[str] = None
     recipient_last_name: Optional[str] = None
@@ -446,6 +448,7 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     recipient_address_label: str = ""
     recipient_counterparty_ref: str = ""
     recipient_contact_ref: str = ""
+    third_person_ref: str = ""
     recipient_name: str = ""
     recipient_first_name: str = ""
     recipient_last_name: str = ""

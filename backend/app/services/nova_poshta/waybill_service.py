@@ -210,6 +210,7 @@ class NovaPoshtaWaybillService:
             data, sender,
             recipient_counterparty_ref=data.recipient_counterparty_ref or "",
             recipient_contact_ref=data.recipient_contact_ref or "",
+            third_person_ref=data.third_person_ref or "",
         )
 
         # Optionally check possibility first (catch errors early)
@@ -271,6 +272,7 @@ class NovaPoshtaWaybillService:
             recipient_address_label=data.recipient_address_label,
             recipient_counterparty_ref=data.recipient_counterparty_ref,
             recipient_contact_ref=data.recipient_contact_ref,
+            third_person_ref=data.third_person_ref or "",
             recipient_name=data.recipient_name,
             recipient_phone=data.recipient_phone,
             recipient_street_ref=data.recipient_street_ref or "",
@@ -327,6 +329,7 @@ class NovaPoshtaWaybillService:
             data, wb.np_ref, sender,
             recipient_counterparty_ref=data.recipient_counterparty_ref or "",
             recipient_contact_ref=data.recipient_contact_ref or "",
+            third_person_ref=data.third_person_ref or "",
         )
 
         try:
@@ -355,6 +358,7 @@ class NovaPoshtaWaybillService:
         # Update editable fields from request
         wb.payer_type = data.payer_type or wb.payer_type
         wb.payment_method = data.payment_method or wb.payment_method
+        wb.third_person_ref = data.third_person_ref or wb.third_person_ref
         wb.cargo_type = data.cargo_type or wb.cargo_type
         wb.cost = Decimal(str(data.cost)) if data.cost else wb.cost
         wb.weight = Decimal(str(data.weight)) if data.weight else wb.weight
@@ -676,6 +680,7 @@ class NovaPoshtaWaybillService:
             recipient_address_label=wb.recipient_address_label,
             recipient_counterparty_ref=wb.recipient_counterparty_ref,
             recipient_contact_ref=wb.recipient_contact_ref,
+            third_person_ref=wb.third_person_ref,
             recipient_name=wb.recipient_name,
             recipient_phone=wb.recipient_phone,
             recipient_street_ref=wb.recipient_street_ref,

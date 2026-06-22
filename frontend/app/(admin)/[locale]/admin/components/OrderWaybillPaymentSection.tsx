@@ -8,6 +8,11 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
@@ -26,6 +31,12 @@ interface Props {
   isServicesMode?: boolean
   onServicesModeChange?: (mode: boolean) => void
   senderProfileId?: number
+  /** Sender type from profile: "private_person" | "fop" | "business" */
+  senderType?: string
+  /** Recipient counterparty type from NP: "PrivatePerson" | "Organization" */
+  recipientCounterpartyType?: string
+  /** ThirdPerson counterparty ref from counterparty search */
+  thirdPersonRef?: string
   onChange: (field: string, value: any) => void
   /** Pre-loaded service refs from the saved waybill */
   initialServiceRefs?: string[]
@@ -70,6 +81,9 @@ export default function OrderWaybillPaymentSection({
   isServicesMode = false,
   onServicesModeChange,
   senderProfileId,
+  senderType = '',
+  recipientCounterpartyType = '',
+  thirdPersonRef = '',
   onChange,
   initialServiceRefs = [],
   initialServiceParams = {},
@@ -300,12 +314,76 @@ export default function OrderWaybillPaymentSection({
     { field: 'special_cargo', label: t('novaposhta_special_cargo') },
   ]
 
+  // ── Payer / Payment validation rules ─────────────────────────────────────
+  // Sender:    private person → Cash only;   FOP/Organization → Cash + NonCash
+  // Recipient: PrivatePerson  → Cash only;   Organization     → Cash + NonCash
+  // ThirdPerson: always NonCash only, requires thirdPersonRef
+  const isPayerAllowed = useCallback(
+    (payer: PayerType, method: PaymentMethod): boolean => {
+      if (payer === 'ThirdPerson')
+        return method === 'NonCash' && !!thirdPersonRef
+      if (method === 'Cash') return true // Sender & Recipient always allow Cash
+      // method === 'NonCash'
+      if (payer === 'Sender') {
+        // Sender can pay non-cash only if FOP or Organization
+        return senderType === 'fop' || senderType === 'business'
+      }
+      if (payer === 'Recipient') {
+        // Recipient can pay non-cash only if Organization (FOP counts as Organization in NP)
+        return recipientCounterpartyType === 'Organization'
+      }
+      return true
+    },
+    [senderType, recipientCounterpartyType, thirdPersonRef],
+  )
+
+  const isPaymentAllowed = useCallback(
+    (method: PaymentMethod, payer: PayerType): boolean => {
+      if (payer === 'ThirdPerson')
+        return method === 'NonCash' && !!thirdPersonRef
+      if (method === 'Cash') return true // Sender & Recipient always allow Cash
+      // method === 'NonCash'
+      if (payer === 'Sender') {
+        return senderType === 'fop' || senderType === 'business'
+      }
+      if (payer === 'Recipient') {
+        return recipientCounterpartyType === 'Organization'
+      }
+      return true
+    },
+    [senderType, recipientCounterpartyType, thirdPersonRef],
+  )
+
   const handlePayerType = (value: PayerType) => {
     onChange('payer_type', value)
+    // Auto-switch payment method if current one is incompatible
+    if (!isPaymentAllowed(paymentMethod, value)) {
+      // ThirdPerson → NonCash; Recipient or Sender on NonCash → switch to Cash
+      const newMethod: PaymentMethod =
+        value === 'ThirdPerson' ? 'NonCash' : 'Cash'
+      onChange('payment_method', newMethod)
+    }
   }
 
   const handlePaymentMethod = (value: PaymentMethod) => {
     onChange('payment_method', value)
+    // Auto-switch payer type if current one is incompatible
+    if (!isPayerAllowed(payerType, value)) {
+      // NonCash selected but current payer can't use it
+      // Try ThirdPerson first (if ref available), fall back to Sender
+      if (
+        value === 'NonCash' &&
+        thirdPersonRef &&
+        isPayerAllowed('ThirdPerson', value)
+      ) {
+        onChange('payer_type', 'ThirdPerson')
+      } else {
+        // Try Sender or Recipient as fallback
+        const fallback: PayerType =
+          payerType === 'ThirdPerson' ? 'Sender' : 'Sender'
+        onChange('payer_type', fallback)
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -585,18 +663,39 @@ export default function OrderWaybillPaymentSection({
             {t('novaposhta_payer_type')}
           </Label>
           <div className="grid grid-cols-3 gap-1.5">
-            {(Object.keys(payerTypeLabels) as PayerType[]).map((value) => (
-              <Button
-                key={value}
-                type="button"
-                variant={payerType === value ? 'default' : 'outline'}
-                className="h-9"
-                disabled={disabled}
-                onClick={() => handlePayerType(value)}
-              >
-                {payerTypeLabels[value]}
-              </Button>
-            ))}
+            {(Object.keys(payerTypeLabels) as PayerType[]).map((value) => {
+              const btnDisabled =
+                disabled || !isPayerAllowed(value, paymentMethod)
+              const btn = (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={payerType === value ? 'default' : 'outline'}
+                  className="h-9"
+                  disabled={btnDisabled}
+                  onClick={() => handlePayerType(value)}
+                >
+                  {payerTypeLabels[value]}
+                </Button>
+              )
+              if (btnDisabled && !disabled) {
+                let tooltipKey: string
+                if (value === 'Sender') {
+                  tooltipKey = 'novaposhta_payer_sender_disabled_tooltip'
+                } else if (value === 'Recipient') {
+                  tooltipKey = 'novaposhta_payer_recipient_disabled_tooltip'
+                } else {
+                  tooltipKey = 'novaposhta_payer_third_person_disabled_tooltip'
+                }
+                return (
+                  <Tooltip key={value}>
+                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                    <TooltipContent>{t(tooltipKey)}</TooltipContent>
+                  </Tooltip>
+                )
+              }
+              return btn
+            })}
           </div>
         </div>
 
@@ -607,18 +706,39 @@ export default function OrderWaybillPaymentSection({
           </Label>
           <div className="grid grid-cols-2 gap-1.5">
             {(Object.keys(paymentMethodLabels) as PaymentMethod[]).map(
-              (value) => (
-                <Button
-                  key={value}
-                  type="button"
-                  variant={paymentMethod === value ? 'default' : 'outline'}
-                  className="h-9"
-                  disabled={disabled}
-                  onClick={() => handlePaymentMethod(value)}
-                >
-                  {paymentMethodLabels[value]}
-                </Button>
-              ),
+              (value) => {
+                const btnDisabled =
+                  disabled || !isPaymentAllowed(value, payerType)
+                const btn = (
+                  <Button
+                    key={value}
+                    type="button"
+                    variant={paymentMethod === value ? 'default' : 'outline'}
+                    className="h-9"
+                    disabled={btnDisabled}
+                    onClick={() => handlePaymentMethod(value)}
+                  >
+                    {paymentMethodLabels[value]}
+                  </Button>
+                )
+                // Show tooltip only when disabled by business rule
+                if (btnDisabled && !disabled) {
+                  // NonCash can be disabled because Sender or Recipient is a private person
+                  const tooltipKey =
+                    value === 'NonCash'
+                      ? payerType === 'Sender'
+                        ? 'novaposhta_payer_sender_disabled_tooltip'
+                        : 'novaposhta_payer_recipient_disabled_tooltip'
+                      : 'novaposhta_payment_cash_disabled_tooltip'
+                  return (
+                    <Tooltip key={value}>
+                      <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                      <TooltipContent>{t(tooltipKey)}</TooltipContent>
+                    </Tooltip>
+                  )
+                }
+                return btn
+              },
             )}
           </div>
         </div>

@@ -98,6 +98,7 @@ export default function OrderWaybillModal({
     recipient_phone: '',
     recipient_counterparty_ref: '',
     recipient_contact_ref: '',
+    third_person_ref: '',
     recipient_street_ref: '',
     recipient_street_label: '',
     recipient_house: '',
@@ -137,6 +138,10 @@ export default function OrderWaybillModal({
   >({})
   /** Set to the canceled service ref — PaymentSection removes it from selection */
   const [lastCanceledRef, setLastCanceledRef] = useState<string | null>(null)
+  /** Recipient counterparty type from NP ("PrivatePerson" / "Organization") */
+  const [recipientCounterpartyType, setRecipientCounterpartyType] =
+    useState<string>('')
+  const [thirdPersonRef, setThirdPersonRef] = useState<string>('')
 
   // ── Derived sender data ─────────────────────────────────────────────────
   const selectedSender = senders.find((s) => s.id === form.sender_profile_id)
@@ -189,6 +194,7 @@ export default function OrderWaybillModal({
         recipient_phone: waybill.recipient_phone,
         recipient_counterparty_ref: waybill.recipient_counterparty_ref || '',
         recipient_contact_ref: waybill.recipient_contact_ref || '',
+        third_person_ref: waybill.third_person_ref || '',
         recipient_street_ref: waybill.recipient_street_ref || '',
         recipient_street_label: waybill.recipient_street_label || '',
         recipient_house: waybill.recipient_house || '',
@@ -226,6 +232,7 @@ export default function OrderWaybillModal({
         service_refs: waybill.service_refs || [],
         service_params: (waybill.service_params as any) || {},
       })
+      setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
     } else if (!waybill && !formInitialized.current && senders.length > 0) {
       // Set default sender and pre-fill recipient from order data
@@ -350,6 +357,7 @@ export default function OrderWaybillModal({
           .searchCounterparties({
             sender_profile_id: form.sender_profile_id,
             query: counterpartyQuery,
+            counterparty_property: 'Recipient,ThirdPerson',
           })
           .then((r) => r.data),
       enabled: counterpartyQuery.length >= 2 && form.sender_profile_id > 0,
@@ -524,7 +532,14 @@ export default function OrderWaybillModal({
         recipient_first_name: item.first_name,
         recipient_middle_name: item.middle_name,
       }))
+      setRecipientCounterpartyType(item.counterparty_type)
       setCounterpartyQuery(item.label)
+      // Save third_person_ref if a ThirdPerson counterparty was selected
+      if (item.counterparty_property === 'ThirdPerson') {
+        setThirdPersonRef(item.counterparty_ref)
+      } else {
+        setThirdPersonRef('')
+      }
     },
     [],
   )
@@ -923,6 +938,9 @@ export default function OrderWaybillModal({
                   isServicesMode={isServicesMode}
                   onServicesModeChange={setIsServicesMode}
                   senderProfileId={form.sender_profile_id}
+                  senderType={selectedSender?.sender_type || ''}
+                  recipientCounterpartyType={recipientCounterpartyType}
+                  thirdPersonRef={thirdPersonRef}
                   onChange={handleFormChange}
                   initialServiceRefs={form.service_refs}
                   initialServiceParams={form.service_params}
