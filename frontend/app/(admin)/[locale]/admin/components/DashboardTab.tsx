@@ -181,7 +181,7 @@ export default function DashboardTab() {
                     <div className="flex items-center gap-3">
                       <span className="font-medium">{fmt(order.total)} ₴</span>
                       <Link href={`/orders/${order.id}`}>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="icon">
                           <ExternalLink className="w-4 h-4" />
                         </Button>
                       </Link>

@@ -268,7 +268,7 @@ export default function ImportPage() {
                             <>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" onClick={() => promoteMutation.mutate(item.id)} disabled={promoteMutation.isPending}>
+                                  <Button variant="outline" size="icon" onClick={() => promoteMutation.mutate(item.id)} disabled={promoteMutation.isPending}>
                                     <RefreshCw className="w-4 h-4" />
                                   </Button>
                                 </TooltipTrigger>
@@ -277,7 +277,7 @@ export default function ImportPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/imports/${item.id}/download`} target="_blank">
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline" size="icon">
                                       <Download className="w-4 h-4" />
                                     </Button>
                                   </a>
@@ -288,7 +288,7 @@ export default function ImportPage() {
                           )}
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(item)}>
+                              <Button variant="destructive" size="icon" onClick={() => setDeleteTarget(item)}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>

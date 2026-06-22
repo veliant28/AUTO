@@ -109,7 +109,7 @@ function TokenBadge({ supplier, onRefresh }: { supplier: string; onRefresh: () =
   if (data?.token_status === 'expired' || (secondsLeft === 0 && data?.token_status)) {
     return (
       <Button variant="outline" size="sm" className="gap-1.5 text-red-500 border-red-300" onClick={onRefresh}>
-        <RefreshCw className="w-3 h-3" />
+        <RefreshCw className="w-4 h-4" />
         {ta('settings_token_refresh')}
       </Button>
     );
@@ -580,20 +580,20 @@ function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                size="sm"
+                size="icon"
                 className={`${s.enabled ? `${color} text-white` : ''}`}
                 variant={s.enabled ? undefined : 'outline'}
                 onClick={() => onToggle(!s.enabled)}
               >
-                {s.enabled ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                {s.enabled ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
               </Button>
             </TooltipTrigger>
             <TooltipContent>{s.enabled ? t('settings_schedule_disabled_short') : t('settings_schedule_enabled_short')}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="outline" onClick={onRun} disabled={!s.enabled || s.schedule_status === 'in_progress'}>
-                <Play className="w-3.5 h-3.5" />
+              <Button size="icon" variant="outline" onClick={onRun} disabled={!s.enabled || s.schedule_status === 'in_progress'}>
+                <Play className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t('settings_schedule_run')}</TooltipContent>

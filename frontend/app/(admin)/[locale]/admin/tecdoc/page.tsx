@@ -627,7 +627,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => batchStart.mutate()}
                 disabled={batchStart.isPending}
               >
@@ -641,7 +641,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <TooltipContent>{t('tecdoc_batch_start')}</TooltipContent>
           </Tooltip>
 
-          <Button variant="ghost" size="sm" disabled>
+          <Button variant="ghost" size="icon" disabled>
             <Square className="w-4 h-4" />
           </Button>
 
@@ -651,7 +651,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             className="h-8 w-8"
             onClick={() => setBatchSize(Math.max(1, batchSize - 1))}
           >
-            <Minus className="w-3 h-3" />
+            <Minus className="w-4 h-4" />
           </Button>
           <span className="text-sm font-medium w-8 text-center">
             {batchSize}
@@ -662,14 +662,14 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             className="h-8 w-8"
             onClick={() => setBatchSize(batchSize + 1)}
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-4 h-4" />
           </Button>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => batchStartSelected.mutate()}
                 disabled={batchStartSelected.isPending || selected.size === 0}
               >
@@ -1081,7 +1081,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                         </span>
                         <Button size="sm" variant="outline" disabled={binding}>
                           {binding ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             t('tecdoc_manual_bind')
                           )}

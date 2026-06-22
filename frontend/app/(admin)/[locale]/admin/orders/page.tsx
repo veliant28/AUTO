@@ -440,7 +440,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => openView(row.original.id)}
                 >
                   <Eye className="w-4 h-4" />
@@ -452,7 +452,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => handleWaybillOpen(row.original.id)}
                 >
                   <Truck className="w-4 h-4" />
@@ -464,7 +464,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => handleTrackingOpen(row.original.id)}
                 >
                   <Clock className="w-4 h-4" />
@@ -835,7 +835,7 @@ export default function AdminOrdersPage() {
                                           <TooltipTrigger asChild>
                                             <Button
                                               variant="destructive"
-                                              size="sm"
+                                              size="icon"
                                               className="shrink-0"
                                               onClick={() =>
                                                 deleteItemMutation.mutate(
@@ -878,7 +878,7 @@ export default function AdminOrdersPage() {
                                               item.quantity) <= 1
                                           }
                                         >
-                                          <Minus className="w-3.5 h-3.5" />
+                                          <Minus className="w-4 h-4" />
                                         </Button>
                                         <span className="w-8 text-center font-medium tabular-nums">
                                           {qty}
@@ -896,7 +896,7 @@ export default function AdminOrdersPage() {
                                             }))
                                           }
                                         >
-                                          <Plus className="w-3.5 h-3.5" />
+                                          <Plus className="w-4 h-4" />
                                         </Button>
                                         <span className="text-sm text-muted-foreground ml-1">
                                           × {fmt(item.price)} ₴
