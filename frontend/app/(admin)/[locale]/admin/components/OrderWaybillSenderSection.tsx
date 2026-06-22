@@ -124,7 +124,7 @@ export default function OrderWaybillSenderSection({
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-1.5 pt-2 min-w-0 flex-1 overflow-y-auto overflow-x-hidden content-start">
+      <div className="grid gap-1.5 pt-2 min-w-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden auto-rows-min">
         {displayFields.map((field) => (
           <div key={field.label} className="grid gap-0.5">
             <Label className="text-sm text-muted-foreground">

@@ -636,7 +636,7 @@ export default function OrderWaybillPaymentSection({
         </h3>
       </div>
 
-      <div className="grid gap-1.5 pt-2 flex-1 overflow-y-auto overflow-x-hidden content-start">
+      <div className="grid gap-1.5 pt-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden auto-rows-min">
         {/* Cost summary */}
         <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
           <div className="flex items-center justify-between gap-2">
