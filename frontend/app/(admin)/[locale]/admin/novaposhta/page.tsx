@@ -206,7 +206,7 @@ function SendersColumn({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Building2 className="w-5 h-5 text-primary" />
             {t('novaposhta_senders')}
@@ -215,15 +215,15 @@ function SendersColumn({
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[140px]">
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-[140px] h-auto py-3">
                   {t('novaposhta_sender_type')}
                 </TableHead>
-                <TableHead>{t('novaposhta_sender')}</TableHead>
-                <TableHead className="w-[100px]">
+                <TableHead className="h-auto py-3">{t('novaposhta_sender')}</TableHead>
+                <TableHead className="w-[100px] h-auto py-3">
                   {t('novaposhta_status')}
                 </TableHead>
-                <TableHead className="w-[150px] text-right">
+                <TableHead className="w-[150px] text-right h-auto py-3">
                   {t('actions')}
                 </TableHead>
               </TableRow>
