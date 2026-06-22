@@ -182,9 +182,10 @@ async def validate_sender(
     try:
         result = await service.validate_profile(sender_id)
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
+    db.commit()
     return result
 
 
@@ -253,7 +254,7 @@ async def lookup_settlements(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -275,7 +276,7 @@ async def lookup_streets(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -298,7 +299,7 @@ async def lookup_warehouses(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -320,7 +321,7 @@ async def lookup_pack_types(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -339,7 +340,7 @@ async def lookup_services(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -361,7 +362,7 @@ async def lookup_time_intervals(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -384,7 +385,7 @@ async def lookup_delivery_date(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -406,7 +407,7 @@ async def lookup_counterparties(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
     return results
 
 
@@ -428,7 +429,7 @@ async def lookup_counterparty_details(
     except NovaPoshtaSenderNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     if not result:
         raise HTTPException(404, "Контрагента не знайдено")
@@ -468,7 +469,7 @@ async def create_waybill(
     except NovaPoshtaValidationError as e:
         raise HTTPException(400, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     return service._waybill_to_response(wb)
 
@@ -493,7 +494,7 @@ async def update_waybill(
     except NovaPoshtaValidationError as e:
         raise HTTPException(400, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     return service._waybill_to_response(wb)
 
@@ -516,7 +517,7 @@ async def delete_waybill(
     except NovaPoshtaValidationError as e:
         raise HTTPException(400, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     return {"message": "TTN видалено"}
 
@@ -534,7 +535,7 @@ async def sync_waybill_status(
     except NovaPoshtaWaybillNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     if not wb:
         raise HTTPException(404, "Waybill not found or deleted")
@@ -553,7 +554,7 @@ async def sync_order_waybill_status(
     try:
         wb = await service.sync_tracking_status(order_id=order_id)
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     if not wb:
         return service.get_order_waybill_detail(order_id)
@@ -581,7 +582,7 @@ async def print_waybill(
     except NovaPoshtaValidationError as e:
         raise HTTPException(400, str(e))
     except NovaPoshtaApiError as e:
-        raise HTTPException(502, detail=e.message)
+        raise HTTPException(502, detail=str(e))
 
     if not result.url:
         raise HTTPException(502, "Не вдалося отримати посилання для друку")
