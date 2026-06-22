@@ -80,7 +80,7 @@ export default function OrderWaybillSenderSection({
     senderAddressDisplay
 
   return (
-    <section className="order-1 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card">
+    <section className="order-1 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card overflow-x-hidden">
       <div className="flex min-h-8 items-center justify-between gap-2">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Building2 className="w-4 h-4 text-muted-foreground" />
@@ -125,13 +125,13 @@ export default function OrderWaybillSenderSection({
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-1.5 pt-2">
+      <div className="grid gap-1.5 pt-2 min-w-0">
         {displayFields.map((field) => (
           <div key={field.label} className="grid gap-0.5">
             <Label className="text-xs text-muted-foreground">
               {t(field.label)}
             </Label>
-            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm">
+            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
               <span
                 className={
                   field.value ? 'truncate' : 'truncate text-muted-foreground'
@@ -166,7 +166,7 @@ export default function OrderWaybillSenderSection({
               </SelectContent>
             </Select>
           ) : (
-            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm">
+            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
               <span
                 className={
                   currentAddressLabel
