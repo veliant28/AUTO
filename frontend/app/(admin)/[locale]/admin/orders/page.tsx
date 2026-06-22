@@ -1096,20 +1096,22 @@ export default function AdminOrdersPage() {
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <ScrollText className="w-5 h-5" /> {t('order_summary')}
                         </h4>
-                        <div className="flex-1 space-y-2 text-sm mt-3">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              {t('total_items')}
-                            </span>
-                            <span>{orderDetail.items.length} шт.</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              {t('order_total')}:
-                            </span>
-                            <span className="font-bold text-lg">
-                              {fmt(editMode ? editTotal : orderDetail.total)} ₴
-                            </span>
+                        <div className="flex-1 mt-3">
+                          <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                {t('total_items')}
+                              </span>
+                              <span>{orderDetail.items.length} шт.</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                {t('order_total')}:
+                              </span>
+                              <span className="font-bold text-lg">
+                                {fmt(editMode ? editTotal : orderDetail.total)} ₴
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
