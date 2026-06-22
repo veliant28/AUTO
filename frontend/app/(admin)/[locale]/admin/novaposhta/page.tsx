@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Truck,
   Building2,
-  Plus,
+  Save,
   Loader2,
   Search,
   MapPin,
@@ -1044,7 +1044,7 @@ function SenderFormDialog({
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Plus className="w-4 h-4" />
+              <Save className="w-4 h-4" />
             )}
             {isEdit ? t('save') : t('novaposhta_sender_create')}
           </Button>
