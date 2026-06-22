@@ -510,7 +510,7 @@ export default function AdminOrdersPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              className="pl-9"
+              className="pl-9 h-10"
               placeholder={t('search_users')}
               value={search}
               onChange={(e) => {
@@ -526,7 +526,7 @@ export default function AdminOrdersPage() {
               setPage(0)
             }}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px] h-10">
               <SelectValue placeholder={t('filter_status')} />
             </SelectTrigger>
             <SelectContent>
