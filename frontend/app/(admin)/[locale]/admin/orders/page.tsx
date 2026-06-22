@@ -553,71 +553,71 @@ export default function AdminOrdersPage() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                <thead>
-                  {table.getHeaderGroups().map((hg) => (
-                    <tr key={hg.id} className="border-b bg-muted/50">
-                      {hg.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="text-left p-3 font-medium text-muted-foreground"
-                          style={{ width: header.getSize() }}
+                    <thead>
+                      {table.getHeaderGroups().map((hg) => (
+                        <tr key={hg.id} className="border-b bg-muted/50">
+                          {hg.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="text-left p-3 font-medium text-muted-foreground"
+                              style={{ width: header.getSize() }}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody>
+                      {table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b last:border-0 hover:bg-muted/30"
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                        </th>
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="p-3">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
                       ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="p-3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {data && data.total > 20 && (
-              <div className="flex items-center justify-between p-3 border-t">
-                <span className="text-sm text-muted-foreground">
-                  {page * 20 + 1}–{Math.min((page + 1) * 20, data.total)} of{' '}
-                  {data.total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 0}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Prev
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={(page + 1) * 20 >= data.total}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </Button>
+                    </tbody>
+                  </table>
                 </div>
-              </div>
+                {data && data.total > 20 && (
+                  <div className="flex items-center justify-between p-3 border-t">
+                    <span className="text-sm text-muted-foreground">
+                      {page * 20 + 1}–{Math.min((page + 1) * 20, data.total)} of{' '}
+                      {data.total}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 0}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        Prev
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={(page + 1) * 20 >= data.total}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
-            </>
-          )}
           </CardContent>
         </Card>
 
@@ -683,7 +683,7 @@ export default function AdminOrdersPage() {
                             })
                           }
                         >
-                          <SelectTrigger className="w-[140px] h-9">
+                          <SelectTrigger className="w-[140px] h-10">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -949,7 +949,7 @@ export default function AdminOrdersPage() {
                                 onChange={(v) =>
                                   setEditRecipient((p) => ({ ...p, phone: v }))
                                 }
-                                className="h-9 w-48 text-sm rounded-lg border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="h-10 w-48 text-sm rounded-lg border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               />
                             ) : (
                               <span>{formatPhone(orderDetail.phone)}</span>
@@ -966,7 +966,7 @@ export default function AdminOrdersPage() {
                                 </span>
                                 {editMode ? (
                                   <Input
-                                    className="h-9 w-40 text-sm"
+                                    className="h-10 w-40 text-sm"
                                     value={editRecipient[field]}
                                     maxLength={100}
                                     onChange={(e) =>
@@ -1064,7 +1064,7 @@ export default function AdminOrdersPage() {
                                 </span>
                                 {editMode ? (
                                   <Input
-                                    className="h-9 w-full text-sm"
+                                    className="h-10 w-full text-sm"
                                     value={editRecipient[field] || ''}
                                     maxLength={200}
                                     onChange={(e) =>
