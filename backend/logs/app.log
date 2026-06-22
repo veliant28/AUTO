@@ -13313,3 +13313,340 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-06-22 12:09:04 - root - INFO - Health check called
 2026-06-22 12:09:34 - root - INFO - Health check called
 2026-06-22 12:10:04 - root - INFO - Health check called
+2026-06-22 12:25:49 - root - INFO - Health check called
+2026-06-22 12:26:19 - root - INFO - Health check called
+2026-06-22 12:26:49 - root - INFO - Health check called
+2026-06-22 12:27:19 - root - INFO - Health check called
+2026-06-22 12:27:49 - root - INFO - Health check called
+2026-06-22 12:28:19 - root - INFO - Health check called
+2026-06-22 12:28:49 - root - INFO - Health check called
+2026-06-22 12:29:20 - root - INFO - Health check called
+2026-06-22 12:29:50 - root - INFO - Health check called
+2026-06-22 12:30:20 - root - INFO - Health check called
+2026-06-22 12:30:50 - root - INFO - Health check called
+2026-06-22 12:31:20 - root - INFO - Health check called
+2026-06-22 12:31:50 - root - INFO - Health check called
+2026-06-22 12:32:20 - root - INFO - Health check called
+2026-06-22 12:32:51 - root - INFO - Health check called
+2026-06-22 12:33:21 - root - INFO - Health check called
+2026-06-22 12:33:51 - root - INFO - Health check called
+2026-06-22 12:34:21 - root - INFO - Health check called
+2026-06-22 12:34:51 - root - INFO - Health check called
+2026-06-22 12:35:21 - root - INFO - Health check called
+2026-06-22 12:35:52 - root - INFO - Health check called
+2026-06-22 12:36:22 - root - INFO - Health check called
+2026-06-22 12:36:52 - root - INFO - Health check called
+2026-06-22 12:37:22 - root - INFO - Health check called
+2026-06-22 12:37:52 - root - INFO - Health check called
+2026-06-22 12:38:22 - root - INFO - Health check called
+2026-06-22 12:38:53 - root - INFO - Health check called
+2026-06-22 12:39:23 - root - INFO - Health check called
+2026-06-22 12:39:53 - root - INFO - Health check called
+2026-06-22 12:40:23 - root - INFO - Health check called
+2026-06-22 12:40:53 - root - INFO - Health check called
+2026-06-22 12:41:23 - root - INFO - Health check called
+2026-06-22 12:41:53 - root - INFO - Health check called
+2026-06-22 12:42:24 - root - INFO - Health check called
+2026-06-22 12:42:54 - root - INFO - Health check called
+2026-06-22 12:43:24 - root - INFO - Health check called
+2026-06-22 12:43:54 - root - INFO - Health check called
+2026-06-22 12:44:24 - root - INFO - Health check called
+2026-06-22 12:44:54 - root - INFO - Health check called
+2026-06-22 12:45:25 - root - INFO - Health check called
+2026-06-22 12:45:55 - root - INFO - Health check called
+2026-06-22 12:46:25 - root - INFO - Health check called
+2026-06-22 12:46:55 - root - INFO - Health check called
+2026-06-22 12:47:25 - root - INFO - Health check called
+2026-06-22 12:47:56 - root - INFO - Health check called
+2026-06-22 12:48:27 - root - INFO - Health check called
+2026-06-22 12:48:57 - root - INFO - Health check called
+2026-06-22 12:49:27 - root - INFO - Health check called
+2026-06-22 12:49:57 - root - INFO - Health check called
+2026-06-22 12:50:27 - root - INFO - Health check called
+2026-06-22 12:50:57 - root - INFO - Health check called
+2026-06-22 12:51:28 - root - INFO - Health check called
+2026-06-22 12:51:58 - root - INFO - Health check called
+2026-06-22 12:52:28 - root - INFO - Health check called
+2026-06-22 12:52:58 - root - INFO - Health check called
+2026-06-22 12:53:28 - root - INFO - Health check called
+2026-06-22 12:53:58 - root - INFO - Health check called
+2026-06-22 12:54:29 - root - INFO - Health check called
+2026-06-22 12:54:59 - root - INFO - Health check called
+2026-06-22 12:55:29 - root - INFO - Health check called
+2026-06-22 12:55:59 - root - INFO - Health check called
+2026-06-22 12:56:29 - root - INFO - Health check called
+2026-06-22 12:56:40 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 12:56:40 - app.services.nova_poshta.lookup_service - WARNING - Settlement search failed: Помилка CityName has invalid characters; Параметр назва міста містить недопустимі символи
+2026-06-22 12:56:59 - root - INFO - Health check called
+2026-06-22 12:57:29 - root - INFO - Health check called
+2026-06-22 12:58:00 - root - INFO - Health check called
+2026-06-22 12:58:30 - root - INFO - Health check called
+2026-06-22 12:59:00 - root - INFO - Health check called
+2026-06-22 12:59:30 - root - INFO - Health check called
+2026-06-22 13:00:00 - root - INFO - Health check called
+2026-06-22 13:00:30 - root - INFO - Health check called
+2026-06-22 13:00:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:00:51 - app.services.nova_poshta.lookup_service - WARNING - Settlement search failed: Помилка CityName has invalid characters; Параметр назва міста містить недопустимі символи
+2026-06-22 13:01:01 - root - INFO - Health check called
+2026-06-22 13:01:04 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:01:04 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:01:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:01:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:01:31 - root - INFO - Health check called
+2026-06-22 13:02:01 - root - INFO - Health check called
+2026-06-22 13:02:28 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 13:02:29 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 13:02:29 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 13:02:29 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 13:02:29 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 13:02:31 - root - INFO - Health check called
+2026-06-22 13:02:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:02:51 - app.services.nova_poshta.lookup_service - WARNING - Settlement search failed: Помилка CityName has invalid characters; Параметр назва міста містить недопустимі символи
+2026-06-22 13:03:01 - root - INFO - Health check called
+2026-06-22 13:03:31 - root - INFO - Health check called
+2026-06-22 13:04:01 - root - INFO - Health check called
+2026-06-22 13:04:32 - root - INFO - Health check called
+2026-06-22 13:05:02 - root - INFO - Health check called
+2026-06-22 13:05:32 - root - INFO - Health check called
+2026-06-22 13:06:02 - root - INFO - Health check called
+2026-06-22 13:06:33 - root - INFO - Health check called
+2026-06-22 13:07:03 - root - INFO - Health check called
+2026-06-22 13:07:33 - root - INFO - Health check called
+2026-06-22 13:07:50 - root - INFO - Health check called
+2026-06-22 13:08:04 - root - INFO - Health check called
+2026-06-22 13:08:34 - root - INFO - Health check called
+2026-06-22 13:08:37 - app.services.nova_poshta.client - WARNING - NP API timeout (attempt 1/3): Counterparty/getCounterparties
+2026-06-22 13:09:04 - root - INFO - Health check called
+2026-06-22 13:09:08 - app.services.nova_poshta.client - WARNING - NP API timeout (attempt 2/3): Counterparty/getCounterparties
+2026-06-22 13:09:10 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:09:11 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:09:15 - app.services.nova_poshta.client - WARNING - NP API timeout (attempt 1/3): Counterparty/getCounterparties
+2026-06-22 13:09:17 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:09:17 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:09:34 - root - INFO - Health check called
+2026-06-22 13:10:04 - root - INFO - Health check called
+2026-06-22 13:10:35 - root - INFO - Health check called
+2026-06-22 13:11:06 - root - INFO - Health check called
+2026-06-22 13:11:36 - root - INFO - Health check called
+2026-06-22 13:11:36 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:11:37 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:12:06 - root - INFO - Health check called
+2026-06-22 13:12:36 - root - INFO - Health check called
+2026-06-22 13:13:06 - root - INFO - Health check called
+2026-06-22 13:13:36 - root - INFO - Health check called
+2026-06-22 13:14:06 - root - INFO - Health check called
+2026-06-22 13:14:37 - root - INFO - Health check called
+2026-06-22 13:15:07 - root - INFO - Health check called
+2026-06-22 13:15:37 - root - INFO - Health check called
+2026-06-22 13:16:07 - root - INFO - Health check called
+2026-06-22 13:16:37 - root - INFO - Health check called
+2026-06-22 13:17:07 - root - INFO - Health check called
+2026-06-22 13:17:38 - root - INFO - Health check called
+2026-06-22 13:18:08 - root - INFO - Health check called
+2026-06-22 13:18:38 - root - INFO - Health check called
+2026-06-22 13:18:53 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:18:53 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:18:57 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:19:00 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:19:08 - root - INFO - Health check called
+2026-06-22 13:19:38 - root - INFO - Health check called
+2026-06-22 13:20:06 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 13:20:08 - root - INFO - Health check called
+2026-06-22 13:20:38 - root - INFO - Health check called
+2026-06-22 13:21:09 - root - INFO - Health check called
+2026-06-22 13:21:39 - root - INFO - Health check called
+2026-06-22 13:22:09 - root - INFO - Health check called
+2026-06-22 13:22:39 - root - INFO - Health check called
+2026-06-22 13:23:09 - root - INFO - Health check called
+2026-06-22 13:23:39 - root - INFO - Health check called
+2026-06-22 13:24:10 - root - INFO - Health check called
+2026-06-22 13:24:40 - root - INFO - Health check called
+2026-06-22 13:25:10 - root - INFO - Health check called
+2026-06-22 13:25:40 - root - INFO - Health check called
+2026-06-22 13:26:10 - root - INFO - Health check called
+2026-06-22 13:26:40 - root - INFO - Health check called
+2026-06-22 13:27:10 - root - INFO - Health check called
+2026-06-22 13:27:40 - root - INFO - Health check called
+2026-06-22 13:28:11 - root - INFO - Health check called
+2026-06-22 13:28:41 - root - INFO - Health check called
+2026-06-22 13:29:11 - root - INFO - Health check called
+2026-06-22 13:29:41 - root - INFO - Health check called
+2026-06-22 13:30:11 - root - INFO - Health check called
+2026-06-22 13:30:41 - root - INFO - Health check called
+2026-06-22 13:31:12 - root - INFO - Health check called
+2026-06-22 13:31:42 - root - INFO - Health check called
+2026-06-22 13:32:12 - root - INFO - Health check called
+2026-06-22 13:32:42 - root - INFO - Health check called
+2026-06-22 13:33:12 - root - INFO - Health check called
+2026-06-22 13:33:42 - root - INFO - Health check called
+2026-06-22 13:34:13 - root - INFO - Health check called
+2026-06-22 13:34:43 - root - INFO - Health check called
+2026-06-22 13:35:13 - root - INFO - Health check called
+2026-06-22 13:35:43 - root - INFO - Health check called
+2026-06-22 13:36:13 - root - INFO - Health check called
+2026-06-22 13:36:43 - root - INFO - Health check called
+2026-06-22 13:37:13 - root - INFO - Health check called
+2026-06-22 13:37:43 - root - INFO - Health check called
+2026-06-22 13:38:14 - root - INFO - Health check called
+2026-06-22 13:38:44 - root - INFO - Health check called
+2026-06-22 13:39:14 - root - INFO - Health check called
+2026-06-22 13:39:44 - root - INFO - Health check called
+2026-06-22 13:40:14 - root - INFO - Health check called
+2026-06-22 13:40:44 - root - INFO - Health check called
+2026-06-22 13:41:14 - root - INFO - Health check called
+2026-06-22 13:41:45 - root - INFO - Health check called
+2026-06-22 13:42:15 - root - INFO - Health check called
+2026-06-22 13:42:45 - root - INFO - Health check called
+2026-06-22 13:43:15 - root - INFO - Health check called
+2026-06-22 13:43:45 - root - INFO - Health check called
+2026-06-22 13:44:15 - root - INFO - Health check called
+2026-06-22 13:44:45 - root - INFO - Health check called
+2026-06-22 13:45:16 - root - INFO - Health check called
+2026-06-22 13:45:46 - root - INFO - Health check called
+2026-06-22 13:46:16 - root - INFO - Health check called
+2026-06-22 13:46:46 - root - INFO - Health check called
+2026-06-22 13:47:16 - root - INFO - Health check called
+2026-06-22 13:47:46 - root - INFO - Health check called
+2026-06-22 13:48:17 - root - INFO - Health check called
+2026-06-22 13:48:47 - root - INFO - Health check called
+2026-06-22 13:49:17 - root - INFO - Health check called
+2026-06-22 13:49:47 - root - INFO - Health check called
+2026-06-22 13:50:18 - root - INFO - Health check called
+2026-06-22 13:51:55 - root - INFO - Health check called
+2026-06-22 13:52:25 - root - INFO - Health check called
+2026-06-22 13:52:56 - root - INFO - Health check called
+2026-06-22 13:53:26 - root - INFO - Health check called
+2026-06-22 13:53:56 - root - INFO - Health check called
+2026-06-22 13:54:26 - root - INFO - Health check called
+2026-06-22 13:54:56 - root - INFO - Health check called
+2026-06-22 13:55:26 - root - INFO - Health check called
+2026-06-22 13:55:56 - root - INFO - Health check called
+2026-06-22 13:56:27 - root - INFO - Health check called
+2026-06-22 13:56:57 - root - INFO - Health check called
+2026-06-22 13:57:27 - root - INFO - Health check called
+2026-06-22 13:57:57 - root - INFO - Health check called
+2026-06-22 13:58:27 - root - INFO - Health check called
+2026-06-22 13:58:57 - root - INFO - Health check called
+2026-06-22 13:59:27 - root - INFO - Health check called
+2026-06-22 13:59:58 - root - INFO - Health check called
+2026-06-22 14:00:28 - root - INFO - Health check called
+2026-06-22 14:00:58 - root - INFO - Health check called
+2026-06-22 14:01:28 - root - INFO - Health check called
+2026-06-22 14:01:58 - root - INFO - Health check called
+2026-06-22 14:02:28 - root - INFO - Health check called
+2026-06-22 14:02:59 - root - INFO - Health check called
+2026-06-22 14:03:29 - root - INFO - Health check called
+2026-06-22 14:03:59 - root - INFO - Health check called
+2026-06-22 14:04:29 - root - INFO - Health check called
+2026-06-22 14:04:59 - root - INFO - Health check called
+2026-06-22 14:05:29 - root - INFO - Health check called
+2026-06-22 14:05:59 - root - INFO - Health check called
+2026-06-22 14:06:30 - root - INFO - Health check called
+2026-06-22 14:07:00 - root - INFO - Health check called
+2026-06-22 14:07:30 - root - INFO - Health check called
+2026-06-22 14:08:00 - root - INFO - Health check called
+2026-06-22 14:08:53 - root - INFO - Health check called
+2026-06-22 14:09:23 - root - INFO - Health check called
+2026-06-22 14:14:58 - root - INFO - Health check called
+2026-06-22 14:15:01 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:18 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:18 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/searchSettlements: success=false, errors=['CityName has invalid characters'], codes=['20000500652'], msg=Помилка CityName has invalid characters; Параметр назва міста містить недопустимі символи
+2026-06-22 14:15:18 - app.services.nova_poshta.lookup_service - WARNING - Settlement search failed: Помилка CityName has invalid characters; Параметр назва міста містить недопустимі символи
+2026-06-22 14:15:28 - root - INFO - Health check called
+2026-06-22 14:15:30 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:30 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:33 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:33 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:43 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:43 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:49 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:53 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:15:58 - root - INFO - Health check called
+2026-06-22 14:16:07 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:08 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:08 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:09 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:09 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:11 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:12 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:12 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/getWarehouses: success=false, errors=['To many requests'], codes=['20000401501'], msg=Помилка To many requests; Занадто багато запитів
+2026-06-22 14:16:12 - app.services.nova_poshta.lookup_service - WARNING - Warehouse search failed: Помилка To many requests; Занадто багато запитів
+2026-06-22 14:16:21 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:23 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 14:16:28 - root - INFO - Health check called
+2026-06-22 14:16:33 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:35 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:37 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:42 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:16:58 - root - INFO - Health check called
+2026-06-22 14:17:05 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:29 - root - INFO - Health check called
+2026-06-22 14:17:47 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:47 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:48 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:52 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:52 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:55 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:55 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:57 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:58 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:17:59 - root - INFO - Health check called
+2026-06-22 14:17:59 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:04 - app.services.nova_poshta.sender_service - INFO - Updated NP sender profile id=6
+2026-06-22 14:18:07 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:12 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:29 - root - INFO - Health check called
+2026-06-22 14:18:43 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:43 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:45 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:45 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:46 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:46 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/getWarehouses: success=false, errors=['To many requests'], codes=['20000401501'], msg=Помилка To many requests; Занадто багато запитів
+2026-06-22 14:18:46 - app.services.nova_poshta.lookup_service - WARNING - Warehouse search failed: Помилка To many requests; Занадто багато запитів
+2026-06-22 14:18:50 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:18:59 - root - INFO - Health check called
+2026-06-22 14:19:29 - root - INFO - Health check called
+2026-06-22 14:19:49 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:19:49 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:19:50 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:19:50 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:19:59 - root - INFO - Health check called
+2026-06-22 14:20:29 - root - INFO - Health check called
+2026-06-22 14:21:00 - root - INFO - Health check called
+2026-06-22 14:21:28 - app.services.nova_poshta.client - WARNING - NP API timeout (attempt 1/3): CounterpartyGeneral/getCounterpartyAddresses
+2026-06-22 14:21:28 - app.services.nova_poshta.client - WARNING - NP API timeout (attempt 1/3): AddressGeneral/searchSettlements
+2026-06-22 14:21:30 - root - INFO - Health check called
+2026-06-22 14:21:30 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:21:30 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:21:36 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:21:36 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:21:38 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:21:38 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:22:00 - root - INFO - Health check called
+2026-06-22 14:22:30 - root - INFO - Health check called
+2026-06-22 14:22:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:22:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:23:00 - root - INFO - Health check called
+2026-06-22 14:23:30 - root - INFO - Health check called
+2026-06-22 14:24:01 - root - INFO - Health check called
+2026-06-22 14:24:31 - root - INFO - Health check called
+2026-06-22 14:25:01 - root - INFO - Health check called
+2026-06-22 14:25:07 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:25:31 - root - INFO - Health check called
+2026-06-22 14:25:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:26:01 - root - INFO - Health check called
+2026-06-22 14:26:31 - root - INFO - Health check called
+2026-06-22 14:27:01 - root - INFO - Health check called
+2026-06-22 14:27:32 - root - INFO - Health check called
+2026-06-22 14:28:02 - root - INFO - Health check called
+2026-06-22 14:28:20 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-22 14:28:32 - root - INFO - Health check called
+2026-06-22 14:29:02 - root - INFO - Health check called
+2026-06-22 14:29:32 - root - INFO - Health check called
+2026-06-22 14:30:03 - root - INFO - Health check called
+2026-06-22 14:30:33 - root - INFO - Health check called
