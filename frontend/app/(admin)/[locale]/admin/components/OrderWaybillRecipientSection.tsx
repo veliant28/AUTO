@@ -402,7 +402,7 @@ export default function OrderWaybillRecipientSection({
             {t('novaposhta_recipient_phone_label')}
           </Label>
           {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span className={recipientPhone ? 'truncate' : 'truncate text-muted-foreground'}>
                 {formatPhoneDisplay(recipientPhone) || '—'}
               </span>
@@ -423,7 +423,7 @@ export default function OrderWaybillRecipientSection({
             {t('novaposhta_counterparty')}
           </Label>
           {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span className={selectedCounterparty?.label ? 'truncate' : 'truncate text-muted-foreground'}>
                 {selectedCounterparty?.label || recipientCounterpartyRef || '—'}
               </span>
@@ -462,7 +462,7 @@ export default function OrderWaybillRecipientSection({
             {t('novaposhta_recipient_name_label')}
           </Label>
           {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span className={recipientName ? 'truncate' : 'truncate text-muted-foreground'}>
                 {recipientName || '—'}
               </span>
@@ -484,7 +484,7 @@ export default function OrderWaybillRecipientSection({
             {t('novaposhta_city')}
           </Label>
           {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span className={recipientCityLabel ? 'truncate' : 'truncate text-muted-foreground'}>
                 {recipientCityLabel || '—'}
               </span>
@@ -527,7 +527,7 @@ export default function OrderWaybillRecipientSection({
             {t('novaposhta_address_label')}
           </Label>
           {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span className={addressDisplay ? 'truncate' : 'truncate text-muted-foreground'}>
                 {addressDisplay || '—'}
               </span>

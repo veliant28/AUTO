@@ -130,7 +130,7 @@ export default function OrderWaybillSenderSection({
             <Label className="text-sm text-muted-foreground">
               {t(field.label)}
             </Label>
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span
                 className={
                   field.value ? 'truncate' : 'truncate text-muted-foreground'
@@ -165,7 +165,7 @@ export default function OrderWaybillSenderSection({
               </SelectContent>
             </Select>
           ) : (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
               <span
                 className={
                   currentAddressLabel
