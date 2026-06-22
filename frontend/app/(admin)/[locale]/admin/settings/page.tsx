@@ -540,7 +540,7 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
         <Button
           variant="outline"
           size="sm"
-          className="h-9 w-24 font-normal text-center mx-auto cursor-pointer gap-2"
+          className="h-8 w-16 font-normal text-center mx-auto cursor-pointer gap-1"
           disabled={disabled}
         >
           <span className="flex-1">{value || '00:00'}</span>
@@ -548,10 +548,9 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-fit p-2" align="center" sideOffset={4}>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {/* Hours */}
-          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1">
-            <div className="text-xs font-medium text-muted-foreground text-center sticky top-0 bg-popover py-1">HH</div>
+          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
               <button
                 key={h}
@@ -572,8 +571,7 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
           </div>
           <div className="w-px bg-border self-stretch" />
           {/* Minutes */}
-          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pl-1">
-            <div className="text-xs font-medium text-muted-foreground text-center sticky top-0 bg-popover py-1">MM</div>
+          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pl-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
               <button
                 key={m}
