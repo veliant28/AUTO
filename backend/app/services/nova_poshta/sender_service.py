@@ -108,6 +108,8 @@ class NovaPoshtaSenderService:
             contact_ref=data.contact_ref or "",
             address_ref=data.address_ref or "",
             city_ref=data.city_ref or "",
+            city_label=data.city_label or "",
+            address_label=data.address_label or "",
             phone=data.phone or "",
             email=data.email or "",
             contact_name=contact_name,
@@ -182,10 +184,39 @@ class NovaPoshtaSenderService:
             else:
                 # Pick first counterparty as our sender
                 cp = data[0]
+
+                # NP API returns field "City" (not "CityRef") for getCounterparties
+                # A zero GUID means "no city assigned" — treat as empty
+                raw_city = cp.get("CityRef") or cp.get("City") or ""
+                if raw_city == "00000000-0000-0000-0000-000000000000":
+                    raw_city = ""
+
                 profile.counterparty_ref = cp.get("Ref", profile.counterparty_ref)
                 profile.contact_ref = cp.get("Contacts", "") or profile.contact_ref
-                profile.city_ref = cp.get("CityRef", profile.city_ref)
+                profile.city_ref = raw_city or profile.city_ref
                 profile.organization_name = cp.get("Description", profile.organization_name)
+
+                # If Contacts field was empty (common for Organization-type counterparties),
+                # try to fetch contact person via getCounterpartyContactPersons
+                if not profile.contact_ref and profile.counterparty_ref:
+                    try:
+                        cp_resp = await client.call(
+                            "CounterpartyGeneral",
+                            "getCounterpartyContactPersons",
+                            {"Ref": profile.counterparty_ref, "Page": "1"},
+                        )
+                        cp_data = cp_resp.get("data", [])
+                        if cp_data:
+                            profile.contact_ref = cp_data[0].get("Ref", "")
+                            if not profile.phone:
+                                profile.phone = cp_data[0].get("Phones", "")
+                            if not profile.email:
+                                profile.email = cp_data[0].get("Email", "")
+                    except Exception:
+                        logger.debug(
+                            "Could not fetch contact persons for counterparty %s during validation",
+                            profile.counterparty_ref,
+                        )
 
                 # Resolve human-readable city label
                 if profile.city_ref:
@@ -213,32 +244,33 @@ class NovaPoshtaSenderService:
                 result = NovaPoshtaSenderProfileValidateResult(
                     success=True,
                     message="Відправника перевірено успішно",
-                    counterparty_ref=profile.counterparty_ref,
-                    contact_ref=profile.contact_ref,
-                    address_ref=profile.address_ref,
-                    city_ref=profile.city_ref,
-                    city_label=profile.city_label,
-                    address_label=profile.address_label,
+                    counterparty_ref=profile.counterparty_ref or "",
+                    contact_ref=profile.contact_ref or "",
+                    address_ref=profile.address_ref or "",
+                    city_ref=profile.city_ref or "",
+                    city_label=profile.city_label or "",
+                    address_label=profile.address_label or "",
                 )
 
             profile.last_validated_at = datetime.utcnow()
             profile.last_validation_ok = result.success
             profile.last_validation_message = result.message
             profile.last_validation_payload = {
-                "counterparty_ref": profile.counterparty_ref,
-                "contact_ref": profile.contact_ref,
-                "address_ref": profile.address_ref,
-                "city_ref": profile.city_ref,
-                "city_label": profile.city_label,
-                "address_label": profile.address_label,
+                "counterparty_ref": profile.counterparty_ref or "",
+                "contact_ref": profile.contact_ref or "",
+                "address_ref": profile.address_ref or "",
+                "city_ref": profile.city_ref or "",
+                "city_label": profile.city_label or "",
+                "address_label": profile.address_label or "",
             }
             self.db.flush()
             return result
 
         except NovaPoshtaApiError as e:
+            logger.warning("Validation failed for sender id=%d: %s", profile_id, str(e))
             result = NovaPoshtaSenderProfileValidateResult(
                 success=False,
-                message=e.message or "Помилка при перевірці API ключа",
+                message=str(e) or "Помилка при перевірці API ключа",
             )
             profile.last_validated_at = datetime.utcnow()
             profile.last_validation_ok = False
@@ -273,6 +305,11 @@ class NovaPoshtaSenderService:
                 )
             cp = data[0]
 
+            # NP API returns "City" not "CityRef"; zero GUID = no city assigned
+            raw_city = cp.get("CityRef") or cp.get("City") or ""
+            if raw_city == "00000000-0000-0000-0000-000000000000":
+                raw_city = ""
+
             result = NovaPoshtaFetchFromTokenResult(
                 success=True,
                 message="Дані відправника отримано",
@@ -283,7 +320,7 @@ class NovaPoshtaSenderService:
                 email=cp.get("Email", ""),
                 counterparty_type=cp.get("CounterpartyType", ""),
                 counterparty_ref=cp.get("Ref", ""),
-                city_ref=cp.get("CityRef", "") or cp.get("City", ""),
+                city_ref=raw_city,
                 edrpou=cp.get("EDRPOU", ""),
                 ownership_form_description=cp.get("OwnershipFormDescription", ""),
                 description=cp.get("Description", ""),
@@ -310,6 +347,8 @@ class NovaPoshtaSenderService:
                             result.last_name = contact["LastName"]
                         if not result.middle_name and contact.get("MiddleName"):
                             result.middle_name = contact["MiddleName"]
+                        if not result.contact_ref and contact.get("Ref"):
+                            result.contact_ref = contact["Ref"]
                 except Exception:
                     logger.debug("Could not fetch contact persons for counterparty %s", result.counterparty_ref)
 
@@ -334,9 +373,10 @@ class NovaPoshtaSenderService:
             return result
 
         except NovaPoshtaApiError as e:
+            logger.warning("fetch_sender_from_token failed: %s", str(e))
             return NovaPoshtaFetchFromTokenResult(
                 success=False,
-                message=e.message or "Помилка при перевірці API ключа",
+                message=str(e) or "Помилка при перевірці API ключа",
             )
 
     # ─── Label resolution helpers ─────────────────────────────────────────────

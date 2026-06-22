@@ -153,6 +153,7 @@ class NovaPoshtaFetchFromTokenResult(BaseModel):
     email: str = ""
     counterparty_type: str = ""  # "PrivatePerson" | "Organization"
     counterparty_ref: str = ""
+    contact_ref: str = ""
     city_ref: str = ""
     city_label: str = ""
     address_label: str = ""

@@ -68,6 +68,11 @@ class NovaPoshtaApiClient:
                     errors = NovaPoshtaErrorMapper.flatten_errors(data)
                     error_codes = self._extract_error_codes(data)
                     msg = "; ".join(errors) if errors else f"NP API error: {data.get('errorMessage', 'unknown')}"
+                    logger.warning(
+                        "NP API error %s/%s: success=false, errors=%s, codes=%s, msg=%s",
+                        model_name, called_method,
+                        data.get("errors"), error_codes, msg,
+                    )
                     raise NovaPoshtaApiError(
                         message=msg,
                         status_code=response.status_code,

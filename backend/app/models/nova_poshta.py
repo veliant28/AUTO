@@ -18,6 +18,8 @@ class NovaPoshtaSenderProfile(Base):
     contact_ref = Column(String(36), default="")
     address_ref = Column(String(36), default="")
     city_ref = Column(String(36), default="")
+    city_label = Column(String(255), default="")
+    address_label = Column(String(255), default="")
 
     first_name = Column(String(36), default="")
     last_name = Column(String(36), default="")
