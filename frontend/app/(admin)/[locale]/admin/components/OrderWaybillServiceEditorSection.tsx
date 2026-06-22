@@ -187,7 +187,7 @@ export default function OrderWaybillServiceEditorSection({
         <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
           {/* Amount field */}
           <div className="grid gap-1.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t('novaposhta_service_amount')}
             </Label>
             <div className="relative">
@@ -212,7 +212,7 @@ export default function OrderWaybillServiceEditorSection({
 
           {/* Payer radio tiles */}
           <div className="grid gap-1.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t('novaposhta_afterpayment_payer')}
             </Label>
             <RadioGroup
@@ -309,7 +309,7 @@ export default function OrderWaybillServiceEditorSection({
         <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
           {/* Single value field */}
           <div className="grid gap-1.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t(simpleConfig.labelKey)}
             </Label>
             <Input
@@ -449,7 +449,7 @@ function LocalExpressEditor({
           </div>
         ) : (
           <div className="grid gap-1.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t('novaposhta_service_time_interval')}
             </Label>
             <Select
@@ -597,7 +597,7 @@ function PreferredDeliveryDateEditor({
         ) : (
           <>
             <div className="grid gap-1.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_service_delivery_date')}
               </Label>
               <Popover
@@ -642,7 +642,7 @@ function PreferredDeliveryDateEditor({
 
             {selectedDate && (
               <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">
+                <Label className="text-sm text-muted-foreground">
                   {t('novaposhta_service_time_interval')}
                 </Label>
                 {loadingIntervals ? (
@@ -752,7 +752,7 @@ function DeliveryByHandEditor({
 
         {enabled && (
           <div className="grid gap-1.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t('novaposhta_service_delivery_by_hand_recipients')}
             </Label>
             <Input

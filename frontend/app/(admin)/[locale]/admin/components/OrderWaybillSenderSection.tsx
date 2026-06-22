@@ -127,7 +127,7 @@ export default function OrderWaybillSenderSection({
       <div className="grid gap-1.5 pt-2 min-w-0">
         {displayFields.map((field) => (
           <div key={field.label} className="grid gap-0.5">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-sm text-muted-foreground">
               {t(field.label)}
             </Label>
             <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
@@ -144,7 +144,7 @@ export default function OrderWaybillSenderSection({
 
         {/* Address with dropdown selector */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_address')}
           </Label>
           {senderAddresses.length > 1 ? (

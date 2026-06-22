@@ -398,7 +398,7 @@ export default function OrderWaybillRecipientSection({
       <div className="grid gap-1.5 pt-2">
         {/* ── Phone ──────────────────────────────────────────────────────── */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_recipient_phone_label')}
           </Label>
           {disabled ? (
@@ -419,7 +419,7 @@ export default function OrderWaybillRecipientSection({
 
         {/* ── Counterparty ──────────────────────────────────────────────── */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_counterparty')}
           </Label>
           {disabled ? (
@@ -458,7 +458,7 @@ export default function OrderWaybillRecipientSection({
 
         {/* ── FIO ────────────────────────────────────────────────────────── */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_recipient_name_label')}
           </Label>
           {disabled ? (
@@ -480,7 +480,7 @@ export default function OrderWaybillRecipientSection({
 
         {/* ── City ───────────────────────────────────────────────────────── */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_city')}
           </Label>
           {disabled ? (
@@ -523,7 +523,7 @@ export default function OrderWaybillRecipientSection({
 
         {/* ── Unified Address: warehouse / postomat / street ─────────────── */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_address_label')}
           </Label>
           {disabled ? (

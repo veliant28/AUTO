@@ -608,7 +608,7 @@ export default function OrderWaybillShipmentSection({
           <div className="grid grid-cols-2 gap-3 items-end shrink-0">
             {/* Search */}
             <div ref={dropdownRef} className="relative">
-              <Label className="text-xs text-muted-foreground mb-0.5 block">
+              <Label className="text-sm text-muted-foreground mb-0.5 block">
                 {t('novaposhta_search_packaging')}
               </Label>
               <div className="relative overflow-visible">
@@ -710,7 +710,7 @@ export default function OrderWaybillShipmentSection({
               </div>
               <div className="flex-1 grid grid-cols-3 gap-1.5">
                 <div>
-                  <Label className="text-xs text-muted-foreground">
+                  <Label className="text-sm text-muted-foreground">
                     {t('novaposhta_width')}
                   </Label>
                   <Input
@@ -720,7 +720,7 @@ export default function OrderWaybillShipmentSection({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">
+                  <Label className="text-sm text-muted-foreground">
                     {t('novaposhta_length')}
                   </Label>
                   <Input
@@ -730,7 +730,7 @@ export default function OrderWaybillShipmentSection({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">
+                  <Label className="text-sm text-muted-foreground">
                     {t('novaposhta_height')}
                   </Label>
                   <Input
@@ -834,7 +834,7 @@ export default function OrderWaybillShipmentSection({
         <div className="overflow-y-auto flex-1 min-h-0 px-0.5">
           <div className="grid gap-1.5 pt-2">
             <div className="grid gap-0.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_description')}
               </Label>
               <Input
@@ -848,7 +848,7 @@ export default function OrderWaybillShipmentSection({
             {/* Cost & Weight */}
             <div className="grid grid-cols-2 gap-2">
               <div className="grid gap-0.5">
-                <Label className="text-xs text-muted-foreground">
+                <Label className="text-sm text-muted-foreground">
                   {t('novaposhta_cost_label')}
                 </Label>
                 <div className="relative">
@@ -870,7 +870,7 @@ export default function OrderWaybillShipmentSection({
                 </div>
               </div>
               <div className="grid gap-0.5">
-                <Label className="text-xs text-muted-foreground">
+                <Label className="text-sm text-muted-foreground">
                   {t('novaposhta_weight')}
                 </Label>
                 <div className="relative">
@@ -903,7 +903,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Add packaging button */}
             <div className="grid gap-0.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_packaging')}
               </Label>
               <Button
@@ -936,7 +936,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Dimensions */}
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
+              <Label className="text-sm text-muted-foreground mb-1 block">
                 {t('novaposhta_dimensions')}
               </Label>
               <div className="grid grid-cols-3 gap-2">
@@ -1029,7 +1029,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Volumetric weight — read-only display */}
             <div className="grid gap-0.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_volume')}
               </Label>
               <div className="flex items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5">
@@ -1042,7 +1042,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Cargo Type — toggle buttons */}
             <div className="grid gap-0.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_cargo_type')}
               </Label>
               <div className="grid grid-cols-5 gap-1.5">

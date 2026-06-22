@@ -657,7 +657,7 @@ export default function OrderWaybillPaymentSection({
 
         {/* Payer type */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_payer_type')}
           </Label>
           <div className="grid grid-cols-3 gap-1.5">
@@ -698,7 +698,7 @@ export default function OrderWaybillPaymentSection({
 
         {/* Payment method */}
         <div className="grid gap-0.5">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-sm text-muted-foreground">
             {t('novaposhta_payment_method_label')}
           </Label>
           <div className="grid grid-cols-2 gap-1.5">
