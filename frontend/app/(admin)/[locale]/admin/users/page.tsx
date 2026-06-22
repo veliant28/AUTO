@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
       header: t('is_active_label'),
       size: 80,
       cell: (info) => (
-        <Badge variant={info.getValue() ? 'outline' : 'destructive'}>
+        <Badge variant={info.getValue() ? 'outline' : 'destructive'} className="text-sm">
           {info.getValue() ? t('yes') : t('no')}
         </Badge>
       ),
