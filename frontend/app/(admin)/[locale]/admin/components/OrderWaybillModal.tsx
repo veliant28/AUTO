@@ -27,6 +27,7 @@ import type {
   NovaPoshtaLookupWarehouse,
   NovaPoshtaLookupCounterparty,
   NovaPoshtaLookupStreet,
+  NovaPoshtaCounterpartyAddress,
 } from '@/lib/types/nova-poshta'
 
 // ── Section components ──────────────────────────────────────────────────────
@@ -87,6 +88,8 @@ export default function OrderWaybillModal({
     payment_method: 'Cash',
     cargo_type: 'Parcel',
     description: '',
+    sender_address_ref: '',
+
     recipient_city_ref: '',
     recipient_city_label: '',
     recipient_address_ref: '',
@@ -150,10 +153,36 @@ export default function OrderWaybillModal({
       selectedSender.contact_name ||
       selectedSender.name
     : ''
-  const senderCityDisplay = selectedSender?.city_ref || ''
-  const senderAddressDisplay = selectedSender?.address_ref || ''
+  const senderCityDisplay =
+    selectedSender?.city_label || selectedSender?.city_ref || ''
+  const senderAddressDisplay =
+    selectedSender?.address_label || selectedSender?.address_ref || ''
   const senderPhone = selectedSender?.phone || ''
   const senderContactName = selectedSender?.contact_name || ''
+
+  // Sync sender_address_ref when sender changes (reset to the sender's default address)
+  useEffect(() => {
+    if (selectedSender) {
+      setForm((prev) => {
+        const defaultRef = selectedSender.address_ref || ''
+        if (prev.sender_address_ref === defaultRef && defaultRef) {
+          return prev // already set, avoid unnecessary update
+        }
+        return { ...prev, sender_address_ref: defaultRef }
+      })
+    }
+  }, [form.sender_profile_id, selectedSender])
+
+  // ── Sender addresses (available when a sender is selected) ───────────────
+  const { data: senderAddresses = [] } = useQuery({
+    queryKey: ['nova-poshta', 'sender-addresses', form.sender_profile_id],
+    queryFn: () =>
+      novaPoshtaApi
+        .getSenderAddresses(form.sender_profile_id)
+        .then((r) => r.data),
+    enabled: form.sender_profile_id > 0 && open,
+    staleTime: 60000,
+  })
 
   // ── Active seat values (for multi-place mode) ──────────────────────────
   const activeSeat = useMemo(() => {
@@ -532,6 +561,10 @@ export default function OrderWaybillModal({
     setForm((prev) => ({ ...prev, sender_profile_id: id }))
   }, [])
 
+  const handleSenderAddressChange = useCallback((addressRef: string) => {
+    setForm((prev) => ({ ...prev, sender_address_ref: addressRef }))
+  }, [])
+
   // ── Counterparty selection handlers ───────────────────────────────────────
   const handleCounterpartyQueryChange = useCallback((query: string) => {
     setCounterpartyQuery(query)
@@ -833,7 +866,7 @@ export default function OrderWaybillModal({
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="grid items-stretch gap-3 xl:grid-cols-4">
-              {/* Column 1: Sender (read-only) */}
+              {/* Column 1: Sender */}
               <OrderWaybillSenderSection
                 sender={selectedSender}
                 senders={senders}
@@ -842,8 +875,13 @@ export default function OrderWaybillModal({
                 senderAddressDisplay={senderAddressDisplay}
                 senderPhone={senderPhone}
                 senderContactName={senderContactName}
+                senderAddresses={senderAddresses}
+                selectedAddressRef={
+                  form.sender_address_ref || selectedSender?.address_ref || ''
+                }
                 disabled={isPending || isPackagingMode || isServicesMode}
                 onSenderChange={handleSenderChange}
+                onAddressChange={handleSenderAddressChange}
               />
 
               {/* Column 2: Shipment or Service Editor */}

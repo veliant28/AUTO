@@ -158,9 +158,10 @@ class NovaPoshtaSenderService:
         self, profile_id: int
     ) -> NovaPoshtaSenderProfileValidateResult:
         """
-        Validate a sender profile by calling NP Counterparty/getCounterpartyOptions.
+        Validate a sender profile by calling NP Counterparty/getCounterparties.
 
-        Updates the profile's validation fields on success.
+        Updates the profile's validation fields on success, including
+        resolving human-readable city_label and address_label.
         """
         profile = self.get_by_id(profile_id)
         client = NovaPoshtaApiClient(profile.api_token)
@@ -186,6 +187,29 @@ class NovaPoshtaSenderService:
                 profile.city_ref = cp.get("CityRef", profile.city_ref)
                 profile.organization_name = cp.get("Description", profile.organization_name)
 
+                # Resolve human-readable city label
+                if profile.city_ref:
+                    profile.city_label = await self._resolve_city_label(client, profile.city_ref)
+
+                # Fetch counterparty addresses to get address_ref and address_label
+                if profile.counterparty_ref:
+                    try:
+                        addr_resp = await client.call(
+                            "CounterpartyGeneral",
+                            "getCounterpartyAddresses",
+                            {"Ref": profile.counterparty_ref, "CounterpartyProperty": "Sender"},
+                        )
+                        addr_data = addr_resp.get("data", [])
+                        if addr_data:
+                            addr = addr_data[0]
+                            profile.address_ref = addr.get("Ref", profile.address_ref)
+                            profile.address_label = addr.get("Description", "")
+                    except Exception:
+                        logger.debug(
+                            "Could not fetch addresses for counterparty %s during validation",
+                            profile.counterparty_ref,
+                        )
+
                 result = NovaPoshtaSenderProfileValidateResult(
                     success=True,
                     message="Відправника перевірено успішно",
@@ -193,6 +217,8 @@ class NovaPoshtaSenderService:
                     contact_ref=profile.contact_ref,
                     address_ref=profile.address_ref,
                     city_ref=profile.city_ref,
+                    city_label=profile.city_label,
+                    address_label=profile.address_label,
                 )
 
             profile.last_validated_at = datetime.utcnow()
@@ -203,6 +229,8 @@ class NovaPoshtaSenderService:
                 "contact_ref": profile.contact_ref,
                 "address_ref": profile.address_ref,
                 "city_ref": profile.city_ref,
+                "city_label": profile.city_label,
+                "address_label": profile.address_label,
             }
             self.db.flush()
             return result
@@ -285,6 +313,24 @@ class NovaPoshtaSenderService:
                 except Exception:
                     logger.debug("Could not fetch contact persons for counterparty %s", result.counterparty_ref)
 
+            # Resolve human-readable labels
+            if result.city_ref:
+                result.city_label = await self._resolve_city_label(client, result.city_ref)
+            if result.counterparty_ref:
+                # Fetch addresses to get label for the default address
+                try:
+                    addr_resp = await client.call(
+                        "CounterpartyGeneral",
+                        "getCounterpartyAddresses",
+                        {"Ref": result.counterparty_ref, "CounterpartyProperty": "Sender"},
+                    )
+                    addr_data = addr_resp.get("data", [])
+                    if addr_data:
+                        # Use first address description as label
+                        result.address_label = addr_data[0].get("Description", "")
+                except Exception:
+                    logger.debug("Could not fetch addresses for counterparty %s", result.counterparty_ref)
+
             return result
 
         except NovaPoshtaApiError as e:
@@ -292,6 +338,55 @@ class NovaPoshtaSenderService:
                 success=False,
                 message=e.message or "Помилка при перевірці API ключа",
             )
+
+    # ─── Label resolution helpers ─────────────────────────────────────────────
+
+    async def _resolve_city_label(
+        self, client: NovaPoshtaApiClient, city_ref: str
+    ) -> str:
+        """Resolve a city Ref to a human-readable name via NP API."""
+        if not city_ref:
+            return ""
+        try:
+            resp = await client.call(
+                "AddressGeneral",
+                "getCities",
+                {"Ref": city_ref},
+            )
+            data = resp.get("data", [])
+            if data:
+                return data[0].get("Description", "")
+        except Exception:
+            logger.debug("Could not resolve city label for ref %s", city_ref)
+        return ""
+
+    async def _resolve_address_label(
+        self,
+        client: NovaPoshtaApiClient,
+        counterparty_ref: str,
+        address_ref: str,
+    ) -> str:
+        """Resolve an address Ref to a human-readable description via NP API."""
+        if not address_ref or not counterparty_ref:
+            return ""
+        try:
+            resp = await client.call(
+                "CounterpartyGeneral",
+                "getCounterpartyAddresses",
+                {"Ref": counterparty_ref, "CounterpartyProperty": "Sender"},
+            )
+            data = resp.get("data", [])
+            for addr in data:
+                if addr.get("Ref") == address_ref:
+                    return addr.get("Description", "")
+            if data:
+                return data[0].get("Description", "")
+        except Exception:
+            logger.debug(
+                "Could not resolve address label for ref %s (counterparty %s)",
+                address_ref, counterparty_ref,
+            )
+        return ""
 
     # ─── Helpers ──────────────────────────────────────────────────────────────
 

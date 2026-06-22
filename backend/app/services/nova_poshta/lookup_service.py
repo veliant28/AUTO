@@ -27,6 +27,7 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaLookupDeliveryDate,
     NovaPoshtaLookupCounterparty,
     NovaPoshtaCounterpartyDetails,
+    NovaPoshtaCounterpartyAddress,
     NovaPoshtaServiceItem,
 )
 from app.services.nova_poshta.client import NovaPoshtaApiClient
@@ -551,3 +552,48 @@ class NovaPoshtaLookupService:
             address_ref=item.get("AddressRef", ""),
             address_label=item.get("AddressDescription", ""),
         )
+
+    async def get_counterparty_addresses(
+        self,
+        sender_profile_id: Optional[int] = None,
+        counterparty_ref: str = "",
+        counterparty_property: str = "Sender",
+    ) -> List[NovaPoshtaCounterpartyAddress]:
+        """
+        Fetch addresses for a counterparty via NP CounterpartyGeneral/getCounterpartyAddresses.
+
+        Returns a list of addresses with their Refs and descriptions.
+        Used on the frontend to let the user pick a different sender address.
+        """
+        if not counterparty_ref:
+            return []
+
+        client = self._get_sender_client(sender_profile_id)
+        try:
+            response = await client.call(
+                "CounterpartyGeneral",
+                "getCounterpartyAddresses",
+                {"Ref": counterparty_ref, "CounterpartyProperty": counterparty_property},
+            )
+        except NovaPoshtaApiError as e:
+            logger.warning("Counterparty addresses request failed: %s", e)
+            return []
+
+        data = response.get("data", [])
+        if not isinstance(data, list):
+            return []
+
+        results: List[NovaPoshtaCounterpartyAddress] = []
+        for item in data:
+            results.append(NovaPoshtaCounterpartyAddress(
+                ref=item.get("Ref", ""),
+                description=item.get("Description", ""),
+                city_ref=item.get("CityRef", ""),
+                city_description=item.get("CityDescription", ""),
+                street_ref=item.get("StreetRef", ""),
+                street_name=item.get("StreetName", ""),
+                building_number=item.get("BuildingNumber", ""),
+                flat=item.get("Flat", ""),
+            ))
+
+        return results

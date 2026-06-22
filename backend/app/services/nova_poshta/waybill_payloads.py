@@ -38,11 +38,14 @@ class NovaPoshtaWaybillPayloadBuilder:
         """
         normalizer = NovaPoshtaDataNormalizer()
 
+        # Sender address: use provided one, fall back to profile default
+        sender_address_ref = data.sender_address_ref or sender.address_ref
+
         props: Dict[str, Any] = {
             # ─── Sender ─────────────────────────────────────────────────
             "SenderRef": sender.counterparty_ref,
             "SenderContactRef": sender.contact_ref,
-            "SenderAddressRef": sender.address_ref,
+            "SenderAddressRef": sender_address_ref,
             "SenderCityRef": sender.city_ref,
             "SenderPhone": normalizer.phone(sender.phone),
 

@@ -40,6 +40,7 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaLookupDeliveryDate,
     NovaPoshtaLookupCounterparty,
     NovaPoshtaCounterpartyDetails,
+    NovaPoshtaCounterpartyAddress,
     NovaPoshtaServiceItem,
     NovaPoshtaServiceLookupQuery,
     # Waybill
@@ -101,6 +102,8 @@ def _sender_to_response(p: NovaPoshtaSenderProfile, service: NovaPoshtaSenderSer
         contact_ref=p.contact_ref or "",
         address_ref=p.address_ref or "",
         city_ref=p.city_ref or "",
+        city_label=p.city_label or "",
+        address_label=p.address_label or "",
         first_name=p.first_name or "",
         last_name=p.last_name or "",
         middle_name=p.middle_name or "",
@@ -199,6 +202,34 @@ async def fetch_sender_from_token(
     service = NovaPoshtaSenderService(db)
     result = await service.fetch_sender_from_token(data.api_token)
     return result
+
+
+@router.get("/senders/{sender_id}/addresses", response_model=List[NovaPoshtaCounterpartyAddress])
+async def get_sender_addresses(
+    sender_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "manager")),
+):
+    """List all addresses for a sender's counterparty from NP API.
+
+    Used on frontend to let the user pick a different sender address
+    when creating/editing a waybill.
+    """
+    service = NovaPoshtaSenderService(db)
+    try:
+        profile = service.get_by_id(sender_id)
+    except NovaPoshtaSenderNotFoundError as e:
+        raise HTTPException(404, str(e))
+
+    if not profile.counterparty_ref:
+        return []
+
+    lookup = NovaPoshtaLookupService(db)
+    addresses = await lookup.get_counterparty_addresses(
+        sender_profile_id=sender_id,
+        counterparty_ref=profile.counterparty_ref,
+    )
+    return addresses
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

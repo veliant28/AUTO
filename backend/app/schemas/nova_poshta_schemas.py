@@ -49,6 +49,8 @@ class NovaPoshtaSenderProfileCreate(BaseModel):
     contact_ref: str = ""
     address_ref: str = ""
     city_ref: str = ""
+    city_label: str = ""
+    address_label: str = ""
 
     is_active: bool = True
     is_default: bool = False
@@ -77,6 +79,8 @@ class NovaPoshtaSenderProfileUpdate(BaseModel):
     contact_ref: Optional[str] = None
     address_ref: Optional[str] = None
     city_ref: Optional[str] = None
+    city_label: Optional[str] = None
+    address_label: Optional[str] = None
 
     is_active: Optional[bool] = None
     is_default: Optional[bool] = None
@@ -94,6 +98,8 @@ class NovaPoshtaSenderProfileResponse(BaseModel):
     contact_ref: str
     address_ref: str
     city_ref: str
+    city_label: str
+    address_label: str
 
     first_name: str
     last_name: str
@@ -127,6 +133,8 @@ class NovaPoshtaSenderProfileValidateResult(BaseModel):
     contact_ref: str = ""
     address_ref: str = ""
     city_ref: str = ""
+    city_label: str = ""
+    address_label: str = ""
 
 
 class NovaPoshtaSenderFetchFromToken(BaseModel):
@@ -146,6 +154,8 @@ class NovaPoshtaFetchFromTokenResult(BaseModel):
     counterparty_type: str = ""  # "PrivatePerson" | "Organization"
     counterparty_ref: str = ""
     city_ref: str = ""
+    city_label: str = ""
+    address_label: str = ""
     edrpou: str = ""
     ownership_form_description: str = ""
     description: str = ""  # Full name or company name from NP "Description"
@@ -297,6 +307,18 @@ class NovaPoshtaCounterpartyDetails(BaseModel):
     address_label: str = ""
 
 
+class NovaPoshtaCounterpartyAddress(BaseModel):
+    """A single address of a counterparty from NP API."""
+    ref: str = ""
+    description: str = ""
+    city_ref: str = ""
+    city_description: str = ""
+    street_ref: str = ""
+    street_name: str = ""
+    building_number: str = ""
+    flat: str = ""
+
+
 class NovaPoshtaServiceItem(BaseModel):
     """Additional service item from NP API."""
     ref: str = ""
@@ -338,6 +360,8 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     cargo_type: str = "Cargo"
 
     description: str = ""
+
+    sender_address_ref: Optional[str] = None
 
     recipient_city_ref: str
     recipient_city_label: str = ""

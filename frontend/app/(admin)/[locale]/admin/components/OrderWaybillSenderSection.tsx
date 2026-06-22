@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { Building2, MoreHorizontal, Check } from 'lucide-react'
+import { Building2, MoreHorizontal, Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -13,7 +13,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import type { NovaPoshtaSenderProfile } from '@/lib/types/nova-poshta'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import type {
+  NovaPoshtaSenderProfile,
+  NovaPoshtaCounterpartyAddress,
+} from '@/lib/types/nova-poshta'
 
 interface Props {
   sender: NovaPoshtaSenderProfile | undefined
@@ -23,8 +33,14 @@ interface Props {
   senderAddressDisplay: string
   senderPhone: string
   senderContactName: string
+  /** Available addresses for the selected sender's counterparty */
+  senderAddresses: NovaPoshtaCounterpartyAddress[]
+  /** Currently selected address ref (may differ from sender.address_ref) */
+  selectedAddressRef: string
   disabled: boolean
   onSenderChange: (id: number) => void
+  /** Called when user picks a different address from the dropdown */
+  onAddressChange: (addressRef: string) => void
 }
 
 export default function OrderWaybillSenderSection({
@@ -35,8 +51,11 @@ export default function OrderWaybillSenderSection({
   senderAddressDisplay,
   senderPhone,
   senderContactName,
+  senderAddresses,
+  selectedAddressRef,
   disabled,
   onSenderChange,
+  onAddressChange,
 }: Props) {
   const t = useTranslations('admin')
 
@@ -54,8 +73,11 @@ export default function OrderWaybillSenderSection({
     { label: 'novaposhta_counterparty', value: senderCounterpartyDisplay },
     { label: 'novaposhta_contact_name', value: senderContactName },
     { label: 'novaposhta_city', value: senderCityDisplay },
-    { label: 'novaposhta_address', value: senderAddressDisplay },
   ]
+
+  const currentAddressLabel =
+    senderAddresses.find((a) => a.ref === selectedAddressRef)?.description ||
+    senderAddressDisplay
 
   return (
     <section className="order-1 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card">
@@ -120,6 +142,43 @@ export default function OrderWaybillSenderSection({
             </div>
           </div>
         ))}
+
+        {/* Address with dropdown selector */}
+        <div className="grid gap-0.5">
+          <Label className="text-xs text-muted-foreground">
+            {t('novaposhta_address')}
+          </Label>
+          {senderAddresses.length > 1 ? (
+            <Select
+              value={selectedAddressRef || sender?.address_ref || ''}
+              onValueChange={onAddressChange}
+              disabled={disabled}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder={currentAddressLabel || '—'} />
+              </SelectTrigger>
+              <SelectContent>
+                {senderAddresses.map((addr) => (
+                  <SelectItem key={addr.ref} value={addr.ref}>
+                    {addr.description}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm">
+              <span
+                className={
+                  currentAddressLabel
+                    ? 'truncate'
+                    : 'truncate text-muted-foreground'
+                }
+              >
+                {currentAddressLabel || '—'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )

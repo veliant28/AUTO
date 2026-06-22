@@ -13,6 +13,8 @@ export interface NovaPoshtaSenderProfile {
   contact_ref: string
   address_ref: string
   city_ref: string
+  city_label: string
+  address_label: string
   first_name: string
   last_name: string
   middle_name: string
@@ -81,6 +83,8 @@ export interface NovaPoshtaSenderProfileValidateResult {
   contact_ref?: string
   address_ref?: string
   city_ref?: string
+  city_label?: string
+  address_label?: string
 }
 
 export interface NovaPoshtaFetchFromTokenResult {
@@ -94,6 +98,8 @@ export interface NovaPoshtaFetchFromTokenResult {
   counterparty_type: string // "PrivatePerson" | "Organization"
   counterparty_ref: string
   city_ref: string
+  city_label: string
+  address_label: string
   edrpou: string
   ownership_form_description: string
   description: string // Full name or company name from NP "Description"
@@ -151,6 +157,17 @@ export interface NovaPoshtaCounterpartyDetailsQuery {
   counterparty_ref: string
   counterparty_property?: string
   locale?: string
+}
+
+export interface NovaPoshtaCounterpartyAddress {
+  ref: string
+  description: string
+  city_ref: string
+  city_description: string
+  street_ref: string
+  street_name: string
+  building_number: string
+  flat: string
 }
 
 export interface NovaPoshtaServiceItem {
@@ -309,6 +326,8 @@ export interface OrderNovaPoshtaWaybillUpsert {
   payment_method?: 'Cash' | 'NonCash'
   cargo_type?: 'Cargo' | 'Parcel' | 'Documents' | 'Pallet' | 'TiresWheels'
   description: string
+
+  sender_address_ref?: string
 
   recipient_city_ref: string
   recipient_city_label: string

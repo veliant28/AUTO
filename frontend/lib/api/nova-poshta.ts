@@ -8,6 +8,7 @@ import type {
   NovaPoshtaSenderProfileUpdate,
   NovaPoshtaSenderProfileValidateResult,
   NovaPoshtaFetchFromTokenResult,
+  NovaPoshtaCounterpartyAddress,
   NovaPoshtaLookupSettlement,
   NovaPoshtaLookupStreet,
   NovaPoshtaLookupWarehouse,
@@ -66,6 +67,11 @@ export const novaPoshtaApi = {
     apiClient.post<NovaPoshtaFetchFromTokenResult>(
       '/admin/nova-poshta/senders/fetch-from-token',
       { api_token: apiToken },
+    ),
+
+  getSenderAddresses: (senderId: number) =>
+    apiClient.get<NovaPoshtaCounterpartyAddress[]>(
+      `/admin/nova-poshta/senders/${senderId}/addresses`,
     ),
 
   // ── Lookups ────────────────────────────────────────────────────────────────
