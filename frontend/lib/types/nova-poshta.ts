@@ -50,6 +50,8 @@ export interface NovaPoshtaSenderProfileCreate {
   contact_ref?: string
   address_ref?: string
   city_ref?: string
+  city_label?: string
+  address_label?: string
   is_active?: boolean
   is_default?: boolean
   raw_meta?: Record<string, any>
@@ -71,6 +73,8 @@ export interface NovaPoshtaSenderProfileUpdate {
   contact_ref?: string
   address_ref?: string
   city_ref?: string
+  city_label?: string
+  address_label?: string
   is_active?: boolean
   is_default?: boolean
   raw_meta?: Record<string, any>
@@ -97,6 +101,7 @@ export interface NovaPoshtaFetchFromTokenResult {
   email: string
   counterparty_type: string // "PrivatePerson" | "Organization"
   counterparty_ref: string
+  contact_ref: string
   city_ref: string
   city_label: string
   address_label: string

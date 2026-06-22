@@ -286,9 +286,30 @@ function SendersColumn({
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={() => setDefaultMutation.mutate(sender.id)}
+                          >
+                            <Star
+                              className={`w-4 h-4 ${
+                                sender.is_default
+                                  ? 'fill-yellow-500 text-yellow-500'
+                                  : ''
+                              }`}
+                            />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t('novaposhta_set_default')}
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => setEditingSender(sender)}
                           >
-                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                            <Pencil className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>{t('edit')}</TooltipContent>
@@ -305,33 +326,12 @@ function SendersColumn({
                             {validateMutation.isPending ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                              <CheckCircle2 className="w-4 h-4" />
                             )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           {t('novaposhta_validate') || 'Перевірити'}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setDefaultMutation.mutate(sender.id)}
-                          >
-                            <Star
-                              className={`w-4 h-4 ${
-                                sender.is_default
-                                  ? 'fill-yellow-500 text-yellow-500'
-                                  : 'text-muted-foreground'
-                              }`}
-                            />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t('novaposhta_set_default')}
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
@@ -455,9 +455,59 @@ function SenderFormDialog({
     email: sender?.email || '',
     organization_name: sender?.organization_name || '',
     edrpou: sender?.edrpou || '',
+    city_ref: sender?.city_ref || '',
+    city_label: sender?.city_label || '',
+    address_ref: sender?.address_ref || '',
+    address_label: sender?.address_label || '',
+    contact_ref: sender?.contact_ref || '',
     is_active: sender?.is_active ?? true,
   })
   const [dataFetched, setDataFetched] = useState(false)
+
+  // ── City / warehouse search state ──
+  const [cityQuery, setCityQuery] = useState(sender?.city_label || '')
+  const [warehouseQuery, setWarehouseQuery] = useState(
+    sender?.address_label || '',
+  )
+  const locale = 'uk'
+
+  // ── Settlements lookup ──
+  const { data: settlements = [], isFetching: settlementsLoading } = useQuery({
+    queryKey: ['np-sender-form', 'settlements', cityQuery, locale],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchSettlements({ query: cityQuery, locale } as any)
+        .then((r) => r.data),
+    enabled: cityQuery.length >= 2,
+    staleTime: 30000,
+  })
+
+  // ── Warehouses lookup ──
+  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
+    queryKey: ['np-sender-form', 'warehouses', form.city_ref, warehouseQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchWarehouses({
+          city_ref: form.city_ref,
+          query: warehouseQuery,
+          locale,
+        } as any)
+        .then((r) => r.data),
+    enabled: !!form.city_ref,
+    staleTime: 30000,
+  })
+
+  // Sync search inputs with form values (e.g. when editing or fetchFromToken)
+  useEffect(() => {
+    if (form.city_label && !cityQuery) {
+      setCityQuery(form.city_label)
+    }
+  }, [form.city_label])
+  useEffect(() => {
+    if (form.address_label && !warehouseQuery) {
+      setWarehouseQuery(form.address_label)
+    }
+  }, [form.address_label])
 
   const handleTypeChange = (type: 'private_person' | 'fop' | 'business') => {
     setForm((prev) => ({
@@ -536,6 +586,10 @@ function SenderFormDialog({
           email: result.email || prev.email,
           organization_name: orgName,
           edrpou: result.edrpou || prev.edrpou,
+          contact_ref: result.contact_ref || prev.contact_ref,
+          city_ref: result.city_ref || prev.city_ref,
+          city_label: result.city_label || prev.city_label,
+          address_label: result.address_label || prev.address_label,
         }
       })
       toast.info(t('novaposhta_data_fetched'))
@@ -591,6 +645,11 @@ function SenderFormDialog({
       email: form.email,
       organization_name: form.organization_name,
       edrpou: form.edrpou,
+      contact_ref: form.contact_ref,
+      city_ref: form.city_ref,
+      city_label: form.city_label,
+      address_ref: form.address_ref,
+      address_label: form.address_label,
       is_active: form.is_active,
     }
 
@@ -828,6 +887,131 @@ function SenderFormDialog({
                   placeholder="email@example.com"
                   disabled={dataFetched}
                 />
+              </div>
+
+              {/* ── City ── */}
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {t('novaposhta_city')}
+                </Label>
+                <SearchableSelect
+                  items={settlements}
+                  isLoading={settlementsLoading}
+                  value={
+                    form.city_label
+                      ? ({
+                          ref: form.city_ref,
+                          delivery_city_ref: form.city_ref,
+                          label: form.city_label,
+                        } as any)
+                      : null
+                  }
+                  onChange={(s: any) => {
+                    setForm({
+                      ...form,
+                      city_ref: s.delivery_city_ref || s.ref,
+                      city_label: s.label,
+                    })
+                    setCityQuery(s.label)
+                    setWarehouseQuery('')
+                  }}
+                  placeholder={t('novaposhta_search_city')}
+                  searchQuery={cityQuery}
+                  onSearchChange={(q) => {
+                    setCityQuery(q)
+                    if (!q) {
+                      setForm({
+                        ...form,
+                        city_ref: '',
+                        city_label: '',
+                        address_ref: '',
+                        address_label: '',
+                      })
+                      setWarehouseQuery('')
+                    }
+                  }}
+                  getKey={(s: any) => s.ref}
+                  getLabel={(s: any) => s.label}
+                  renderItem={(s: any, _sel: boolean, _high: boolean) => (
+                    <>
+                      <div className="font-medium leading-tight">{s.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {[s.area, s.region].filter(Boolean).join(' — ')}
+                        {s.warehouses_count && s.warehouses_count !== '0' ? (
+                          <span className="ml-2 inline-flex items-center gap-1">
+                            <Warehouse className="w-3 h-3" />×
+                            {s.warehouses_count}
+                          </span>
+                        ) : null}
+                      </div>
+                    </>
+                  )}
+                  noResultsMessage={t('novaposhta_no_results')}
+                  typeToSearchMessage={t('novaposhta_type_to_search')}
+                />
+              </div>
+
+              {/* ── Warehouse / Address ── */}
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {t('novaposhta_warehouse')}
+                </Label>
+                {form.city_ref ? (
+                  <SearchableSelect
+                    items={warehouses}
+                    isLoading={warehousesLoading}
+                    value={
+                      form.address_label
+                        ? ({
+                            ref: form.address_ref,
+                            label: form.address_label,
+                          } as any)
+                        : null
+                    }
+                    onChange={(w: any) => {
+                      setForm({
+                        ...form,
+                        address_ref: w.ref,
+                        address_label: w.label,
+                      })
+                      setWarehouseQuery(w.label)
+                    }}
+                    placeholder={t('novaposhta_search_warehouse')}
+                    searchQuery={warehouseQuery}
+                    onSearchChange={(q) => {
+                      setWarehouseQuery(q)
+                      if (!q)
+                        setForm({ ...form, address_ref: '', address_label: '' })
+                    }}
+                    minSearchLength={1}
+                    getKey={(w: any) => w.ref}
+                    getLabel={(w: any) => w.label}
+                    renderItem={(w: any, _sel: boolean, _high: boolean) => (
+                      <>
+                        <div className="font-medium leading-tight flex items-center gap-2">
+                          {w.type === 'Postomat' ? (
+                            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold">
+                              {t('novaposhta_postomat')}
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold">
+                              №{w.number}
+                            </span>
+                          )}
+                          {w.label}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {w.description}
+                        </div>
+                      </>
+                    )}
+                    noResultsMessage={t('novaposhta_no_results')}
+                  />
+                ) : (
+                  <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
+                    {t('novaposhta_select_city_first')}
+                  </div>
+                )}
               </div>
             </div>
           </div>
