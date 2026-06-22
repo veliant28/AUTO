@@ -529,6 +529,44 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
   );
 }
 
+function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const [hours, minutes] = (value || '00:00').split(':');
+
+  return (
+    <div className="flex items-center gap-0.5 mx-auto w-fit">
+      <Select
+        value={hours}
+        onValueChange={(h) => onChange(`${h}:${minutes}`)}
+        disabled={disabled}
+      >
+        <SelectTrigger className="h-9 w-[68px] cursor-pointer text-center">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+            <SelectItem key={h} value={h} className="cursor-pointer">{h}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <span className="text-sm text-muted-foreground select-none">:</span>
+      <Select
+        value={minutes}
+        onValueChange={(m) => onChange(`${hours}:${m}`)}
+        disabled={disabled}
+      >
+        <SelectTrigger className="h-9 w-[68px] cursor-pointer text-center">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
+            <SelectItem key={m} value={m} className="cursor-pointer">{m}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
   schedule: any; tz: string; t: any;
   onToggle: (enabled: boolean) => void;
@@ -545,10 +583,9 @@ function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
         <Badge className={`${color} border-0 text-white text-sm`}>{s.supplier}</Badge>
       </td>
       <td className="p-3 text-center">
-        <Input
+        <TimePicker
           value={s.run_at_time}
-          onChange={(e) => onTimeChange(e.target.value)}
-          className="h-8 w-16 text-sm text-center mx-auto"
+          onChange={onTimeChange}
           disabled={!s.enabled}
         />
       </td>
