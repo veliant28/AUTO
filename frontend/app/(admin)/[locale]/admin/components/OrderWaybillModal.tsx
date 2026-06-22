@@ -234,7 +234,12 @@ export default function OrderWaybillModal({
       })
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
-    } else if (!waybill && !formInitialized.current && senders.length > 0) {
+    } else if (
+      !waybill &&
+      !formInitialized.current &&
+      senders.length > 0 &&
+      detail !== undefined
+    ) {
       // Set default sender and pre-fill recipient from order data
       const defaultSender = senders.find((s) => s.is_default) || senders[0]
       const orderData = detail?.recipient_from_order
@@ -252,7 +257,7 @@ export default function OrderWaybillModal({
       formInitialized.current = true
     }
     return () => {}
-  }, [waybill, senders])
+  }, [waybill, senders, detail])
 
   // ── Lookups ──────────────────────────────────────────────────────────────
   const [cityQuery, setCityQuery] = useState('')
