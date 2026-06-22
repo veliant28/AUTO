@@ -20,6 +20,9 @@ import {
   Globe,
   Trash2,
   AlertTriangle,
+  Pencil,
+  CheckCircle2,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -161,6 +164,23 @@ function SendersColumn({
       toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
   })
 
+  const validateMutation = useMutation({
+    mutationFn: (id: number) =>
+      novaPoshtaApi.validateSender(id).then((r) => r.data),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['nova-poshta', 'senders'] })
+      if (result.success) {
+        toast.success(
+          t('novaposhta_validation_ok') || 'Підключення підтверджено',
+        )
+      } else {
+        toast.error(result.message || t('novaposhta_error_api'))
+      }
+    },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
+  })
+
   if (isLoading) {
     return (
       <Card>
@@ -259,7 +279,40 @@ function SendersColumn({
 
                   {/* Действия */}
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setEditingSender(sender)}
+                          >
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t('edit')}</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => validateMutation.mutate(sender.id)}
+                            disabled={validateMutation.isPending}
+                          >
+                            {validateMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t('novaposhta_validate') || 'Перевірити'}
+                        </TooltipContent>
+                      </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -316,7 +369,10 @@ function SendersColumn({
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
         <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center gap-3">
@@ -325,7 +381,9 @@ function SendersColumn({
               </div>
               <div>
                 <DialogTitle>{t('novaposhta_delete_sender_title')}</DialogTitle>
-                <DialogDescription>{t('novaposhta_delete_sender_confirm')}</DialogDescription>
+                <DialogDescription>
+                  {t('novaposhta_delete_sender_confirm')}
+                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -336,7 +394,8 @@ function SendersColumn({
                   {senderDisplayName(deleteTarget)}
                 </span>
                 <Badge variant="outline" className="text-sm shrink-0">
-                  {typeLabels[deleteTarget.sender_type] || deleteTarget.sender_type}
+                  {typeLabels[deleteTarget.sender_type] ||
+                    deleteTarget.sender_type}
                 </Badge>
               </div>
               {deleteTarget.phone && (
