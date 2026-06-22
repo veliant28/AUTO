@@ -580,8 +580,8 @@ function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                size="icon"
-                className={`h-8 w-8 ${s.enabled ? `${color} text-white` : ''}`}
+                size="sm"
+                className={`${s.enabled ? `${color} text-white` : ''}`}
                 variant={s.enabled ? undefined : 'outline'}
                 onClick={() => onToggle(!s.enabled)}
               >
@@ -592,7 +592,7 @@ function ScheduleRow({ schedule: s, tz, t, onToggle, onTimeChange, onRun }: {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" variant="outline" className="h-8 w-8" onClick={onRun} disabled={!s.enabled || s.schedule_status === 'in_progress'}>
+              <Button size="sm" variant="outline" onClick={onRun} disabled={!s.enabled || s.schedule_status === 'in_progress'}>
                 <Play className="w-3.5 h-3.5" />
               </Button>
             </TooltipTrigger>

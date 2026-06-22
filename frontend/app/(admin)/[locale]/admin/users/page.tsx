@@ -199,7 +199,7 @@ export default function AdminUsersPage() {
       size: 120,
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
+          <Button variant="outline" size="sm" onClick={() => {
             const u = row.original;
             setEditUser(u);
             const roleId = (rolesData || []).find((r) => r.name === u.role)?.id || 1;
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
           }}>
             <Pencil className="w-4 h-4" />
           </Button>
-          <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(row.original)}>
+          <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(row.original)}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>

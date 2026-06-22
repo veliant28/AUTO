@@ -616,8 +616,7 @@ export default function WorkersTab() {
             <TooltipTrigger asChild>
               <Button
                 variant="destructive"
-                size="icon"
-                className="h-8 w-8"
+                size="sm"
                 onClick={() => revokeMutation.mutate(row.original.id)}
               >
                 <XCircle className="w-4 h-4" />
@@ -790,8 +789,7 @@ export default function WorkersTab() {
                           <TooltipTrigger asChild>
                             <Button
                               variant="destructive"
-                              size="icon"
-                              className="h-8 w-8"
+                              size="sm"
                               onClick={() => revokeMutation.mutate(task.id)}
                             >
                               <XCircle className="w-4 h-4" />

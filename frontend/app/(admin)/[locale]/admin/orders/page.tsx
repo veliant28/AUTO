@@ -440,8 +440,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
+                  size="sm"
                   onClick={() => openView(row.original.id)}
                 >
                   <Eye className="w-4 h-4" />
@@ -453,8 +452,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
+                  size="sm"
                   onClick={() => handleWaybillOpen(row.original.id)}
                 >
                   <Truck className="w-4 h-4" />
@@ -466,8 +464,7 @@ export default function AdminOrdersPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
+                  size="sm"
                   onClick={() => handleTrackingOpen(row.original.id)}
                 >
                   <Clock className="w-4 h-4" />
@@ -838,8 +835,8 @@ export default function AdminOrdersPage() {
                                           <TooltipTrigger asChild>
                                             <Button
                                               variant="destructive"
-                                              size="icon"
-                                              className="h-8 w-8 shrink-0"
+                                              size="sm"
+                                              className="shrink-0"
                                               onClick={() =>
                                                 deleteItemMutation.mutate(
                                                   item.id,

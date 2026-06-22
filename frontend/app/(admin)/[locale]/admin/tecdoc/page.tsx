@@ -627,8 +627,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-8 w-8"
+                size="sm"
                 onClick={() => batchStart.mutate()}
                 disabled={batchStart.isPending}
               >
@@ -642,7 +641,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <TooltipContent>{t('tecdoc_batch_start')}</TooltipContent>
           </Tooltip>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
+          <Button variant="ghost" size="sm" disabled>
             <Square className="w-4 h-4" />
           </Button>
 
@@ -670,8 +669,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-8 w-8"
+                size="sm"
                 onClick={() => batchStartSelected.mutate()}
                 disabled={batchStartSelected.isPending || selected.size === 0}
               >
@@ -1171,7 +1169,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                             setModelFilter('')
                           }}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="text-xs">
                             <SelectValue placeholder="Марка" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1189,7 +1187,7 @@ function ManualTab({ t }: { t: (k: string) => string }) {
                             setModelFilter(v === 'all' ? '' : v)
                           }
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="text-xs">
                             <SelectValue placeholder="Модель" />
                           </SelectTrigger>
                           <SelectContent>

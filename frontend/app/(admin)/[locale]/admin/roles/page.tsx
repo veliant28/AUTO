@@ -210,13 +210,12 @@ export default function AdminRolesPage() {
       size: 120,
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openEdit(row.original)}>
+          <Button variant="outline" size="sm" onClick={() => openEdit(row.original)}>
             <Pencil className="w-4 h-4" />
           </Button>
           <Button
             variant="destructive"
-            size="icon"
-            className="h-8 w-8"
+            size="sm"
             disabled={row.original.is_system}
             onClick={() => setDeleteTarget(row.original)}
           >

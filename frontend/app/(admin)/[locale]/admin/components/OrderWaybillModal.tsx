@@ -849,8 +849,8 @@ export default function OrderWaybillModal({
           <Button
             type="button"
             variant="outline"
-            size="icon"
-            className="absolute right-4 top-4 h-8 w-8"
+            size="sm"
+            className="absolute right-4 top-4"
             aria-label="Close"
             onClick={() => onOpenChange(false)}
           >

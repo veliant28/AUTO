@@ -284,8 +284,7 @@ function SendersColumn({
                         <TooltipTrigger asChild>
                           <Button
                             variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="sm"
                             onClick={() => setDefaultMutation.mutate(sender.id)}
                           >
                             <Star
@@ -305,8 +304,7 @@ function SendersColumn({
                         <TooltipTrigger asChild>
                           <Button
                             variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="sm"
                             onClick={() => setEditingSender(sender)}
                           >
                             <Pencil className="w-4 h-4" />
@@ -318,8 +316,7 @@ function SendersColumn({
                         <TooltipTrigger asChild>
                           <Button
                             variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="sm"
                             onClick={() => validateMutation.mutate(sender.id)}
                             disabled={validateMutation.isPending}
                           >
@@ -338,8 +335,7 @@ function SendersColumn({
                         <TooltipTrigger asChild>
                           <Button
                             variant="destructive"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="sm"
                             onClick={() => setDeleteTarget(sender)}
                           >
                             <Trash2 className="w-4 h-4" />
