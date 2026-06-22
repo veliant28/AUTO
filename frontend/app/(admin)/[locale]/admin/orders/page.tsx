@@ -935,9 +935,10 @@ export default function AdminOrdersPage() {
                         <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
                           <User className="w-4 h-4" /> {t('recipient_data')}
                         </h4>
-                        <div className="flex-1 space-y-2 text-sm overflow-y-auto mt-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground shrink-0">
+                        <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3">
+                          {/* ── Phone ── */}
+                          <div className="grid gap-1">
+                            <span className="text-muted-foreground text-xs">
                               {t('phone_label')}
                             </span>
                             {editMode ? (
@@ -946,24 +947,27 @@ export default function AdminOrdersPage() {
                                 onChange={(v) =>
                                   setEditRecipient((p) => ({ ...p, phone: v }))
                                 }
-                                className="h-10 w-48 text-sm rounded-lg border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               />
                             ) : (
-                              <span>{formatPhone(orderDetail.phone)}</span>
+                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
+                                <span className={orderDetail.phone ? 'truncate' : 'truncate text-muted-foreground'}>
+                                  {formatPhone(orderDetail.phone) || '—'}
+                                </span>
+                              </div>
                             )}
                           </div>
+
+                          {/* ── FIO ── */}
                           {['last_name', 'first_name', 'middle_name'].map(
                             (field) => (
-                              <div
-                                key={field}
-                                className="flex justify-between items-center"
-                              >
-                                <span className="text-muted-foreground">
+                              <div key={field} className="grid gap-1">
+                                <span className="text-muted-foreground text-xs">
                                   {t(field)}
                                 </span>
                                 {editMode ? (
                                   <Input
-                                    className="h-10 w-40 text-sm"
+                                    className="h-10 w-full text-sm"
                                     value={editRecipient[field]}
                                     maxLength={100}
                                     onChange={(e) =>
@@ -974,13 +978,16 @@ export default function AdminOrdersPage() {
                                     }
                                   />
                                 ) : (
-                                  <span>
-                                    {(orderDetail as any)[field] || '—'}
-                                  </span>
+                                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
+                                    <span className={(orderDetail as any)[field] ? 'truncate' : 'truncate text-muted-foreground'}>
+                                      {(orderDetail as any)[field] || '—'}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             ),
                           )}
+
                           <Separator />
                           <h5 className="font-semibold text-sm flex items-center gap-2">
                             <MapPin className="w-4 h-4" /> {t('delivery_info')}
@@ -1055,8 +1062,8 @@ export default function AdminOrdersPage() {
                           </RadioGroup>
                           {['delivery_city', 'delivery_warehouse'].map(
                             (field) => (
-                              <div key={field} className="space-y-1">
-                                <span className="text-muted-foreground">
+                              <div key={field} className="grid gap-1">
+                                <span className="text-muted-foreground text-xs">
                                   {t(field)}
                                 </span>
                                 {editMode ? (
@@ -1072,9 +1079,11 @@ export default function AdminOrdersPage() {
                                     }
                                   />
                                 ) : (
-                                  <p className="text-sm">
-                                    {(orderDetail as any)[field] || '—'}
-                                  </p>
+                                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
+                                    <span className={(orderDetail as any)[field] ? 'truncate' : 'truncate text-muted-foreground'}>
+                                      {(orderDetail as any)[field] || '—'}
+                                    </span>
+                                  </div>
                                 )}
                               </div>
                             ),
