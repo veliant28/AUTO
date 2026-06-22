@@ -935,7 +935,7 @@ export default function AdminOrdersPage() {
                         <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
                           <User className="w-4 h-4" /> {t('recipient_data')}
                         </h4>
-                        <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3">
+                        <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
                           {/* ── Phone ── */}
                           <div className="grid gap-1">
                             <span className="text-muted-foreground text-sm">
