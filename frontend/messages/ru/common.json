@@ -651,7 +651,7 @@
     "novaposhta_delete_sender_title": "Удаление Отправителя",
     "novaposhta_delete_sender_confirm": "Вы уверены, что хотите удалить Отправителя?",
     "novaposhta_waybill": "TTN",
-    "novaposhta_waybill_create": "Создать TTN",
+    "novaposhta_waybill_create": "Создать ТТН",
     "novaposhta_waybill_edit": "Редактировать TTN",
     "novaposhta_waybill_delete": "Удалить TTN",
     "novaposhta_waybill_print": "Печать",
