@@ -8,7 +8,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { Loader2, Truck, BadgeCheck, X } from 'lucide-react'
+import { Loader2, Truck, BadgeCheck } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { toast } from '@/lib/toast'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type {
@@ -814,27 +815,17 @@ export default function OrderWaybillModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[1550px] w-[96vw] max-h-[90vh] overflow-hidden flex flex-col !gap-0 !p-0"
+        className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !gap-0 !p-0"
         aria-describedby={undefined}
-        hideClose
       >
-        {/* Visually hidden title for a11y (Radix requirement) */}
-        <DialogTitle className="sr-only">
-          {isEdit
-            ? `${t('novaposhta_waybill_edit')} — ${waybill?.np_number}`
-            : t('novaposhta_waybill_create')}
-        </DialogTitle>
-        {/* Header — explicit visual bar */}
-        <header className="relative flex items-center justify-between gap-4 border-b bg-muted/20 px-4 py-3 flex-shrink-0 min-h-[60px]">
-          <div className="flex items-center gap-3 min-w-0 pr-8">
-            <div className="flex items-center gap-2">
-              <Truck className="w-5 h-5 text-muted-foreground shrink-0" />
-              <h2 className="text-base font-semibold truncate">
-                {isEdit
-                  ? `${t('novaposhta_waybill_edit')} — ${waybill?.np_number}`
-                  : t('novaposhta_waybill_create')}
-              </h2>
-            </div>
+        <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Truck className="w-5 h-5 shrink-0" />
+              {isEdit
+                ? `${t('novaposhta_waybill_edit')} — ${waybill?.np_number}`
+                : t('novaposhta_waybill_create')}
+            </DialogTitle>
             {summary?.exists && !summary.is_deleted && (
               <Badge
                 variant={summary.has_sync_error ? 'destructive' : 'secondary'}
@@ -846,17 +837,9 @@ export default function OrderWaybillModal({
               </Badge>
             )}
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="absolute right-4 top-4"
-            aria-label="Close"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </header>
+        </DialogHeader>
+
+        <Separator className="flex-shrink-0" />
 
         {/* Scrollable content with 4-column grid */}
         {loadingWaybill ? (
@@ -864,7 +847,7 @@ export default function OrderWaybillModal({
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
             <div className="grid items-stretch gap-3 xl:grid-cols-4">
               {/* Column 1: Sender */}
               <OrderWaybillSenderSection
@@ -1007,6 +990,8 @@ export default function OrderWaybillModal({
             </div>
           </div>
         )}
+
+        <Separator className="flex-shrink-0" />
 
         {/* Footer */}
         {!loadingWaybill && (

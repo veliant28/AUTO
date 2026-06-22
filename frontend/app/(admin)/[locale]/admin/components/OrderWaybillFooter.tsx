@@ -53,7 +53,7 @@ export default function OrderWaybillFooter({
   const isBusy = isPending || isSyncing || isDeleting || isPrinting || disabled
 
   return (
-    <div className="border-t px-4 py-3 bg-muted/20 flex flex-wrap items-start justify-between gap-3">
+    <div className="flex-shrink-0 p-4 pt-3 flex flex-wrap items-start justify-between gap-3">
       {/* Left group */}
       <div className="flex items-center gap-2">
         {isEdit && canEdit && (

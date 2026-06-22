@@ -82,8 +82,8 @@ export default function OrderWaybillSenderSection({
   return (
     <section className="order-1 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card overflow-x-hidden">
       <div className="flex min-h-8 items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <Building2 className="w-5 h-5" />
           {t('novaposhta_sender')}
         </h3>
         <DropdownMenu>

@@ -389,8 +389,8 @@ export default function OrderWaybillRecipientSection({
   return (
     <section className="order-3 rounded-md border p-3 xl:h-[460px] bg-card">
       <div className="flex min-h-8 items-center gap-2">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <User className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <User className="w-5 h-5" />
           {t('novaposhta_recipient')}
         </h3>
       </div>

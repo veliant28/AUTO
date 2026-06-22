@@ -114,49 +114,49 @@ export default function OrderWaybillServiceEditorSection({
       field: 'packing_number',
       type: 'text',
       labelKey: 'novaposhta_service_packing_number',
-      icon: <Package className="w-4 h-4 text-muted-foreground" />,
+      icon: <Package className="w-5 h-5" />,
     },
     InfoRegClientBarcodes: {
       field: 'info_reg_client_barcodes',
       type: 'text',
       labelKey: 'novaposhta_service_info_reg_client_barcodes',
-      icon: <Barcode className="w-4 h-4 text-muted-foreground" />,
+      icon: <Barcode className="w-5 h-5" />,
     },
     AccompanyingDocuments: {
       field: 'accompanying_documents',
       type: 'text',
       labelKey: 'novaposhta_service_accompanying_documents',
-      icon: <FileText className="w-4 h-4 text-muted-foreground" />,
+      icon: <FileText className="w-5 h-5" />,
     },
     AdditionalInformation: {
       field: 'additional_information',
       type: 'text',
       labelKey: 'novaposhta_service_additional_information',
-      icon: <Info className="w-4 h-4 text-muted-foreground" />,
+      icon: <Info className="w-5 h-5" />,
     },
     NumberOfFloorsLifting: {
       field: 'number_of_floors_lifting',
       type: 'number',
       labelKey: 'novaposhta_service_number_of_floors_lifting',
-      icon: <ArrowUp className="w-4 h-4 text-muted-foreground" />,
+      icon: <ArrowUp className="w-5 h-5" />,
     },
     NumberOfFloorsDescent: {
       field: 'number_of_floors_descent',
       type: 'number',
       labelKey: 'novaposhta_service_number_of_floors_descent',
-      icon: <ArrowDown className="w-4 h-4 text-muted-foreground" />,
+      icon: <ArrowDown className="w-5 h-5" />,
     },
     ForwardingCount: {
       field: 'forwarding_count',
       type: 'number',
       labelKey: 'novaposhta_service_forwarding_count',
-      icon: <CornerDownRight className="w-4 h-4 text-muted-foreground" />,
+      icon: <CornerDownRight className="w-5 h-5" />,
     },
     RedBoxBarcode: {
       field: 'red_box_barcode',
       type: 'text',
       labelKey: 'novaposhta_service_red_box_barcode',
-      icon: <Box className="w-4 h-4 text-muted-foreground" />,
+      icon: <Box className="w-5 h-5" />,
     },
   }
 
@@ -178,8 +178,8 @@ export default function OrderWaybillServiceEditorSection({
       <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+            <CreditCard className="w-5 h-5" />
             {serviceName}
           </h3>
         </div>
@@ -300,7 +300,7 @@ export default function OrderWaybillServiceEditorSection({
       <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
+          <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
             {simpleConfig.icon}
             {serviceName}
           </h3>
@@ -349,8 +349,8 @@ export default function OrderWaybillServiceEditorSection({
   return (
     <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <CreditCard className="w-5 h-5" />
           {serviceName}
         </h3>
       </div>
@@ -436,8 +436,8 @@ function LocalExpressEditor({
   return (
     <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Clock className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <Clock className="w-5 h-5" />
           {serviceName}
         </h3>
       </div>
@@ -583,8 +583,8 @@ function PreferredDeliveryDateEditor({
   return (
     <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <CalendarIcon className="w-5 h-5" />
           {serviceName}
         </h3>
       </div>
@@ -731,8 +731,8 @@ function DeliveryByHandEditor({
   return (
     <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <UserCheck className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <UserCheck className="w-5 h-5" />
           {serviceName}
         </h3>
       </div>

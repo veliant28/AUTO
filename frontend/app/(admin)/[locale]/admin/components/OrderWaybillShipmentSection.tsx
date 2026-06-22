@@ -463,8 +463,8 @@ export default function OrderWaybillShipmentSection({
     <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
       {/* ── Header ── */}
       <div className="flex min-h-8 items-center gap-2 shrink-0">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Package className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
+          <Package className="w-5 h-5" />
           {isPlacesListMode
             ? `${t('novaposhta_shipment_heading')} / ${t('novaposhta_places_list_title')}`
             : isPackagingMode
@@ -706,7 +706,7 @@ export default function OrderWaybillShipmentSection({
             {/* Dimensions display */}
             <div className="flex gap-1.5 items-end">
               <div className="flex flex-col justify-center shrink-0">
-                <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                <Maximize2 className="w-5 h-5" />
               </div>
               <div className="flex-1 grid grid-cols-3 gap-1.5">
                 <div>
