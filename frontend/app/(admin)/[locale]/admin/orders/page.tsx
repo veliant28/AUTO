@@ -658,8 +658,8 @@ export default function AdminOrdersPage() {
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                          <DialogTitle className="text-lg">
-                            {t('order_details')} #{orderDetail.id}
+                          <DialogTitle className="text-2xl font-bold tracking-tight">
+                            {t('order_details')}: {orderDetail.id}
                           </DialogTitle>
                           <Badge
                             className={`${ORDER_STATUS_LABELS[orderDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
