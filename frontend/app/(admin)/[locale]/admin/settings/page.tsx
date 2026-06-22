@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
@@ -530,14 +531,70 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
 }
 
 function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const [open, setOpen] = React.useState(false);
+  const [hours, minutes] = (value || '00:00').split(':');
+
   return (
-    <Input
-      type="time"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-24 text-sm text-center mx-auto [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:transition-opacity [&::-webkit-time-edit]:cursor-pointer"
-      disabled={disabled}
-    />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild disabled={disabled}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 w-24 font-normal text-center mx-auto cursor-pointer gap-2"
+          disabled={disabled}
+        >
+          <span className="flex-1">{value || '00:00'}</span>
+          <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit p-2" align="center" sideOffset={4}>
+        <div className="flex gap-2">
+          {/* Hours */}
+          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1">
+            <div className="text-xs font-medium text-muted-foreground text-center sticky top-0 bg-popover py-1">HH</div>
+            {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+              <button
+                key={h}
+                type="button"
+                className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
+                  h === hours
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => {
+                  onChange(`${h}:${minutes}`);
+                  setOpen(false);
+                }}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+          <div className="w-px bg-border self-stretch" />
+          {/* Minutes */}
+          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pl-1">
+            <div className="text-xs font-medium text-muted-foreground text-center sticky top-0 bg-popover py-1">MM</div>
+            {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
+                  m === minutes
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'hover:bg-accent text-foreground'
+                }`}
+                onClick={() => {
+                  onChange(`${hours}:${m}`);
+                  setOpen(false);
+                }}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
