@@ -533,6 +533,19 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
 function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const [hours, minutes] = (value || '00:00').split(':');
+  const hoursRef = React.useRef<HTMLDivElement>(null);
+  const minutesRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        hoursRef.current?.querySelector<HTMLButtonElement>('[data-selected]')
+          ?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        minutesRef.current?.querySelector<HTMLButtonElement>('[data-selected]')
+          ?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      });
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -550,11 +563,12 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
       <PopoverContent className="w-fit p-2" align="center" sideOffset={4}>
         <div className="flex gap-1">
           {/* Hours */}
-          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div ref={hoursRef} className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
               <button
                 key={h}
                 type="button"
+                data-selected={h === hours || undefined}
                 className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
                   h === hours
                     ? 'bg-primary text-primary-foreground font-medium'
@@ -571,11 +585,12 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
           </div>
           <div className="w-px bg-border self-stretch" />
           {/* Minutes */}
-          <div className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pl-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div ref={minutesRef} className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pl-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
               <button
                 key={m}
                 type="button"
+                data-selected={m === minutes || undefined}
                 className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
                   m === minutes
                     ? 'bg-primary text-primary-foreground font-medium'
