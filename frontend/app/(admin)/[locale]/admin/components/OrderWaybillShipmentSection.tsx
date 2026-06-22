@@ -1032,7 +1032,7 @@ export default function OrderWaybillShipmentSection({
               <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_volume')}
               </Label>
-              <div className="flex items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5">
+              <div className="flex items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5 h-10">
                 <Box className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="font-medium">
                   {t('novaposhta_volumetric_weight')} {volumetricWeight()} кг
