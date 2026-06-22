@@ -785,7 +785,7 @@ export default function AdminOrdersPage() {
                   ) : (
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 min-h-full">
                       <div className="border rounded-lg p-3 flex flex-col h-full">
-                        <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
+                        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <Package className="w-4 h-4" /> {t('order_items')}
                         </h4>
                         <div className="space-y-3 flex-1 overflow-y-auto pr-1 mt-3">
@@ -920,7 +920,7 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
-                        <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
+                        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <CreditCard className="w-4 h-4" />{' '}
                           {t('payment_method')}
                         </h4>
@@ -932,7 +932,7 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
-                        <h4 className="font-semibold text-sm flex items-center gap-2 flex-shrink-0">
+                        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <User className="w-4 h-4" /> {t('recipient_data')}
                         </h4>
                         <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
@@ -1092,7 +1092,7 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
-                        <h4 className="font-semibold text-sm flex-shrink-0">
+                        <h4 className="font-semibold text-lg flex-shrink-0">
                           {t('order_summary')}
                         </h4>
                         <div className="flex-1 space-y-2 text-sm mt-3">
