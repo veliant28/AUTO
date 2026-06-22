@@ -787,7 +787,7 @@ export default function AdminOrdersPage() {
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 min-h-full">
                       <div className="border rounded-lg p-3 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <Package className="w-4 h-4" /> {t('order_items')}
+                          <Package className="w-5 h-5" /> {t('order_items')}
                         </h4>
                         <div className="space-y-3 flex-1 overflow-y-auto pr-1 mt-3">
                           {orderDetail.items.map((item) => {
@@ -922,7 +922,7 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <CreditCard className="w-4 h-4" />{' '}
+                          <CreditCard className="w-5 h-5" />{' '}
                           {t('payment_method')}
                         </h4>
                         <div className="flex-1 flex items-center justify-center">
@@ -934,7 +934,7 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <User className="w-4 h-4" /> {t('recipient_data')}
+                          <User className="w-5 h-5" /> {t('recipient_data')}
                         </h4>
                         <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
                           {/* ── Phone ── */}
@@ -1094,7 +1094,7 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <ScrollText className="w-4 h-4" /> {t('order_summary')}
+                          <ScrollText className="w-5 h-5" /> {t('order_summary')}
                         </h4>
                         <div className="flex-1 space-y-2 text-sm mt-3">
                           <div className="flex justify-between">
