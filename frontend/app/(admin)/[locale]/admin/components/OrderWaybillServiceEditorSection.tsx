@@ -202,7 +202,7 @@ export default function OrderWaybillServiceEditorSection({
                 onFocus={handleAmountFocus}
                 onBlur={handleAmountBlur}
                 placeholder={t('novaposhta_money_transfer')}
-                className="h-9 pr-8"
+                className="pr-8"
               />
               <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-sm text-muted-foreground">
                 ₴
@@ -240,18 +240,12 @@ export default function OrderWaybillServiceEditorSection({
 
           {/* Action buttons */}
           <div className="flex justify-end gap-2 pt-1 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9"
-              onClick={onCancel}
-            >
+            <Button type="button" variant="outline" onClick={onCancel}>
               {t('novaposhta_services_cancel')}
             </Button>
             <Button
               type="button"
               variant="default"
-              className="h-9"
               disabled={!canSave}
               onClick={handleSave}
             >
@@ -323,7 +317,6 @@ export default function OrderWaybillServiceEditorSection({
               min={simpleConfig.type === 'number' ? '0' : undefined}
               value={simpleValue}
               onChange={(e) => setSimpleValue(e.target.value)}
-              className="h-9"
             />
           </div>
 
@@ -332,18 +325,12 @@ export default function OrderWaybillServiceEditorSection({
 
           {/* Action buttons */}
           <div className="flex justify-end gap-2 pt-1 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9"
-              onClick={onCancel}
-            >
+            <Button type="button" variant="outline" onClick={onCancel}>
               {t('novaposhta_services_cancel')}
             </Button>
             <Button
               type="button"
               variant="default"
-              className="h-9"
               onClick={() =>
                 onSave({
                   [simpleConfig.field]: simpleValue,
@@ -371,20 +358,10 @@ export default function OrderWaybillServiceEditorSection({
         {t('novaposhta_service_no_params')}
       </div>
       <div className="flex justify-end gap-2 pt-1 shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9"
-          onClick={onCancel}
-        >
+        <Button type="button" variant="outline" onClick={onCancel}>
           {t('novaposhta_services_cancel')}
         </Button>
-        <Button
-          type="button"
-          variant="default"
-          className="h-9"
-          onClick={() => onSave({})}
-        >
+        <Button type="button" variant="default" onClick={() => onSave({})}>
           {t('novaposhta_services_add')}
         </Button>
       </div>
@@ -479,7 +456,7 @@ function LocalExpressEditor({
               value={selectedInterval}
               onValueChange={setSelectedInterval}
             >
-              <SelectTrigger className="h-9">
+              <SelectTrigger>
                 <SelectValue
                   placeholder={t('novaposhta_service_select_interval')}
                 />
@@ -508,18 +485,12 @@ function LocalExpressEditor({
         <div className="flex-1" />
 
         <div className="flex justify-end gap-2 pt-1 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             {t('novaposhta_services_cancel')}
           </Button>
           <Button
             type="button"
             variant="default"
-            className="h-9"
             disabled={!selectedInterval}
             onClick={() => {
               const label =
@@ -638,7 +609,7 @@ function PreferredDeliveryDateEditor({
                   <Button
                     variant="outline"
                     className={cn(
-                      'h-9 w-full justify-start text-left font-normal',
+                      'w-full justify-start text-left font-normal',
                       !selectedDate && 'text-muted-foreground',
                     )}
                   >
@@ -687,7 +658,7 @@ function PreferredDeliveryDateEditor({
                     value={selectedInterval}
                     onValueChange={setSelectedInterval}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger>
                       <SelectValue
                         placeholder={t('novaposhta_service_select_interval')}
                       />
@@ -709,18 +680,12 @@ function PreferredDeliveryDateEditor({
         <div className="flex-1" />
 
         <div className="flex justify-end gap-2 pt-1 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             {t('novaposhta_services_cancel')}
           </Button>
           <Button
             type="button"
             variant="default"
-            className="h-9"
             disabled={!canSave}
             onClick={() => {
               const label =
@@ -794,7 +759,6 @@ function DeliveryByHandEditor({
               value={recipients}
               onChange={(e) => setRecipients(e.target.value)}
               placeholder={t('novaposhta_service_delivery_by_hand_placeholder')}
-              className="h-9"
             />
             <p className="text-xs text-muted-foreground">
               {t('novaposhta_service_delivery_by_hand_hint')}
@@ -805,18 +769,12 @@ function DeliveryByHandEditor({
         <div className="flex-1" />
 
         <div className="flex justify-end gap-2 pt-1 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             {t('novaposhta_services_cancel')}
           </Button>
           <Button
             type="button"
             variant="default"
-            className="h-9"
             onClick={() =>
               onSave({
                 delivery_by_hand: enabled,

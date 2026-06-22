@@ -61,7 +61,7 @@ export default function OrderWaybillFooter({
             <TooltipTrigger asChild>
               <Button
                 variant="destructive"
-                className="h-9 gap-1.5"
+                className="gap-1.5"
                 onClick={onDelete}
                 disabled={isBusy}
               >
@@ -82,7 +82,7 @@ export default function OrderWaybillFooter({
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
-                className="h-9 gap-1.5"
+                className="gap-1.5"
                 onClick={onSync}
                 disabled={isBusy}
               >
@@ -104,7 +104,7 @@ export default function OrderWaybillFooter({
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-9 gap-1.5"
+                  className="gap-1.5"
                   onClick={onPrintHtml}
                   disabled={isBusy}
                 >
@@ -122,7 +122,7 @@ export default function OrderWaybillFooter({
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-9 gap-1.5"
+                  className="gap-1.5"
                   onClick={onPrintPdf}
                   disabled={isBusy}
                 >
@@ -142,15 +142,10 @@ export default function OrderWaybillFooter({
 
       {/* Right group */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          className="h-9"
-          onClick={onCancel}
-          disabled={isBusy}
-        >
+        <Button variant="outline" onClick={onCancel} disabled={isBusy}>
           {t('cancel')}
         </Button>
-        <Button className="h-9 gap-1.5" onClick={onSave} disabled={isBusy}>
+        <Button className="gap-1.5" onClick={onSave} disabled={isBusy}>
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           {isEdit ? t('novaposhta_save') : t('novaposhta_waybill_create')}
         </Button>

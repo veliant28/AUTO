@@ -421,7 +421,7 @@ export default function OrderWaybillPaymentSection({
                 onFocus={() => setIsDropdownOpen(true)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder={t('novaposhta_search_services')}
-                className="h-9 pl-8"
+                className="pl-8"
                 disabled={disabled}
               />
               {isLoadingServices && (
@@ -484,7 +484,7 @@ export default function OrderWaybillPaymentSection({
                     tabIndex={0}
                     className={cn(
                       buttonVariants({ variant: 'outline' }),
-                      'h-9 gap-2 px-3 cursor-pointer',
+                      'gap-2 px-3 cursor-pointer',
                     )}
                     onClick={toggleSelectAllServices}
                     onKeyDown={(e) => {
@@ -570,7 +570,7 @@ export default function OrderWaybillPaymentSection({
                     return (
                       <div
                         key={item.ref}
-                        className="flex items-center gap-2 px-3 h-9"
+                        className="flex items-center gap-2 px-3"
                         onDoubleClick={() => {
                           if (PARAM_REQUIRED_SERVICES.has(item.ref)) {
                             onServiceEdit?.(item.ref, item.description)
@@ -604,7 +604,6 @@ export default function OrderWaybillPaymentSection({
             <Button
               type="button"
               variant="outline"
-              className="h-9"
               disabled={disabled}
               onClick={handleCancel}
             >
@@ -613,7 +612,6 @@ export default function OrderWaybillPaymentSection({
             <Button
               type="button"
               variant="default"
-              className="h-9"
               disabled={disabled || selectedServices.length === 0}
               onClick={handleAdd}
             >
@@ -671,7 +669,6 @@ export default function OrderWaybillPaymentSection({
                   key={value}
                   type="button"
                   variant={payerType === value ? 'default' : 'outline'}
-                  className="h-9"
                   disabled={btnDisabled}
                   onClick={() => handlePayerType(value)}
                 >
@@ -714,7 +711,6 @@ export default function OrderWaybillPaymentSection({
                     key={value}
                     type="button"
                     variant={paymentMethod === value ? 'default' : 'outline'}
-                    className="h-9"
                     disabled={btnDisabled}
                     onClick={() => handlePaymentMethod(value)}
                   >
@@ -747,7 +743,7 @@ export default function OrderWaybillPaymentSection({
         <Button
           type="button"
           variant="outline"
-          className="mt-2 gap-1.5 h-9"
+          className="mt-2 gap-1.5"
           disabled={disabled}
           onClick={() => onServicesModeChange?.(true)}
         >

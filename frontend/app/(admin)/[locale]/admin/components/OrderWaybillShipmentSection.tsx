@@ -480,7 +480,6 @@ export default function OrderWaybillShipmentSection({
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9"
                   onClick={onAddPlace}
                   disabled={disabled || isPackagingMode}
                 >
@@ -496,7 +495,6 @@ export default function OrderWaybillShipmentSection({
               type="button"
               variant="outline"
               size="icon"
-              className="h-9 w-9"
               onClick={() => onPlacesListModeChange?.(!isPlacesListMode)}
               disabled={disabled || isPackagingMode}
             >
@@ -517,7 +515,7 @@ export default function OrderWaybillShipmentSection({
                 tabIndex={0}
                 className={cn(
                   buttonVariants({ variant: 'outline' }),
-                  'h-9 gap-2 px-3 cursor-pointer',
+                  'gap-2 px-3 cursor-pointer',
                 )}
                 onClick={toggleAllPlaces}
                 onKeyDown={(e) => {
@@ -551,7 +549,7 @@ export default function OrderWaybillShipmentSection({
                 {form.options_seat.map((seat: any, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 px-3 h-9 cursor-pointer hover:bg-muted/50"
+                    className="flex items-center gap-2 px-3 cursor-pointer hover:bg-muted/50"
                     onDoubleClick={() => onSwitchPlace?.(idx)}
                   >
                     {idx > 0 ? (
@@ -596,7 +594,6 @@ export default function OrderWaybillShipmentSection({
             <Button
               type="button"
               variant="outline"
-              className="h-9"
               onClick={() => onAddPlace?.()}
               disabled={disabled || isPackagingMode}
             >
@@ -626,7 +623,7 @@ export default function OrderWaybillShipmentSection({
                   onFocus={() => setIsDropdownOpen(true)}
                   onKeyDown={handleSearchKeyDown}
                   placeholder={t('novaposhta_search_packaging')}
-                  className="h-9 pl-8"
+                  className="pl-8"
                   disabled={disabled}
                 />
                 {isLoadingPackaging && (
@@ -708,7 +705,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Dimensions display */}
             <div className="flex gap-1.5 items-end">
-              <div className="flex flex-col justify-center h-9 shrink-0">
+              <div className="flex flex-col justify-center shrink-0">
                 <Maximize2 className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="flex-1 grid grid-cols-3 gap-1.5">
@@ -719,7 +716,7 @@ export default function OrderWaybillShipmentSection({
                   <Input
                     value={dimCm(lastAddedItem?.width_mm || '')}
                     readOnly
-                    className="h-9 text-sm text-center mt-0.5"
+                    className="text-sm text-center mt-0.5"
                   />
                 </div>
                 <div>
@@ -729,7 +726,7 @@ export default function OrderWaybillShipmentSection({
                   <Input
                     value={dimCm(lastAddedItem?.length_mm || '')}
                     readOnly
-                    className="h-9 text-sm text-center mt-0.5"
+                    className="text-sm text-center mt-0.5"
                   />
                 </div>
                 <div>
@@ -739,7 +736,7 @@ export default function OrderWaybillShipmentSection({
                   <Input
                     value={dimCm(lastAddedItem?.height_mm || '')}
                     readOnly
-                    className="h-9 text-sm text-center mt-0.5"
+                    className="text-sm text-center mt-0.5"
                   />
                 </div>
               </div>
@@ -756,7 +753,7 @@ export default function OrderWaybillShipmentSection({
                   tabIndex={0}
                   className={cn(
                     buttonVariants({ variant: 'outline' }),
-                    'h-9 gap-2 px-3 cursor-pointer',
+                    'gap-2 px-3 cursor-pointer',
                   )}
                   onClick={toggleSelectAll}
                   onKeyDown={(e) => {
@@ -785,10 +782,7 @@ export default function OrderWaybillShipmentSection({
             {tableItems.length > 0 ? (
               <div className="border rounded-md divide-y">
                 {tableItems.map((item) => (
-                  <div
-                    key={item.ref}
-                    className="flex items-center gap-2 px-3 h-9"
-                  >
+                  <div key={item.ref} className="flex items-center gap-2 px-3">
                     <Checkbox
                       checked={checkedRefs.has(item.ref)}
                       onCheckedChange={() => toggleCheck(item.ref)}
@@ -820,7 +814,6 @@ export default function OrderWaybillShipmentSection({
             <Button
               type="button"
               variant="outline"
-              className="h-9"
               disabled={disabled}
               onClick={handleCancel}
             >
@@ -829,7 +822,6 @@ export default function OrderWaybillShipmentSection({
             <Button
               type="button"
               variant="default"
-              className="h-9"
               disabled={disabled || tableItems.length === 0}
               onClick={handleSave}
             >
@@ -850,7 +842,6 @@ export default function OrderWaybillShipmentSection({
                 onChange={(e) => onChange('description', e.target.value)}
                 disabled={disabled}
                 placeholder={t('novaposhta_description_placeholder')}
-                className="h-9"
               />
             </div>
 
@@ -871,7 +862,7 @@ export default function OrderWaybillShipmentSection({
                     }
                     onBlur={() => !cost && onChange('cost', '0')}
                     disabled={disabled}
-                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     ₴
@@ -901,7 +892,7 @@ export default function OrderWaybillShipmentSection({
                     }}
                     onBlur={() => !weight && onChange('weight', '0.1')}
                     disabled={disabled}
-                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     кг
@@ -918,7 +909,7 @@ export default function OrderWaybillShipmentSection({
               <Button
                 type="button"
                 variant="default"
-                className="w-full h-9 overflow-hidden"
+                className="w-full overflow-hidden"
                 disabled={disabled}
                 onClick={() => onPackagingModeChange(true)}
               >
@@ -971,7 +962,7 @@ export default function OrderWaybillShipmentSection({
                       !volumetricWidth && onChange('volumetric_width', '0')
                     }
                     disabled={disabled}
-                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     см
@@ -999,7 +990,7 @@ export default function OrderWaybillShipmentSection({
                       !volumetricLength && onChange('volumetric_length', '0')
                     }
                     disabled={disabled}
-                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     см
@@ -1027,7 +1018,7 @@ export default function OrderWaybillShipmentSection({
                       !volumetricHeight && onChange('volumetric_height', '0')
                     }
                     disabled={disabled}
-                    className="h-9 pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     см
@@ -1041,7 +1032,7 @@ export default function OrderWaybillShipmentSection({
               <Label className="text-xs text-muted-foreground">
                 {t('novaposhta_volume')}
               </Label>
-              <div className="flex h-9 items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5">
+              <div className="flex items-center justify-center rounded-md border bg-muted/30 px-3 text-sm gap-1.5">
                 <Box className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="font-medium">
                   {t('novaposhta_volumetric_weight')} {volumetricWeight()} кг
@@ -1063,7 +1054,7 @@ export default function OrderWaybillShipmentSection({
                         variant={
                           cargoType === item.value ? 'default' : 'outline'
                         }
-                        className="h-9 px-0"
+                        className="px-0"
                         disabled={disabled}
                         onClick={() => onChange('cargo_type', item.value)}
                       >

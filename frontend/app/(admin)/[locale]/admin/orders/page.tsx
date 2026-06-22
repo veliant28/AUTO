@@ -647,7 +647,7 @@ export default function AdminOrdersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 rounded-full"
+                        className="rounded-full"
                         onClick={() => setShowHistory(false)}
                       >
                         <ArrowLeft className="w-4 h-4" />
@@ -1113,12 +1113,11 @@ export default function AdminOrdersPage() {
                 <Separator className="flex-shrink-0" />
                 <div className="flex-shrink-0 p-4 pt-3">
                   {showHistory ? (
-                    <div className="h-9" />
+                    <div className="h-10" />
                   ) : editMode ? (
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        className="h-9"
                         onClick={() => {
                           setEditMode(false)
                         }}
@@ -1126,7 +1125,7 @@ export default function AdminOrdersPage() {
                         {t('cancel')}
                       </Button>
                       <Button
-                        className="h-9 gap-2"
+                        className="gap-2"
                         onClick={handleSave}
                         disabled={updateMutation.isPending}
                       >
@@ -1142,14 +1141,14 @@ export default function AdminOrdersPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        className="gap-1.5 h-9"
+                        className="gap-1.5"
                         onClick={() => setShowHistory(true)}
                       >
                         <History className="w-4 h-4" /> {t('order_history')}
                       </Button>
                       <Button
                         variant="outline"
-                        className="gap-1.5 h-9"
+                        className="gap-1.5"
                         onClick={enterEditMode}
                       >
                         <Pencil className="w-4 h-4" /> {t('edit_order')}

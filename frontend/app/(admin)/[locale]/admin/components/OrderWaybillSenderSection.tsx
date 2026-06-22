@@ -92,7 +92,6 @@ export default function OrderWaybillSenderSection({
               type="button"
               variant="outline"
               size="icon"
-              className="h-9 w-9"
               disabled={disabled || senders.length === 0}
               aria-label={t('novaposhta_select_sender')}
             >
@@ -131,7 +130,7 @@ export default function OrderWaybillSenderSection({
             <Label className="text-xs text-muted-foreground">
               {t(field.label)}
             </Label>
-            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
               <span
                 className={
                   field.value ? 'truncate' : 'truncate text-muted-foreground'
@@ -154,7 +153,7 @@ export default function OrderWaybillSenderSection({
               onValueChange={onAddressChange}
               disabled={disabled}
             >
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder={currentAddressLabel || '—'} />
               </SelectTrigger>
               <SelectContent>
@@ -166,7 +165,7 @@ export default function OrderWaybillSenderSection({
               </SelectContent>
             </Select>
           ) : (
-            <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden">
               <span
                 className={
                   currentAddressLabel

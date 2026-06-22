@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function CatalogSkeleton() {
   return (
@@ -16,7 +16,7 @@ export function CatalogSkeleton() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 export function SearchSkeleton() {
@@ -27,7 +27,7 @@ export function SearchSkeleton() {
         <Skeleton key={i} className="h-20 w-full" />
       ))}
     </div>
-  );
+  )
 }
 
 export function GarageSkeleton() {
@@ -40,11 +40,11 @@ export function GarageSkeleton() {
             <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
           </div>
           <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-9 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 export function OrdersSkeleton() {
@@ -54,7 +54,7 @@ export function OrdersSkeleton() {
         <Skeleton key={i} className="h-28 w-full rounded-lg" />
       ))}
     </div>
-  );
+  )
 }
 
 export function TableSkeleton({ rows = 8 }: { rows?: number }) {
@@ -65,5 +65,5 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
         <Skeleton key={i} className="h-12 w-full" />
       ))}
     </div>
-  );
+  )
 }

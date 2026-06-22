@@ -1008,7 +1008,7 @@ function SenderFormDialog({
                     noResultsMessage={t('novaposhta_no_results')}
                   />
                 ) : (
-                  <div className="flex h-9 items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
+                  <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
                     {t('novaposhta_select_city_first')}
                   </div>
                 )}
