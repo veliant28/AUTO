@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
@@ -530,40 +531,59 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
 }
 
 function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const [open, setOpen] = React.useState(false);
   const [hours, minutes] = (value || '00:00').split(':');
 
   return (
-    <div className="flex items-center gap-0.5 mx-auto w-fit">
-      <Select
-        value={hours}
-        onValueChange={(h) => onChange(`${h}:${minutes}`)}
-        disabled={disabled}
-      >
-        <SelectTrigger className="h-9 w-[68px] cursor-pointer text-center">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
-            <SelectItem key={h} value={h} className="cursor-pointer">{h}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <span className="text-sm text-muted-foreground select-none">:</span>
-      <Select
-        value={minutes}
-        onValueChange={(m) => onChange(`${hours}:${m}`)}
-        disabled={disabled}
-      >
-        <SelectTrigger className="h-9 w-[68px] cursor-pointer text-center">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
-            <SelectItem key={m} value={m} className="cursor-pointer">{m}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild disabled={disabled}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 w-24 text-center font-mono mx-auto cursor-pointer"
+          disabled={disabled}
+        >
+          {value || '00:00'}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit p-2" align="center">
+        <div className="flex items-center gap-1">
+          <Select
+            value={hours}
+            onValueChange={(h) => {
+              onChange(`${h}:${minutes}`);
+              setOpen(false);
+            }}
+          >
+            <SelectTrigger className="h-9 w-[72px] cursor-pointer text-center">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+                <SelectItem key={h} value={h} className="cursor-pointer">{h}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground select-none">:</span>
+          <Select
+            value={minutes}
+            onValueChange={(m) => {
+              onChange(`${hours}:${m}`);
+              setOpen(false);
+            }}
+          >
+            <SelectTrigger className="h-9 w-[72px] cursor-pointer text-center">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')).map((m) => (
+                <SelectItem key={m} value={m} className="cursor-pointer">{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
