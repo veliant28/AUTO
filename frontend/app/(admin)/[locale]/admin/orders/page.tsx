@@ -938,7 +938,7 @@ export default function AdminOrdersPage() {
                         <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3">
                           {/* ── Phone ── */}
                           <div className="grid gap-1">
-                            <span className="text-muted-foreground text-xs">
+                            <span className="text-muted-foreground text-sm">
                               {t('phone_label')}
                             </span>
                             {editMode ? (
@@ -962,7 +962,7 @@ export default function AdminOrdersPage() {
                           {['last_name', 'first_name', 'middle_name'].map(
                             (field) => (
                               <div key={field} className="grid gap-1">
-                                <span className="text-muted-foreground text-xs">
+                                <span className="text-muted-foreground text-sm">
                                   {t(field)}
                                 </span>
                                 {editMode ? (
@@ -1063,7 +1063,7 @@ export default function AdminOrdersPage() {
                           {['delivery_city', 'delivery_warehouse'].map(
                             (field) => (
                               <div key={field} className="grid gap-1">
-                                <span className="text-muted-foreground text-xs">
+                                <span className="text-muted-foreground text-sm">
                                   {t(field)}
                                 </span>
                                 {editMode ? (
