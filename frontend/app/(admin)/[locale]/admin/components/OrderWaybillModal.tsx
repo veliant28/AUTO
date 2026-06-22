@@ -8,7 +8,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { Loader2, Truck, BadgeCheck } from 'lucide-react'
+import { Loader2, BadgeCheck } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -821,7 +821,6 @@ export default function OrderWaybillModal({
         <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Truck className="w-5 h-5 shrink-0" />
               {isEdit
                 ? `${t('novaposhta_waybill_edit')} — ${waybill?.np_number}`
                 : t('novaposhta_waybill_create')}
