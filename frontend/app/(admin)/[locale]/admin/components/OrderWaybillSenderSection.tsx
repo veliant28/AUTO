@@ -80,7 +80,7 @@ export default function OrderWaybillSenderSection({
     senderAddressDisplay
 
   return (
-    <section className="order-1 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card overflow-x-hidden">
+    <section className="order-1 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center justify-between gap-2">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <Building2 className="w-5 h-5" />
@@ -124,7 +124,7 @@ export default function OrderWaybillSenderSection({
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-1.5 pt-2 min-w-0">
+      <div className="grid gap-1.5 pt-2 min-w-0 flex-1 overflow-y-auto overflow-x-hidden content-start">
         {displayFields.map((field) => (
           <div key={field.label} className="grid gap-0.5">
             <Label className="text-sm text-muted-foreground">

@@ -396,7 +396,7 @@ export default function OrderWaybillPaymentSection({
       checkedServiceRefs.size === selectedServices.length
 
     return (
-      <section className="order-4 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+      <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -628,15 +628,15 @@ export default function OrderWaybillPaymentSection({
   // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <section className="order-4 rounded-md border p-3 xl:h-[460px] xl:overflow-y-auto bg-card">
-      <div className="flex min-h-8 items-center gap-2">
+    <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+      <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CreditCard className="w-5 h-5" />
           {t('novaposhta_payment')}
         </h3>
       </div>
 
-      <div className="grid gap-1.5 pt-2">
+      <div className="grid gap-1.5 pt-2 flex-1 overflow-y-auto overflow-x-hidden content-start">
         {/* Cost summary */}
         <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
           <div className="flex items-center justify-between gap-2">

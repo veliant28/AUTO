@@ -387,7 +387,7 @@ export default function OrderWaybillRecipientSection({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <section className="order-3 rounded-md border p-3 xl:h-[460px] bg-card">
+    <section className="order-3 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center gap-2">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <User className="w-5 h-5" />
@@ -395,7 +395,7 @@ export default function OrderWaybillRecipientSection({
         </h3>
       </div>
 
-      <div className="grid gap-1.5 pt-2">
+      <div className="grid gap-1.5 pt-2 flex-1 overflow-y-auto overflow-x-hidden content-start">
         {/* ── Phone ──────────────────────────────────────────────────────── */}
         <div className="grid gap-0.5">
           <Label className="text-sm text-muted-foreground">

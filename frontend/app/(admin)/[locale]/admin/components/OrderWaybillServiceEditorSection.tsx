@@ -175,7 +175,7 @@ export default function OrderWaybillServiceEditorSection({
 
   if (serviceRef === 'AfterpaymentOnGoodsCost') {
     return (
-      <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -297,7 +297,7 @@ export default function OrderWaybillServiceEditorSection({
   // ── Generic editor for simple single-field services ─────────────────────
   if (simpleConfig) {
     return (
-      <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -347,7 +347,7 @@ export default function OrderWaybillServiceEditorSection({
 
   // Fallback for services without a specific editor
   return (
-    <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CreditCard className="w-5 h-5" />
@@ -434,7 +434,7 @@ function LocalExpressEditor({
   }, [availableIntervals, selectedInterval])
 
   return (
-    <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <Clock className="w-5 h-5" />
@@ -581,7 +581,7 @@ function PreferredDeliveryDateEditor({
     : undefined
 
   return (
-    <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CalendarIcon className="w-5 h-5" />
@@ -729,7 +729,7 @@ function DeliveryByHandEditor({
   )
 
   return (
-    <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <UserCheck className="w-5 h-5" />

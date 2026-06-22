@@ -460,7 +460,7 @@ export default function OrderWaybillShipmentSection({
   // ── Render ────────────────────────────────────────────────────────────
 
   return (
-    <section className="order-2 rounded-md border p-3 xl:h-[460px] flex flex-col bg-card">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
       {/* ── Header ── */}
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">

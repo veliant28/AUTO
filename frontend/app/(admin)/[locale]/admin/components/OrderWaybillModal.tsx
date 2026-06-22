@@ -847,7 +847,7 @@ export default function OrderWaybillModal({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
-            <div className="grid items-stretch gap-3 xl:grid-cols-4">
+            <div className="grid items-stretch gap-3 xl:grid-cols-4 min-h-full">
               {/* Column 1: Sender */}
               <OrderWaybillSenderSection
                 sender={selectedSender}
