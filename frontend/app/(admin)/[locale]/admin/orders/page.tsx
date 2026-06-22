@@ -31,7 +31,7 @@ import {
   Truck,
   MapPin,
   User,
-  Receipt,
+  ScrollText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1094,7 +1094,7 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <Receipt className="w-4 h-4" /> {t('order_summary')}
+                          <ScrollText className="w-4 h-4" /> {t('order_summary')}
                         </h4>
                         <div className="flex-1 space-y-2 text-sm mt-3">
                           <div className="flex justify-between">
