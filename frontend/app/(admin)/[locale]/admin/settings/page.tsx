@@ -449,7 +449,7 @@ function ScheduleSection() {
 
   return (
     <Card className="mt-6">
-      <CardHeader>
+      <CardHeader className="border-b">
         <CardTitle className="text-lg flex items-center gap-2">
           <CalendarClock className="w-5 h-5" />
           {t('settings_schedule_title')}
