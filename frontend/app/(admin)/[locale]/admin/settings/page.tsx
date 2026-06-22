@@ -540,7 +540,7 @@ function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-16 font-normal text-center mx-auto cursor-pointer gap-1"
+          className="h-9 w-24 font-normal text-center mx-auto cursor-pointer gap-1 text-base"
           disabled={disabled}
         >
           <span className="flex-1">{value || '00:00'}</span>
