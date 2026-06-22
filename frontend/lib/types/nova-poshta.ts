@@ -225,6 +225,34 @@ export interface NovaPoshtaServiceLookupQuery {
   sender_profile_id?: number
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Price calculation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface NovaPoshtaPriceRequest {
+  sender_profile_id: number
+  city_sender_ref: string
+  city_recipient_ref: string
+  weight: string
+  service_type: string
+  cost: string
+  cargo_type: string
+  seats_amount: number
+  afterpayment_amount?: string
+  pack_ref?: string
+  pack_count?: number
+  volumetric_width?: string
+  volumetric_length?: string
+  volumetric_height?: string
+}
+
+export interface NovaPoshtaPriceResponse {
+  delivery_cost: string
+  packaging_cost: string
+  redelivery_cost: string
+  assessed_cost: string
+}
+
 export interface NovaPoshtaLookupSettlement {
   ref: string
   delivery_city_ref: string

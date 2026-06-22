@@ -3,7 +3,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
-import { CreditCard, Plus, Search, Trash2 } from 'lucide-react'
+import {
+  CreditCard,
+  Loader2,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +21,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type { NovaPoshtaServiceItem } from '@/lib/types/nova-poshta'
@@ -48,6 +56,17 @@ interface Props {
   editingServiceRef?: string | null
   /** When set, remove this ref from the local selection (editor was cancelled) */
   lastCanceledRef?: string | null
+  /** Price breakdown from NP API */
+  priceData?: {
+    delivery_cost: string
+    packaging_cost: string
+    redelivery_cost: string
+    assessed_cost: string
+  } | null
+  priceLoading?: boolean
+  priceError?: boolean
+  /** Sum of selected packaging items costs (from pack_items) */
+  localPackagingCost?: number
 }
 
 /** Map of service ref → parameter field name for simple services */
@@ -90,6 +109,10 @@ export default function OrderWaybillPaymentSection({
   onServiceEdit,
   editingServiceRef = null,
   lastCanceledRef = null,
+  priceData = null,
+  priceLoading = false,
+  priceError = false,
+  localPackagingCost = 0,
 }: Props) {
   const t = useTranslations('admin')
 
@@ -396,7 +419,7 @@ export default function OrderWaybillPaymentSection({
       checkedServiceRefs.size === selectedServices.length
 
     return (
-      <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+      <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -405,9 +428,12 @@ export default function OrderWaybillPaymentSection({
           </h3>
         </div>
 
-        <div className="flex flex-col gap-2 flex-1 min-h-0 pt-2">
+        <div className="flex flex-col gap-2 flex-1 min-h-0 pt-2 px-1.5">
           {/* Search field */}
           <div ref={dropdownRef} className="relative">
+            <Label className="text-sm text-muted-foreground mb-0.5 block">
+              {t('novaposhta_search_services')}
+            </Label>
             <div className="relative overflow-visible">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
@@ -470,7 +496,7 @@ export default function OrderWaybillPaymentSection({
           </div>
 
           {/* Selected services table */}
-          <div className="flex-1 overflow-y-auto min-h-0 space-y-2 px-0.5">
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-2">
             {selectedServices.length === 0 ? (
               <div className="text-xs text-muted-foreground text-center py-4 border rounded-md">
                 {t('novaposhta_no_services_selected')}
@@ -570,7 +596,7 @@ export default function OrderWaybillPaymentSection({
                     return (
                       <div
                         key={item.ref}
-                        className="flex items-center gap-2 px-3"
+                        className="flex items-center gap-2 px-3 py-2.5"
                         onDoubleClick={() => {
                           if (PARAM_REQUIRED_SERVICES.has(item.ref)) {
                             onServiceEdit?.(item.ref, item.description)
@@ -628,104 +654,169 @@ export default function OrderWaybillPaymentSection({
   // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-4 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CreditCard className="w-5 h-5" />
           {t('novaposhta_payment')}
         </h3>
+        <div className="ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="invisible"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-1.5 pt-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden auto-rows-min">
-        {/* Cost summary */}
-        <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">
-              {t('novaposhta_to_pay')}
-            </span>
-            <span className="font-semibold">{cost || '0'} ₴</span>
-          </div>
-          {afterpaymentAmount && (
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground">
-                {t('novaposhta_afterpayment_summary')}
-              </span>
-              <span className="font-semibold">{afterpaymentAmount} ₴</span>
+      <div className="flex-1 overflow-y-auto min-h-0 px-1.5">
+        <div className="grid gap-3 pt-2 auto-rows-min">
+          {/* Cost summary — unified block */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_payment_summary_label')}
+            </Label>
+            <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+              {/* 1. Afterpayment / COD service — the selected service name + amount */}
+              {afterpaymentAmount && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    {selectedServices.find(
+                      (s) => s.ref === 'AfterpaymentOnGoodsCost',
+                    )?.description || t('novaposhta_afterpayment_summary')}
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {Number(afterpaymentAmount).toFixed(2)} ₴
+                  </span>
+                </div>
+              )}
+
+              {/* 2. COD / redelivery fee — from API only */}
+              {priceData &&
+                !priceLoading &&
+                afterpaymentAmount &&
+                Number(priceData.redelivery_cost) > 0 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t('novaposhta_redelivery_fee')}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {Number(priceData.redelivery_cost).toFixed(2)} ₴
+                    </span>
+                  </div>
+                )}
+
+              {/* 3. Packaging cost — local + API override */}
+              {(localPackagingCost > 0 ||
+                (priceData &&
+                  !priceLoading &&
+                  Number(priceData.packaging_cost) > 0)) && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    {t('novaposhta_packaging_cost')}
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {priceData && !priceLoading
+                      ? Number(priceData.packaging_cost).toFixed(2)
+                      : localPackagingCost.toFixed(2)}{' '}
+                    ₴
+                  </span>
+                </div>
+              )}
+
+              {/* 4. Delivery cost — from API only */}
+              {priceData && !priceLoading && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    {t('novaposhta_delivery_cost')}
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {Number(priceData.delivery_cost).toFixed(2)} ₴
+                  </span>
+                </div>
+              )}
+
+              {/* Loading spinner */}
+              {priceLoading && (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {t('novaposhta_price_calculating')}
+                  </span>
+                </div>
+              )}
+
+              {/* Error state */}
+              {priceError && (
+                <div className="text-xs text-destructive">
+                  {t('novaposhta_price_error')}
+                </div>
+              )}
+
+              <Separator className="my-1" />
+
+              {/* Total — always visible */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">{t('novaposhta_to_pay')}</span>
+                <span className="font-bold text-base tabular-nums">
+                  {(() => {
+                    if (priceData && !priceLoading) {
+                      // API data available: full calculation
+                      return (
+                        Number(priceData.delivery_cost) +
+                        Number(priceData.packaging_cost) +
+                        Number(priceData.redelivery_cost)
+                      ).toFixed(2)
+                    }
+                    if (localPackagingCost > 0 || afterpaymentAmount) {
+                      // Partial data: what we know so far
+                      let total = 0
+                      total += localPackagingCost
+                      return total.toFixed(2)
+                    }
+                    return '0.00'
+                  })()}{' '}
+                  ₴
+                </span>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Payer type */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_payer_type')}
-          </Label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {(Object.keys(payerTypeLabels) as PayerType[]).map((value) => {
-              const btnDisabled =
-                disabled || !isPayerAllowed(value, paymentMethod)
-              const btn = (
-                <Button
-                  key={value}
-                  type="button"
-                  variant={payerType === value ? 'default' : 'outline'}
-                  disabled={btnDisabled}
-                  onClick={() => handlePayerType(value)}
-                >
-                  {payerTypeLabels[value]}
-                </Button>
-              )
-              if (btnDisabled && !disabled) {
-                let tooltipKey: string
-                if (value === 'Sender') {
-                  tooltipKey = 'novaposhta_payer_sender_disabled_tooltip'
-                } else if (value === 'Recipient') {
-                  tooltipKey = 'novaposhta_payer_recipient_disabled_tooltip'
-                } else {
-                  tooltipKey = 'novaposhta_payer_third_person_disabled_tooltip'
-                }
-                return (
-                  <Tooltip key={value}>
-                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                    <TooltipContent>{t(tooltipKey)}</TooltipContent>
-                  </Tooltip>
-                )
-              }
-              return btn
-            })}
           </div>
-        </div>
 
-        {/* Payment method */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_payment_method_label')}
-          </Label>
-          <div className="grid grid-cols-2 gap-1.5">
-            {(Object.keys(paymentMethodLabels) as PaymentMethod[]).map(
-              (value) => {
+          {/* Payer type */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_payer_type')}
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(payerTypeLabels) as PayerType[]).map((value) => {
                 const btnDisabled =
-                  disabled || !isPaymentAllowed(value, payerType)
+                  disabled || !isPayerAllowed(value, paymentMethod)
                 const btn = (
                   <Button
                     key={value}
                     type="button"
-                    variant={paymentMethod === value ? 'default' : 'outline'}
+                    variant={payerType === value ? 'default' : 'outline'}
                     disabled={btnDisabled}
-                    onClick={() => handlePaymentMethod(value)}
+                    onClick={() => handlePayerType(value)}
                   >
-                    {paymentMethodLabels[value]}
+                    {payerTypeLabels[value]}
                   </Button>
                 )
-                // Show tooltip only when disabled by business rule
                 if (btnDisabled && !disabled) {
-                  // NonCash can be disabled because Sender or Recipient is a private person
-                  const tooltipKey =
-                    value === 'NonCash'
-                      ? payerType === 'Sender'
-                        ? 'novaposhta_payer_sender_disabled_tooltip'
-                        : 'novaposhta_payer_recipient_disabled_tooltip'
-                      : 'novaposhta_payment_cash_disabled_tooltip'
+                  let tooltipKey: string
+                  if (value === 'Sender') {
+                    tooltipKey = 'novaposhta_payer_sender_disabled_tooltip'
+                  } else if (value === 'Recipient') {
+                    tooltipKey = 'novaposhta_payer_recipient_disabled_tooltip'
+                  } else {
+                    tooltipKey =
+                      'novaposhta_payer_third_person_disabled_tooltip'
+                  }
                   return (
                     <Tooltip key={value}>
                       <TooltipTrigger asChild>{btn}</TooltipTrigger>
@@ -734,31 +825,79 @@ export default function OrderWaybillPaymentSection({
                   )
                 }
                 return btn
-              },
-            )}
-          </div>
-        </div>
-
-        {/* Additional services button */}
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-2 gap-1.5"
-          disabled={disabled}
-          onClick={() => onServicesModeChange?.(true)}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {t('novaposhta_additional_services')}
-        </Button>
-
-        {/* Sync error banner */}
-        {syncError && (
-          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs text-destructive mt-2">
-            <div className="flex items-start gap-1.5">
-              <span className="leading-4">{syncError}</span>
+              })}
             </div>
           </div>
-        )}
+
+          {/* Payment method */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_payment_method_label')}
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(paymentMethodLabels) as PaymentMethod[]).map(
+                (value) => {
+                  const btnDisabled =
+                    disabled || !isPaymentAllowed(value, payerType)
+                  const btn = (
+                    <Button
+                      key={value}
+                      type="button"
+                      variant={paymentMethod === value ? 'default' : 'outline'}
+                      disabled={btnDisabled}
+                      onClick={() => handlePaymentMethod(value)}
+                    >
+                      {paymentMethodLabels[value]}
+                    </Button>
+                  )
+                  // Show tooltip only when disabled by business rule
+                  if (btnDisabled && !disabled) {
+                    // NonCash can be disabled because Sender or Recipient is a private person
+                    const tooltipKey =
+                      value === 'NonCash'
+                        ? payerType === 'Sender'
+                          ? 'novaposhta_payer_sender_disabled_tooltip'
+                          : 'novaposhta_payer_recipient_disabled_tooltip'
+                        : 'novaposhta_payment_cash_disabled_tooltip'
+                    return (
+                      <Tooltip key={value}>
+                        <TooltipTrigger asChild>{btn}</TooltipTrigger>
+                        <TooltipContent>{t(tooltipKey)}</TooltipContent>
+                      </Tooltip>
+                    )
+                  }
+                  return btn
+                },
+              )}
+            </div>
+          </div>
+
+          {/* Additional services button */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_additional_services')}
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-1.5"
+              disabled={disabled}
+              onClick={() => onServicesModeChange?.(true)}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t('novaposhta_additional_services')}
+            </Button>
+          </div>
+
+          {/* Sync error banner */}
+          {syncError && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs text-destructive mt-2">
+              <div className="flex items-start gap-1.5">
+                <span className="leading-4">{syncError}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )

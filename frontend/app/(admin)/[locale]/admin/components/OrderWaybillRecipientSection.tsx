@@ -2,11 +2,12 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { User, Search, Loader2, Warehouse } from 'lucide-react'
+import { User, Search, Loader2, Warehouse, MoreHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { PhoneInput } from '@/components/ui/PhoneInput'
+import { Button } from '@/components/ui/button'
 import type {
   NovaPoshtaLookupSettlement,
   NovaPoshtaLookupWarehouse,
@@ -387,288 +388,344 @@ export default function OrderWaybillRecipientSection({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <section className="order-3 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-3 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <User className="w-5 h-5" />
           {t('novaposhta_recipient')}
         </h3>
+        <div className="ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="invisible"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-1.5 pt-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden auto-rows-min">
-        {/* ── Phone ──────────────────────────────────────────────────────── */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_recipient_phone_label')}
-          </Label>
-          {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span className={recipientPhone ? 'truncate' : 'truncate text-muted-foreground'}>
-                {formatPhoneDisplay(recipientPhone) || '—'}
-              </span>
-            </div>
-          ) : (
-            <PhoneInput
-              value={recipientPhone}
-              onChange={(v) => onFieldChange('recipient_phone', v)}
-              disabled={disabled}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          )}
-        </div>
-
-        {/* ── Counterparty ──────────────────────────────────────────────── */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_counterparty')}
-          </Label>
-          {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span className={selectedCounterparty?.label ? 'truncate' : 'truncate text-muted-foreground'}>
-                {selectedCounterparty?.label || recipientCounterpartyRef || '—'}
-              </span>
-            </div>
-          ) : (
-            <SearchableSelect
-              items={counterparties}
-              isLoading={counterpartiesLoading}
-              value={selectedCounterparty}
-              onChange={onCounterpartySelect}
-              placeholder={t('novaposhta_counterparty_placeholder')}
-              searchQuery={counterpartyQuery}
-              onSearchChange={onCounterpartyQueryChange}
-              getKey={(item) => item.ref}
-              getLabel={(item) => item.label}
-              renderItem={(item, isSelected, isHighlighted) => (
-                <div className="flex items-center justify-between">
-                  <span>{item.label}</span>
-                  <span className="text-xs text-muted-foreground ml-1 shrink-0">
-                    {item.phone}
-                  </span>
-                </div>
-              )}
-              minSearchLength={2}
-              noResultsMessage={t('novaposhta_counterparty_not_found')}
-              typeToSearchMessage={t('novaposhta_type_to_search_city')}
-              disabled={disabled}
-              hideSearchIcon
-            />
-          )}
-        </div>
-
-        {/* ── FIO ────────────────────────────────────────────────────────── */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_recipient_name_label')}
-          </Label>
-          {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span className={recipientName ? 'truncate' : 'truncate text-muted-foreground'}>
-                {recipientName || '—'}
-              </span>
-            </div>
-          ) : (
-            <Input
-              value={recipientName}
-              onChange={handleFioChange}
-              onBlur={handleFioBlur}
-              disabled={disabled}
-              placeholder={t('novaposhta_fio_placeholder')}
-            />
-          )}
-        </div>
-
-        {/* ── City ───────────────────────────────────────────────────────── */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_city')}
-          </Label>
-          {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span className={recipientCityLabel ? 'truncate' : 'truncate text-muted-foreground'}>
-                {recipientCityLabel || '—'}
-              </span>
-            </div>
-          ) : (
-            <SearchableSelect
-              items={settlements}
-              isLoading={settlementsLoading}
-              value={selectedSettlement}
-              onChange={onCitySelect}
-              placeholder={t('novaposhta_search_city_placeholder')}
-              searchQuery={cityQuery}
-              onSearchChange={onCityQueryChange}
-              getKey={(item) => item.ref}
-              getLabel={(item) => item.label}
-              renderItem={(item, isSelected, isHighlighted) => (
-                <>
-                  <div className="font-medium leading-tight">{item.label}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {[item.area, item.region].filter(Boolean).join(' — ')}
-                    {item.warehouses_count && item.warehouses_count !== '0' ? (
-                      <span className="ml-2 inline-flex items-center gap-1">
-                        <Warehouse className="w-3 h-3" />×{item.warehouses_count}
-                      </span>
-                    ) : null}
-                  </div>
-                </>
-              )}
-              minSearchLength={2}
-              noResultsMessage={t('novaposhta_cities_not_found')}
-              typeToSearchMessage={t('novaposhta_type_to_search_city')}
-              disabled={disabled}
-            />
-          )}
-        </div>
-
-        {/* ── Unified Address: warehouse / postomat / street ─────────────── */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_address_label')}
-          </Label>
-          {disabled ? (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span className={addressDisplay ? 'truncate' : 'truncate text-muted-foreground'}>
-                {addressDisplay || '—'}
-              </span>
-            </div>
-          ) : (
-          <div ref={addressContainerRef} className="relative">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder={t('novaposhta_address_placeholder')}
-                value={addressDisplay}
-                onChange={handleAddressChange}
-                onFocus={() => {
-                  if (addressQuery.length >= 1) setAddressOpen(true)
-                }}
-                onKeyDown={handleAddressKeyDown}
-                className="pl-8"
-                disabled={disabled || !recipientCityLabel}
+      <div className="flex-1 overflow-y-auto min-h-0 px-1.5">
+        <div className="grid gap-3 pt-2 auto-rows-min">
+          {/* ── Phone ──────────────────────────────────────────────────────── */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_recipient_phone_label')}
+            </Label>
+            {disabled ? (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    recipientPhone
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {formatPhoneDisplay(recipientPhone) || '—'}
+                </span>
+              </div>
+            ) : (
+              <PhoneInput
+                value={recipientPhone}
+                onChange={(v) => onFieldChange('recipient_phone', v)}
+                disabled={disabled}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
-              {addressLoading && (
-                <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground pointer-events-none" />
-              )}
-            </div>
-
-            {/* Warehouse / Postomat results */}
-            {showWarehouseDropdown && (
-              <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
-                <div
-                  className="overflow-y-auto py-1"
-                  style={{ maxHeight: 160 }}
-                >
-                  {warehouses.length > 0 ? (
-                    warehouses.map((item, index) => {
-                      const isHighlighted = index === addressHighlighted
-                      const isPostomat = item.type === 'Postomat'
-                      return (
-                        <div
-                          key={item.ref}
-                          data-index={index}
-                          role="option"
-                          aria-selected={isHighlighted}
-                          className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
-                            isHighlighted ? 'bg-accent' : 'hover:bg-muted'
-                          }`}
-                          onClick={() => handleWarehouseItemSelect(item)}
-                          onMouseEnter={() => setAddressHighlighted(index)}
-                        >
-                          <div className="font-medium leading-tight flex items-center gap-2">
-                            {isPostomat ? (
-                              <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
-                                {t('novaposhta_postomat')}
-                              </span>
-                            ) : (
-                              <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
-                                №{item.number}
-                              </span>
-                            )}
-                            <span className="truncate">
-                              {item.label.includes(':')
-                                ? item.label.slice(0, item.label.indexOf(':'))
-                                : item.label}
-                            </span>
-                          </div>
-                          {(() => {
-                            const afterColon = item.label.includes(':')
-                              ? item.label
-                                  .slice(item.label.indexOf(':') + 1)
-                                  .trim()
-                              : ''
-                            const desc = afterColon || item.description || ''
-                            return desc ? (
-                              <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                                {desc}
-                              </div>
-                            ) : null
-                          })()}
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="text-sm text-muted-foreground py-3 text-center">
-                      {t('novaposhta_warehouses_not_found')}
-                    </div>
-                  )}
-                </div>
-              </div>
             )}
-
-            {/* Street results */}
-            {showStreetDropdown && (
-              <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
-                <div
-                  className="overflow-y-auto py-1"
-                  style={{ maxHeight: 160 }}
-                >
-                  {streets.length > 0 ? (
-                    streets.map((item, index) => {
-                      const isHighlighted = index === addressHighlighted
-                      return (
-                        <div
-                          key={item.street_ref}
-                          data-index={index}
-                          role="option"
-                          aria-selected={isHighlighted}
-                          className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
-                            isHighlighted ? 'bg-accent' : 'hover:bg-muted'
-                          }`}
-                          onClick={() => handleStreetItemSelect(item)}
-                          onMouseEnter={() => setAddressHighlighted(index)}
-                        >
-                          <div className="font-medium leading-tight">
-                            {item.street_type ? `${item.street_type}. ` : ''}
-                            {item.label}
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="text-sm text-muted-foreground py-3 text-center">
-                      {t('novaposhta_streets_not_found')}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Type-to-search hint */}
-            {addressOpen &&
-              !disabled &&
-              addressQuery.length > 0 &&
-              addressQuery.length < (isStreetMode ? 2 : 1) && (
-                <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg">
-                  <div className="text-xs text-muted-foreground py-3 text-center">
-                    {isStreetMode
-                      ? t('novaposhta_type_to_search_street')
-                      : t('novaposhta_type_to_search_address')}
-                  </div>
-                </div>
-              )}
           </div>
-          )}
+
+          {/* ── Counterparty ──────────────────────────────────────────────── */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_counterparty')}
+            </Label>
+            {disabled ? (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    selectedCounterparty?.label
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {selectedCounterparty?.label ||
+                    recipientCounterpartyRef ||
+                    '—'}
+                </span>
+              </div>
+            ) : (
+              <SearchableSelect
+                items={counterparties}
+                isLoading={counterpartiesLoading}
+                value={selectedCounterparty}
+                onChange={onCounterpartySelect}
+                placeholder={t('novaposhta_counterparty_placeholder')}
+                searchQuery={counterpartyQuery}
+                onSearchChange={onCounterpartyQueryChange}
+                getKey={(item) => item.ref}
+                getLabel={(item) => item.label}
+                renderItem={(item, isSelected, isHighlighted) => (
+                  <div className="flex items-center justify-between">
+                    <span>{item.label}</span>
+                    <span className="text-xs text-muted-foreground ml-1 shrink-0">
+                      {item.phone}
+                    </span>
+                  </div>
+                )}
+                minSearchLength={2}
+                noResultsMessage={t('novaposhta_counterparty_not_found')}
+                typeToSearchMessage={t('novaposhta_type_to_search_city')}
+                disabled={disabled}
+                hideSearchIcon
+              />
+            )}
+          </div>
+
+          {/* ── FIO ────────────────────────────────────────────────────────── */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_recipient_name_label')}
+            </Label>
+            {disabled ? (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    recipientName
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {recipientName || '—'}
+                </span>
+              </div>
+            ) : (
+              <Input
+                value={recipientName}
+                onChange={handleFioChange}
+                onBlur={handleFioBlur}
+                disabled={disabled}
+                placeholder={t('novaposhta_fio_placeholder')}
+              />
+            )}
+          </div>
+
+          {/* ── City ───────────────────────────────────────────────────────── */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_city')}
+            </Label>
+            {disabled ? (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    recipientCityLabel
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {recipientCityLabel || '—'}
+                </span>
+              </div>
+            ) : (
+              <SearchableSelect
+                items={settlements}
+                isLoading={settlementsLoading}
+                value={selectedSettlement}
+                onChange={onCitySelect}
+                placeholder={t('novaposhta_search_city_placeholder')}
+                searchQuery={cityQuery}
+                onSearchChange={onCityQueryChange}
+                getKey={(item) => item.ref}
+                getLabel={(item) => item.label}
+                renderItem={(item, isSelected, isHighlighted) => (
+                  <>
+                    <div className="font-medium leading-tight">
+                      {item.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {[item.area, item.region].filter(Boolean).join(' — ')}
+                      {item.warehouses_count &&
+                      item.warehouses_count !== '0' ? (
+                        <span className="ml-2 inline-flex items-center gap-1">
+                          <Warehouse className="w-3 h-3" />×
+                          {item.warehouses_count}
+                        </span>
+                      ) : null}
+                    </div>
+                  </>
+                )}
+                minSearchLength={2}
+                noResultsMessage={t('novaposhta_cities_not_found')}
+                typeToSearchMessage={t('novaposhta_type_to_search_city')}
+                disabled={disabled}
+              />
+            )}
+          </div>
+
+          {/* ── Unified Address: warehouse / postomat / street ─────────────── */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_address_label')}
+            </Label>
+            {disabled ? (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    addressDisplay
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {addressDisplay || '—'}
+                </span>
+              </div>
+            ) : (
+              <div ref={addressContainerRef} className="relative">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder={t('novaposhta_address_placeholder')}
+                    value={addressDisplay}
+                    onChange={handleAddressChange}
+                    onFocus={() => {
+                      if (addressQuery.length >= 1) setAddressOpen(true)
+                    }}
+                    onKeyDown={handleAddressKeyDown}
+                    className="pl-8"
+                    disabled={disabled || !recipientCityLabel}
+                  />
+                  {addressLoading && (
+                    <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground pointer-events-none" />
+                  )}
+                </div>
+
+                {/* Warehouse / Postomat results */}
+                {showWarehouseDropdown && (
+                  <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
+                    <div
+                      className="overflow-y-auto py-1"
+                      style={{ maxHeight: 160 }}
+                    >
+                      {warehouses.length > 0 ? (
+                        warehouses.map((item, index) => {
+                          const isHighlighted = index === addressHighlighted
+                          const isPostomat = item.type === 'Postomat'
+                          return (
+                            <div
+                              key={item.ref}
+                              data-index={index}
+                              role="option"
+                              aria-selected={isHighlighted}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                isHighlighted ? 'bg-accent' : 'hover:bg-muted'
+                              }`}
+                              onClick={() => handleWarehouseItemSelect(item)}
+                              onMouseEnter={() => setAddressHighlighted(index)}
+                            >
+                              <div className="font-medium leading-tight flex items-center gap-2">
+                                {isPostomat ? (
+                                  <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                    {t('novaposhta_postomat')}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                    №{item.number}
+                                  </span>
+                                )}
+                                <span className="truncate">
+                                  {item.label.includes(':')
+                                    ? item.label.slice(
+                                        0,
+                                        item.label.indexOf(':'),
+                                      )
+                                    : item.label}
+                                </span>
+                              </div>
+                              {(() => {
+                                const afterColon = item.label.includes(':')
+                                  ? item.label
+                                      .slice(item.label.indexOf(':') + 1)
+                                      .trim()
+                                  : ''
+                                const desc =
+                                  afterColon || item.description || ''
+                                return desc ? (
+                                  <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                                    {desc}
+                                  </div>
+                                ) : null
+                              })()}
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div className="text-sm text-muted-foreground py-3 text-center">
+                          {t('novaposhta_warehouses_not_found')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Street results */}
+                {showStreetDropdown && (
+                  <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
+                    <div
+                      className="overflow-y-auto py-1"
+                      style={{ maxHeight: 160 }}
+                    >
+                      {streets.length > 0 ? (
+                        streets.map((item, index) => {
+                          const isHighlighted = index === addressHighlighted
+                          return (
+                            <div
+                              key={item.street_ref}
+                              data-index={index}
+                              role="option"
+                              aria-selected={isHighlighted}
+                              className={`px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                                isHighlighted ? 'bg-accent' : 'hover:bg-muted'
+                              }`}
+                              onClick={() => handleStreetItemSelect(item)}
+                              onMouseEnter={() => setAddressHighlighted(index)}
+                            >
+                              <div className="font-medium leading-tight">
+                                {item.street_type
+                                  ? `${item.street_type}. `
+                                  : ''}
+                                {item.label}
+                              </div>
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div className="text-sm text-muted-foreground py-3 text-center">
+                          {t('novaposhta_streets_not_found')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Type-to-search hint */}
+                {addressOpen &&
+                  !disabled &&
+                  addressQuery.length > 0 &&
+                  addressQuery.length < (isStreetMode ? 2 : 1) && (
+                    <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg">
+                      <div className="text-xs text-muted-foreground py-3 text-center">
+                        {isStreetMode
+                          ? t('novaposhta_type_to_search_street')
+                          : t('novaposhta_type_to_search_address')}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

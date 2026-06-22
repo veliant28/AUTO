@@ -33,6 +33,8 @@ import type {
   NovaPoshtaDeliveryDateLookupQuery,
   NovaPoshtaServiceItem,
   NovaPoshtaServiceLookupQuery,
+  NovaPoshtaPriceRequest,
+  NovaPoshtaPriceResponse,
 } from '@/lib/types/nova-poshta'
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -182,5 +184,11 @@ export const novaPoshtaApi = {
       '/admin/nova-poshta/sync-all',
       null,
       { params: { max_waybills: maxWaybills } },
+    ),
+
+  calculatePrice: (data: NovaPoshtaPriceRequest) =>
+    apiClient.post<NovaPoshtaPriceResponse>(
+      '/admin/nova-poshta/calculate-price',
+      data,
     ),
 }

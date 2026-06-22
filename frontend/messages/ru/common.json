@@ -690,6 +690,7 @@
     "novaposhta_payment_noncash": "Безналичный",
     "novaposhta_cargo_type": "Тип груза",
     "novaposhta_tracking": "Отслеживание",
+    "novaposhta_tracking_back": "Назад к форме",
     "novaposhta_tracking_title": "История статусов TTN",
     "novaposhta_tracking_empty": "История статусов пуста",
     "novaposhta_sync_now": "Синхронизировать",
@@ -772,6 +773,14 @@
     "novaposhta_additional_services_short": "Доп. услуги",
     "novaposhta_back": "Назад",
     "novaposhta_to_pay": "К оплате",
+    "novaposhta_payment_summary_label": "Сумма",
+    "novaposhta_delivery_cost": "Стоимость доставки",
+    "novaposhta_packaging_cost": "Стоимость упаковки",
+    "novaposhta_redelivery_cost": "Обратная доставка",
+    "novaposhta_redelivery_fee": "Комиссия за наложенный платеж",
+    "novaposhta_total_cost": "Итого",
+    "novaposhta_price_calculating": "Расчёт стоимости...",
+    "novaposhta_price_error": "Не удалось рассчитать стоимость",
     "novaposhta_afterpayment_summary": "Обратная оплата",
     "novaposhta_payer_third_person": "Третье лицо",
     "novaposhta_payment_method_label": "Форма оплаты",
@@ -859,7 +868,9 @@
     "novaposhta_service_loading": "Загрузка...",
     "novaposhta_service_no_intervals": "Нет доступных интервалов",
     "novaposhta_enabled": "Вкл",
-    "novaposhta_disabled": "Выкл"
+    "novaposhta_disabled": "Выкл",
+    "novaposhta_cost_below_afterpayment": "Оценочная стоимость не может быть ниже суммы наложенного платежа",
+    "novaposhta_cost_above_afterpayment": "Оценочная стоимость увеличена"
   },
   "catalog": {
     "title": "Каталог",

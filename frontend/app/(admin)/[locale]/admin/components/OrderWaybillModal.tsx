@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   useQuery,
@@ -8,7 +8,21 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { Loader2, BadgeCheck } from 'lucide-react'
+import {
+  Loader2,
+  BadgeCheck,
+  Clock,
+  RefreshCw,
+  AlertTriangle,
+  Package,
+  Truck,
+  MapPin,
+  CheckCircle2,
+  RotateCcw,
+  XCircle,
+  ScanBarcode,
+  ScanLine,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +44,7 @@ import type {
   NovaPoshtaLookupStreet,
   NovaPoshtaCounterpartyAddress,
 } from '@/lib/types/nova-poshta'
+import type { WaybillTrackingEvent } from '@/lib/types/nova-poshta'
 
 // ── Section components ──────────────────────────────────────────────────────
 import OrderWaybillSenderSection from './OrderWaybillSenderSection'
@@ -38,6 +53,148 @@ import OrderWaybillRecipientSection from './OrderWaybillRecipientSection'
 import OrderWaybillPaymentSection from './OrderWaybillPaymentSection'
 import OrderWaybillServiceEditorSection from './OrderWaybillServiceEditorSection'
 import OrderWaybillFooter from './OrderWaybillFooter'
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Format NP number from "20400048799000" → "204 000 4879 9000" */
+function formatNpNumber(num: string): string {
+  const digits = num.replace(/\D/g, '')
+  if (digits.length !== 14) return num
+  return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 10)} ${digits.slice(10, 14)}`
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Tracking helpers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getStatusGroup(code: string): {
+  icon: React.ReactNode
+  color: string
+  bgColor: string
+} {
+  const groups: Record<
+    string,
+    { icon: React.ReactNode; color: string; bgColor: string }
+  > = {
+    created: {
+      icon: <Package className="w-4 h-4" />,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    in_transit: {
+      icon: <Truck className="w-4 h-4" />,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-100',
+    },
+    arrived: {
+      icon: <MapPin className="w-4 h-4" />,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+    },
+    delivered: {
+      icon: <CheckCircle2 className="w-4 h-4" />,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+    },
+    returned: {
+      icon: <RotateCcw className="w-4 h-4" />,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+    error: {
+      icon: <XCircle className="w-4 h-4" />,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+    },
+  }
+
+  if (['101', '102', '104', '1'].includes(code)) return groups.created
+  if (['103', '105', '107', '118', '119', '200', '2', '3', '5'].includes(code))
+    return groups.in_transit
+  if (['106', '108', '110', '4', '6'].includes(code)) return groups.arrived
+  if (['111', '112', '113', '114', '201', '7', '10'].includes(code))
+    return groups.delivered
+  if (['117', '123', '124', '125', '9'].includes(code)) return groups.returned
+  if (['109', '115', '116', '120', '121', '122', '8'].includes(code))
+    return groups.error
+
+  return groups.in_transit
+}
+
+function renderTrackingTimeline(
+  t: (key: string) => string,
+  events: WaybillTrackingEvent[],
+): React.ReactNode {
+  if (events.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        {t('novaposhta_tracking_empty')}
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative space-y-0">
+      {events.map((event, index) => {
+        const group = getStatusGroup(event.status_code)
+        const isLast = index === events.length - 1
+        const isFirst = index === 0
+
+        return (
+          <div key={index} className="flex gap-4 pb-6 relative">
+            {/* Timeline line */}
+            {!isLast && (
+              <div className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-border" />
+            )}
+
+            {/* Icon */}
+            <div
+              className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full ${group.bgColor} ${group.color} shrink-0`}
+            >
+              {group.icon}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-sm font-medium ${group.color}`}>
+                  {event.status_text || `Код ${event.status_code}`}
+                </span>
+                {isFirst && (
+                  <Badge variant="secondary" className="text-[10px] h-5">
+                    {t('novaposhta_waybill_sync')}
+                  </Badge>
+                )}
+              </div>
+
+              {event.location && (
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {event.location}
+                  {event.warehouse ? ` — ${event.warehouse}` : ''}
+                </div>
+              )}
+
+              {event.event_at && (
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {new Date(event.event_at).toLocaleString()}
+                </div>
+              )}
+
+              {event.note && (
+                <div className="text-xs text-muted-foreground mt-1 italic">
+                  {event.note}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
@@ -133,6 +290,7 @@ export default function OrderWaybillModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [activePlaceIndex, setActivePlaceIndex] = useState(0)
   const [isPlacesListMode, setIsPlacesListMode] = useState(false)
+  const [isTrackingMode, setIsTrackingMode] = useState(false)
   const [editingServiceRef, setEditingServiceRef] = useState<string | null>(
     null,
   )
@@ -142,6 +300,8 @@ export default function OrderWaybillModal({
   >({})
   /** Set to the canceled service ref — PaymentSection removes it from selection */
   const [lastCanceledRef, setLastCanceledRef] = useState<string | null>(null)
+  /** Tracks last validated cost value — prevents duplicate toasts on blur */
+  const lastValidatedCost = useRef<string>('0')
   /** Recipient counterparty type from NP ("PrivatePerson" / "Organization") */
   const [recipientCounterpartyType, setRecipientCounterpartyType] =
     useState<string>('')
@@ -185,6 +345,78 @@ export default function OrderWaybillModal({
     staleTime: 60000,
   })
 
+  // ── Delivery type → ServiceType mapping ─────────────────────────────────
+  const deliveryServiceType = useMemo(() => {
+    const map: Record<string, string> = {
+      warehouse: 'WarehouseWarehouse',
+      postomat: 'WarehousePostomat',
+      address: 'WarehouseDoors',
+    }
+    return map[form.delivery_type] || 'WarehouseWarehouse'
+  }, [form.delivery_type])
+
+  // ── Price calculation ───────────────────────────────────────────────────
+  const priceQueryEnabled =
+    open &&
+    (form.sender_profile_id ?? 0) > 0 &&
+    !!selectedSender?.city_ref &&
+    !!form.recipient_city_ref &&
+    !!form.weight
+
+  // Compute local packaging cost from selected pack_items
+  const localPackagingCost = useMemo(() => {
+    const items: any[] = (form as any).pack_items || []
+    return items.reduce(
+      (sum: number, item: any) => sum + Number(item.cost || 0),
+      0,
+    )
+  }, [(form as any).pack_items])
+
+  const {
+    data: priceData,
+    isLoading: priceLoading,
+    isError: priceError,
+  } = useQuery({
+    queryKey: [
+      'nova-poshta',
+      'calculate-price',
+      form.sender_profile_id,
+      selectedSender?.city_ref,
+      form.recipient_city_ref,
+      form.weight,
+      form.cargo_type,
+      form.cost,
+      form.seats_amount,
+      form.afterpayment_amount,
+      form.pack_ref ?? form.pack_refs?.[0],
+      form.volumetric_width,
+      form.volumetric_length,
+      form.volumetric_height,
+      form.delivery_type,
+    ],
+    queryFn: () =>
+      novaPoshtaApi
+        .calculatePrice({
+          sender_profile_id: form.sender_profile_id,
+          city_sender_ref: selectedSender?.city_ref || '',
+          city_recipient_ref: form.recipient_city_ref,
+          weight: form.weight || '0.1',
+          service_type: deliveryServiceType,
+          cost: form.cost || '0',
+          cargo_type: form.cargo_type || 'Parcel',
+          seats_amount: form.seats_amount || 1,
+          afterpayment_amount: form.afterpayment_amount || undefined,
+          pack_ref: form.pack_ref ?? form.pack_refs?.[0] ?? undefined,
+          volumetric_width: form.volumetric_width || undefined,
+          volumetric_length: form.volumetric_length || undefined,
+          volumetric_height: form.volumetric_height || undefined,
+        })
+        .then((r) => r.data),
+    enabled: priceQueryEnabled,
+    staleTime: 30000,
+    placeholderData: keepPreviousData,
+  })
+
   // ── Active seat values (for multi-place mode) ──────────────────────────
   const activeSeat = useMemo(() => {
     if (
@@ -201,11 +433,24 @@ export default function OrderWaybillModal({
   useEffect(() => {
     if (open) {
       formInitialized.current = false
+      setIsTrackingMode(false)
     }
   }, [open])
 
   useEffect(() => {
     if (waybill && !waybill.is_deleted) {
+      // When afterpayment_amount is set, sync cost to match (COD always overrides cost)
+      const hasAfterpayment =
+        waybill.afterpayment_amount && Number(waybill.afterpayment_amount) > 0
+      const syncedCost = hasAfterpayment
+        ? String(Math.round(Number(waybill.afterpayment_amount)))
+        : waybill.cost || '0'
+      const seats = waybill.seats_amount || 1
+      const perSeatCost =
+        hasAfterpayment && seats > 1
+          ? String(Math.round(Number(syncedCost) / seats))
+          : undefined
+
       setForm({
         sender_profile_id: waybill.sender_profile_id,
         delivery_type: 'warehouse',
@@ -230,8 +475,8 @@ export default function OrderWaybillModal({
         recipient_house: waybill.recipient_house || '',
         recipient_apartment: waybill.recipient_apartment || '',
         weight: waybill.weight || '1.000',
-        seats_amount: waybill.seats_amount || 1,
-        cost: waybill.cost || '0',
+        seats_amount: seats,
+        cost: syncedCost,
         afterpayment_amount: waybill.afterpayment_amount || undefined,
         packing_number: waybill.packing_number || '',
         additional_information: waybill.additional_information || '',
@@ -249,21 +494,40 @@ export default function OrderWaybillModal({
         saturday_delivery: waybill.saturday_delivery ?? false,
         special_cargo: waybill.special_cargo ?? false,
         options_seat:
-          (waybill.options_seat?.map((s) => ({
-            description: s.description,
-            weight: s.weight,
-            cost: s.cost,
-            volumetric_width: s.volumetric_width,
-            volumetric_length: s.volumetric_length,
-            volumetric_height: s.volumetric_height,
-            pack_refs: s.pack_refs,
-            cargo_type: s.cargo_type,
-          })) as any) || undefined,
+          hasAfterpayment && seats > 1
+            ? (Array.from({ length: seats }, (_, i) => ({
+                ...(waybill.options_seat?.[i]
+                  ? {
+                      description: waybill.options_seat[i].description,
+                      weight: waybill.options_seat[i].weight,
+                      volumetric_width:
+                        waybill.options_seat[i].volumetric_width,
+                      volumetric_length:
+                        waybill.options_seat[i].volumetric_length,
+                      volumetric_height:
+                        waybill.options_seat[i].volumetric_height,
+                      pack_refs: waybill.options_seat[i].pack_refs,
+                      cargo_type: waybill.options_seat[i].cargo_type,
+                    }
+                  : {}),
+                cost: perSeatCost,
+              })) as any)
+            : (waybill.options_seat?.map((s) => ({
+                description: s.description,
+                weight: s.weight,
+                cost: s.cost,
+                volumetric_width: s.volumetric_width,
+                volumetric_length: s.volumetric_length,
+                volumetric_height: s.volumetric_height,
+                pack_refs: s.pack_refs,
+                cargo_type: s.cargo_type,
+              })) as any) || undefined,
         service_refs: waybill.service_refs || [],
         service_params: (waybill.service_params as any) || {},
       })
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
+      lastValidatedCost.current = syncedCost
     } else if (
       !waybill &&
       !formInitialized.current &&
@@ -522,6 +786,44 @@ export default function OrderWaybillModal({
     [activePlaceIndex],
   )
 
+  // ── Blur handler — validates cost against afterpayment_amount ──────────
+  const handleFieldBlur = useCallback(
+    (field: string, value: any) => {
+      if (field !== 'cost') return
+      setForm((prev) => {
+        const afterpayment = prev.afterpayment_amount
+        if (!afterpayment || Number(afterpayment) <= 0) return prev
+
+        if (Number(value) < Number(afterpayment)) {
+          toast.warning(t('novaposhta_cost_below_afterpayment'))
+          lastValidatedCost.current = afterpayment
+          // Reset cost to afterpayment_amount
+          if (prev.seats_amount && prev.seats_amount > 1) {
+            const perSeatMin = Math.round(
+              Number(afterpayment) / prev.seats_amount,
+            )
+            const newOptions = (prev.options_seat || []).map((s) => ({
+              ...s,
+              cost: String(perSeatMin),
+            }))
+            return { ...prev, options_seat: newOptions, cost: afterpayment }
+          }
+          return { ...prev, cost: afterpayment }
+        }
+
+        if (
+          Number(value) > Number(afterpayment) &&
+          value !== lastValidatedCost.current
+        ) {
+          toast.info(t('novaposhta_cost_above_afterpayment'))
+          lastValidatedCost.current = value
+        }
+        return prev
+      })
+    },
+    [t],
+  )
+
   // ── City/Warehouse selection handlers ───────────────────────────────────
   const handleCitySelect = useCallback((item: NovaPoshtaLookupSettlement) => {
     setForm((prev) => ({
@@ -640,6 +942,19 @@ export default function OrderWaybillModal({
       while (newOptions.length < newSeats) {
         newOptions.push({})
       }
+
+      // If AfterpaymentOnGoodsCost is active, redistribute cost across all seats
+      const hasAfterpayment =
+        prev.afterpayment_amount && Number(prev.afterpayment_amount) > 0
+      if (hasAfterpayment) {
+        const perSeatCost = String(
+          Math.round(Number(prev.afterpayment_amount) / newSeats),
+        )
+        newOptions.forEach((opt, i) => {
+          newOptions[i] = { ...opt, cost: perSeatCost }
+        })
+      }
+
       return { ...prev, seats_amount: newSeats, options_seat: newOptions }
     })
     setActivePlaceIndex((prev) => prev + 1)
@@ -681,6 +996,17 @@ export default function OrderWaybillModal({
             pack_refs: s.pack_refs || prev.pack_refs,
             pack_items: (s as any).pack_items || (prev as any).pack_items || [],
           }
+        }
+        // If AfterpaymentOnGoodsCost is active, redistribute cost across remaining seats
+        const hasAfterpayment =
+          prev.afterpayment_amount && Number(prev.afterpayment_amount) > 0
+        if (hasAfterpayment && newSeats > 1) {
+          const perSeatCost = String(
+            Math.round(Number(prev.afterpayment_amount) / newSeats),
+          )
+          newOptions.forEach((opt, i) => {
+            newOptions[i] = { ...opt, cost: perSeatCost }
+          })
         }
         return { ...prev, seats_amount: newSeats, options_seat: newOptions }
       })
@@ -785,14 +1111,50 @@ export default function OrderWaybillModal({
           }
         }
       }
-      setForm((prev) => ({
-        ...prev,
-        service_params: {
-          ...prev.service_params,
-          [editingServiceRef]: params,
-        },
-        ...syncObj,
-      }))
+
+      // AfterpaymentOnGoodsCost → always sync afterpayment_amount to cost
+      // and distribute equally across seats when multiple places
+      if (
+        editingServiceRef === 'AfterpaymentOnGoodsCost' &&
+        'afterpayment_amount' in params
+      ) {
+        const paymentAmount = String(
+          Math.round(Number(params.afterpayment_amount) || 0),
+        )
+        syncObj.cost = paymentAmount
+        syncObj.afterpayment_amount = paymentAmount
+        lastValidatedCost.current = paymentAmount
+      }
+
+      setForm((prev) => {
+        const base = {
+          ...prev,
+          service_params: {
+            ...prev.service_params,
+            [editingServiceRef]: params,
+          },
+          ...syncObj,
+        }
+
+        // Multi-seat distribution for AfterpaymentOnGoodsCost
+        if (
+          editingServiceRef === 'AfterpaymentOnGoodsCost' &&
+          base.cost &&
+          (prev.seats_amount ?? 1) > 1
+        ) {
+          const seatCount = prev.seats_amount ?? 1
+          const perSeat = String(Math.round(Number(base.cost) / seatCount))
+          const newOptions = [...(prev.options_seat || [])]
+          // Ensure all seats exist
+          while (newOptions.length < seatCount) {
+            newOptions.push({} as any)
+          }
+          base.options_seat = newOptions.map((s) => ({ ...s, cost: perSeat }))
+        }
+
+        return base
+      })
+
       setEditingServiceRef(null)
       setEditingServiceParams({})
       setEditingServiceName('')
@@ -815,16 +1177,34 @@ export default function OrderWaybillModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !gap-0 !p-0"
+        className="w-[98vw] max-w-[1800px] h-[90vh] flex flex-col !gap-0 !p-0"
         aria-describedby={undefined}
       >
         <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
               {isEdit
-                ? `${t('novaposhta_waybill_edit')} — ${waybill?.np_number}`
+                ? t('novaposhta_waybill_edit')
                 : t('novaposhta_waybill_create')}
             </DialogTitle>
+
+            {/* TTN badge — always visible */}
+            <Badge
+              className={`text-xs gap-1.5 shrink-0 h-6 px-2.5 border-0 ${
+                waybill?.np_number
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-500 text-white'
+              }`}
+            >
+              {waybill?.np_number ? (
+                <ScanBarcode className="w-3.5 h-3.5" />
+              ) : (
+                <ScanLine className="w-3.5 h-3.5" />
+              )}
+              {waybill?.np_number
+                ? formatNpNumber(waybill.np_number)
+                : '204 000 0000 0000'}
+            </Badge>
             {summary?.exists && !summary.is_deleted && (
               <Badge
                 variant={summary.has_sync_error ? 'destructive' : 'secondary'}
@@ -845,8 +1225,49 @@ export default function OrderWaybillModal({
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
+        ) : isTrackingMode ? (
+          /* ═══════════════ Tracking mode ═══════════════ */
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-[600px] mx-auto space-y-4">
+              {/* Waybill info */}
+              {waybill && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{waybill.np_number}</Badge>
+                  <Badge>{waybill.status_text || waybill.status_code}</Badge>
+                </div>
+              )}
+
+              {/* Sync button */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => waybill && syncMutation.mutate(waybill.id)}
+                  disabled={syncMutation.isPending}
+                >
+                  {syncMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  {t('novaposhta_sync_now')}
+                </Button>
+              </div>
+
+              {/* Timeline */}
+              {renderTrackingTimeline(t, waybill?.tracking_events || [])}
+
+              {/* Error state */}
+              {waybill?.last_sync_error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {waybill.last_sync_error}
+                </div>
+              )}
+            </div>
+          </div>
         ) : (
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
+          <div className="flex-1 overflow-y-auto p-6">
             <div className="grid items-stretch gap-3 xl:grid-cols-4 min-h-full">
               {/* Column 1: Sender */}
               <OrderWaybillSenderSection
@@ -912,6 +1333,7 @@ export default function OrderWaybillModal({
                     onPlacesListModeChange={setIsPlacesListMode}
                     onCancel={handleCancel}
                     onSave={handleSave}
+                    onFieldBlur={handleFieldBlur}
                     disabled={isPending || isServicesMode}
                     isEdit={isEdit}
                     waybill={waybill}
@@ -984,6 +1406,10 @@ export default function OrderWaybillModal({
                   onServiceEdit={handleServiceEdit}
                   editingServiceRef={editingServiceRef}
                   lastCanceledRef={lastCanceledRef}
+                  priceData={priceData ?? null}
+                  priceLoading={priceLoading}
+                  priceError={priceError}
+                  localPackagingCost={localPackagingCost}
                 />
               </div>
             </div>
@@ -1003,6 +1429,7 @@ export default function OrderWaybillModal({
             isPrinting={
               printHtmlMutation.isPending || printPdfMutation.isPending
             }
+            isTrackingView={isTrackingMode}
             onSave={handleSave}
             onDelete={() => setShowDeleteConfirm(true)}
             onSync={() => {
@@ -1015,6 +1442,7 @@ export default function OrderWaybillModal({
               if (waybill) printPdfMutation.mutate(waybill.id)
             }}
             onCancel={() => onOpenChange(false)}
+            onTracking={() => setIsTrackingMode((prev) => !prev)}
             disabled={isPackagingMode || isServicesMode}
           />
         )}

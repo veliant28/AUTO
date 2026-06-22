@@ -689,6 +689,7 @@
     "novaposhta_payment_noncash": "Безготівковий",
     "novaposhta_cargo_type": "Тип вантажу",
     "novaposhta_tracking": "Відстеження",
+    "novaposhta_tracking_back": "Назад до форми",
     "novaposhta_tracking_title": "Історія статусів ТТН",
     "novaposhta_tracking_empty": "Історія статусів порожня",
     "novaposhta_sync_now": "Синхронізувати",
@@ -771,6 +772,14 @@
     "novaposhta_additional_services_short": "Дод. послуги",
     "novaposhta_back": "Назад",
     "novaposhta_to_pay": "До оплати",
+    "novaposhta_payment_summary_label": "Сума",
+    "novaposhta_delivery_cost": "Вартість доставки",
+    "novaposhta_packaging_cost": "Вартість пакування",
+    "novaposhta_redelivery_cost": "Зворотна доставка",
+    "novaposhta_redelivery_fee": "Комісія за накладений платіж",
+    "novaposhta_total_cost": "Разом",
+    "novaposhta_price_calculating": "Розрахунок вартості...",
+    "novaposhta_price_error": "Не вдалося розрахувати вартість",
     "novaposhta_afterpayment_summary": "Зворотна оплата",
     "novaposhta_payer_third_person": "Третя особа",
     "novaposhta_payment_method_label": "Форма оплати",
@@ -858,7 +867,9 @@
     "novaposhta_service_loading": "Завантаження...",
     "novaposhta_service_no_intervals": "Немає доступних інтервалів",
     "novaposhta_enabled": "Увімк",
-    "novaposhta_disabled": "Вимк"
+    "novaposhta_disabled": "Вимк",
+    "novaposhta_cost_below_afterpayment": "Оціночна вартість не може бути нижчою за суму післяплати",
+    "novaposhta_cost_above_afterpayment": "Оціночну вартість збільшено"
   },
   "catalog": {
     "title": "Каталог",

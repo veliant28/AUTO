@@ -80,7 +80,7 @@ export default function OrderWaybillSenderSection({
     senderAddressDisplay
 
   return (
-    <section className="order-1 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-1 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center justify-between gap-2">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <Building2 className="w-5 h-5" />
@@ -124,59 +124,61 @@ export default function OrderWaybillSenderSection({
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-1.5 pt-2 min-w-0 flex-1 min-h-0 overflow-y-auto overflow-x-hidden auto-rows-min">
-        {displayFields.map((field) => (
-          <div key={field.label} className="grid gap-0.5">
-            <Label className="text-sm text-muted-foreground">
-              {t(field.label)}
-            </Label>
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span
-                className={
-                  field.value ? 'truncate' : 'truncate text-muted-foreground'
-                }
-              >
-                {field.value || '—'}
-              </span>
+      <div className="flex-1 overflow-y-auto min-h-0 px-1.5">
+        <div className="grid gap-3 pt-2 min-w-0 auto-rows-min">
+          {displayFields.map((field) => (
+            <div key={field.label} className="grid gap-1.5">
+              <Label className="text-sm text-muted-foreground">
+                {t(field.label)}
+              </Label>
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    field.value ? 'truncate' : 'truncate text-muted-foreground'
+                  }
+                >
+                  {field.value || '—'}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Address with dropdown selector */}
-        <div className="grid gap-0.5">
-          <Label className="text-sm text-muted-foreground">
-            {t('novaposhta_address')}
-          </Label>
-          {senderAddresses.length > 1 ? (
-            <Select
-              value={selectedAddressRef || sender?.address_ref || ''}
-              onValueChange={onAddressChange}
-              disabled={disabled}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder={currentAddressLabel || '—'} />
-              </SelectTrigger>
-              <SelectContent>
-                {senderAddresses.map((addr) => (
-                  <SelectItem key={addr.ref} value={addr.ref}>
-                    {addr.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-              <span
-                className={
-                  currentAddressLabel
-                    ? 'truncate'
-                    : 'truncate text-muted-foreground'
-                }
+          {/* Address with dropdown selector */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm text-muted-foreground">
+              {t('novaposhta_address')}
+            </Label>
+            {senderAddresses.length > 1 ? (
+              <Select
+                value={selectedAddressRef || sender?.address_ref || ''}
+                onValueChange={onAddressChange}
+                disabled={disabled}
               >
-                {currentAddressLabel || '—'}
-              </span>
-            </div>
-          )}
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder={currentAddressLabel || '—'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {senderAddresses.map((addr) => (
+                    <SelectItem key={addr.ref} value={addr.ref}>
+                      {addr.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                <span
+                  className={
+                    currentAddressLabel
+                      ? 'truncate'
+                      : 'truncate text-muted-foreground'
+                  }
+                >
+                  {currentAddressLabel || '—'}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

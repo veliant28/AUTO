@@ -335,6 +335,36 @@ class NovaPoshtaServiceLookupQuery(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Price calculation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class NovaPoshtaPriceRequest(BaseModel):
+    """Request to calculate delivery price via InternetDocument/getDocumentPrice."""
+    sender_profile_id: int
+    city_sender_ref: str = ""
+    city_recipient_ref: str = ""
+    weight: str = "0.1"
+    service_type: str = "WarehouseWarehouse"
+    cost: str = "0"
+    cargo_type: str = "Cargo"
+    seats_amount: int = 1
+    afterpayment_amount: Optional[str] = None
+    pack_ref: Optional[str] = None
+    pack_count: Optional[int] = None
+    volumetric_width: Optional[str] = None
+    volumetric_length: Optional[str] = None
+    volumetric_height: Optional[str] = None
+
+
+class NovaPoshtaPriceResponse(BaseModel):
+    """Price calculation result from NP API."""
+    delivery_cost: str = "0"
+    packaging_cost: str = "0"
+    redelivery_cost: str = "0"
+    assessed_cost: str = "0"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Waybills (TTN)
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -175,7 +175,7 @@ export default function OrderWaybillServiceEditorSection({
 
   if (serviceRef === 'AfterpaymentOnGoodsCost') {
     return (
-      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -184,7 +184,7 @@ export default function OrderWaybillServiceEditorSection({
           </h3>
         </div>
 
-        <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
+        <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2 px-1.5">
           {/* Amount field */}
           <div className="grid gap-1.5">
             <Label className="text-sm text-muted-foreground">
@@ -297,7 +297,7 @@ export default function OrderWaybillServiceEditorSection({
   // ── Generic editor for simple single-field services ─────────────────────
   if (simpleConfig) {
     return (
-      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+      <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
         {/* Header */}
         <div className="flex min-h-8 items-center gap-2 shrink-0">
           <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -306,7 +306,7 @@ export default function OrderWaybillServiceEditorSection({
           </h3>
         </div>
 
-        <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
+        <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2 px-1.5">
           {/* Single value field */}
           <div className="grid gap-1.5">
             <Label className="text-sm text-muted-foreground">
@@ -347,7 +347,7 @@ export default function OrderWaybillServiceEditorSection({
 
   // Fallback for services without a specific editor
   return (
-    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CreditCard className="w-5 h-5" />
@@ -434,7 +434,7 @@ function LocalExpressEditor({
   }, [availableIntervals, selectedInterval])
 
   return (
-    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <Clock className="w-5 h-5" />
@@ -442,7 +442,7 @@ function LocalExpressEditor({
         </h3>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
+      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2 px-1.5">
         {!senderProfileId || !recipientCityRef ? (
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
             {t('novaposhta_service_select_city_first')}
@@ -581,7 +581,7 @@ function PreferredDeliveryDateEditor({
     : undefined
 
   return (
-    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <CalendarIcon className="w-5 h-5" />
@@ -589,7 +589,7 @@ function PreferredDeliveryDateEditor({
         </h3>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
+      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2 px-1.5">
         {!senderProfileId || !recipientCityRef ? (
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
             {t('novaposhta_service_select_city_first')}
@@ -729,7 +729,7 @@ function DeliveryByHandEditor({
   )
 
   return (
-    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
           <UserCheck className="w-5 h-5" />
@@ -737,7 +737,7 @@ function DeliveryByHandEditor({
         </h3>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2">
+      <div className="flex flex-col gap-4 flex-1 min-h-0 pt-2 px-1.5">
         <div className="flex items-center gap-3">
           <Checkbox
             id="dbh-enabled"

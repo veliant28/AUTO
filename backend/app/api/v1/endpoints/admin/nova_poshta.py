@@ -43,6 +43,9 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaCounterpartyAddress,
     NovaPoshtaServiceItem,
     NovaPoshtaServiceLookupQuery,
+    # Price
+    NovaPoshtaPriceRequest,
+    NovaPoshtaPriceResponse,
     # Waybill
     OrderNovaPoshtaWaybillUpsert,
     OrderNovaPoshtaWaybillResponse,
@@ -52,6 +55,7 @@ from app.schemas.nova_poshta_schemas import (
     PrintResult,
 )
 from app.services.nova_poshta import (
+    NovaPoshtaApiClient,
     NovaPoshtaSenderService,
     NovaPoshtaWaybillService,
     NovaPoshtaLookupService,
@@ -434,6 +438,76 @@ async def lookup_counterparty_details(
     if not result:
         raise HTTPException(404, "Контрагента не знайдено")
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Price calculation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.post("/calculate-price", response_model=NovaPoshtaPriceResponse)
+async def calculate_price(
+    data: NovaPoshtaPriceRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "manager", "operator")),
+):
+    """Calculate delivery price via NP API's getDocumentPrice."""
+    sender_service = NovaPoshtaSenderService(db)
+    sender = sender_service.get_by_id(data.sender_profile_id)
+    if not sender.is_active:
+        raise HTTPException(400, "Відправника деактивовано")
+
+    client = NovaPoshtaApiClient(sender.api_token)
+
+    props: dict = {
+        "CitySender": data.city_sender_ref,
+        "CityRecipient": data.city_recipient_ref,
+        "Weight": data.weight,
+        "ServiceType": data.service_type,
+        "Cost": data.cost,
+        "CargoType": data.cargo_type,
+        "SeatsAmount": str(data.seats_amount),
+    }
+
+    # Build OptionsSeat
+    seat: dict = {
+        "weight": data.weight,
+        "volumetricWidth": data.volumetric_width or "1",
+        "volumetricLength": data.volumetric_length or "1",
+        "volumetricHeight": data.volumetric_height or "1",
+    }
+    if data.pack_ref:
+        seat["packRef"] = data.pack_ref
+    props["OptionsSeat"] = [seat]
+
+    # Afterpayment / redelivery
+    if data.afterpayment_amount:
+        props["RedeliveryCalculate"] = {
+            "CargoType": "Money",
+            "Amount": data.afterpayment_amount,
+        }
+
+    # Packaging
+    if data.pack_ref and data.pack_count:
+        props["PackRef"] = data.pack_ref
+        props["PackCount"] = str(data.pack_count)
+
+    logger.info("getDocumentPrice payload: %s", props)
+
+    try:
+        response = await client.call("InternetDocument", "getDocumentPrice", props)
+    except NovaPoshtaApiError as e:
+        raise HTTPException(502, detail=str(e))
+
+    if not response.get("data"):
+        return NovaPoshtaPriceResponse()
+
+    item = response["data"][0]
+    return NovaPoshtaPriceResponse(
+        delivery_cost=item.get("Cost", "0"),
+        packaging_cost=item.get("CostPack", "0"),
+        redelivery_cost=item.get("CostRedelivery", "0"),
+        assessed_cost=item.get("AssessedCost", "0"),
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

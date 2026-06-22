@@ -461,23 +461,11 @@ export default function AdminOrdersPage() {
               </TooltipTrigger>
               <TooltipContent>{t('novaposhta_waybill')}</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleTrackingOpen(row.original.id)}
-                >
-                  <Clock className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('novaposhta_tracking')}</TooltipContent>
-            </Tooltip>
           </div>
         ),
       }),
     ],
-    [t, statusMutation, openView, handleWaybillOpen, handleTrackingOpen],
+    [t, statusMutation, openView, handleWaybillOpen],
   )
 
   const table = useReactTable({
@@ -952,7 +940,13 @@ export default function AdminOrdersPage() {
                               />
                             ) : (
                               <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
-                                <span className={orderDetail.phone ? 'truncate' : 'truncate text-muted-foreground'}>
+                                <span
+                                  className={
+                                    orderDetail.phone
+                                      ? 'truncate'
+                                      : 'truncate text-muted-foreground'
+                                  }
+                                >
                                   {formatPhone(orderDetail.phone) || '—'}
                                 </span>
                               </div>
@@ -980,7 +974,13 @@ export default function AdminOrdersPage() {
                                   />
                                 ) : (
                                   <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
-                                    <span className={(orderDetail as any)[field] ? 'truncate' : 'truncate text-muted-foreground'}>
+                                    <span
+                                      className={
+                                        (orderDetail as any)[field]
+                                          ? 'truncate'
+                                          : 'truncate text-muted-foreground'
+                                      }
+                                    >
                                       {(orderDetail as any)[field] || '—'}
                                     </span>
                                   </div>
@@ -1081,7 +1081,13 @@ export default function AdminOrdersPage() {
                                   />
                                 ) : (
                                   <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden">
-                                    <span className={(orderDetail as any)[field] ? 'truncate' : 'truncate text-muted-foreground'}>
+                                    <span
+                                      className={
+                                        (orderDetail as any)[field]
+                                          ? 'truncate'
+                                          : 'truncate text-muted-foreground'
+                                      }
+                                    >
                                       {(orderDetail as any)[field] || '—'}
                                     </span>
                                   </div>
@@ -1094,7 +1100,8 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <ScrollText className="w-5 h-5" /> {t('order_summary')}
+                          <ScrollText className="w-5 h-5" />{' '}
+                          {t('order_summary')}
                         </h4>
                         <div className="flex-1 mt-3">
                           <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
@@ -1109,7 +1116,8 @@ export default function AdminOrdersPage() {
                                 {t('order_total')}:
                               </span>
                               <span className="font-bold text-lg">
-                                {fmt(editMode ? editTotal : orderDetail.total)} ₴
+                                {fmt(editMode ? editTotal : orderDetail.total)}{' '}
+                                ₴
                               </span>
                             </div>
                           </div>

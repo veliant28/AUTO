@@ -64,6 +64,7 @@ interface Props {
   onPlacesListModeChange?: (mode: boolean) => void
   onCancel?: () => void
   onSave?: () => void
+  onFieldBlur?: (field: string, value: any) => void
   isEdit?: boolean
   waybill?: any
   form?: any
@@ -91,6 +92,7 @@ export default function OrderWaybillShipmentSection({
   onPlacesListModeChange,
   onCancel: onModalCancel,
   onSave: onModalSave,
+  onFieldBlur,
   isEdit,
   waybill,
   form,
@@ -460,7 +462,7 @@ export default function OrderWaybillShipmentSection({
   // ── Render ────────────────────────────────────────────────────────────
 
   return (
-    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card overflow-hidden">
+    <section className="order-2 rounded-md border p-3 h-full flex flex-col bg-card">
       {/* ── Header ── */}
       <div className="flex min-h-8 items-center gap-2 shrink-0">
         <h3 className="text-lg font-semibold flex items-center gap-2 flex-shrink-0">
@@ -469,7 +471,9 @@ export default function OrderWaybillShipmentSection({
             ? `${t('novaposhta_shipment_heading')} / ${t('novaposhta_places_list_title')}`
             : isPackagingMode
               ? t('novaposhta_packaging')
-              : t('novaposhta_shipment_heading')}
+              : seatsAmount === 1 || activePlaceIndex === 0
+                ? t('novaposhta_shipment_heading')
+                : `${t('novaposhta_shipment_heading')} *${activePlaceIndex.toString().padStart(4, '0')}`}
         </h3>
         {/* Multi-place button: "+" when single, "⁝" when multiple */}
         <div className="ml-auto">
@@ -506,7 +510,7 @@ export default function OrderWaybillShipmentSection({
 
       {isPlacesListMode ? (
         /* ═══════════════ Places list mode ═══════════════ */
-        <div className="flex flex-col gap-2 flex-1 min-h-0 pt-2">
+        <div className="flex flex-col gap-2 flex-1 min-h-0 pt-2 px-1.5">
           {/* Toolbar */}
           {form?.options_seat && form.options_seat.length > 0 && (
             <div className="flex items-center justify-between shrink-0">
@@ -543,13 +547,13 @@ export default function OrderWaybillShipmentSection({
             </div>
           )}
           {/* Table */}
-          <div className="flex-1 overflow-y-auto min-h-0 px-0.5">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {form?.options_seat && form.options_seat.length > 0 ? (
               <div className="border rounded-md divide-y">
                 {form.options_seat.map((seat: any, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 px-3 cursor-pointer hover:bg-muted/50"
+                    className="flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-muted/50"
                     onDoubleClick={() => onSwitchPlace?.(idx)}
                   >
                     {idx > 0 ? (
@@ -561,10 +565,7 @@ export default function OrderWaybillShipmentSection({
                     ) : (
                       <div className="w-5" /> /* spacer to align with checkboxes */
                     )}
-                    <span
-                      className="flex-1 text-sm min-w-0 truncate cursor-pointer"
-                      onClick={() => idx > 0 && togglePlace(idx)}
-                    >
+                    <span className="flex-1 text-sm min-w-0 truncate">
                       <span
                         className={
                           seat.description ? '' : 'text-muted-foreground'
@@ -605,7 +606,7 @@ export default function OrderWaybillShipmentSection({
         /* ═══════════════ Packaging search mode ═══════════════ */
         <div className="flex flex-col gap-2 flex-1 min-h-0">
           {/* ── Row 1: Search + Dimensions (outside scroll to avoid clipping dropdown) ── */}
-          <div className="grid grid-cols-2 gap-3 items-end shrink-0">
+          <div className="grid grid-cols-2 gap-3 items-end shrink-0 px-1.5">
             {/* Search */}
             <div ref={dropdownRef} className="relative">
               <Label className="text-sm text-muted-foreground mb-0.5 block">
@@ -705,10 +706,10 @@ export default function OrderWaybillShipmentSection({
 
             {/* Dimensions display */}
             <div className="flex gap-1.5 items-end">
-              <div className="flex flex-col justify-center shrink-0">
+              <div className="flex items-center justify-center shrink-0 h-10">
                 <Maximize2 className="w-5 h-5" />
               </div>
-              <div className="flex-1 grid grid-cols-3 gap-1.5">
+              <div className="flex-1 grid grid-cols-3 gap-2">
                 <div>
                   <Label className="text-sm text-muted-foreground">
                     {t('novaposhta_width')}
@@ -744,7 +745,7 @@ export default function OrderWaybillShipmentSection({
           </div>
 
           {/* ── Scrollable area for table + toolbar ── */}
-          <div className="flex-1 overflow-y-auto space-y-2 min-h-0 px-0.5">
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0 px-1.5">
             {/* ── Toolbar: Select + Delete ── */}
             {tableItems.length > 0 && (
               <div className="flex items-center justify-between">
@@ -782,7 +783,10 @@ export default function OrderWaybillShipmentSection({
             {tableItems.length > 0 ? (
               <div className="border rounded-md divide-y">
                 {tableItems.map((item) => (
-                  <div key={item.ref} className="flex items-center gap-2 px-3">
+                  <div
+                    key={item.ref}
+                    className="flex items-center gap-2 px-3 py-2.5"
+                  >
                     <Checkbox
                       checked={checkedRefs.has(item.ref)}
                       onCheckedChange={() => toggleCheck(item.ref)}
@@ -831,9 +835,9 @@ export default function OrderWaybillShipmentSection({
         </div>
       ) : (
         /* ═══════════════ Shipment fields mode ═══════════════ */
-        <div className="overflow-y-auto flex-1 min-h-0 px-0.5">
-          <div className="grid gap-1.5 pt-2">
-            <div className="grid gap-0.5">
+        <div className="overflow-y-auto flex-1 min-h-0 px-1.5">
+          <div className="grid gap-3 pt-2">
+            <div className="grid gap-1.5">
               <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_description')}
               </Label>
@@ -847,7 +851,7 @@ export default function OrderWaybillShipmentSection({
 
             {/* Cost & Weight */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="grid gap-0.5">
+              <div className="grid gap-1.5">
                 <Label className="text-sm text-muted-foreground">
                   {t('novaposhta_cost_label')}
                 </Label>
@@ -860,7 +864,12 @@ export default function OrderWaybillShipmentSection({
                     onChange={(e) =>
                       onChange('cost', e.target.value.replace(/[^\d]/g, ''))
                     }
-                    onBlur={() => !cost && onChange('cost', '0')}
+                    onBlur={(e) => {
+                      const val = e.target.value
+                      const finalCost = val || '0'
+                      if (!val) onChange('cost', finalCost)
+                      onFieldBlur?.('cost', finalCost)
+                    }}
                     disabled={disabled}
                     className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
@@ -869,7 +878,7 @@ export default function OrderWaybillShipmentSection({
                   </span>
                 </div>
               </div>
-              <div className="grid gap-0.5">
+              <div className="grid gap-1.5">
                 <Label className="text-sm text-muted-foreground">
                   {t('novaposhta_weight')}
                 </Label>
@@ -902,7 +911,7 @@ export default function OrderWaybillShipmentSection({
             </div>
 
             {/* Add packaging button */}
-            <div className="grid gap-0.5">
+            <div className="grid gap-1.5">
               <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_packaging')}
               </Label>
@@ -935,8 +944,8 @@ export default function OrderWaybillShipmentSection({
             </div>
 
             {/* Dimensions */}
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">
+            <div className="grid gap-1.5">
+              <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_dimensions')}
               </Label>
               <div className="grid grid-cols-3 gap-2">
@@ -1028,7 +1037,7 @@ export default function OrderWaybillShipmentSection({
             </div>
 
             {/* Volumetric weight — read-only display */}
-            <div className="grid gap-0.5">
+            <div className="grid gap-1.5">
               <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_volume')}
               </Label>
@@ -1041,11 +1050,11 @@ export default function OrderWaybillShipmentSection({
             </div>
 
             {/* Cargo Type — toggle buttons */}
-            <div className="grid gap-0.5">
+            <div className="grid gap-1.5">
               <Label className="text-sm text-muted-foreground">
                 {t('novaposhta_cargo_type')}
               </Label>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-5 gap-2">
                 {cargoTypeMeta.map((item) => (
                   <Tooltip key={item.value}>
                     <TooltipTrigger asChild>

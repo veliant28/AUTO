@@ -689,6 +689,7 @@
     "novaposhta_payment_noncash": "Non-cash",
     "novaposhta_cargo_type": "Cargo Type",
     "novaposhta_tracking": "Tracking",
+    "novaposhta_tracking_back": "Back to form",
     "novaposhta_tracking_title": "TTN Status History",
     "novaposhta_tracking_empty": "Status history is empty",
     "novaposhta_sync_now": "Sync Now",
@@ -771,6 +772,14 @@
     "novaposhta_additional_services_short": "Add. services",
     "novaposhta_back": "Back",
     "novaposhta_to_pay": "To pay",
+    "novaposhta_payment_summary_label": "Amount",
+    "novaposhta_delivery_cost": "Delivery cost",
+    "novaposhta_packaging_cost": "Packaging cost",
+    "novaposhta_redelivery_cost": "Redelivery",
+    "novaposhta_redelivery_fee": "COD commission",
+    "novaposhta_total_cost": "Total",
+    "novaposhta_price_calculating": "Calculating price...",
+    "novaposhta_price_error": "Failed to calculate price",
     "novaposhta_afterpayment_summary": "Afterpayment",
     "novaposhta_payer_third_person": "Third party",
     "novaposhta_payment_method_label": "Payment method",
@@ -858,7 +867,9 @@
     "novaposhta_service_loading": "Loading...",
     "novaposhta_service_no_intervals": "No available intervals",
     "novaposhta_enabled": "On",
-    "novaposhta_disabled": "Off"
+    "novaposhta_disabled": "Off",
+    "novaposhta_cost_below_afterpayment": "Assessed value cannot be lower than the cash on delivery amount",
+    "novaposhta_cost_above_afterpayment": "Assessed value increased"
   },
   "catalog": {
     "title": "Catalog",

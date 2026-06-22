@@ -20,7 +20,7 @@
   --color-destructive: hsl(0 84.2% 60.2%);
   --color-destructive-foreground: hsl(0 0% 98%);
   --color-border: hsl(240 5.9% 90%);
-  --color-input: hsl(240 5.9% 90%);
+  --color-input: hsl(240 5% 75%);
   --color-ring: hsl(240 5.9% 10%);
   --radius: 0.5rem;
 
@@ -66,6 +66,15 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Focus ring — shadcn/ui style */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent);
 }
 
 .safe-area-bottom {
