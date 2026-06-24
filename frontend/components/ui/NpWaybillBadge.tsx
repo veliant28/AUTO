@@ -29,9 +29,7 @@ export function NpWaybillBadge({ npNumber, isDeleted, exists }: Props) {
   }
 
   return (
-    <Badge
-      className={`text-xs gap-1.5 shrink-0 h-6 px-2.5 border-0 ${bgClass}`}
-    >
+    <Badge className={`text-sm gap-1.5 border-0 ${bgClass}`}>
       {hasNumber || isDeleted ? (
         <ScanBarcode className="w-3.5 h-3.5" />
       ) : (

@@ -158,6 +158,8 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   admin: 'bg-red-500 text-white',
   manager: 'bg-blue-500 text-white',
   operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
 }
 
 export default function AdminOrdersPage() {
