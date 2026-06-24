@@ -543,6 +543,8 @@ export interface OrderRecipientInfo {
   first_name: string
   last_name: string
   middle_name: string
+  order_number: string
+  order_total: string
 }
 
 export interface OrderNovaPoshtaWaybillDetailResponse {

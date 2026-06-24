@@ -540,6 +540,13 @@ export default function OrderWaybillModal({
         recipient_last_name: orderData?.last_name || prev.recipient_last_name,
         recipient_middle_name:
           orderData?.middle_name || prev.recipient_middle_name,
+        // Auto-fill for new TTNs
+        ...(orderData?.order_number
+          ? { info_reg_client_barcodes: orderData.order_number }
+          : {}),
+        ...(orderData?.order_total
+          ? { cost: String(Math.round(Number(orderData.order_total))) }
+          : {}),
       }))
       formInitialized.current = true
     } else if (

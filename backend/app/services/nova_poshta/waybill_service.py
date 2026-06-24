@@ -142,6 +142,8 @@ class NovaPoshtaWaybillService:
                 first_name=order.first_name or "",
                 last_name=order.last_name or "",
                 middle_name=order.middle_name or "",
+                order_number=order.order_number or f"ORD-{order.id:010d}",
+                order_total=str(order.total) if order.total else "0",
             )
 
         if not wb:

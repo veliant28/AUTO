@@ -565,6 +565,8 @@ class OrderRecipientInfo(BaseModel):
     first_name: str = ""
     last_name: str = ""
     middle_name: str = ""
+    order_number: str = ""
+    order_total: str = ""
 
 
 class NovaPoshtaWaybillSummary(BaseModel):
