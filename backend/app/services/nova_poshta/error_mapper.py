@@ -1,13 +1,33 @@
 """
 Maps Nova Poshta API error codes to user-friendly messages.
 """
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from app.core.middleware import locale_ctx
 from app.services.nova_poshta.error_translations import ERROR_TRANSLATIONS
 
 
 class NovaPoshtaErrorMapper:
     """Resolve NP API error codes into human-readable text."""
+
+    @classmethod
+    def classify_severity(cls, error_codes: List[str]) -> str:
+        """Classify error codes by severity.
+
+        Returns one of: "error", "warning", "info"
+        """
+        if not error_codes:
+            return "error"  # default for unknown errors
+
+        # Check prefixes
+        for code in error_codes:
+            if code.startswith("200"):  # 200001-2000xx = hard errors
+                return "error"
+            if code.startswith("300"):  # 300001-3000xx = warnings
+                return "warning"
+            if code.startswith("400"):  # 400001-4000xx = info
+                return "info"
+
+        return "error"
 
     @classmethod
     def translate(cls, error_code: str, locale: Optional[str] = None) -> str:

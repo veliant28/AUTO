@@ -2,6 +2,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from typing import Union
 import logging
+from app.services.nova_poshta.errors import NovaPoshtaApiError
 
 logger = logging.getLogger(__name__)
 
@@ -52,12 +53,30 @@ async def app_exception_handler(request: Request, exc: AppException):
     )
 
 async def http_exception_handler(request: Request, exc: HTTPException):
+    content = {
+        "status": "error",
+        "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+        "detail": exc.detail,
+    }
     return JSONResponse(
         status_code=exc.status_code,
+        content=content,
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
+
+async def nova_poshta_api_error_handler(request: Request, exc: NovaPoshtaApiError):
+    """Handle NP API errors with severity classification."""
+    return JSONResponse(
+        status_code=502,
         content={
             "status": "error",
-            "message": exc.detail,
-            "detail": exc.detail
+            "message": str(exc),
+            "detail": str(exc),
+            "severity": exc.severity,
         },
         headers={
             "Access-Control-Allow-Origin": request.headers.get("origin", "*"),

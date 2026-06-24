@@ -11,9 +11,14 @@ class NovaPoshtaError(Exception):
 class NovaPoshtaApiError(NovaPoshtaError):
     """Raised when NP API returns an error response."""
 
-    def __init__(self, message: str, status_code: int = 0, errors: list = None):
+    SEVERITY_ERROR = "error"
+    SEVERITY_WARNING = "warning"
+    SEVERITY_INFO = "info"
+
+    def __init__(self, message: str, status_code: int = 0, errors: list = None, severity: str = "error"):
         self.status_code = status_code
         self.errors = errors or []
+        self.severity = severity
         super().__init__(message)
 
 

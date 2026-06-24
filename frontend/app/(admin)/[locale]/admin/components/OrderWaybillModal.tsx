@@ -45,7 +45,14 @@ import OrderWaybillFooter from './OrderWaybillFooter'
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Format NP number from "20400048799000" → "204 000 4879 9000" */
+/** Show NP API error with severity-based toast color */
+function showNpError(err: any, fallback: string) {
+  const detail = err?.response?.data?.detail || fallback
+  const severity = err?.response?.data?.severity || 'info'
+  if (severity === 'error') toast.error(detail)
+  else if (severity === 'warning') toast.warning(detail)
+  else toast.info(detail)
+}
 function formatNpNumber(num: string): string {
   const digits = num.replace(/\D/g, '')
   if (digits.length !== 14) return num
@@ -679,7 +686,7 @@ export default function OrderWaybillModal({
       onOpenChange(false)
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   const updateMutation = useMutation({
@@ -697,7 +704,7 @@ export default function OrderWaybillModal({
       onOpenChange(false)
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   const deleteMutation = useMutation({
@@ -709,7 +716,7 @@ export default function OrderWaybillModal({
       onOpenChange(false)
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   const syncMutation = useMutation({
@@ -729,7 +736,7 @@ export default function OrderWaybillModal({
       }
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   const printMarkingsMutation = useMutation({
@@ -741,7 +748,7 @@ export default function OrderWaybillModal({
       queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   const printTtnMutation = useMutation({
@@ -753,7 +760,7 @@ export default function OrderWaybillModal({
       queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
     onError: (err: any) =>
-      toast.info(err?.response?.data?.detail || t('novaposhta_error_api')),
+      showNpError(err, t('novaposhta_error_api')),
   })
 
   // ── Form change handler ─────────────────────────────────────────────────
