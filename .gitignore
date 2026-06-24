@@ -29,3 +29,5 @@ celerybeat-schedule*
 # Generated
 *.tsbuildinfo
 imports/
+backend/app.db
+temp_np_pages/
