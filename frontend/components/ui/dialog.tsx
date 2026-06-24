@@ -50,11 +50,20 @@ function Dialog({
 
 function DialogTrigger({ asChild, children, ...props }: React.ComponentProps<'button'> & { asChild?: boolean }) {
   const { onOpenChange } = React.useContext(DialogContext)
-  if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, {
-      onClick: () => onOpenChange(true),
-      ...props,
-    })
+  if (asChild) {
+    // When asChild is true, merge onClick into the child instead of wrapping
+    if (React.isValidElement(children)) {
+      return React.cloneElement(children as React.ReactElement<any>, {
+        onClick: () => onOpenChange(true),
+        ...props,
+      })
+    }
+    // Fallback for non-element children (text, numbers): render a span
+    return (
+      <span onClick={() => onOpenChange(true)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpenChange(true)}>
+        {children}
+      </span>
+    )
   }
   return (
     <button type="button" onClick={() => onOpenChange(true)} {...props}>
