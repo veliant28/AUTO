@@ -83,6 +83,8 @@ export default function OrderDetailPage() {
     );
   }
 
+  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 space-y-6">
@@ -91,8 +93,6 @@ export default function OrderDetailPage() {
       </div>
     );
   }
-
-  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
 
   if (!order) {
     return (
