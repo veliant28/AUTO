@@ -888,6 +888,9 @@ export default function OrderWaybillShipmentSection({
                     step="1"
                     min="0"
                     value={cost}
+                    onFocus={() => {
+                      if (cost === '0' || cost === '') onChange('cost', '')
+                    }}
                     onChange={(e) =>
                       onChange('cost', e.target.value.replace(/[^\d]/g, ''))
                     }
