@@ -633,7 +633,7 @@
     "novaposhta_api_token": "API ключ",
     "novaposhta_api_token_masked": "API ключ (приховано)",
     "novaposhta_phone": "Телефон",
-    "novaposhta_contact_name": "Контактна особа",
+    "novaposhta_contact_name": "ПІБ",
     "novaposhta_organization": "Організація",
     "novaposhta_email": "Email",
     "novaposhta_edrpou": "ЄДРПОУ",

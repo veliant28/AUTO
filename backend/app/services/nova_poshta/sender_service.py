@@ -414,7 +414,15 @@ class NovaPoshtaSenderService:
             )
             data = resp.get("data", [])
             if data:
-                return data[0].get("Description", "")
+                city = data[0]
+                name = city.get("Description", "")
+                area = city.get("AreaDescription", "")
+                ctype = city.get("CityTypeDescription", "")
+                # Build full label like "м. Миколаїв, Миколаївська обл." (same format as getSettlements)
+                parts = [f"{ctype}. {name}" if ctype else name]
+                if area:
+                    parts.append(f"{area} обл.")
+                return ", ".join(parts)
         except Exception:
             logger.debug("Could not resolve city label for ref %s", city_ref)
         return ""

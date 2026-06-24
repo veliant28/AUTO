@@ -19858,3 +19858,4 @@ TypeError: 'label' is an invalid keyword argument for OrderNovaPoshtaWaybillSeat
 2026-06-24 08:34:11 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice result: {'delivery_cost': '430', 'packaging_cost': '0', 'redelivery_cost': '0', 'assessed_cost': '50000'}
 2026-06-24 08:34:38 - root - INFO - Health check called
 2026-06-24 08:35:08 - root - INFO - Health check called
+2026-06-24 09:56:29 - root - INFO - Health check called
