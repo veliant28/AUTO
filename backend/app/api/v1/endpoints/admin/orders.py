@@ -151,6 +151,7 @@ async def update_order(
                 item.quantity = upd.quantity
 
         # Recalculate total after quantity changes
+        db.flush()
         remaining = db.query(OrderItem).options(joinedload(OrderItem.part)).filter(
             OrderItem.order_id == order_id
         ).all()
