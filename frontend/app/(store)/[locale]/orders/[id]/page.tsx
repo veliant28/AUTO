@@ -92,6 +92,8 @@ export default function OrderDetailPage() {
     );
   }
 
+  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
+
   if (!order) {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
@@ -102,7 +104,6 @@ export default function OrderDetailPage() {
     );
   }
 
-  const locale = LOCALE_MAP[useLocale()] || 'ru-RU';
   const fmt = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n);
   const statusInfo = ORDER_STATUS_LABELS[order.status] || { labelKey: 'order_pending', className: 'bg-gray-500 text-white' };
   const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
