@@ -518,14 +518,6 @@ export default function OrderWaybillModal({
         local_express: waybill.local_express ?? false,
         saturday_delivery: waybill.saturday_delivery ?? false,
         special_cargo: waybill.special_cargo ?? false,
-        // Restore packaging and dimensions from first seat for display
-        pack_ref: waybill.options_seat?.[0]?.pack_ref || '',
-        pack_refs: waybill.options_seat?.[0]?.pack_ref
-          ? [waybill.options_seat[0].pack_ref]
-          : [],
-        volumetric_width: waybill.options_seat?.[0]?.volumetric_width || '',
-        volumetric_length: waybill.options_seat?.[0]?.volumetric_length || '',
-        volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
         options_seat:
           hasAfterpayment && seats > 1
             ? (Array.from({ length: seats }, (_, i) => ({
@@ -557,16 +549,7 @@ export default function OrderWaybillModal({
               })) as any) || undefined,
         service_refs: waybill.service_refs || [],
         service_params: (waybill.service_params as any) || {},
-        pack_items: waybill.options_seat?.[0]?.pack_ref
-          ? [
-              {
-                ref: waybill.options_seat[0].pack_ref,
-                label: waybill.options_seat[0].pack_label || '',
-                cost: waybill.options_seat[0].pack_cost || '',
-              },
-            ]
-          : [],
-      } as any)
+      })
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
       lastValidatedCost.current = syncedCost
