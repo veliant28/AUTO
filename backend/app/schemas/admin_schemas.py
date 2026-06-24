@@ -22,6 +22,7 @@ class DashboardResponse(BaseModel):
 
 class AdminOrderItem(BaseModel):
     id: int
+    order_number: str = ""
     user_id: int
     status: str
     total: float
@@ -76,6 +77,7 @@ class AdminOrderItemSchema(BaseModel):
 
 class AdminOrderDetailResponse(BaseModel):
     id: int
+    order_number: str = ""
     user_id: int
     status: str
     total: float

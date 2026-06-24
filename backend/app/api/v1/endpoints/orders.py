@@ -27,6 +27,7 @@ def _items_with_brand(order, db):
 def _order_to_dict(order, db):
     return {
         "id": order.id,
+        "order_number": order.order_number or f"ORD-{order.id:010d}",
         "status": order.status.value,
         "total": float(order.total),
         "full_name": order.full_name,
@@ -108,7 +109,10 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
     )
     db.add(order)
     db.flush()
-    
+
+    # Generate human-readable order number
+    order.order_number = f"ORD-{order.id:010d}"
+
     for item_data in data.items:
         order_item = OrderItem(
             order_id=order.id,

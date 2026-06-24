@@ -16,6 +16,7 @@ class Order(Base):
     __tablename__ = "orders"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    order_number = Column(String(20), unique=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False, index=True)
     total = Column(Numeric(10, 2), nullable=False)

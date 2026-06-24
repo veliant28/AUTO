@@ -38,6 +38,7 @@ async def list_orders(
             search_id = int(search)
             query = query.filter(
                 (Order.id == search_id) |
+                (Order.order_number.ilike(like)) |
                 (Order.full_name.ilike(like)) |
                 (Order.last_name.ilike(like)) |
                 (Order.first_name.ilike(like)) |
@@ -46,6 +47,7 @@ async def list_orders(
             )
         except ValueError:
             query = query.filter(
+                (Order.order_number.ilike(like)) |
                 (Order.full_name.ilike(like)) |
                 (Order.last_name.ilike(like)) |
                 (Order.first_name.ilike(like)) |
@@ -58,6 +60,7 @@ async def list_orders(
         items=[
             AdminOrderItem(
                 id=o.id,
+                order_number=o.order_number or f"ORD-{o.id:010d}",
                 user_id=o.user_id,
                 status=o.status.value if hasattr(o.status, "value") else o.status,
                 total=float(o.total),
@@ -90,6 +93,7 @@ async def get_order_detail(
         raise HTTPException(404, "Order not found")
     return AdminOrderDetailResponse(
         id=order.id,
+        order_number=order.order_number or f"ORD-{order.id:010d}",
         user_id=order.user_id,
         status=order.status.value if hasattr(order.status, "value") else order.status,
         total=float(order.total),
@@ -235,6 +239,7 @@ async def delete_order_item(
 
     return AdminOrderDetailResponse(
         id=order.id,
+        order_number=order.order_number or f"ORD-{order.id:010d}",
         user_id=order.user_id,
         status=order.status.value if hasattr(order.status, "value") else order.status,
         total=float(order.total),

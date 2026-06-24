@@ -163,7 +163,7 @@ export default function OrdersPage() {
                 });
                 return (
                   <Link key={order.id} href={`/orders/${order.id}`} className="grid grid-cols-5 gap-4 px-6 py-4 items-center hover:bg-muted/50 transition-colors">
-                    <span className="font-bold font-mono">#{order.id}</span>
+                    <span className="font-bold font-mono">{order.order_number || `#${order.id}`}</span>
                     <Badge className={`${statusInfo.className} border-0 text-sm w-fit`}>
                       {t(statusInfo.labelKey)}
                     </Badge>

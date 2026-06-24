@@ -131,7 +131,7 @@ export default function OrderDetailPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h1 className="text-3xl font-bold font-mono">#{order.id}</h1>
+                    <h1 className="text-3xl font-bold font-mono">{order.order_number || `#${order.id}`}</h1>
                     <Badge className={`${statusInfo.className} border-0 text-sm`}>
                       {t(statusInfo.labelKey)}
                     </Badge>
