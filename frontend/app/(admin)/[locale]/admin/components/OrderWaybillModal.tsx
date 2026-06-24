@@ -741,6 +741,7 @@ export default function OrderWaybillModal({
     onSuccess: (res) => {
       if (res.url) window.open(res.url, '_blank')
       else toast.error(t('novaposhta_print_no_url'))
+      queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
     onError: (err: any) =>
       toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
@@ -752,6 +753,7 @@ export default function OrderWaybillModal({
     onSuccess: (res) => {
       if (res.url) window.open(res.url, '_blank')
       else toast.error(t('novaposhta_print_no_url'))
+      queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
     onError: (err: any) =>
       toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
