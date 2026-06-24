@@ -534,6 +534,20 @@ class NovaPoshtaWaybillService:
                     user_id=None,
                 )
 
+            # If NP reports the waybill as deleted, sync our local state
+            if wb.status_code in ("2", "102") and not wb.is_deleted:
+                wb.mark_deleted()
+                self._log_event(
+                    order_id=wb.order_id,
+                    waybill_id=wb.id,
+                    event_type=OrderNovaPoshtaWaybillEvent.EVENT_DELETE,
+                    message=f"TTN {wb.np_number} видалено (статус НП)",
+                    status_code=wb.status_code,
+                    status_text=wb.status_text,
+                    raw_response=tracking,
+                    user_id=None,
+                )
+
         wb.last_sync_error = ""
         wb.status_synced_at = datetime.utcnow()
         self.db.flush()
