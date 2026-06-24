@@ -1264,7 +1264,11 @@ export default function OrderWaybillModal({
                   form.sender_address_ref || selectedSender?.address_ref || ''
                 }
                 disabled={
-                  isPending || isPackagingMode || isServicesMode || isPrinted
+                  isPending ||
+                  isPackagingMode ||
+                  isServicesMode ||
+                  isPrinted ||
+                  isEdit
                 }
                 onSenderChange={handleSenderChange}
                 onAddressChange={handleSenderAddressChange}
