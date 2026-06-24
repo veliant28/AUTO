@@ -108,8 +108,8 @@ export default function OrderWaybillFooter({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="outline"
-                      className="gap-1.5"
+                      variant="default"
+                      className="gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
                       onClick={onPrintMarkings}
                       disabled={isBusy}
                     >
