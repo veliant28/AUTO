@@ -280,16 +280,6 @@ class NovaPoshtaWaybillService:
         try:
             response = await client.save(MODEL_INTERNET_DOCUMENT_GENERAL, payload)
         except NovaPoshtaApiError as e:
-            # Log the error event
-            self._log_event(
-                order_id=order_id,
-                waybill_id=0,
-                event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=str(e) or "Помилка створення TTN",
-                errors=[],
-                error_codes=e.errors or [],
-                user_id=user_id,
-            )
             raise
 
         # Parse response
