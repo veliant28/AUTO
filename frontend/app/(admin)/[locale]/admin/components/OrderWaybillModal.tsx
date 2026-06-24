@@ -66,6 +66,36 @@ function formatNpNumber(num: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Helpers for packaging restore
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Converts a waybill seat's packaging data (cm) → PackagingTableEntry (mm)
+ * so the packaging button and table can display saved items on re-open.
+ */
+function buildPackItemsFromSeat(seat: any): any[] {
+  if (!seat?.pack_ref) return []
+  return [
+    {
+      ref: seat.pack_ref,
+      label: seat.pack_label || seat.pack_ref,
+      description: '',
+      // Waybill stores dimensions in cm; packaging table expects mm
+      width_mm: seat.volumetric_width
+        ? String(parseFloat(seat.volumetric_width) * 10)
+        : '',
+      length_mm: seat.volumetric_length
+        ? String(parseFloat(seat.volumetric_length) * 10)
+        : '',
+      height_mm: seat.volumetric_height
+        ? String(parseFloat(seat.volumetric_height) * 10)
+        : '',
+      cost: seat.pack_cost || '0',
+    },
+  ]
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Tracking helpers
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -459,6 +489,9 @@ export default function OrderWaybillModal({
     if (open) {
       formInitialized.current = false
       setIsTrackingMode(false)
+      // Reset city/address queries so SearchableSelect shows saved label on next render
+      setCityQuery('')
+      setAddressQuery('')
     }
   }, [open])
 
@@ -525,6 +558,7 @@ export default function OrderWaybillModal({
         volumetric_width: waybill.options_seat?.[0]?.volumetric_width || '',
         volumetric_length: waybill.options_seat?.[0]?.volumetric_length || '',
         volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
+        pack_items: buildPackItemsFromSeat(waybill.options_seat?.[0]),
         options_seat:
           hasAfterpayment && seats > 1
             ? (Array.from({ length: seats }, (_, i) => ({
@@ -540,6 +574,9 @@ export default function OrderWaybillModal({
                         waybill.options_seat[i].volumetric_height,
                       pack_refs: waybill.options_seat[i].pack_refs,
                       cargo_type: waybill.options_seat[i].cargo_type,
+                      pack_items: buildPackItemsFromSeat(
+                        waybill.options_seat[i],
+                      ),
                     }
                   : {}),
                 cost: perSeatCost,
@@ -553,13 +590,17 @@ export default function OrderWaybillModal({
                 volumetric_height: s.volumetric_height,
                 pack_refs: s.pack_refs,
                 cargo_type: s.cargo_type,
+                pack_items: buildPackItemsFromSeat(s),
               })) as any) || undefined,
         service_refs: waybill.service_refs || [],
         service_params: (waybill.service_params as any) || {},
-      })
+      } as any)
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
       lastValidatedCost.current = syncedCost
+      // Restore city/address display (queries were reset in open-effect)
+      setCityQuery(waybill.recipient_city_label || '')
+      setAddressQuery(waybill.recipient_address_label || '')
     } else if (
       !waybill &&
       !formInitialized.current &&
