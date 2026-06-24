@@ -472,8 +472,11 @@ export default function OrderWaybillModal({
           : [],
         volumetric_width: waybill.options_seat?.[0]?.volumetric_width || '',
         volumetric_length: waybill.options_seat?.[0]?.volumetric_length || '',
-        volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
-        options_seat:
+	        volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
+	        pack_label: waybill.options_seat?.[0]?.pack_label || '',
+	        pack_cost: waybill.options_seat?.[0]?.pack_cost || '',
+	        pack_items: buildPackItemsFromSeat(waybill.options_seat?.[0]),
+	        options_seat:
           hasAfterpayment && seats > 1
             ? (Array.from({ length: seats }, (_, i) => ({
                 ...(waybill.options_seat?.[i]
