@@ -17,6 +17,7 @@ class OrderItemSchema(BaseModel):
 
 class OrderSchema(BaseModel):
     id: int
+    order_number: str = ""
     status: str
     total: float
     full_name: str
