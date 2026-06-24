@@ -104,7 +104,7 @@ function renderTrackingTimeline(
       {/* Vertical line */}
       <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
       {events.map((event, index) => {
-        const isFirst = index === events.length - 1
+        const isFirst = index === 0
         return (
           <div key={index} className="relative pb-6">
             {/* Dot */}

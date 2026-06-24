@@ -643,7 +643,7 @@ class NovaPoshtaWaybillService:
         return events
 
     def list_tracking_records(self, waybill_id: int) -> List[WaybillTrackingEvent]:
-        """Get tracking status history from DB events, oldest first."""
+        """Get tracking status history from DB events, newest first."""
         stmt = (
             select(OrderNovaPoshtaWaybillEvent)
             .where(
@@ -654,14 +654,15 @@ class NovaPoshtaWaybillService:
                 ]),
                 OrderNovaPoshtaWaybillEvent.status_code != "",
             )
-            .order_by(OrderNovaPoshtaWaybillEvent.created_at.asc())
+            .order_by(OrderNovaPoshtaWaybillEvent.created_at.desc())
         )
         db_events = list(self.db.execute(stmt).scalars().all())
 
         result: List[WaybillTrackingEvent] = []
         for ev in db_events:
             raw = ev.raw_response or {}
-            event_at = raw.get("Date", "") or raw.get("DateScan", "") or str(ev.created_at) if ev.created_at else ""
+            # NP API date fields are unreliable (often "0001-01-01"); use created_at instead
+            event_at = str(ev.created_at) if ev.created_at else ""
             result.append(WaybillTrackingEvent(
                 id=ev.id,
                 event_type=ev.event_type,
