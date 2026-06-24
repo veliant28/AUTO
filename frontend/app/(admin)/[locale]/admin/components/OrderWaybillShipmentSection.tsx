@@ -144,6 +144,7 @@ export default function OrderWaybillShipmentSection({
   const [tableItems, setTableItems] = useState<PackagingTableEntry[]>([])
   const [checkedRefs, setCheckedRefs] = useState<Set<string>>(new Set())
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const dropdownScrollRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Track last added item for dimensions display
@@ -210,6 +211,15 @@ export default function OrderWaybillShipmentSection({
   useEffect(() => {
     setHighlightedIdx(-1)
   }, [dropdownItems])
+
+  // ── Scroll highlighted item into view ─────────────────────────────────
+  useEffect(() => {
+    if (highlightedIdx < 0 || !dropdownScrollRef.current) return
+    const item = dropdownScrollRef.current.querySelector(
+      `[data-index="${highlightedIdx}"]`,
+    ) as HTMLElement | null
+    item?.scrollIntoView({ block: 'nearest' })
+  }, [highlightedIdx])
 
   // ── Close dropdown on click outside ────────────────────────────────────
   useEffect(() => {
@@ -653,7 +663,7 @@ export default function OrderWaybillShipmentSection({
 
               {/* Dropdown */}
               {isDropdownOpen && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-popover border rounded-md shadow-lg max-h-[240px] overflow-y-auto py-1">
+                <div ref={dropdownScrollRef} className="absolute top-full mt-1 left-0 right-0 z-50 bg-popover border rounded-md shadow-lg max-h-[240px] overflow-y-auto py-1">
                   {/* Loading state */}
                   {isLoadingPackaging && (
                     <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
