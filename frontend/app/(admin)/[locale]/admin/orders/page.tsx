@@ -630,16 +630,8 @@ export default function AdminOrdersPage() {
                 <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
                   {showHistory ? (
                     <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full"
-                        onClick={() => setShowHistory(false)}
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                      </Button>
-                      <DialogTitle className="text-lg">
-                        {t('order_history')} #{orderDetail.id}
+                      <DialogTitle className="text-2xl font-bold tracking-tight">
+                        {t('order_history')}: {orderDetail.id}
                       </DialogTitle>
                     </div>
                   ) : (
@@ -1130,7 +1122,13 @@ export default function AdminOrdersPage() {
                 <Separator className="flex-shrink-0" />
                 <div className="flex-shrink-0 p-4 pt-3">
                   {showHistory ? (
-                    <div className="h-10" />
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowHistory(false)}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-1" />
+                      {t('back')}
+                    </Button>
                   ) : editMode ? (
                     <div className="flex gap-2">
                       <Button

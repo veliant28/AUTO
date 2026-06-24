@@ -245,11 +245,21 @@ export default function OrderWaybillPaymentSection({
   }, [selectedServices])
 
   const deleteSelectedServices = useCallback(() => {
-    setSelectedServices((prev) =>
-      prev.filter((s) => !checkedServiceRefs.has(s.ref)),
+    const remaining = selectedServices.filter(
+      (s) => !checkedServiceRefs.has(s.ref),
     )
+    setSelectedServices(remaining)
     setCheckedServiceRefs(new Set())
-  }, [checkedServiceRefs])
+    // Immediately commit deletions to form so they persist even on Cancel
+    onChange(
+      'service_refs',
+      remaining.map((s) => s.ref),
+    )
+    onChange(
+      'service_names',
+      remaining.map((s) => s.description),
+    )
+  }, [selectedServices, checkedServiceRefs, onChange])
 
   // ── Keyboard navigation for search dropdown ──────────────────────────────
 
@@ -676,12 +686,14 @@ export default function OrderWaybillPaymentSection({
 
       <div className="flex-1 overflow-y-auto min-h-0 px-1.5">
         <div className="grid gap-3 pt-2 auto-rows-min">
-          {/* Cost summary — unified block */}
           <div className="grid gap-1.5">
             <Label className="text-sm text-muted-foreground">
               {t('novaposhta_payment_summary_label')}
             </Label>
-            <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+            <div
+              className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm"
+              style={{ minHeight: '210px' }}
+            >
               {/* 1. Afterpayment / COD service — the selected service name + amount */}
               {afterpaymentAmount && (
                 <div className="flex items-center justify-between gap-2">
@@ -711,32 +723,61 @@ export default function OrderWaybillPaymentSection({
                   </div>
                 )}
 
-              {/* 3. Packaging cost — local + API override */}
-              {(localPackagingCost > 0 ||
-                (priceData &&
-                  !priceLoading &&
-                  Number(priceData.packaging_cost) > 0)) && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">
-                    {t('novaposhta_packaging_cost')}
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {priceData && !priceLoading
-                      ? Number(priceData.packaging_cost).toFixed(2)
-                      : localPackagingCost.toFixed(2)}{' '}
-                    ₴
-                  </span>
-                </div>
-              )}
+              {/* 3. Assessed value commission — 0.5% on amount over 500 UAH */}
+              {(() => {
+                const declaredValue = Number(cost)
+                const commission =
+                  declaredValue > 500 ? (declaredValue - 500) * 0.005 : 0
+                if (commission <= 0) return null
+                return (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t('novaposhta_assessed_commission')}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {commission.toFixed(2)} ₴
+                    </span>
+                  </div>
+                )
+              })()}
 
-              {/* 4. Delivery cost — from API only */}
+              {/* 4. Packaging cost — API CostPack or local fallback */}
+              {(() => {
+                const apiPackCost =
+                  priceData && !priceLoading
+                    ? Number(priceData.packaging_cost)
+                    : 0
+                const displayPackCost =
+                  apiPackCost > 0 ? apiPackCost : localPackagingCost
+                if (displayPackCost <= 0) return null
+                return (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      {t('novaposhta_packaging_cost')}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {displayPackCost.toFixed(2)} ₴
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {/* 5. Delivery cost — from API (does not include OS commission) */}
               {priceData && !priceLoading && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">
                     {t('novaposhta_delivery_cost')}
                   </span>
                   <span className="font-semibold tabular-nums">
-                    {Number(priceData.delivery_cost).toFixed(2)} ₴
+                    {(() => {
+                      const apiDelivery = Number(priceData.delivery_cost)
+                      const apiPack = Number(priceData.packaging_cost)
+                      // Subtract API-known packaging portion when available
+                      const pureDelivery =
+                        apiPack > 0 ? apiDelivery - apiPack : apiDelivery
+                      return pureDelivery.toFixed(2)
+                    })()}{' '}
+                    ₴
                   </span>
                 </div>
               )}
@@ -766,12 +807,12 @@ export default function OrderWaybillPaymentSection({
                 <span className="font-bold text-base tabular-nums">
                   {(() => {
                     if (priceData && !priceLoading) {
-                      // API data available: full calculation
-                      return (
+                      // API data: total = delivery_cost (includes packaging + OS commission) + redelivery
+                      // Commission is already inside delivery_cost — NOT added again
+                      const apiTotal =
                         Number(priceData.delivery_cost) +
-                        Number(priceData.packaging_cost) +
                         Number(priceData.redelivery_cost)
-                      ).toFixed(2)
+                      return apiTotal.toFixed(2)
                     }
                     if (localPackagingCost > 0 || afterpaymentAmount) {
                       // Partial data: what we know so far

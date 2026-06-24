@@ -374,6 +374,8 @@ class WaybillSeatOptionPayload(BaseModel):
     weight: Optional[str] = None
     pack_ref: Optional[str] = None
     pack_refs: Optional[List[str]] = None
+    pack_label: Optional[str] = None
+    pack_cost: Optional[str] = None
     volumetric_width: Optional[str] = None
     volumetric_length: Optional[str] = None
     volumetric_height: Optional[str] = None
@@ -416,6 +418,8 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     volume_general: Optional[str] = None
     pack_ref: Optional[str] = None
     pack_refs: Optional[List[str]] = None
+    pack_label: Optional[str] = None
+    pack_cost: Optional[str] = None
     volumetric_width: Optional[str] = None
     volumetric_length: Optional[str] = None
     volumetric_height: Optional[str] = None
@@ -451,6 +455,8 @@ class WaybillSeatOption(BaseModel):
     weight: str = ""
     pack_ref: str = ""
     pack_refs: List[str] = []
+    pack_label: str = ""
+    pack_cost: str = ""
     volumetric_width: str = ""
     volumetric_length: str = ""
     volumetric_height: str = ""

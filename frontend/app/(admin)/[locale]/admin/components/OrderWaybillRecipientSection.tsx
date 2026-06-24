@@ -291,6 +291,7 @@ export default function OrderWaybillRecipientSection({
   const [addressOpen, setAddressOpen] = useState(false)
   const [addressHighlighted, setAddressHighlighted] = useState(-1)
   const addressContainerRef = useRef<HTMLDivElement>(null)
+  const addressListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -308,6 +309,15 @@ export default function OrderWaybillRecipientSection({
   useEffect(() => {
     setAddressHighlighted(-1)
   }, [warehouses, streets])
+
+  // Auto-scroll highlighted item into view on keyboard navigation
+  useEffect(() => {
+    if (addressHighlighted < 0 || !addressListRef.current) return
+    const el = addressListRef.current.querySelector(
+      `[data-index="${addressHighlighted}"]`,
+    ) as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [addressHighlighted])
 
   const startsWithDigit = /^\d/.test(addressQuery)
   const startsWithLetter = /^[a-zа-яіїєґ']/i.test(addressQuery)
@@ -596,6 +606,7 @@ export default function OrderWaybillRecipientSection({
                     onKeyDown={handleAddressKeyDown}
                     className="pl-8"
                     disabled={disabled || !recipientCityLabel}
+                    autoComplete="off"
                   />
                   {addressLoading && (
                     <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground pointer-events-none" />
@@ -606,6 +617,7 @@ export default function OrderWaybillRecipientSection({
                 {showWarehouseDropdown && (
                   <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
                     <div
+                      ref={addressListRef}
                       className="overflow-y-auto py-1"
                       style={{ maxHeight: 160 }}
                     >
@@ -674,6 +686,7 @@ export default function OrderWaybillRecipientSection({
                 {showStreetDropdown && (
                   <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
                     <div
+                      ref={addressListRef}
                       className="overflow-y-auto py-1"
                       style={{ maxHeight: 160 }}
                     >

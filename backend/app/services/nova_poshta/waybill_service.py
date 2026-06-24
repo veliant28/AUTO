@@ -16,6 +16,7 @@ from app.models.nova_poshta import (
     NovaPoshtaSenderProfile,
     OrderNovaPoshtaWaybill,
     OrderNovaPoshtaWaybillEvent,
+    OrderNovaPoshtaWaybillSeat,
 )
 from app.schemas.nova_poshta_schemas import (
     OrderNovaPoshtaWaybillUpsert,
@@ -31,6 +32,7 @@ from app.schemas.nova_poshta_schemas import (
 )
 from app.models import Order
 from app.services.nova_poshta.client import NovaPoshtaApiClient
+from app.services.nova_poshta.constants import MODEL_INTERNET_DOCUMENT_GENERAL
 from app.services.nova_poshta.lookup_service import NovaPoshtaLookupService
 from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.waybill_payloads import NovaPoshtaWaybillPayloadBuilder
@@ -171,6 +173,23 @@ class NovaPoshtaWaybillService:
         )
         if result:
             counterparty_ref, contact_ref = result
+            # Try to get existing contact persons for this counterparty
+            # (InternetDocumentGeneral requires a valid ContactRecipient ref)
+            try:
+                sender = self.sender_service.get_by_id(sender_profile_id)
+                client = NovaPoshtaApiClient(sender.api_token)
+                contact_resp = await client.call(
+                    "Counterparty",
+                    "getCounterpartyContactPersons",
+                    {"Ref": counterparty_ref, "Page": "1"},
+                )
+                contact_data = contact_resp.get("data", [])
+                if contact_data:
+                    # Use the first existing contact person
+                    contact_ref = contact_data[0].get("Ref", contact_ref)
+            except Exception as e:
+                logger.debug("Could not fetch contact persons: %s", e)
+
             data.recipient_counterparty_ref = counterparty_ref
             data.recipient_contact_ref = contact_ref
             logger.info(
@@ -216,14 +235,15 @@ class NovaPoshtaWaybillService:
         # Optionally check possibility first (catch errors early)
         try:
             check_payload = self.payload_builder.build_check_possible_payload(data, sender)
-            await client.call("InternetDocument", "checkPossibilityCreateDocument", check_payload)
+            await client.call(MODEL_INTERNET_DOCUMENT_GENERAL, "checkPossibilityCreateDocument", check_payload)
         except NovaPoshtaApiError:
             # Non-fatal — NP allows creation even if check fails in some cases
             logger.warning("checkPossibilityCreateDocument failed, proceeding anyway")
 
         # Call NP API to create the document
+        logger.info("InternetDocumentGeneral/save payload: %s", payload)
         try:
-            response = await client.save("InternetDocument", payload)
+            response = await client.save(MODEL_INTERNET_DOCUMENT_GENERAL, payload)
         except NovaPoshtaApiError as e:
             # Log the error event
             self._log_event(
@@ -249,7 +269,7 @@ class NovaPoshtaWaybillService:
         np_ref = np_data.get("Ref", "")
         np_number = np_data.get("IntDocNumber", "") or np_data.get("Number", "")
 
-        # Persist waybill
+		    # Persist waybill
         wb = OrderNovaPoshtaWaybill(
             order_id=order_id,
             sender_profile_id=sender.id,
@@ -287,6 +307,9 @@ class NovaPoshtaWaybillService:
         )
         self.db.add(wb)
         self.db.flush()
+
+        # Save per-seat data
+        self._save_seats(wb, data)
 
         # Log create event
         self._log_event(
@@ -332,8 +355,9 @@ class NovaPoshtaWaybillService:
             third_person_ref=data.third_person_ref or "",
         )
 
+        logger.info("InternetDocumentGeneral/update payload: %s", payload)
         try:
-            response = await client.update("InternetDocument", payload)
+            response = await client.update(MODEL_INTERNET_DOCUMENT_GENERAL, payload)
         except NovaPoshtaApiError as e:
             self._log_event(
                 order_id=wb.order_id,
@@ -378,6 +402,7 @@ class NovaPoshtaWaybillService:
         if data_list:
             wb.raw_response_json = data_list[0]
 
+        self._save_seats(wb, data)
         self.db.flush()
 
         self._log_event(
@@ -411,7 +436,7 @@ class NovaPoshtaWaybillService:
         payload = self.payload_builder.build_delete_payload([wb.np_ref])
 
         try:
-            await client.delete("InternetDocument", payload)
+            await client.delete(MODEL_INTERNET_DOCUMENT_GENERAL, payload)
         except NovaPoshtaApiError as e:
             self._log_event(
                 order_id=wb.order_id,
@@ -538,7 +563,7 @@ class NovaPoshtaWaybillService:
         payload = self.payload_builder.build_print_payload([wb.np_ref], document_type)
 
         try:
-            response = await client.call("InternetDocument", "generateReport", payload)
+            response = await client.call(MODEL_INTERNET_DOCUMENT_GENERAL, "generateReport", payload)
         except NovaPoshtaApiError as e:
             self._log_event(
                 order_id=wb.order_id,
@@ -671,7 +696,7 @@ class NovaPoshtaWaybillService:
             service_type=wb.service_type,
             cargo_type=wb.cargo_type,
             cost=str(wb.cost),
-            weight=str(wb.weight),
+            weight=str(wb.weight).rstrip("0").rstrip("."),
             seats_amount=wb.seats_amount,
             afterpayment_amount=str(wb.afterpayment_amount) if wb.afterpayment_amount else None,
             recipient_city_ref=wb.recipient_city_ref,
@@ -702,7 +727,7 @@ class NovaPoshtaWaybillService:
             created_at=wb.created_at,
             updated_at=wb.updated_at,
             events_count=len(events),
-            options_seat=[],  # NP doesn't persist options_seat separately
+            options_seat=self._seat_orm_to_response(wb),
             service_params=wb.service_params or {},
             service_refs=list((wb.service_params or {}).keys()),
             tracking_events=tracking_events,
@@ -711,7 +736,7 @@ class NovaPoshtaWaybillService:
     def _get_actor(self, wb: OrderNovaPoshtaWaybill) -> Optional[StaffActor]:
         """Get the last actor (user) who modified this waybill."""
         if wb.updated_by_id:
-            from app.models.base import User
+            from app.models.users import User
             user = self.db.get(User, wb.updated_by_id)
             if user:
                 return StaffActor(
@@ -720,7 +745,7 @@ class NovaPoshtaWaybillService:
                     role_code=getattr(user, "role_code", "") or "",
                 )
         if wb.created_by_id:
-            from app.models.base import User
+            from app.models.users import User
             user = self.db.get(User, wb.created_by_id)
             if user:
                 return StaffActor(
@@ -735,6 +760,92 @@ class NovaPoshtaWaybillService:
         """Get a human-readable status label."""
         from app.services.nova_poshta.tracking_status_catalog import NovaPoshtaTrackingStatusCatalog
         return NovaPoshtaTrackingStatusCatalog.get_label(status_code)
+
+    @staticmethod
+    def _extract_options_seat(wb: OrderNovaPoshtaWaybill) -> list:
+        """Extract OptionsSeat from raw_request_json for response."""
+        seats = []
+        raw_seats = (wb.raw_request_json or {}).get("OptionsSeat", [])
+        for s in raw_seats:
+            seat = {
+                "description": s.get("description", ""),
+                "cost": str(s.get("cost", "0")),
+                "weight": str(s.get("weight", "0")),
+            }
+            if s.get("volumetricWidth"):
+                seat["volumetric_width"] = str(s["volumetricWidth"])
+            if s.get("volumetricLength"):
+                seat["volumetric_length"] = str(s["volumetricLength"])
+            if s.get("volumetricHeight"):
+                seat["volumetric_height"] = str(s["volumetricHeight"])
+            if s.get("packRef"):
+                seat["pack_ref"] = s["packRef"]
+            seats.append(seat)
+        return seats
+
+    def _save_seats(self, wb: OrderNovaPoshtaWaybill, data: OrderNovaPoshtaWaybillUpsert) -> None:
+        """Save per-seat data from the form into the seats table."""
+        # Remove existing seats (for update scenario)
+        for old in wb.seats:
+            self.db.delete(old)
+        # Flush deletes before inserting new seats to avoid unique constraint violation
+        self.db.flush()
+
+        seats_data = data.options_seat or []
+        if not seats_data:
+            # Build a single seat from top-level fields
+            seats_data = [{
+                "description": data.description or "",
+                "cost": data.cost or "0",
+                "weight": data.weight or "0.1",
+                "volumetric_width": data.volumetric_width or "",
+                "volumetric_length": data.volumetric_length or "",
+                "volumetric_height": data.volumetric_height or "",
+                "pack_ref": data.pack_ref or (data.pack_refs[0] if data.pack_refs else ""),
+                "label": data.pack_label or "",
+                "cost_pack": data.pack_cost or "",
+            }]
+
+        for idx, s in enumerate(seats_data):
+            seat = OrderNovaPoshtaWaybillSeat(
+                waybill_id=wb.id,
+                seat_index=idx,
+                description=s.get("description", "") if isinstance(s, dict) else getattr(s, "description", ""),
+                weight=str(s.get("weight", "0")) if isinstance(s, dict) else str(getattr(s, "weight", "0")),
+                cost=str(s.get("cost", "0")) if isinstance(s, dict) else str(getattr(s, "cost", "0")),
+                # Prefer top-level volumetric fields (set by packaging selection), fallback to seat
+                volumetric_width=data.volumetric_width or (str(s.get("volumetric_width", "")) if isinstance(s, dict) else str(getattr(s, "volumetric_width", ""))),
+                volumetric_length=data.volumetric_length or (str(s.get("volumetric_length", "")) if isinstance(s, dict) else str(getattr(s, "volumetric_length", ""))),
+                volumetric_height=data.volumetric_height or (str(s.get("volumetric_height", "")) if isinstance(s, dict) else str(getattr(s, "volumetric_height", ""))),
+                # Read pack_ref from seat, fallback to data.pack_refs[idx] or data.pack_ref
+                pack_ref=(s.get("pack_ref", "") if isinstance(s, dict) else (getattr(s, "pack_ref", "") or ""))
+                    or (data.pack_refs[idx] if data.pack_refs and idx < len(data.pack_refs) else "")
+                    or (data.pack_ref or ""),
+                label=(s.get("label", "") if isinstance(s, dict) else (getattr(s, "pack_label", "") or ""))
+                    or (data.pack_label or ""),
+                cost_pack=(s.get("cost_pack", "") if isinstance(s, dict) else (getattr(s, "pack_cost", "") or ""))
+                    or (data.pack_cost or ""),
+            )
+            self.db.add(seat)
+        self.db.flush()
+
+    @staticmethod
+    def _seat_orm_to_response(wb: OrderNovaPoshtaWaybill) -> list:
+        """Convert ORM seats to WaybillSeatOption list."""
+        result = []
+        for seat in sorted(wb.seats, key=lambda s: s.seat_index):
+            result.append(WaybillSeatOption(
+                description=seat.description,
+                cost=seat.cost,
+                weight=seat.weight,
+                volumetric_width=seat.volumetric_width,
+                volumetric_length=seat.volumetric_length,
+                volumetric_height=seat.volumetric_height,
+                pack_ref=seat.pack_ref,
+                pack_label=seat.label or "",
+                pack_cost=seat.cost_pack or "",
+            ))
+        return result
 
     @staticmethod
     def _delivery_type_to_np(delivery_type: str) -> str:

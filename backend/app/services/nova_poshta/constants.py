@@ -56,8 +56,10 @@ NOVA_POSHTA_ERROR_TRANSLATIONS: Dict[str, str] = {**NOVA_POSHTA_BASE_ERRORS, **N
 
 # ─── NP API model names ──────────────────────────────────────────────────────
 MODEL_INTERNET_DOCUMENT = "InternetDocument"
+MODEL_INTERNET_DOCUMENT_GENERAL = "InternetDocumentGeneral"
 MODEL_ADDRESS_GENERAL = "AddressGeneral"
 MODEL_COUNTERPARTY = "Counterparty"
+MODEL_COUNTERPARTY_GENERAL = "CounterpartyGeneral"
 MODEL_ADDRESS = "Address"
 MODEL_COMMON = "Common"
 MODEL_TRACKING = "TrackingDocument"
@@ -91,8 +93,10 @@ METHOD_GET_SERVICE_LIST = "getServiceList"
 # ─── NP API model names ────────────────────────────────────────────────────
 MODEL_COMMON = "Common"
 MODEL_INTERNET_DOCUMENT = "InternetDocument"
+MODEL_INTERNET_DOCUMENT_GENERAL = "InternetDocumentGeneral"
 MODEL_TRACKING = "TrackingDocument"
 MODEL_COUNTERPARTY = "Counterparty"
+MODEL_COUNTERPARTY_GENERAL = "CounterpartyGeneral"
 MODEL_CONTACT_PERSON = "CounterpartyContactPerson"
 MODEL_ADDITIONAL_SERVICE = "AdditionalService"
 

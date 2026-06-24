@@ -231,6 +231,31 @@ export default function OrderWaybillModal({
   const summary = detail?.summary
   const isEdit = !!waybill && !waybill.is_deleted
 
+  // ── Saved packaging data from waybill (ref — no re-renders) ────────────
+  const savedPackRef = useRef({
+    pack_ref: '',
+    pack_refs: [] as string[],
+    volumetric_width: '',
+    volumetric_length: '',
+    volumetric_height: '',
+    pack_label: '',
+    pack_cost: '',
+  })
+  useEffect(() => {
+    const seat = waybill?.options_seat?.[0]
+    if (seat) {
+      savedPackRef.current = {
+        pack_ref: seat.pack_ref || '',
+        pack_refs: seat.pack_ref ? [seat.pack_ref] : [],
+        volumetric_width: seat.volumetric_width || '',
+        volumetric_length: seat.volumetric_length || '',
+        volumetric_height: seat.volumetric_height || '',
+        pack_label: seat.pack_label || '',
+        pack_cost: seat.pack_cost || '',
+      }
+    }
+  }, [waybill])
+
   // ── Senders ──────────────────────────────────────────────────────────────
   const { data: senders = [] } = useQuery({
     queryKey: ['nova-poshta', 'senders'],
@@ -444,7 +469,7 @@ export default function OrderWaybillModal({
         waybill.afterpayment_amount && Number(waybill.afterpayment_amount) > 0
       const syncedCost = hasAfterpayment
         ? String(Math.round(Number(waybill.afterpayment_amount)))
-        : waybill.cost || '0'
+        : String(Number(waybill.cost)) || '0'
       const seats = waybill.seats_amount || 1
       const perSeatCost =
         hasAfterpayment && seats > 1
@@ -1026,10 +1051,25 @@ export default function OrderWaybillModal({
       return
     }
 
+    // Merge saved packaging from waybill into payload (form may not have it)
+    const sp = savedPackRef.current
+    const savePayload = {
+      ...form,
+      ...(sp.pack_ref && !form.pack_ref
+        ? {
+            pack_ref: sp.pack_ref,
+            pack_refs: sp.pack_refs,
+            volumetric_width: sp.volumetric_width,
+            volumetric_length: sp.volumetric_length,
+            volumetric_height: sp.volumetric_height,
+          }
+        : {}),
+    }
+
     if (isEdit && waybill) {
-      updateMutation.mutate({ id: waybill.id, data: form })
+      updateMutation.mutate({ id: waybill.id, data: savePayload })
     } else {
-      createMutation.mutate(form)
+      createMutation.mutate(savePayload)
     }
   }, [form, isEdit, waybill, t, createMutation, updateMutation])
 

@@ -101,6 +101,7 @@ export default function OrderWaybillShipmentSection({
 
   // ── Shorten packaging label for button display ────────────────────────
   const shortLabel = useCallback((label: string) => {
+    if (!label) return ''
     return label
       .replace(/^Коробка\s*/i, 'кор. ')
       .replace(/^Стреч-пленка\s*/i, 'стр. ')
@@ -238,25 +239,41 @@ export default function OrderWaybillShipmentSection({
   }, [isPackagingMode, activePlaceIndex])
 
   // ── Add item to table ─────────────────────────────────────────────────
-  const addToTable = useCallback((item: NovaPoshtaLookupPackaging) => {
-    setTableItems((prev) => [
-      ...prev,
-      {
-        ref: item.ref,
-        label: item.label,
-        description: item.description,
-        width_mm: item.width_mm,
-        length_mm: item.length_mm,
-        height_mm: item.height_mm,
-        cost: item.cost,
-      },
-    ])
-    setPackagingQuery('')
-    setIsDropdownOpen(false)
-    setHighlightedIdx(-1)
-    // Focus back on search input
-    setTimeout(() => searchInputRef.current?.focus(), 0)
-  }, [])
+  const addToTable = useCallback(
+    (item: NovaPoshtaLookupPackaging) => {
+      setTableItems((prev) => [
+        ...prev,
+        {
+          ref: item.ref,
+          label: item.label,
+          description: item.description,
+          width_mm: item.width_mm,
+          length_mm: item.length_mm,
+          height_mm: item.height_mm,
+          cost: item.cost,
+        },
+      ])
+      // Update form dimensions from packaging (mm → cm) immediately
+      if (item.width_mm)
+        onChange('volumetric_width', String(parseFloat(item.width_mm) / 10))
+      if (item.length_mm)
+        onChange('volumetric_length', String(parseFloat(item.length_mm) / 10))
+      if (item.height_mm)
+        onChange('volumetric_height', String(parseFloat(item.height_mm) / 10))
+      // Save pack ref so payload builder sends it to NP API
+      onChange('pack_ref', item.ref)
+      onChange('pack_refs', [item.ref])
+      // Save packaging name and cost for display in UI
+      onChange('pack_label', item.label)
+      onChange('pack_cost', item.cost)
+      setPackagingQuery('')
+      setIsDropdownOpen(false)
+      setHighlightedIdx(-1)
+      // Focus back on search input
+      setTimeout(() => searchInputRef.current?.focus(), 0)
+    },
+    [onChange],
+  )
 
   // ── Checkbox logic ────────────────────────────────────────────────────
   const toggleCheck = useCallback((ref: string) => {
@@ -670,7 +687,7 @@ export default function OrderWaybillShipmentSection({
                         )}
                         <div className="flex gap-2 text-xs text-muted-foreground">
                           <span>
-                            {item.width_mm} × {item.length_mm} ×{' '}
+                            {item.length_mm} × {item.width_mm} ×{' '}
                             {item.height_mm} мм
                           </span>
                           {item.cost !== '0' && <span>{item.cost} ₴</span>}
@@ -712,20 +729,20 @@ export default function OrderWaybillShipmentSection({
               <div className="flex-1 grid grid-cols-3 gap-2">
                 <div>
                   <Label className="text-sm text-muted-foreground">
-                    {t('novaposhta_width')}
+                    {t('novaposhta_length')}
                   </Label>
                   <Input
-                    value={dimCm(lastAddedItem?.width_mm || '')}
+                    value={dimCm(lastAddedItem?.length_mm || '')}
                     readOnly
                     className="text-sm text-center mt-0.5"
                   />
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">
-                    {t('novaposhta_length')}
+                    {t('novaposhta_width')}
                   </Label>
                   <Input
-                    value={dimCm(lastAddedItem?.length_mm || '')}
+                    value={dimCm(lastAddedItem?.width_mm || '')}
                     readOnly
                     className="text-sm text-center mt-0.5"
                   />
@@ -949,34 +966,7 @@ export default function OrderWaybillShipmentSection({
                 {t('novaposhta_dimensions')}
               </Label>
               <div className="grid grid-cols-3 gap-2">
-                <div className="relative">
-                  <Input
-                    placeholder={t('novaposhta_width')}
-                    type="text"
-                    inputMode="decimal"
-                    value={volumetricWidth ?? '0'}
-                    onChange={(e) => {
-                      let val = e.target.value
-                        .replace(/[^\d,.]/g, '')
-                        .replace(/,+/g, ',')
-                        .replace(/\.+/g, '.')
-                        .replace(/,/g, '.')
-                      if (val.includes('.')) {
-                        const [int, dec] = val.split('.')
-                        val = int + '.' + (dec || '').slice(0, 1)
-                      }
-                      onChange('volumetric_width', val)
-                    }}
-                    onBlur={() =>
-                      !volumetricWidth && onChange('volumetric_width', '0')
-                    }
-                    disabled={disabled}
-                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                    см
-                  </span>
-                </div>
+                {/* 1. Length */}
                 <div className="relative">
                   <Input
                     placeholder={t('novaposhta_length')}
@@ -997,6 +987,35 @@ export default function OrderWaybillShipmentSection({
                     }}
                     onBlur={() =>
                       !volumetricLength && onChange('volumetric_length', '0')
+                    }
+                    disabled={disabled}
+                    className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    см
+                  </span>
+                </div>
+                {/* 2. Width */}
+                <div className="relative">
+                  <Input
+                    placeholder={t('novaposhta_width')}
+                    type="text"
+                    inputMode="decimal"
+                    value={volumetricWidth ?? '0'}
+                    onChange={(e) => {
+                      let val = e.target.value
+                        .replace(/[^\d,.]/g, '')
+                        .replace(/,+/g, ',')
+                        .replace(/\.+/g, '.')
+                        .replace(/,/g, '.')
+                      if (val.includes('.')) {
+                        const [int, dec] = val.split('.')
+                        val = int + '.' + (dec || '').slice(0, 1)
+                      }
+                      onChange('volumetric_width', val)
+                    }}
+                    onBlur={() =>
+                      !volumetricWidth && onChange('volumetric_width', '0')
                     }
                     disabled={disabled}
                     className="pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"

@@ -122,6 +122,7 @@ class OrderNovaPoshtaWaybill(Base):
     sender_profile = relationship("NovaPoshtaSenderProfile", foreign_keys=[sender_profile_id])
     created_by = relationship("User", foreign_keys=[created_by_id])
     updated_by = relationship("User", foreign_keys=[updated_by_id])
+    seats = relationship("OrderNovaPoshtaWaybillSeat", back_populates="waybill", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("np_wb_order_del", "order_id", "is_deleted"),
@@ -135,6 +136,35 @@ class OrderNovaPoshtaWaybill(Base):
     def mark_deleted(self) -> None:
         self.is_deleted = True
         self.deleted_at = datetime.utcnow()
+
+
+class OrderNovaPoshtaWaybillSeat(Base):
+    """Per-seat volumetric data for a waybill.
+
+    Stored separately so each seat's dimensions, weight, cost and
+    packaging ref are persisted alongside the TTN number.
+    Seat indices: 0 = main seat, 1 = first additional, etc.
+    """
+    __tablename__ = "order_nova_poshta_waybill_seats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    waybill_id = Column(Integer, ForeignKey("order_nova_poshta_waybills.id"), nullable=False, index=True)
+    seat_index = Column(Integer, nullable=False, default=0)
+    description = Column(String(255), default="")
+    weight = Column(String(32), default="")
+    cost = Column(String(32), default="")
+    volumetric_width = Column(String(16), default="")
+    volumetric_length = Column(String(16), default="")
+    volumetric_height = Column(String(16), default="")
+    pack_ref = Column(String(36), default="")
+    label = Column(String(255), default="")
+    cost_pack = Column(String(32), default="")
+
+    waybill = relationship("OrderNovaPoshtaWaybill", foreign_keys=[waybill_id], back_populates="seats")
+
+    __table_args__ = (
+        Index("np_seat_wb_idx", "waybill_id", "seat_index", unique=True),
+    )
 
 
 class OrderNovaPoshtaWaybillEvent(Base):

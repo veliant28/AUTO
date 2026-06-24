@@ -43,28 +43,28 @@ class NovaPoshtaWaybillPayloadBuilder:
 
         props: Dict[str, Any] = {
             # ─── Sender ─────────────────────────────────────────────────
-            "SenderRef": sender.counterparty_ref,
-            "SenderContactRef": sender.contact_ref,
-            "SenderAddressRef": sender_address_ref,
-            "SenderCityRef": sender.city_ref,
-            "SenderPhone": normalizer.phone(sender.phone),
+            "Sender": sender.counterparty_ref,
+            "ContactSender": sender.contact_ref,
+            "SenderAddress": sender_address_ref,
+            "CitySender": sender.city_ref,
+            "SendersPhone": normalizer.phone(sender.phone),
 
             # ─── Sender person info ────────────────────────────────────
-            "SenderSurname": "",
-            "SenderFirstname": "",
-            "SenderMiddleName": "",
+            "SenderSurname": sender.last_name or "",
+            "SenderFirstname": sender.first_name or "",
+            "SenderMiddleName": sender.middle_name or "",
             "SenderName": sender.contact_name,
             "SenderOrganizationName": sender.organization_name,
-            "SenderEDRPOU": sender.edrpou,
+            "SenderEDRPOU": "",
 
             # ─── Recipient ─────────────────────────────────────────────
-            "RecipientCityRef": data.recipient_city_ref,
-            "RecipientAddressRef": data.recipient_address_ref,
+            "CityRecipient": data.recipient_city_ref,
+            "RecipientAddress": data.recipient_address_ref,
             "RecipientContactName": data.recipient_name,
             "RecipientSurname": data.recipient_last_name or "",
             "RecipientFirstname": data.recipient_first_name or "",
             "RecipientMiddleName": data.recipient_middle_name or "",
-            "RecipientPhone": normalizer.phone(data.recipient_phone),
+            "RecipientsPhone": normalizer.phone(data.recipient_phone),
 
             # ─── Delivery type ─────────────────────────────────────────
             "ServiceType": NovaPoshtaWaybillPayloadBuilder._delivery_type_to_service(data.delivery_type),
@@ -90,11 +90,16 @@ class NovaPoshtaWaybillPayloadBuilder:
             "OptionsSeat": NovaPoshtaWaybillPayloadBuilder._build_options_seat(data),
         }
 
+        # ─── Top-level packaging refs (required by NP for update) ───────────
+        if data.pack_ref or (data.pack_refs and len(data.pack_refs) > 0):
+            props["PackRef"] = data.pack_ref or data.pack_refs[0]
+            props["PackCount"] = str(len(data.pack_refs or []) or 1)
+
         # ─── Counterparty refs (if known) ────────────────────────────────
         if recipient_counterparty_ref:
-            props["RecipientRef"] = recipient_counterparty_ref
+            props["Recipient"] = recipient_counterparty_ref
         if recipient_contact_ref:
-            props["RecipientContactRef"] = recipient_contact_ref
+            props["ContactRecipient"] = recipient_contact_ref
 
         # ─── ThirdPerson ref (if payer is ThirdPerson) ──────────────────
         if data.payer_type == "ThirdPerson" and third_person_ref:
@@ -235,20 +240,30 @@ class NovaPoshtaWaybillPayloadBuilder:
         """Build OptionsSeat array from seat data."""
         if data.options_seat:
             seats = []
-            for seat in data.options_seat:
+            for idx, seat in enumerate(data.options_seat):
                 seat_dict: Dict[str, Any] = {
                     "description": seat.description or "",
                     "cost": seat.cost or "0",
-                    "weight": seat.weight or "0.001",
+                    "weight": data.weight or seat.weight or "0.001",
                 }
                 if seat.pack_ref:
                     seat_dict["packRef"] = seat.pack_ref
-                if seat.volumetric_width:
+                elif data.pack_refs and idx < len(data.pack_refs):
+                    seat_dict["packRef"] = data.pack_refs[idx]
+                elif data.pack_ref:
+                    seat_dict["packRef"] = data.pack_ref
+                if seat.volumetric_width and not data.volumetric_width:
                     seat_dict["volumetricWidth"] = seat.volumetric_width
-                if seat.volumetric_length:
+                elif data.volumetric_width:
+                    seat_dict["volumetricWidth"] = data.volumetric_width
+                if seat.volumetric_length and not data.volumetric_length:
                     seat_dict["volumetricLength"] = seat.volumetric_length
-                if seat.volumetric_height:
+                elif data.volumetric_length:
+                    seat_dict["volumetricLength"] = data.volumetric_length
+                if seat.volumetric_height and not data.volumetric_height:
                     seat_dict["volumetricHeight"] = seat.volumetric_height
+                elif data.volumetric_height:
+                    seat_dict["volumetricHeight"] = data.volumetric_height
                 if seat.volumetric_volume:
                     seat_dict["volumetricVolume"] = seat.volumetric_volume
                 seats.append(seat_dict)
@@ -262,6 +277,8 @@ class NovaPoshtaWaybillPayloadBuilder:
         }
         if data.pack_ref:
             seat["packRef"] = data.pack_ref
+        elif data.pack_refs:
+            seat["packRef"] = data.pack_refs[0]
         if data.volumetric_width:
             seat["volumetricWidth"] = data.volumetric_width
         if data.volumetric_length:

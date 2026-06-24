@@ -7,6 +7,7 @@ from app.core.exceptions import (
     AppException,
     app_exception_handler,
     http_exception_handler,
+    catch_all_exception_handler,
 )
 from app.core.middleware import LoggingMiddleware, LocaleMiddleware
 from app.core.logger import logger
@@ -47,6 +48,7 @@ app.add_middleware(
 # Exception handlers
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(Exception, catch_all_exception_handler)
 
 # Routes
 app.include_router(api_router, prefix=settings.API_V1_STR)

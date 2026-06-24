@@ -147,12 +147,31 @@ class NovaPoshtaSenderService:
         return profile
 
     def delete(self, profile_id: int) -> None:
-        """Soft-delete by setting is_active=False."""
+        """Delete or deactivate a sender profile.
+
+        If no waybills reference this sender, the row is hard-deleted.
+        Otherwise, soft-delete by setting is_active=False to preserve FK integrity.
+        """
         profile = self.get_by_id(profile_id)
-        profile.is_active = False
-        profile.updated_at = datetime.utcnow()
-        self.db.flush()
-        logger.info("Deactivated NP sender profile id=%d", profile.id)
+
+        # Check if any waybills reference this sender
+        from app.models.nova_poshta import OrderNovaPoshtaWaybill
+        stmt = select(OrderNovaPoshtaWaybill).where(
+            OrderNovaPoshtaWaybill.sender_profile_id == profile_id
+        ).limit(1)
+        has_waybills = self.db.execute(stmt).first() is not None
+
+        if has_waybills:
+            # Soft-delete — keep the record for FK integrity
+            profile.is_active = False
+            profile.updated_at = datetime.utcnow()
+            self.db.flush()
+            logger.info("Deactivated NP sender profile id=%d (has waybills)", profile.id)
+        else:
+            # Hard-delete — no waybills reference this sender
+            self.db.delete(profile)
+            self.db.flush()
+            logger.info("Deleted NP sender profile id=%d", profile.id)
 
     # ─── Validation ───────────────────────────────────────────────────────────
 

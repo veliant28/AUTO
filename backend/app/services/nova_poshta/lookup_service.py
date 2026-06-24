@@ -198,6 +198,11 @@ class NovaPoshtaLookupService:
         if warehouse_type_ref:
             props["TypeOfWarehouseRef"] = warehouse_type_ref
 
+        # FindByString is unreliable for multi-digit numbers ("18", "19").
+        # Search by the first digit instead and filter locally.
+        if query.strip().isdigit() and len(query.strip()) > 1:
+            props["FindByString"] = query.strip()[0]
+
         try:
             response = await client.call(
                 MODEL_ADDRESS_GENERAL,
@@ -210,18 +215,28 @@ class NovaPoshtaLookupService:
 
         results: List[NovaPoshtaLookupWarehouse] = []
         data = response.get("data", []) if isinstance(response.get("data"), list) else []
+        seen_refs: set = set()
+
         for item in data:
-            results.append(NovaPoshtaLookupWarehouse(
-                ref=item.get("Ref", ""),
-                number=item.get("Number", ""),
-                city_ref=item.get("CityRef", ""),
-                type=item.get("TypeOfWarehouse", ""),
-                category=item.get("CategoryOfWarehouse", ""),
-                label=item.get("Description", ""),
-                description=item.get("ShortAddress", ""),
-                full_description=item.get("Description", ""),
-                post_finance=item.get("PostFinance", False) == "1",
-            ))
+            ref = item.get("Ref", "")
+            if ref not in seen_refs:
+                seen_refs.add(ref)
+                number = item.get("Number", "")
+                # For multi-digit numeric queries, filter locally by number prefix
+                if query.strip().isdigit() and len(query.strip()) > 1:
+                    if not number.startswith(query.strip()):
+                        continue
+                results.append(NovaPoshtaLookupWarehouse(
+                    ref=ref,
+                    number=number,
+                    city_ref=item.get("CityRef", ""),
+                    type=item.get("TypeOfWarehouse", ""),
+                    category=item.get("CategoryOfWarehouse", ""),
+                    label=item.get("Description", ""),
+                    description=item.get("ShortAddress", ""),
+                    full_description=item.get("Description", ""),
+                    post_finance=item.get("PostFinance", False) == "1",
+                ))
 
         return results
 

@@ -165,7 +165,7 @@ async def delete_sender(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin", "manager")),
 ):
-    """Soft-delete a sender profile."""
+    """Delete (or deactivate if used in waybills) a sender profile."""
     service = NovaPoshtaSenderService(db)
     try:
         service.delete(sender_id)
@@ -468,12 +468,12 @@ async def calculate_price(
         "SeatsAmount": str(data.seats_amount),
     }
 
-    # Build OptionsSeat
+    # Build OptionsSeat — NP API expects numeric types for these fields
     seat: dict = {
-        "weight": data.weight,
-        "volumetricWidth": data.volumetric_width or "1",
-        "volumetricLength": data.volumetric_length or "1",
-        "volumetricHeight": data.volumetric_height or "1",
+        "weight": float(data.weight),
+        "volumetricWidth": float(data.volumetric_width or "1"),
+        "volumetricLength": float(data.volumetric_length or "1"),
+        "volumetricHeight": float(data.volumetric_height or "1"),
     }
     if data.pack_ref:
         seat["packRef"] = data.pack_ref
@@ -487,27 +487,32 @@ async def calculate_price(
         }
 
     # Packaging
-    if data.pack_ref and data.pack_count:
+    if data.pack_ref:
         props["PackRef"] = data.pack_ref
-        props["PackCount"] = str(data.pack_count)
+        props["PackCount"] = str(data.pack_count or 1)
 
     logger.info("getDocumentPrice payload: %s", props)
 
     try:
-        response = await client.call("InternetDocument", "getDocumentPrice", props)
+        response = await client.call("InternetDocumentGeneral", "getDocumentPrice", props)
+        logger.info("getDocumentPrice response: %s", response)
     except NovaPoshtaApiError as e:
+        logger.warning("getDocumentPrice failed: %s", e)
         raise HTTPException(502, detail=str(e))
 
     if not response.get("data"):
+        logger.warning("getDocumentPrice returned empty data — all costs zero")
         return NovaPoshtaPriceResponse()
 
     item = response["data"][0]
-    return NovaPoshtaPriceResponse(
-        delivery_cost=item.get("Cost", "0"),
-        packaging_cost=item.get("CostPack", "0"),
-        redelivery_cost=item.get("CostRedelivery", "0"),
-        assessed_cost=item.get("AssessedCost", "0"),
+    result = NovaPoshtaPriceResponse(
+        delivery_cost=str(item.get("Cost", "0") or "0"),
+        packaging_cost=str(item.get("CostPack", "0") or "0"),
+        redelivery_cost=str(item.get("CostRedelivery", "0") or "0"),
+        assessed_cost=str(item.get("AssessedCost", "0") or "0"),
     )
+    logger.info("getDocumentPrice result: %s", result.model_dump())
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -545,6 +550,7 @@ async def create_waybill(
     except NovaPoshtaApiError as e:
         raise HTTPException(502, detail=str(e))
 
+    db.commit()
     return service._waybill_to_response(wb)
 
 
@@ -570,6 +576,7 @@ async def update_waybill(
     except NovaPoshtaApiError as e:
         raise HTTPException(502, detail=str(e))
 
+    db.commit()
     return service._waybill_to_response(wb)
 
 
@@ -593,6 +600,7 @@ async def delete_waybill(
     except NovaPoshtaApiError as e:
         raise HTTPException(502, detail=str(e))
 
+    db.commit()
     return {"message": "TTN видалено"}
 
 
@@ -614,6 +622,7 @@ async def sync_waybill_status(
     if not wb:
         raise HTTPException(404, "Waybill not found or deleted")
 
+    db.commit()
     return service._waybill_to_response(wb)
 
 

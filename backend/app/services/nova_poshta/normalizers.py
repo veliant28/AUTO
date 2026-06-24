@@ -32,17 +32,17 @@ class NovaPoshtaDataNormalizer:
 
     @staticmethod
     def weight(value: Optional[str]) -> str:
-        """Normalize weight to NP format (up to 3 decimal places)."""
+        """Normalize weight to NP format."""
         if not value:
-            return "0.001"
+            return "0.1"
         value = value.replace(",", ".")
         try:
             w = float(value)
             if w <= 0:
-                return "0.001"
-            return f"{w:.3f}"
+                return "0.1"
+            return str(w).rstrip("0").rstrip(".")
         except (ValueError, TypeError):
-            return "0.001"
+            return "0.1"
 
     @staticmethod
     def cost(value: Optional[str]) -> str:

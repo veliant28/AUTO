@@ -148,7 +148,7 @@ function SearchableSelect<T>({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full">
       <div className="relative">
         {!hideSearchIcon && (
           <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />

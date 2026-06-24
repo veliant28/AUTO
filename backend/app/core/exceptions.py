@@ -1,6 +1,9 @@
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from typing import Union
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AppException(Exception):
     def __init__(
@@ -41,6 +44,10 @@ async def app_exception_handler(request: Request, exc: AppException):
             "status": "error",
             "message": exc.message,
             "detail": exc.detail or {}
+        },
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
         }
     )
 
@@ -50,6 +57,26 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={
             "status": "error",
             "message": exc.detail,
-            "detail": {}
+            "detail": exc.detail
+        },
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
+async def catch_all_exception_handler(request: Request, exc: Exception):
+    """Catch-all handler for unhandled exceptions — ensures CORS headers on 500s."""
+    logger.exception("Unhandled exception: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": "Internal server error",
+            "detail": str(exc) if str(exc) else None
+        },
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
         }
     )

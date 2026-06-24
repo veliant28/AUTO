@@ -159,6 +159,7 @@ function SendersColumn({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nova-poshta', 'senders'] })
       toast.success(t('novaposhta_sender_deleted'))
+      setDeleteTarget(null)
     },
     onError: (err: any) =>
       toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
@@ -219,7 +220,9 @@ function SendersColumn({
                 <TableHead className="w-[140px] h-auto py-3">
                   {t('novaposhta_sender_type')}
                 </TableHead>
-                <TableHead className="h-auto py-3">{t('novaposhta_sender')}</TableHead>
+                <TableHead className="h-auto py-3">
+                  {t('novaposhta_sender')}
+                </TableHead>
                 <TableHead className="w-[100px] h-auto py-3">
                   {t('novaposhta_status')}
                 </TableHead>
@@ -456,6 +459,7 @@ function SenderFormDialog({
     address_ref: sender?.address_ref || '',
     address_label: sender?.address_label || '',
     contact_ref: sender?.contact_ref || '',
+    counterparty_ref: sender?.counterparty_ref || '',
     is_active: sender?.is_active ?? true,
   })
   const [dataFetched, setDataFetched] = useState(false)
@@ -583,6 +587,7 @@ function SenderFormDialog({
           organization_name: orgName,
           edrpou: result.edrpou || prev.edrpou,
           contact_ref: result.contact_ref || prev.contact_ref,
+          counterparty_ref: result.counterparty_ref || prev.counterparty_ref,
           city_ref: result.city_ref || prev.city_ref,
           city_label: result.city_label || prev.city_label,
           address_label: result.address_label || prev.address_label,
@@ -642,6 +647,7 @@ function SenderFormDialog({
       organization_name: form.organization_name,
       edrpou: form.edrpou,
       contact_ref: form.contact_ref,
+      counterparty_ref: form.counterparty_ref,
       city_ref: form.city_ref,
       city_label: form.city_label,
       address_ref: form.address_ref,
@@ -1004,7 +1010,7 @@ function SenderFormDialog({
                     noResultsMessage={t('novaposhta_no_results')}
                   />
                 ) : (
-                  <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
+                  <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground h-10">
                     {t('novaposhta_select_city_first')}
                   </div>
                 )}
