@@ -71,18 +71,18 @@ export default function SearchPage() {
             <div key={part.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors">
               <div className="space-y-1 min-w-0 flex-1 mr-4">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-muted-foreground">{part.article}</span>
                   {part.supplier_name && (
-                    <Badge variant="outline" className="text-[10px]">{part.supplier_name}</Badge>
+                    <Badge variant="secondary" className="text-sm px-1.5">{part.supplier_name}</Badge>
                   )}
+                  <span className="font-mono text-sm text-muted-foreground">{part.article}</span>
                 </div>
                 <p className="font-medium line-clamp-2">{part.name}</p>
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 {part.price && (
-                  <span className="font-semibold text-sm whitespace-nowrap">{fmt(part.price)} ₴</span>
+                  <span className="font-bold text-lg whitespace-nowrap">{fmt(part.price)} ₴</span>
                 )}
-                <Button variant="outline" size="sm">{t('details')}</Button>
+                <Button variant="outline" size="lg">{t('details')}</Button>
               </div>
             </div>
           ))}
