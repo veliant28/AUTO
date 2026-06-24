@@ -103,6 +103,7 @@ class OrderNovaPoshtaWaybill(Base):
 
     print_url_html = Column(String(1024), default="")
     print_url_pdf = Column(String(1024), default="")
+    printed_at = Column(DateTime, nullable=True)
 
     service_params = Column(JSON, default=dict)
 

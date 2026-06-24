@@ -540,6 +540,7 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     warning_codes: List[str] = []
     info_codes: List[str] = []
     can_edit: bool = True
+    is_printed: bool = False
     last_sync_error: str = ""
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None

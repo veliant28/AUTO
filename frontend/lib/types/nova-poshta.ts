@@ -509,6 +509,7 @@ export interface OrderNovaPoshtaWaybillResponse {
   warning_codes: string[]
   info_codes: string[]
   can_edit: boolean
+  is_printed: boolean
   last_sync_error: string
   is_deleted: boolean
   deleted_at: string | null

@@ -178,6 +178,7 @@ export default function OrderWaybillModal({
   })
 
   const waybill = detail?.waybill
+  const isPrinted = waybill?.is_printed ?? false
   const summary = detail?.summary
   const isEdit = !!waybill && !waybill.is_deleted
 
@@ -1260,7 +1261,9 @@ export default function OrderWaybillModal({
                 selectedAddressRef={
                   form.sender_address_ref || selectedSender?.address_ref || ''
                 }
-                disabled={isPending || isPackagingMode || isServicesMode}
+                disabled={
+                  isPending || isPackagingMode || isServicesMode || isPrinted
+                }
                 onSenderChange={handleSenderChange}
                 onAddressChange={handleSenderAddressChange}
               />
@@ -1312,7 +1315,7 @@ export default function OrderWaybillModal({
                     onCancel={handleCancel}
                     onSave={handleSave}
                     onFieldBlur={handleFieldBlur}
-                    disabled={isPending || isServicesMode}
+                    disabled={isPending || isServicesMode || isPrinted}
                     isEdit={isEdit}
                     waybill={waybill}
                     form={form}
@@ -1350,7 +1353,7 @@ export default function OrderWaybillModal({
                   counterparties={counterparties}
                   counterpartiesLoading={counterpartiesLoading}
                   selectedCounterparty={selectedCounterparty}
-                  disabled={isPending}
+                  disabled={isPending || isPrinted}
                   onFieldChange={handleFormChange}
                   onCityQueryChange={setCityQuery}
                   onCitySelect={handleCitySelect}
@@ -1371,7 +1374,12 @@ export default function OrderWaybillModal({
                   afterpaymentAmount={form.afterpayment_amount}
                   cost={form.cost}
                   syncError={waybill?.last_sync_error || ''}
-                  disabled={isPending || isPackagingMode || !!editingServiceRef}
+                  disabled={
+                    isPending ||
+                    isPackagingMode ||
+                    !!editingServiceRef ||
+                    isPrinted
+                  }
                   isServicesMode={isServicesMode}
                   onServicesModeChange={setIsServicesMode}
                   senderProfileId={form.sender_profile_id}

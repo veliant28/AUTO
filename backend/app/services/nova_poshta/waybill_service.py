@@ -567,6 +567,10 @@ class NovaPoshtaWaybillService:
         sender = self.sender_service.get_by_id(wb.sender_profile_id)
         api_token = sender.api_token
 
+        # ── Set printed_at on first print (blocks editing afterwards) ────
+        if not wb.printed_at:
+            wb.printed_at = datetime.utcnow()
+
         # ── Маркировка (наклейка 6 шт на А4) ────────────────────────────────
         if document_type == "markings":
             url = (
@@ -759,6 +763,7 @@ class NovaPoshtaWaybillService:
             warning_codes=wb.warning_codes or [],
             info_codes=wb.info_codes or [],
             can_edit=wb.can_edit and not wb.is_deleted,
+            is_printed=wb.printed_at is not None,
             last_sync_error=wb.last_sync_error or "",
             is_deleted=wb.is_deleted,
             deleted_at=wb.deleted_at,
