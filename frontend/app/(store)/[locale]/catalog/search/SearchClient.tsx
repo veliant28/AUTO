@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Input } from '@/components/ui/input';
@@ -82,7 +83,11 @@ export default function SearchPage() {
                 {part.price && (
                   <span className="font-bold text-lg whitespace-nowrap">{fmt(part.price)} ₴</span>
                 )}
-                <Button variant="outline" size="lg">{t('details')}</Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link href={`/catalog/${part.article}`}>
+                    {t('details')} <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </Button>
               </div>
             </div>
           ))}
