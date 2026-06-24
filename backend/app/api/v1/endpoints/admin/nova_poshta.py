@@ -670,6 +670,7 @@ async def print_waybill(
     if not result.url:
         raise HTTPException(502, "Не вдалося отримати посилання для друку")
 
+    db.commit()
     return result
 
 
