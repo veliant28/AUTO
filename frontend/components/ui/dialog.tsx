@@ -268,3 +268,8 @@ export {
   DialogDescription,
   DialogFooter,
 }
+
+/** Hook for accessing DialogContext — used by drawer etc. */
+export function useDialogContext() {
+  return React.useContext(DialogContext)
+}
