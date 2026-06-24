@@ -79,18 +79,53 @@ class NovaPoshtaWaybillService:
         return self.db.execute(stmt).scalar_one_or_none()
 
     def get_order_summary(self, order_id: int) -> NovaPoshtaWaybillSummary:
-        """Get lightweight summary of waybill status for an order."""
-        wb = self.get_order_waybill(order_id)
-        if not wb:
-            return NovaPoshtaWaybillSummary(exists=False)
-        return NovaPoshtaWaybillSummary(
-            exists=True,
-            is_deleted=wb.is_deleted,
-            np_number=wb.np_number,
-            status_code=wb.status_code,
-            status_text=wb.status_text,
-            has_sync_error=bool(wb.last_sync_error),
+        """Get lightweight summary of waybill status for an order.
+
+        Returns the most recent waybill for the order — even if deleted —
+        so the orders table can show a red badge with the old TTN number.
+        """
+        # Try active (non-deleted) first
+        active = (
+            self.db.execute(
+                select(OrderNovaPoshtaWaybill)
+                .where(
+                    OrderNovaPoshtaWaybill.order_id == order_id,
+                    OrderNovaPoshtaWaybill.is_deleted == False,
+                )
+                .order_by(OrderNovaPoshtaWaybill.created_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
         )
+        if active:
+            return NovaPoshtaWaybillSummary(
+                exists=True,
+                is_deleted=False,
+                np_number=active.np_number,
+                status_code=active.status_code,
+                status_text=active.status_text,
+                has_sync_error=bool(active.last_sync_error),
+            )
+
+        # Fall back to most recent waybill (may be deleted)
+        last = (
+            self.db.execute(
+                select(OrderNovaPoshtaWaybill)
+                .where(OrderNovaPoshtaWaybill.order_id == order_id)
+                .order_by(OrderNovaPoshtaWaybill.created_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+        )
+        if last:
+            return NovaPoshtaWaybillSummary(
+                exists=True,
+                is_deleted=last.is_deleted,
+                np_number=last.np_number,
+                status_code=last.status_code,
+                status_text=last.status_text,
+                has_sync_error=bool(last.last_sync_error),
+            )
+
+        return NovaPoshtaWaybillSummary(exists=False)
 
     def get_order_waybill_detail(self, order_id: int) -> OrderNovaPoshtaWaybillDetailResponse:
         """Get full waybill detail for an order, including tracking events."""
