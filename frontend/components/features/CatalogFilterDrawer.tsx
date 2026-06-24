@@ -42,7 +42,7 @@ export default function CatalogFilterDrawer({ filters, onChange, onClear, active
           )}
         </Button>
       </DrawerTrigger>
-      <DrawerContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DrawerContent>
         <div className="mx-auto w-full max-w-md px-5 py-5 space-y-4 overflow-y-auto">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-lg">{t('filters_sort')}</h3>
