@@ -71,8 +71,8 @@ export default function SearchPage() {
             <div key={part.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors">
               <div className="space-y-1 min-w-0 flex-1 mr-4">
                 <div className="flex items-center gap-2">
-                  {part.supplier_name && (
-                    <Badge variant="secondary" className="text-sm px-1.5">{part.supplier_name}</Badge>
+                  {part.brand && (
+                    <Badge variant="secondary" className="text-sm px-1.5">{part.brand}</Badge>
                   )}
                   <span className="font-mono text-sm text-muted-foreground">{part.article}</span>
                 </div>
