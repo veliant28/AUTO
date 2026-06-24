@@ -563,6 +563,23 @@ export default function OrderWaybillModal({
                 ref: waybill.options_seat[0].pack_ref,
                 label: waybill.options_seat[0].pack_label || '',
                 cost: waybill.options_seat[0].pack_cost || '',
+                width_mm: waybill.options_seat[0].volumetric_width
+                  ? String(
+                      parseFloat(waybill.options_seat[0].volumetric_width) * 10,
+                    )
+                  : '',
+                length_mm: waybill.options_seat[0].volumetric_length
+                  ? String(
+                      parseFloat(waybill.options_seat[0].volumetric_length) *
+                        10,
+                    )
+                  : '',
+                height_mm: waybill.options_seat[0].volumetric_height
+                  ? String(
+                      parseFloat(waybill.options_seat[0].volumetric_height) *
+                        10,
+                    )
+                  : '',
               },
             ]
           : [],
