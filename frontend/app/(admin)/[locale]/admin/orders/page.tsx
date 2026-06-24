@@ -674,7 +674,7 @@ export default function AdminOrdersPage() {
                   {showHistory ? (
                     <div className="flex items-center gap-3">
                       <DialogTitle className="text-2xl font-bold tracking-tight">
-                        {t('order_history')}: {orderDetail.order_number}
+                        {orderDetail.order_number}
                       </DialogTitle>
                     </div>
                   ) : (
@@ -682,7 +682,7 @@ export default function AdminOrdersPage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
                           <DialogTitle className="text-2xl font-bold tracking-tight">
-                            {t('order_details')}: {orderDetail.order_number}
+                            {orderDetail.order_number}
                           </DialogTitle>
                           <Badge
                             className={`${ORDER_STATUS_LABELS[orderDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
