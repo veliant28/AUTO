@@ -19859,3 +19859,13 @@ TypeError: 'label' is an invalid keyword argument for OrderNovaPoshtaWaybillSeat
 2026-06-24 08:34:38 - root - INFO - Health check called
 2026-06-24 08:35:08 - root - INFO - Health check called
 2026-06-24 09:56:29 - root - INFO - Health check called
+2026-06-24 09:56:59 - root - INFO - Health check called
+2026-06-24 09:57:14 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-24 09:57:14 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-24 09:57:14 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/searchSettlementStreets: success=false, errors=['StreetName has invalid characters'], codes=['20000500676'], msg=Помилка StreetName has invalid characters; Параметр назва вулиці містить неприпустимі символи
+2026-06-24 09:57:14 - app.services.nova_poshta.lookup_service - WARNING - Street search failed: Помилка StreetName has invalid characters; Параметр назва вулиці містить неприпустимі символи
+2026-06-24 09:57:14 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-24 09:57:29 - root - INFO - Health check called
+2026-06-24 09:57:59 - root - INFO - Health check called
+2026-06-24 09:58:29 - root - INFO - Health check called
+2026-06-24 09:58:45 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice payload: {'CitySender': 'db5c888c-391c-11dd-90d9-001a92567626', 'CityRecipient': 'db5c888c-391c-11dd-90d9-001a92567626', 'Weight': '30', 'ServiceType': 'WarehouseWarehouse', 'Cost': '50000', 'CargoType': 'Parcel', 'SeatsAmount': '1', 'OptionsSeat': [{'weight': 30.0, 'volumetricWidth': 35.0, 'volumetricLength': 60.0, 'volumetricHeight': 28.5, 'packRef': '36c461c8-dcd6-11e8-ad0d-005056b24375'}], 'PackRef': '36c461c8-dcd6-11e8-ad0d-005056b24375', 'PackCount': '1'}

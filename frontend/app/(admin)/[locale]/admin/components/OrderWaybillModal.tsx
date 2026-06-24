@@ -558,7 +558,6 @@ export default function OrderWaybillModal({
         volumetric_width: waybill.options_seat?.[0]?.volumetric_width || '',
         volumetric_length: waybill.options_seat?.[0]?.volumetric_length || '',
         volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
-        pack_items: buildPackItemsFromSeat(waybill.options_seat?.[0]),
         options_seat:
           hasAfterpayment && seats > 1
             ? (Array.from({ length: seats }, (_, i) => ({
@@ -574,9 +573,6 @@ export default function OrderWaybillModal({
                         waybill.options_seat[i].volumetric_height,
                       pack_refs: waybill.options_seat[i].pack_refs,
                       cargo_type: waybill.options_seat[i].cargo_type,
-                      pack_items: buildPackItemsFromSeat(
-                        waybill.options_seat[i],
-                      ),
                     }
                   : {}),
                 cost: perSeatCost,
@@ -590,11 +586,10 @@ export default function OrderWaybillModal({
                 volumetric_height: s.volumetric_height,
                 pack_refs: s.pack_refs,
                 cargo_type: s.cargo_type,
-                pack_items: buildPackItemsFromSeat(s),
               })) as any) || undefined,
         service_refs: waybill.service_refs || [],
         service_params: (waybill.service_params as any) || {},
-      } as any)
+      })
       setThirdPersonRef(waybill.third_person_ref || '')
       formInitialized.current = true
       lastValidatedCost.current = syncedCost
