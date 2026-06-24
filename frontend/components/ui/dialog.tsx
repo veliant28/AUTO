@@ -28,14 +28,17 @@ const DialogContext = React.createContext<DialogContextValue>({
 // ── Root ─────────────────────────────────────────────────────────────────
 
 function Dialog({
-  open,
-  onOpenChange,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
   children,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   children: React.ReactNode
 }) {
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const open = openProp !== undefined ? openProp : internalOpen
+  const onOpenChange = onOpenChangeProp ?? setInternalOpen
   return (
     <DialogContext.Provider value={{ open, onOpenChange }}>
       {children}
