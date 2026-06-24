@@ -259,6 +259,11 @@ export default function OrderWaybillPaymentSection({
       'service_names',
       remaining.map((s) => s.description),
     )
+    // If AfterpaymentOnGoodsCost was removed, clear the afterpayment amount
+    if (checkedServiceRefs.has('AfterpaymentOnGoodsCost')) {
+      onChange('afterpayment_amount', undefined)
+      onChange('cost', '0')
+    }
   }, [selectedServices, checkedServiceRefs, onChange])
 
   // ── Keyboard navigation for search dropdown ──────────────────────────────
