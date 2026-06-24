@@ -5,11 +5,13 @@ import { useMessages, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Package, ChevronRight, ArrowLeft } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { novaPoshtaApi } from '@/lib/api/nova-poshta';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge';
 import CatalogPagination from '@/components/features/CatalogPagination';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUS_LABELS } from '@/lib/constants';
@@ -22,18 +24,20 @@ const LOCALE_MAP: Record<string, string> = { ru: 'ru-RU', ua: 'uk-UA', en: 'en-U
 function OrdersSkeleton() {
   return (
     <div className="rounded-lg border bg-card divide-y">
-      <div className="grid grid-cols-5 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50">
+      <div className="grid grid-cols-6 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-20" />
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-20" />
         <Skeleton className="h-4 w-24" />
       </div>
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="grid grid-cols-5 gap-4 px-6 py-4 items-center">
+        <div key={i} className="grid grid-cols-6 gap-4 px-6 py-4 items-center">
           <Skeleton className="h-6 w-16" />
           <Skeleton className="h-6 w-24 rounded-md" />
           <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-6 w-20" />
           <Skeleton className="h-6 w-20" />
           <Skeleton className="h-10 w-28 rounded-md" />
         </div>
@@ -80,6 +84,17 @@ export default function OrdersPage() {
     },
     enabled: isAuthenticated,
   });
+
+  // ── NP waybill summaries for the TTN column ───────────────────────────────
+  const orderIds = data?.items?.map((o: any) => o.id) ?? []
+  const npSummaries = useQueries({
+    queries: orderIds.map((id: number) => ({
+      queryKey: ['np-summary', id],
+      queryFn: () => novaPoshtaApi.getOrderWaybillSummary(id).then((r) => r.data),
+      staleTime: 30000,
+    })),
+    combine: (results) => results.map((r) => r.data ?? null),
+  })
 
   const handlePageChange = useCallback((nextPage: number) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
@@ -148,27 +163,38 @@ export default function OrdersPage() {
       ) : (
         <>
           <div className="rounded-lg border bg-card">
-            <div className="grid grid-cols-5 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50 rounded-t-lg border-b">
+            <div className="grid grid-cols-6 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground bg-muted/50 rounded-t-lg border-b">
               <span>{t('order_number')}</span>
               <span>{t('status')}</span>
               <span>{t('order_time')}</span>
               <span>{t('order_sum')}</span>
+              <span>{t('novaposhta_ttn')}</span>
               <span></span>
             </div>
             <div className="divide-y">
-              {data.items.map((order: any) => {
+              {data.items.map((order: any, idx: number) => {
                 const statusInfo = ORDER_STATUS_LABELS[order.status] || { labelKey: 'order_pending', className: 'bg-gray-500 text-white' };
                 const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
                   day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
                 });
+                const summary = npSummaries[idx] ?? null;
                 return (
-                  <Link key={order.id} href={`/orders/${order.id}`} className="grid grid-cols-5 gap-4 px-6 py-4 items-center hover:bg-muted/50 transition-colors">
+                  <Link key={order.id} href={`/orders/${order.id}`} className="grid grid-cols-6 gap-4 px-6 py-4 items-center hover:bg-muted/50 transition-colors">
                     <span className="font-bold font-mono">{order.order_number || `#${order.id}`}</span>
                     <Badge className={`${statusInfo.className} border-0 text-sm w-fit`}>
                       {t(statusInfo.labelKey)}
                     </Badge>
                     <span className="text-sm text-muted-foreground">{date}</span>
                     <span className="font-semibold">{fmt(Number(order.total))} ₴</span>
+                    {summary ? (
+                      <NpWaybillBadge
+                        npNumber={summary.np_number}
+                        exists={summary.exists}
+                        isDeleted={summary.is_deleted}
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                     <Button variant="outline" size="lg" className="gap-2 w-fit" asChild>
                       <span>{t('details')} <ChevronRight className="w-4 h-4" /></span>
                     </Button>
