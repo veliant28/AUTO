@@ -152,10 +152,9 @@ async def update_order(
 
         # Recalculate total after quantity changes
         db.flush()
-        remaining = db.query(OrderItem).options(joinedload(OrderItem.part)).filter(
-            OrderItem.order_id == order_id
-        ).all()
-        order.total = sum(float(i.quantity) * float(i.price) for i in remaining)
+        order.total = sum(
+            float(i.quantity) * float(i.price) for i in order.items
+        )
 
     if data.phone is not None and order.phone != data.phone:
         changes.append(f"телефон: {order.phone} → {data.phone}")
