@@ -1,4 +1,9 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios'
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type AxiosError,
+} from 'axios'
 import { STORAGE_KEYS } from '@/lib/constants'
 import type { ApiClientConfig } from './types'
 
@@ -16,9 +21,17 @@ export class ApiClient {
     })
 
     this.client.interceptors.request.use((config) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TOKEN) : null
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem(STORAGE_KEYS.TOKEN)
+          : null
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+      }
+      // Send current UI language so backend can localize error messages
+      if (typeof window !== 'undefined') {
+        const lang = document.documentElement.lang || 'ru'
+        config.headers['Accept-Language'] = lang
       }
       return config
     })
@@ -60,19 +73,33 @@ export class ApiClient {
     this.unauthorizedHandled = false
   }
 
-  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  get<T = any>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.client.get<T>(url, config)
   }
 
-  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.client.post<T>(url, data, config)
   }
 
-  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.client.put<T>(url, data, config)
   }
 
-  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  delete<T = any>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(url, config)
   }
 }

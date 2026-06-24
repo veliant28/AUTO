@@ -545,50 +545,58 @@ class NovaPoshtaWaybillService:
     async def print_waybill(
         self,
         waybill_id: int,
-        document_type: str = "html",
+        document_type: str = "ttn",
         user_id: Optional[int] = None,
     ) -> PrintResult:
-        """Generate a printable document for a waybill."""
+        """Generate a printable document for a waybill using direct NP URLs.
+
+        document_type:
+          - "markings" — generate markings/label (stickers 6 per A4), direct URL
+          - "ttn"      — generate ТТН (express waybill) in PDF, direct URL
+          - "pdf"      — alias for "ttn" (backward compat)
+          - "html"     — generate ТТН in HTML (backward compat)
+        """
         wb = self.get_waybill(waybill_id)
         if wb.is_deleted:
             raise NovaPoshtaValidationError("TTN видалено, друк неможливий")
 
-        if not wb.np_ref:
-            # Use the number instead if ref is missing
+        ref = wb.np_ref or wb.np_number
+        if not ref:
             raise NovaPoshtaValidationError("Ref відсутній для друку")
 
         sender = self.sender_service.get_by_id(wb.sender_profile_id)
-        client = NovaPoshtaApiClient(sender.api_token)
+        api_token = sender.api_token
 
-        payload = self.payload_builder.build_print_payload([wb.np_ref], document_type)
-
-        try:
-            response = await client.call(MODEL_INTERNET_DOCUMENT_GENERAL, "generateReport", payload)
-        except NovaPoshtaApiError as e:
+        # ── Маркировка (наклейка 6 шт на А4) ────────────────────────────────
+        if document_type == "markings":
+            url = (
+                f"https://my.novaposhta.ua/orders/printMarking85x85"
+                f"/orders[]/{ref}/type/html/apiKey/{api_token}"
+            )
+            content_type = "text/html"
             self._log_event(
                 order_id=wb.order_id,
                 waybill_id=wb.id,
-                event_type=OrderNovaPoshtaWaybillEvent.EVENT_ERROR,
-                message=str(e) or "Помилка друку TTN",
+                event_type=OrderNovaPoshtaWaybillEvent.EVENT_PRINT,
+                message=f"Друк маркування {wb.np_number}",
                 user_id=user_id,
             )
-            raise
+            return PrintResult(url=url, content_type=content_type)
 
-        data_list = response.get("data", [])
-        url = ""
-        if data_list and isinstance(data_list[0], dict):
-            url = data_list[0].get("DocumentRef", "") or data_list[0].get("Url", "")
+        # ── ТТН (друкована форма експрес-накладної) ─────────────────────────
+        # Use direct URL instead of API call (more reliable, no date issues)
+        api_type = "pdf" if document_type in ("ttn", "pdf") else "html"
+        url = (
+            f"https://my.novaposhta.ua/orders/printDocument"
+            f"/orders[]/{ref}/type/{api_type}/apiKey/{api_token}"
+        )
+        content_type = "application/pdf" if api_type == "pdf" else "text/html"
 
-        # Also check for direct URL reference
-        if not url:
-            url = response.get("info", "") or ""
-
-        # Update print URLs on waybill
-        if document_type == "html" and url:
+        # Save URL on waybill for backward compat
+        if api_type == "html":
             wb.print_url_html = url
-        elif document_type == "pdf" and url:
+        elif api_type == "pdf":
             wb.print_url_pdf = url
-
         self.db.flush()
 
         self._log_event(
@@ -599,7 +607,6 @@ class NovaPoshtaWaybillService:
             user_id=user_id,
         )
 
-        content_type = "application/pdf" if document_type == "pdf" else "text/html"
         return PrintResult(url=url, content_type=content_type)
 
     # ─── Tracking events ──────────────────────────────────────────────────────
@@ -630,6 +637,40 @@ class NovaPoshtaWaybillService:
                 events.append(event)
 
         return events
+
+    def list_tracking_records(self, waybill_id: int) -> List[WaybillTrackingEvent]:
+        """Get tracking status history from DB events, oldest first."""
+        stmt = (
+            select(OrderNovaPoshtaWaybillEvent)
+            .where(
+                OrderNovaPoshtaWaybillEvent.waybill_id == waybill_id,
+                OrderNovaPoshtaWaybillEvent.event_type.in_([
+                    OrderNovaPoshtaWaybillEvent.EVENT_SYNC,
+                    OrderNovaPoshtaWaybillEvent.EVENT_CREATE,
+                ]),
+                OrderNovaPoshtaWaybillEvent.status_code != "",
+            )
+            .order_by(OrderNovaPoshtaWaybillEvent.created_at.asc())
+        )
+        db_events = list(self.db.execute(stmt).scalars().all())
+
+        result: List[WaybillTrackingEvent] = []
+        for ev in db_events:
+            raw = ev.raw_response or {}
+            event_at = raw.get("Date", "") or raw.get("DateScan", "") or str(ev.created_at) if ev.created_at else ""
+            result.append(WaybillTrackingEvent(
+                id=ev.id,
+                event_type=ev.event_type,
+                status_code=ev.status_code,
+                status_text=ev.status_text,
+                location=raw.get("CityRecipient", "") or raw.get("CitySender", ""),
+                warehouse=raw.get("WarehouseRecipient", "") or raw.get("WarehouseSender", ""),
+                note="",
+                comment="",
+                event_at=event_at,
+                synced_at=str(ev.created_at) if ev.created_at else "",
+            ))
+        return result
 
     # ─── Internal helpers ─────────────────────────────────────────────────────
 
@@ -678,7 +719,7 @@ class NovaPoshtaWaybillService:
         sender = wb.sender_profile
 
         events = self.list_events(wb.id)
-        tracking_events = self.get_tracking_events(wb.id)
+        tracking_events = self.list_tracking_records(wb.id)
 
         return OrderNovaPoshtaWaybillResponse(
             id=wb.id,

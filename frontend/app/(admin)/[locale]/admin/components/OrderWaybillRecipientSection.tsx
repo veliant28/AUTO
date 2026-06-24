@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { User, Search, Loader2, Warehouse, MoreHorizontal } from 'lucide-react'
+import { User, Loader2, Warehouse, MoreHorizontal } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
@@ -442,7 +442,6 @@ export default function OrderWaybillRecipientSection({
                 value={recipientPhone}
                 onChange={(v) => onFieldChange('recipient_phone', v)}
                 disabled={disabled}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
             )}
           </div>
@@ -571,6 +570,7 @@ export default function OrderWaybillRecipientSection({
                 noResultsMessage={t('novaposhta_cities_not_found')}
                 typeToSearchMessage={t('novaposhta_type_to_search_city')}
                 disabled={disabled}
+                hideSearchIcon
               />
             )}
           </div>
@@ -595,7 +595,6 @@ export default function OrderWaybillRecipientSection({
             ) : (
               <div ref={addressContainerRef} className="relative">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <Input
                     placeholder={t('novaposhta_address_placeholder')}
                     value={addressDisplay}
@@ -604,7 +603,6 @@ export default function OrderWaybillRecipientSection({
                       if (addressQuery.length >= 1) setAddressOpen(true)
                     }}
                     onKeyDown={handleAddressKeyDown}
-                    className="pl-8"
                     disabled={disabled || !recipientCityLabel}
                     autoComplete="off"
                   />

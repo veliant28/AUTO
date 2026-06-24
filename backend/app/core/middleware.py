@@ -2,10 +2,14 @@ from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import time
+from contextvars import ContextVar
 
 # Supported locales: Ukrainian, Russian, English
 SUPPORTED_LOCALES = ("ua", "ru", "en")
 DEFAULT_LOCALE = "ru"
+
+# Async-safe locale context — can be read from any service layer
+locale_ctx: ContextVar[str] = ContextVar("locale", default=DEFAULT_LOCALE)
 
 # Map Accept-Language values to our locales
 _LOCALE_ALIASES = {
@@ -64,7 +68,9 @@ class LocaleMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         accept_lang = request.headers.get("accept-language", "")
-        request.state.locale = parse_accept_language(accept_lang)
+        locale = parse_accept_language(accept_lang)
+        request.state.locale = locale
+        locale_ctx.set(locale)
         return await call_next(request)
 
 

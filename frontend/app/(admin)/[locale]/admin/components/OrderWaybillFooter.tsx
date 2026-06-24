@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { Trash2, RefreshCw, Printer, Clock, Loader2 } from 'lucide-react'
+import { Trash2, Printer, Clock, Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -17,8 +17,6 @@ interface Props {
   canEdit: boolean
   /** Whether any async operation is in progress */
   isPending: boolean
-  /** Loading state for sync */
-  isSyncing: boolean
   /** Loading state for delete */
   isDeleting: boolean
   /** Loading state for print */
@@ -30,9 +28,8 @@ interface Props {
   /** Callbacks */
   onSave: () => void
   onDelete: () => void
-  onSync: () => void
-  onPrintHtml: () => void
-  onPrintPdf: () => void
+  onPrintMarkings: () => void
+  onPrintTtn: () => void
   onCancel: () => void
   onTracking?: () => void
 }
@@ -41,21 +38,19 @@ export default function OrderWaybillFooter({
   isEdit,
   canEdit,
   isPending,
-  isSyncing,
   isDeleting,
   isPrinting,
   onSave,
   onDelete,
-  onSync,
-  onPrintHtml,
-  onPrintPdf,
+  onPrintMarkings,
+  onPrintTtn,
   onCancel,
   onTracking,
   isTrackingView = false,
   disabled = false,
 }: Props) {
   const t = useTranslations('admin')
-  const isBusy = isPending || isSyncing || isDeleting || isPrinting || disabled
+  const isBusy = isPending || isDeleting || isPrinting || disabled
 
   return (
     <div className="flex-shrink-0 p-4 pt-3 flex flex-wrap items-start justify-between gap-3">
@@ -63,7 +58,7 @@ export default function OrderWaybillFooter({
       <div className="flex items-center gap-2">
         {isTrackingView ? (
           <Button variant="outline" onClick={onTracking} disabled={isBusy}>
-            <Clock className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
             {t('novaposhta_tracking_back')}
           </Button>
         ) : (
@@ -109,34 +104,13 @@ export default function OrderWaybillFooter({
             )}
 
             {isEdit && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-1.5"
-                    onClick={onSync}
-                    disabled={isBusy}
-                  >
-                    {isSyncing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
-                    {t('novaposhta_waybill_sync_short')}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('novaposhta_waybill_sync')}</TooltipContent>
-              </Tooltip>
-            )}
-
-            {isEdit && (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       className="gap-1.5"
-                      onClick={onPrintHtml}
+                      onClick={onPrintMarkings}
                       disabled={isBusy}
                     >
                       {isPrinting ? (
@@ -144,17 +118,19 @@ export default function OrderWaybillFooter({
                       ) : (
                         <Printer className="w-4 h-4" />
                       )}
-                      {t('novaposhta_print_html')}
+                      {t('novaposhta_print_markings')}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{t('novaposhta_print_html')}</TooltipContent>
+                  <TooltipContent>
+                    {t('novaposhta_print_markings')}
+                  </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       className="gap-1.5"
-                      onClick={onPrintPdf}
+                      onClick={onPrintTtn}
                       disabled={isBusy}
                     >
                       {isPrinting ? (
@@ -162,10 +138,10 @@ export default function OrderWaybillFooter({
                       ) : (
                         <Printer className="w-4 h-4" />
                       )}
-                      {t('novaposhta_print_pdf')}
+                      {t('novaposhta_print_ttn')}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{t('novaposhta_print_pdf')}</TooltipContent>
+                  <TooltipContent>{t('novaposhta_print_ttn')}</TooltipContent>
                 </Tooltip>
               </>
             )}
@@ -174,15 +150,17 @@ export default function OrderWaybillFooter({
       </div>
 
       {/* Right group */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={onCancel} disabled={isBusy}>
-          {t('cancel')}
-        </Button>
-        <Button className="gap-1.5" onClick={onSave} disabled={isBusy}>
-          {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-          {isEdit ? t('novaposhta_save') : t('novaposhta_waybill_create')}
-        </Button>
-      </div>
+      {!isTrackingView && (
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={isBusy}>
+            {t('cancel')}
+          </Button>
+          <Button className="gap-1.5" onClick={onSave} disabled={isBusy}>
+            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isEdit ? t('novaposhta_save') : t('novaposhta_waybill_create')}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

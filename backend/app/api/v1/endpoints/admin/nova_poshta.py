@@ -648,7 +648,7 @@ async def sync_order_waybill_status(
 @router.post("/waybills/{waybill_id}/print", response_model=PrintResult)
 async def print_waybill(
     waybill_id: int,
-    document_type: str = Query("html", regex="^(html|pdf)$"),
+    document_type: str = Query("ttn", regex="^(markings|ttn|html|pdf)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin", "manager")),
 ):

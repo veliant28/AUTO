@@ -162,7 +162,10 @@ export const novaPoshtaApi = {
       `/admin/nova-poshta/orders/${orderId}/waybill/sync`,
     ),
 
-  printWaybill: (waybillId: number, documentType: 'html' | 'pdf' = 'html') =>
+  printWaybill: (
+    waybillId: number,
+    documentType: 'markings' | 'ttn' | 'html' | 'pdf' = 'ttn',
+  ) =>
     apiClient.post<PrintResult>(
       `/admin/nova-poshta/waybills/${waybillId}/print`,
       null,

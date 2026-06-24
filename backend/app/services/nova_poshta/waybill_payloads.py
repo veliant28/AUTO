@@ -209,10 +209,14 @@ class NovaPoshtaWaybillPayloadBuilder:
 
         document_type: "pdf" or "html"
         """
-        return {
+        payload: dict = {
             "DocumentRefs[]": waybill_refs,
             "Type": document_type,
         }
+        # NP API requires DateTime for PDF generation
+        if document_type == "pdf":
+            payload["DateTime"] = datetime.now().strftime("%d.%m.%Y")
+        return payload
 
     @staticmethod
     def build_check_possible_payload(

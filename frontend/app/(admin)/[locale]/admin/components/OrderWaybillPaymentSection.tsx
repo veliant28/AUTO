@@ -691,7 +691,7 @@ export default function OrderWaybillPaymentSection({
               {t('novaposhta_payment_summary_label')}
             </Label>
             <div
-              className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm"
+              className="flex flex-col gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm"
               style={{ minHeight: '210px' }}
             >
               {/* 1. Afterpayment / COD service — the selected service name + amount */}
@@ -799,7 +799,7 @@ export default function OrderWaybillPaymentSection({
                 </div>
               )}
 
-              <Separator className="my-1" />
+              <Separator className="my-1 mt-auto" />
 
               {/* Total — always visible */}
               <div className="flex items-center justify-between gap-2">
