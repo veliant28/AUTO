@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogTrigger,
   DialogClose,
-  DialogTitle,
+  DialogContent,
   DialogOverlay,
+  DialogTitle,
 } from "@/components/ui/dialog";
 
 const Drawer = Dialog;
@@ -16,29 +16,22 @@ const DrawerTrigger = DialogTrigger;
 const DrawerClose = DialogClose;
 
 const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+  HTMLDivElement,
+  React.ComponentProps<typeof DialogContent>
 >(({ className, children, ...props }, ref) => (
-  <DialogPrimitive.Portal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      forceMount
-      className={cn(
-        'fixed z-50 flex flex-col bg-background border shadow-lg',
-        'bottom-0 left-0 right-0 top-auto max-w-full',
-        'rounded-t-lg',
-        'data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
-        className,
-      )}
-      aria-describedby={undefined}
-      {...props}
-    >
-      <DialogTitle className="sr-only">Drawer</DialogTitle>
-      <div className="mx-auto mt-3 h-1.5 w-[40px] shrink-0 rounded-full bg-muted" />
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPrimitive.Portal>
+  <DialogContent
+    ref={ref}
+    className={cn(
+      'fixed z-50 flex flex-col bg-background border shadow-lg',
+      'bottom-0 left-0 right-0 top-auto max-w-full',
+      'rounded-t-lg',
+      className,
+    )}
+    {...props}
+  >
+    <div className="mx-auto mt-3 h-1.5 w-[40px] shrink-0 rounded-full bg-muted" />
+    {children}
+  </DialogContent>
 ));
 DrawerContent.displayName = "DrawerContent";
 
