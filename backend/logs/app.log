@@ -19952,18 +19952,3 @@ TypeError: 'label' is an invalid keyword argument for OrderNovaPoshtaWaybillSeat
 2026-06-24 08:46:16 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
 2026-06-24 08:46:41 - root - INFO - Health check called
 2026-06-24 08:47:12 - root - INFO - Health check called
-2026-06-24 08:47:17 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice payload: {'CitySender': 'db5c888c-391c-11dd-90d9-001a92567626', 'CityRecipient': 'db5c888c-391c-11dd-90d9-001a92567626', 'Weight': '15', 'ServiceType': 'WarehouseWarehouse', 'Cost': '50000', 'CargoType': 'Parcel', 'SeatsAmount': '1', 'OptionsSeat': [{'weight': 15.0, 'volumetricWidth': 34.0, 'volumetricLength': 40.0, 'volumetricHeight': 28.5, 'packRef': '2200f200-dcd6-11e8-ad0d-005056b24375'}], 'PackRef': '2200f200-dcd6-11e8-ad0d-005056b24375', 'PackCount': '1'}
-2026-06-24 08:47:18 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
-2026-06-24 08:47:18 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
-2026-06-24 08:47:18 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice response: {'success': True, 'data': [{'Cost': 470, 'AssessedCost': 50000}], 'errors': [], 'warnings': ['VolumeWeight is changed', 'VolumeGeneral is changed', 'Weight is changed', 'DateTime is set to current', 'VolumeWeight is changed'], 'info': [], 'messageCodes': [], 'errorCodes': [], 'warningCodes': ['30000200888', '30000200889', '30000200881', '30000200880', '30000200888'], 'infoCodes': []}
-2026-06-24 08:47:18 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice result: {'delivery_cost': '470', 'packaging_cost': '0', 'redelivery_cost': '0', 'assessed_cost': '50000'}
-2026-06-24 08:47:42 - root - INFO - Health check called
-2026-06-24 08:47:59 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
-2026-06-24 08:48:12 - root - INFO - Health check called
-2026-06-24 08:48:42 - root - INFO - Health check called
-2026-06-24 08:49:01 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice payload: {'CitySender': 'db5c888c-391c-11dd-90d9-001a92567626', 'CityRecipient': 'db5c888c-391c-11dd-90d9-001a92567626', 'Weight': '15', 'ServiceType': 'WarehouseWarehouse', 'Cost': '50000', 'CargoType': 'Parcel', 'SeatsAmount': '1', 'OptionsSeat': [{'weight': 15.0, 'volumetricWidth': 34.0, 'volumetricLength': 40.0, 'volumetricHeight': 28.5, 'packRef': '2200f200-dcd6-11e8-ad0d-005056b24375'}], 'PackRef': '2200f200-dcd6-11e8-ad0d-005056b24375', 'PackCount': '1'}
-2026-06-24 08:49:01 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
-2026-06-24 08:49:01 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
-2026-06-24 08:49:01 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice response: {'success': True, 'data': [{'Cost': 470, 'AssessedCost': 50000}], 'errors': [], 'warnings': ['VolumeWeight is changed', 'VolumeGeneral is changed', 'Weight is changed', 'DateTime is set to current', 'VolumeWeight is changed'], 'info': [], 'messageCodes': [], 'errorCodes': [], 'warningCodes': ['30000200888', '30000200889', '30000200881', '30000200880', '30000200888'], 'infoCodes': []}
-2026-06-24 08:49:01 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice result: {'delivery_cost': '470', 'packaging_cost': '0', 'redelivery_cost': '0', 'assessed_cost': '50000'}
-2026-06-24 08:49:12 - root - INFO - Health check called
