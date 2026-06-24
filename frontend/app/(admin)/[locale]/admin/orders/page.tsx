@@ -2,7 +2,12 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useQueries,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   useReactTable,
   getCoreRowModel,
@@ -36,6 +41,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -62,6 +68,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
+import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
@@ -231,6 +238,18 @@ export default function AdminOrdersPage() {
       }
     },
     enabled: !!user && ['admin', 'manager', 'operator'].includes(user.role),
+  })
+
+  // ── NP waybill summaries for the TTN column ───────────────────────────────
+  const orderIds = data?.items?.map((o) => o.id) ?? []
+  const npSummaries = useQueries({
+    queries: orderIds.map((id) => ({
+      queryKey: ['np-summary', id],
+      queryFn: () =>
+        novaPoshtaApi.getOrderWaybillSummary(id).then((r) => r.data),
+      staleTime: 30000,
+    })),
+    combine: (results) => results.map((r) => r.data ?? null),
   })
 
   const { data: orderDetail, isLoading: detailLoading } = useQuery({
@@ -430,6 +449,24 @@ export default function AdminOrdersPage() {
       columnHelper.accessor('created_at', {
         header: t('order_date'),
         cell: (info) => new Date(info.getValue() + 'Z').toLocaleString(),
+      }),
+      columnHelper.display({
+        id: 'ttn',
+        header: t('novaposhta_ttn'),
+        size: 180,
+        cell: ({ row }) => {
+          const idx = orderIds.indexOf(row.original.id)
+          const summary = idx >= 0 ? npSummaries[idx] : null
+          return summary ? (
+            <NpWaybillBadge
+              npNumber={summary.np_number}
+              exists={summary.exists}
+              isDeleted={summary.is_deleted}
+            />
+          ) : (
+            <span className="text-muted-foreground text-sm">—</span>
+          )
+        },
       }),
       columnHelper.display({
         id: 'actions',

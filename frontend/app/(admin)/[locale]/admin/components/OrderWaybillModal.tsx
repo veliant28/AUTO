@@ -8,14 +8,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import {
-  Loader2,
-  Clock,
-  AlertTriangle,
-  ScanBarcode,
-  ScanLine,
-  Trash2,
-} from 'lucide-react'
+import { Loader2, Clock, AlertTriangle, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/lib/toast'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
@@ -1205,22 +1199,11 @@ export default function OrderWaybillModal({
             </DialogTitle>
 
             {/* TTN badge — always visible */}
-            <Badge
-              className={`text-xs gap-1.5 shrink-0 h-6 px-2.5 border-0 ${
-                waybill?.np_number
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-500 text-white'
-              }`}
-            >
-              {waybill?.np_number ? (
-                <ScanBarcode className="w-3.5 h-3.5" />
-              ) : (
-                <ScanLine className="w-3.5 h-3.5" />
-              )}
-              {waybill?.np_number
-                ? formatNpNumber(waybill.np_number)
-                : '204 000 0000 0000'}
-            </Badge>
+            <NpWaybillBadge
+              npNumber={waybill?.np_number}
+              exists={summary?.exists}
+              isDeleted={waybill?.is_deleted}
+            />
           </div>
         </DialogHeader>
 
