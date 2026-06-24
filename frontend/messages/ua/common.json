@@ -123,6 +123,7 @@
     "status": "Статус",
     "order_time": "Час замовлення",
     "order_sum": "Сума замовлення",
+    "novaposhta_ttn": "ТТН",
     "my_orders": "Мої замовлення",
     "orders_empty_title": "У вас поки немає замовлень",
     "order_not_found": "Замовлення не знайдено",
