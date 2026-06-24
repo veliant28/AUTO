@@ -15,11 +15,12 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
-  // Omit ref to avoid Presence infinite loop with React 19 (@radix-ui/react-presence bug)
+  // Using plain div instead of DialogPrimitive.Overlay to avoid
+  // @radix-ui/react-presence infinite loop with React 19 (bug in presence 1.1.5/1.1.6)
   return (
-    <DialogPrimitive.Overlay
+    <div
       className={cn(
-        'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out',
+        'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm',
         className,
       )}
       {...props}
