@@ -530,6 +530,11 @@ export default function OrderWaybillModal({
       // Set default sender and pre-fill recipient from order data
       const defaultSender = senders.find((s) => s.is_default) || senders[0]
       const orderData = detail.recipient_from_order
+      // Read brand name from cached public settings
+      const cached = queryClient.getQueryData(['public-settings']) as
+        | { brand_name?: string }
+        | undefined
+      const brandName = cached?.brand_name || 'SVOM'
       setForm((prev) => ({
         ...prev,
         sender_profile_id: defaultSender?.id || 0,
@@ -541,6 +546,7 @@ export default function OrderWaybillModal({
         recipient_middle_name:
           orderData?.middle_name || prev.recipient_middle_name,
         // Auto-fill for new TTNs
+        description: `${brandName} Автозапчасти`,
         ...(orderData?.order_number
           ? { info_reg_client_barcodes: orderData.order_number }
           : {}),
