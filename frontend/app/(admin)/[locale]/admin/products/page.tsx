@@ -6,8 +6,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Package,
   Loader2,
-  CheckCircle2,
-  XCircle,
   Pencil,
   Trash2,
   Search,
@@ -544,18 +542,18 @@ export default function AdminProductsPage() {
                         <td className="p-3 text-center">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              {item.total_stock > 0 ? (
-                                <Badge className="bg-green-500 border-0 h-6 w-6 p-0 flex items-center justify-center">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                              {item.is_active ? (
+                                <Badge className="bg-green-500 border-0 text-xs text-white px-2 py-1">
+                                  {t('products_active')}
                                 </Badge>
                               ) : (
-                                <Badge className="bg-gray-400 border-0 h-6 w-6 p-0 flex items-center justify-center">
-                                  <XCircle className="w-3.5 h-3.5" />
+                                <Badge className="bg-gray-400 border-0 text-xs text-white px-2 py-1">
+                                  {t('products_inactive')}
                                 </Badge>
                               )}
                             </TooltipTrigger>
                             <TooltipContent>
-                              {item.total_stock > 0
+                              {item.is_active
                                 ? t('products_active')
                                 : t('products_inactive')}
                             </TooltipContent>
