@@ -853,8 +853,8 @@ export default function AdminOrdersPage() {
                                   <span className="flex items-center gap-1">
                                     <IconComponent className="w-4 h-4 inline shrink-0" />
                                     <span>
-                                      {t('waybill_' + ev.event_type)}:{' '}
-                                      {ev.details || ''}
+                                      {ev.details ||
+                                        t('waybill_' + ev.event_type)}
                                     </span>
                                   </span>
                                 ) : (

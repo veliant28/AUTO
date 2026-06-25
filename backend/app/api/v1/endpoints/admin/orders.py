@@ -514,8 +514,10 @@ async def get_order_all_events(
         actor_name = ""
         actor_group = ""
         if ev.created_by:
-            actor_name = getattr(ev.created_by, "full_name", "") or getattr(ev.created_by, "name", "") or ""
-            actor_group = getattr(ev.created_by, "role_code", "") or ""
+            user = ev.created_by
+            parts = [user.last_name or '', user.first_name or '']
+            actor_name = ' '.join(filter(None, parts)).strip() or user.full_name or ''
+            actor_group = user.role.name if user.role else ''
         merged.append(UnifiedEventResponse(
             id=ev.id,
             type="waybill",
