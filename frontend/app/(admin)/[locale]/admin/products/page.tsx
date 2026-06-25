@@ -490,7 +490,7 @@ export default function AdminProductsPage() {
                       <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
                         {t('products_supplier')}
                       </th>
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[20px]">
+                      <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
                         {t('products_status')}
                       </th>
                       <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">
@@ -539,15 +539,15 @@ export default function AdminProductsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-3 text-left">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               {item.is_active ? (
-                                <Badge className="bg-green-500 border-0 text-xs text-white px-2 py-1">
+                                <Badge className="bg-green-500 text-white border-0 text-sm">
                                   {t('products_active')}
                                 </Badge>
                               ) : (
-                                <Badge className="bg-gray-400 border-0 text-xs text-white px-2 py-1">
+                                <Badge className="bg-gray-500 text-white border-0 text-sm">
                                   {t('products_inactive')}
                                 </Badge>
                               )}
