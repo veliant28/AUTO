@@ -523,8 +523,14 @@ async def get_order_all_events(
         wb = db.query(OrderNovaPoshtaWaybill).filter(
             OrderNovaPoshtaWaybill.id == ev.waybill_id
         ).first()
-        if wb:
+        if wb and wb.np_number:
             np_number = wb.np_number
+        # Fallback: extract from message "TTN XXXX ..."
+        if not np_number and ev.message:
+            import re
+            m = re.search(r'(\d{14})', ev.message)
+            if m:
+                np_number = m.group(1)
         merged.append(UnifiedEventResponse(
             id=ev.id,
             type="waybill",
