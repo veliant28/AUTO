@@ -100,6 +100,11 @@ class AdminOrderDetailResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class AdminOrderAddItemSchema(BaseModel):
+    part_id: int
+    quantity: int = 1
+
+
 class AdminOrderUpdateItem(BaseModel):
     id: int
     quantity: int

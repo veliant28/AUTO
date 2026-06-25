@@ -49,7 +49,7 @@ async def list_products(
     if search:
         like = f"%{search}%"
         query = query.filter(
-            Part.article.ilike(like) | Part.name.ilike(like)
+            Part.article.ilike(like) | Part.name.ilike(like) | Part.sku.ilike(like)
         )
 
     total = query.count()
