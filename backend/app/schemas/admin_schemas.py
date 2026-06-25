@@ -139,6 +139,7 @@ class UnifiedEventResponse(BaseModel):
     user_name: Optional[str] = None
     user_group: Optional[str] = None
     details: Optional[str] = None
+    np_number: Optional[str] = None  # TTN number for waybill events
     created_at: datetime
 
 # Role schemas

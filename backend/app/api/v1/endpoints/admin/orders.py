@@ -11,7 +11,7 @@ from app.schemas.admin_schemas import (
     OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
-from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent
+from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill
 from datetime import datetime
 
 router = APIRouter()
@@ -513,11 +513,18 @@ async def get_order_all_events(
     for ev in waybill_events:
         actor_name = ""
         actor_group = ""
+        np_number = None
         if ev.created_by:
             user = ev.created_by
             parts = [user.last_name or '', user.first_name or '']
             actor_name = ' '.join(filter(None, parts)).strip() or user.full_name or ''
             actor_group = user.role.name if user.role else ''
+        # Look up TTN number from the waybill
+        wb = db.query(OrderNovaPoshtaWaybill).filter(
+            OrderNovaPoshtaWaybill.id == ev.waybill_id
+        ).first()
+        if wb:
+            np_number = wb.np_number
         merged.append(UnifiedEventResponse(
             id=ev.id,
             type="waybill",
@@ -525,6 +532,7 @@ async def get_order_all_events(
             user_name=actor_name or None,
             user_group=actor_group or None,
             details=ev.message,
+            np_number=np_number or None,
             created_at=ev.created_at,
         ))
 

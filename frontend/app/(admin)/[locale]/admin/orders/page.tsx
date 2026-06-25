@@ -147,6 +147,7 @@ interface UnifiedEvent {
   user_name: string | null
   user_group: string | null
   details: string | null
+  np_number: string | null
   created_at: string
 }
 
@@ -850,12 +851,21 @@ export default function AdminOrdersPage() {
                                     })()}
                                   </span>
                                 ) : isWaybill ? (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-2">
                                     <IconComponent className="w-4 h-4 inline shrink-0" />
-                                    <span>
-                                      {ev.details ||
-                                        t('waybill_' + ev.event_type)}
-                                    </span>
+                                    {ev.np_number && (
+                                      <Badge
+                                        className={`border-0 text-sm font-mono ${
+                                          ev.event_type === 'delete'
+                                            ? 'bg-red-500 text-white line-through'
+                                            : ev.event_type === 'create'
+                                              ? 'bg-green-500 text-white'
+                                              : 'bg-blue-500 text-white'
+                                        }`}
+                                      >
+                                        {ev.np_number}
+                                      </Badge>
+                                    )}
                                   </span>
                                 ) : (
                                   formatPhonesInText(
