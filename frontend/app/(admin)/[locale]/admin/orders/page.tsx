@@ -750,9 +750,12 @@ export default function AdminOrdersPage() {
 
                 <Separator className="flex-shrink-0" />
 
-                <div className="flex-1 overflow-hidden p-6">
+                <div
+                  className={`flex-1 ${showHistory ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} p-6`}
+                >
                   {showHistory ? (
-                    <div className="relative pl-12 space-y-0 overflow-y-auto h-full">
+                    <div className="relative pl-12 space-y-0">
+                      <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
                       {!allEvents || allEvents.length === 0 ? (
                         <p className="text-muted-foreground py-8 text-center">
                           —
@@ -799,8 +802,6 @@ export default function AdminOrdersPage() {
                               key={`${ev.type}-${ev.id}`}
                               className="relative pb-6"
                             >
-                              {/* Vertical line segment connecting timeline dots */}
-                              <div className="absolute left-[22px] top-0 bottom-0 w-[3px] bg-border" />
                               <div
                                 className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
                               />
