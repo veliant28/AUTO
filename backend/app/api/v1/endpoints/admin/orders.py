@@ -441,6 +441,11 @@ async def update_order_status(
 
     old_status = order.status.value if hasattr(order.status, "value") else order.status
     order.status = new_status
+
+    # Track first time the order is marked as delivered
+    if data.status == "delivered" and order.first_delivered_at is None:
+        order.first_delivered_at = datetime.utcnow()
+
     role_name = current_user.role.name if current_user.role else ""
     order.updated_by_user_id = current_user.id
     order.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()

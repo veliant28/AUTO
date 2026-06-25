@@ -31,6 +31,8 @@ class OrderSchema(BaseModel):
     delivery_warehouse: Optional[str] = None
     payment_method: Optional[str] = None
     created_at: datetime
+    first_delivered_at: Optional[datetime] = None
+    can_return: bool = False
     items: List[OrderItemSchema]
 
     class Config:

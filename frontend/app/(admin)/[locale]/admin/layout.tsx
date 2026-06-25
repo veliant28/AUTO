@@ -1,60 +1,105 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import React, { useState, useEffect, Suspense } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import {
-		  LayoutDashboard, Users, ShoppingCart, Menu, X, Ban, Loader2, Package, FileText, Shield, Database, RefreshCw, Plus, Save, Tag, Car, Settings, UserCog, FileDown, FolderTree, TrendingUp, Play, RotateCcw, Activity, Clock, Minus, SlidersHorizontal, Truck,
-		} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useAuthStore } from '@/store/authStore';
-import api from '@/lib/api';
-import { toast } from '@/lib/toast';
-import { useMutation } from '@tanstack/react-query';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { getAvatarUrl, getInitials } from '@/lib/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-import { AdminLocaleProvider, useAdminLocale } from './components/AdminLocaleContext';
-import { useBrandName } from '@/hooks/useBrandName';
-import FalconLogo from '@/components/ui/FalconLogo';
+  LayoutDashboard,
+  Users,
+  ShoppingCart,
+  Menu,
+  X,
+  Ban,
+  Loader2,
+  Package,
+  FileText,
+  Shield,
+  Database,
+  RefreshCw,
+  Plus,
+  Save,
+  Tag,
+  Car,
+  Settings,
+  UserCog,
+  FileDown,
+  FolderTree,
+  TrendingUp,
+  Play,
+  RotateCcw,
+  Activity,
+  Clock,
+  Minus,
+  SlidersHorizontal,
+  Truck,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { useAuthStore } from '@/store/authStore'
+import api from '@/lib/api'
+import { toast } from '@/lib/toast'
+import { useMutation } from '@tanstack/react-query'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { getAvatarUrl, getInitials } from '@/lib/avatar'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
+import ThemeToggle from '@/components/ui/ThemeToggle'
+import {
+  AdminLocaleProvider,
+  useAdminLocale,
+} from './components/AdminLocaleContext'
+import { useBrandName } from '@/hooks/useBrandName'
+import FalconLogo from '@/components/ui/FalconLogo'
 
-const LOCALES = ['ru', 'en', 'ua'];
+const LOCALES = ['ru', 'en', 'ua']
 
 function hasRole(user: { role: string } | null, ...roles: string[]) {
-  if (!user) return false;
-  return roles.includes(user.role);
+  if (!user) return false
+  return roles.includes(user.role)
 }
 
 function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user } = useAuthStore();
-  const { activeLocale, setActiveLocale } = useAdminLocale();
-  const ta = useTranslations('admin');
-  const isTecDoc = pathname.includes('/admin/tecdoc');
-  const isFooter = pathname.includes('/admin/footer');
-  const isSettings = pathname.includes('/admin/settings');
-  const isNovaposhta = pathname.includes('/admin/novaposhta');
-  const isImport = pathname.includes('/admin/import');
-  const isPricing = pathname.includes('/admin/pricing');
-  const isAdmin = pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname);
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user } = useAuthStore()
+  const { activeLocale, setActiveLocale } = useAdminLocale()
+  const ta = useTranslations('admin')
+  const isTecDoc = pathname.includes('/admin/tecdoc')
+  const isFooter = pathname.includes('/admin/footer')
+  const isSettings = pathname.includes('/admin/settings')
+  const isNovaposhta = pathname.includes('/admin/novaposhta')
+  const isImport = pathname.includes('/admin/import')
+  const isPricing = pathname.includes('/admin/pricing')
+  const isAdmin =
+    pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname)
+  const isOrders = pathname.includes('/admin/orders')
+  const isReturns = pathname.includes('/admin/returns')
 
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
     { key: 'workers', label: ta('workers_title') },
-  ];
+  ]
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
+    '/admin/returns': { icon: RotateCcw, titleKey: 'returns_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/categories': { icon: FolderTree, titleKey: 'categories_title' },
@@ -65,167 +110,259 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
     '/admin/import': { icon: FileDown, titleKey: 'import_title' },
-	    '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
-	    '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
-	  };
+    '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
+    '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
+  }
 
-  const pageMetaEntries = Object.entries(pageMeta).sort((a, b) => b[0].length - a[0].length);
-  const currentMeta = pageMetaEntries.find(([route]) => pathname.endsWith(route) || pathname.includes(route + '/')) || pageMetaEntries.find(([route]) => pathname.includes(route));
-  const meta = currentMeta?.[1];
-  const brandName = useBrandName();
-  const [pricingTaskStatus, setPricingTaskStatus] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [restartDialogOpen, setRestartDialogOpen] = useState(false);
-  const [restartCounts, setRestartCounts] = useState({ active: 0, reserved: 0 });
+  const pageMetaEntries = Object.entries(pageMeta).sort(
+    (a, b) => b[0].length - a[0].length,
+  )
+  const currentMeta =
+    pageMetaEntries.find(
+      ([route]) => pathname.endsWith(route) || pathname.includes(route + '/'),
+    ) || pageMetaEntries.find(([route]) => pathname.includes(route))
+  const meta = currentMeta?.[1]
+  const brandName = useBrandName()
+  const [pricingTaskStatus, setPricingTaskStatus] = useState<string | null>(
+    null,
+  )
+  const [refreshing, setRefreshing] = useState(false)
+  const [restartDialogOpen, setRestartDialogOpen] = useState(false)
+  const [restartCounts, setRestartCounts] = useState({ active: 0, reserved: 0 })
   useEffect(() => {
     if (restartDialogOpen) {
       setRestartCounts({
         active: (window as any).__workerActiveCount ?? 0,
         reserved: (window as any).__workerReservedCount ?? 0,
-      });
+      })
     }
-  }, [restartDialogOpen]);
+  }, [restartDialogOpen])
   const restartMutation = useMutation({
     mutationFn: async () => {
-      const { data } = await api.post('/admin/workers/restart');
-      return data;
+      const { data } = await api.post('/admin/workers/restart')
+      return data
     },
     onSuccess: () => {
-      toast.success(ta('workers_restart_success'));
-      setTimeout(() => (window as any).__refreshWorkers?.(), 3000);
+      toast.success(ta('workers_restart_success'))
+      setTimeout(() => (window as any).__refreshWorkers?.(), 3000)
     },
     onError: () => toast.error(ta('workers_restart_error')),
-  });
+  })
   useEffect(() => {
-    const id = setInterval(() => setPricingTaskStatus((window as any).__pricingTaskStatus || null), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const [pricingOtpDigits, setPricingOtpDigits] = useState<string[]>(['0', '0', '0']);
+    const id = setInterval(
+      () => setPricingTaskStatus((window as any).__pricingTaskStatus || null),
+      1000,
+    )
+    return () => clearInterval(id)
+  }, [])
+  const [pricingOtpDigits, setPricingOtpDigits] = useState<string[]>([
+    '0',
+    '0',
+    '0',
+  ])
   useEffect(() => {
     const id = setInterval(() => {
-      const d = (window as any).__pricingOtpDigits;
-      if (d) setPricingOtpDigits([...d]);
-    }, 200);
-    return () => clearInterval(id);
-  }, []);
+      const d = (window as any).__pricingOtpDigits
+      if (d) setPricingOtpDigits([...d])
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
 
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
     { key: 'batch', label: ta('tecdoc_batch') },
     { key: 'manual', label: ta('tecdoc_manual') },
     { key: 'settings', label: ta('tecdoc_settings') },
-  ];
+  ]
 
   const settingsNavTabs = [
     { key: 'settings', label: ta('settings_title') },
     { key: 'novaposhta', label: ta('novaposhta_title') },
-  ];
+  ]
+
+  const ordersNavTabs = [
+    { key: 'orders', label: ta('orders_title') },
+    { key: 'returns', label: ta('returns_title') },
+  ]
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-card flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-3 min-w-0">
-        <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onMenuClick}
+        >
           <Menu className="w-5 h-5" />
         </Button>
         {meta && (
           <div className="flex items-center gap-2 shrink-0">
             <meta.icon className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-bold truncate hidden sm:block">{ta(meta.titleKey)}</h1>
+            <h1 className="text-lg font-bold truncate hidden sm:block">
+              {ta(meta.titleKey)}
+            </h1>
           </div>
         )}
-        {isTecDoc && tecdocTabs.map((t) => {
-          const active = (searchParams.get('tab') || 'dashboard') === t.key;
-          return (
+        {isTecDoc &&
+          tecdocTabs.map((t) => {
+            const active = (searchParams.get('tab') || 'dashboard') === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.set('tab', t.key)
+                  router.replace(`${pathname}?${params.toString()}`, {
+                    scroll: false,
+                  })
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {t.label.toUpperCase()}
+              </button>
+            )
+          })}
+        {(isSettings || isNovaposhta) &&
+          settingsNavTabs.map((t) => {
+            const active =
+              (t.key === 'settings' && isSettings) ||
+              (t.key === 'novaposhta' && isNovaposhta)
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const basePath = pathname.replace(
+                    /\/admin\/(settings|novaposhta).*/,
+                    '/admin',
+                  )
+                  router.push(`${basePath}/${t.key}`)
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {t.label.toUpperCase()}
+              </button>
+            )
+          })}
+        {(isOrders || isReturns) &&
+          ordersNavTabs.map((t) => {
+            const active =
+              (t.key === 'orders' && isOrders) ||
+              (t.key === 'returns' && isReturns)
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const basePath = pathname.replace(
+                    /\/admin\/(orders|returns).*/,
+                    '/admin',
+                  )
+                  router.push(`${basePath}/${t.key}`)
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {t.label.toUpperCase()}
+              </button>
+            )
+          })}
+        {isAdmin &&
+          adminTabs.map((t) => {
+            const active = (searchParams.get('tab') || 'dashboard') === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.set('tab', t.key)
+                  router.replace(`${pathname}?${params.toString()}`, {
+                    scroll: false,
+                  })
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {t.label.toUpperCase()}
+              </button>
+            )
+          })}
+        {isFooter &&
+          LOCALES.map((loc) => (
             <button
-              key={t.key}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams.toString());
-                params.set('tab', t.key);
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-              }}
+              key={loc}
+              onClick={() => setActiveLocale(loc)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                activeLocale === loc
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
-              {t.label.toUpperCase()}
+              {loc.toUpperCase()}
             </button>
-          );
-        })}
-        {(isSettings || isNovaposhta) && settingsNavTabs.map((t) => {
-          const active = (t.key === 'settings' && isSettings) || (t.key === 'novaposhta' && isNovaposhta);
-          return (
-            <button
-              key={t.key}
-              onClick={() => {
-                const basePath = pathname.replace(/\/admin\/(settings|novaposhta).*/, '/admin');
-                router.push(`${basePath}/${t.key}`);
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              {t.label.toUpperCase()}
-            </button>
-          );
-        })}
-        {isAdmin && adminTabs.map((t) => {
-          const active = (searchParams.get('tab') || 'dashboard') === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams.toString());
-                params.set('tab', t.key);
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              {t.label.toUpperCase()}
-            </button>
-          );
-        })}
-        {isFooter && LOCALES.map((loc) => (
-          <button
-            key={loc}
-            onClick={() => setActiveLocale(loc)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-              activeLocale === loc
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            {loc.toUpperCase()}
-          </button>
-        ))}
+          ))}
       </div>
       <div className="flex items-center gap-2">
-        {isAdmin && (searchParams.get('tab') || 'dashboard') === 'dashboard' && (
-          <div className="border-r pr-2 self-stretch flex items-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => api.post('/catalog/sync/vehicles').then(() => alert(ta('sync_started')))}>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{ta('sync_catalog')}</TooltipContent>
-            </Tooltip>
-          </div>
-        )}
+        {isAdmin &&
+          (searchParams.get('tab') || 'dashboard') === 'dashboard' && (
+            <div className="border-r pr-2 self-stretch flex items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() =>
+                      api
+                        .post('/catalog/sync/vehicles')
+                        .then(() => alert(ta('sync_started')))
+                    }
+                  >
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('sync_catalog')}</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'workers' && (
           <div className="border-r pr-2 self-stretch flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => { setRefreshing(true); Promise.resolve((window as any).__refreshWorkers?.()).finally(() => setTimeout(() => setRefreshing(false), 600)); }}>
-                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <Button
+                  size="icon"
+                  onClick={() => {
+                    setRefreshing(true)
+                    Promise.resolve(
+                      (window as any).__refreshWorkers?.(),
+                    ).finally(() => setTimeout(() => setRefreshing(false), 600))
+                  }}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('workers_refresh')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="destructive" onClick={() => setRestartDialogOpen(true)}>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={() => setRestartDialogOpen(true)}
+                >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -237,7 +374,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__openCreateUser?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateUser?.()}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -249,7 +389,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__openCreateRole?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateRole?.()}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -261,7 +404,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__openCreateCategory?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateCategory?.()}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -273,7 +419,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__openImportExport?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openImportExport?.()}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -285,7 +434,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__openCreateSender?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateSender?.()}
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -297,14 +449,19 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => {
-                  if (isFooter) (window as any).__saveFooter?.();
-                  if (isSettings) (window as any).__saveSettings?.();
-                }}>
+                <Button
+                  size="icon"
+                  onClick={() => {
+                    if (isFooter) (window as any).__saveFooter?.()
+                    if (isSettings) (window as any).__saveSettings?.()
+                  }}
+                >
                   <Save className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{ta('save_footer', { locale: activeLocale.toUpperCase() })}</TooltipContent>
+              <TooltipContent>
+                {ta('save_footer', { locale: activeLocale.toUpperCase() })}
+              </TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -319,11 +476,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               size="icon"
               className="h-7 w-7 rounded-full"
               onClick={() => {
-                const current = Number(pricingOtpDigits.join(''));
-                const newVal = Math.max(0, current - 1);
-                const str = String(newVal).padStart(3, '0');
-                setPricingOtpDigits(str.split(''));
-                (window as any).__pricingSetGeneralMargin?.(newVal);
+                const current = Number(pricingOtpDigits.join(''))
+                const newVal = Math.max(0, current - 1)
+                const str = String(newVal).padStart(3, '0')
+                setPricingOtpDigits(str.split(''))
+                ;(window as any).__pricingSetGeneralMargin?.(newVal)
               }}
             >
               <Minus className="w-3.5 h-3.5" />
@@ -338,22 +495,28 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => {
-                    const char = e.target.value;
+                    const char = e.target.value
                     if (char && /\d/.test(char)) {
-                      const digits = [...pricingOtpDigits];
-                      digits[i] = char.slice(-1);
-                      setPricingOtpDigits(digits);
-                      const num = Math.min(100, Math.max(0, Number(digits.join(''))));
-                      (window as any).__pricingSetGeneralMargin?.(num);
+                      const digits = [...pricingOtpDigits]
+                      digits[i] = char.slice(-1)
+                      setPricingOtpDigits(digits)
+                      const num = Math.min(
+                        100,
+                        Math.max(0, Number(digits.join(''))),
+                      )
+                      ;(window as any).__pricingSetGeneralMargin?.(num)
                     }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Backspace') {
-                      const digits = [...pricingOtpDigits];
-                      digits[i] = '0';
-                      setPricingOtpDigits(digits);
-                      const num = Math.min(100, Math.max(0, Number(digits.join(''))));
-                      (window as any).__pricingSetGeneralMargin?.(num);
+                      const digits = [...pricingOtpDigits]
+                      digits[i] = '0'
+                      setPricingOtpDigits(digits)
+                      const num = Math.min(
+                        100,
+                        Math.max(0, Number(digits.join(''))),
+                      )
+                      ;(window as any).__pricingSetGeneralMargin?.(num)
                     }
                   }}
                 />
@@ -364,11 +527,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               size="icon"
               className="h-7 w-7 rounded-full"
               onClick={() => {
-                const current = Number(pricingOtpDigits.join(''));
-                const newVal = Math.min(100, current + 1);
-                const str = String(newVal).padStart(3, '0');
-                setPricingOtpDigits(str.split(''));
-                (window as any).__pricingSetGeneralMargin?.(newVal);
+                const current = Number(pricingOtpDigits.join(''))
+                const newVal = Math.min(100, current + 1)
+                const str = String(newVal).padStart(3, '0')
+                setPricingOtpDigits(str.split(''))
+                ;(window as any).__pricingSetGeneralMargin?.(newVal)
               }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -380,7 +543,9 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 <Button
                   size="icon"
                   className="bg-green-500 text-white hover:bg-green-600 disabled:opacity-60"
-                  disabled={['PENDING', 'PROGRESS'].includes(pricingTaskStatus || '')}
+                  disabled={['PENDING', 'PROGRESS'].includes(
+                    pricingTaskStatus || '',
+                  )}
                   onClick={() => (window as any).__applyPricing?.()}
                 >
                   {['PENDING', 'PROGRESS'].includes(pricingTaskStatus || '') ? (
@@ -394,7 +559,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" onClick={() => (window as any).__savePricing?.()}>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__savePricing?.()}
+                >
                   <Save className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -402,7 +570,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight shrink-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-bold text-xl tracking-tight shrink-0"
+        >
           <div className="bg-primary text-primary-foreground p-1 rounded">
             <FalconLogo className="w-6 h-6" />
           </div>
@@ -411,8 +582,15 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <div className="border-l pl-2 flex items-center gap-1">
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
-            <AvatarImage src={getAvatarUrl(user?.avatar_index, user?.full_name || user?.email)} />
-            <AvatarFallback>{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
+            <AvatarImage
+              src={getAvatarUrl(
+                user?.avatar_index,
+                user?.full_name || user?.email,
+              )}
+            />
+            <AvatarFallback>
+              {getInitials(user?.full_name || '', user?.email)}
+            </AvatarFallback>
           </Avatar>
           <ThemeToggle />
         </div>
@@ -427,58 +605,85 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </div>
               <div>
                 <DialogTitle>{ta('workers_restart')}</DialogTitle>
-                <DialogDescription>{ta('workers_restart_confirm')}</DialogDescription>
+                <DialogDescription>
+                  {ta('workers_restart_confirm')}
+                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
           <div className="rounded-lg bg-muted p-4 flex items-center justify-center gap-4">
-            <Badge className="bg-blue-500 text-white border-0 gap-1.5 text-sm px-3 py-1" variant="default">
+            <Badge
+              className="bg-blue-500 text-white border-0 gap-1.5 text-sm px-3 py-1"
+              variant="default"
+            >
               <Activity className="w-3.5 h-3.5" />
               {ta('workers_active')}: {restartCounts.active}
             </Badge>
-            <Badge className="bg-yellow-500 text-white border-0 gap-1.5 text-sm px-3 py-1" variant="default">
+            <Badge
+              className="bg-yellow-500 text-white border-0 gap-1.5 text-sm px-3 py-1"
+              variant="default"
+            >
               <Clock className="w-3.5 h-3.5" />
               {ta('workers_reserved')}: {restartCounts.reserved}
             </Badge>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRestartDialogOpen(false)}>{ta('cancel')}</Button>
-            <Button variant="destructive" onClick={() => { setRestartDialogOpen(false); restartMutation.mutate(); }} disabled={restartMutation.isPending} className="gap-2">
-              {restartMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+            <Button
+              variant="outline"
+              onClick={() => setRestartDialogOpen(false)}
+            >
+              {ta('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setRestartDialogOpen(false)
+                restartMutation.mutate()
+              }}
+              disabled={restartMutation.isPending}
+              className="gap-2"
+            >
+              {restartMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RotateCcw className="w-4 h-4" />
+              )}
               {ta('workers_restart_action')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </header>
-  );
+  )
 }
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { user, isAuthenticated } = useAuthStore();
-  const t = useTranslations('admin');
-  const tc = useTranslations('common');
-  const brandName = useBrandName();
+  const pathname = usePathname()
+  const { user, isAuthenticated } = useAuthStore()
+  const t = useTranslations('admin')
+  const tc = useTranslations('common')
+  const brandName = useBrandName()
   const roleBadgeColors: Record<string, string> = {
     admin: 'bg-red-500 text-white',
     manager: 'bg-blue-500 text-white',
     operator: 'bg-orange-500 text-white',
     b2b: 'bg-green-500 text-white',
     retail: 'bg-gray-500 text-white',
-  };
-  const userRole = user?.role || '';
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  }
+  const userRole = user?.role || ''
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
 
-  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   if (!hydrated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/10">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   if (!hasRole(user, 'admin', 'manager', 'operator')) {
@@ -490,41 +695,115 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             <h1 className="text-2xl font-bold">{t('access_denied')}</h1>
             <p className="text-muted-foreground">{t('access_denied_desc')}</p>
             {!isAuthenticated ? (
-              <Link href="/auth/login"><Button>{tc('login')}</Button></Link>
+              <Link href="/auth/login">
+                <Button>{tc('login')}</Button>
+              </Link>
             ) : (
-              <Link href="/"><Button variant="outline">{t('go_home')}</Button></Link>
+              <Link href="/">
+                <Button variant="outline">{t('go_home')}</Button>
+              </Link>
             )}
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   const navItems = [
-    { href: '/admin', icon: LayoutDashboard, label: t('dashboard_title'), roles: ['admin', 'manager', 'operator'] },
-    { href: '/admin/orders', icon: ShoppingCart, label: t('orders_title'), roles: ['admin', 'manager', 'operator'] },
-    { href: '/admin/products', icon: Package, label: t('products_title'), roles: ['admin'] },
-    { href: '/admin/brands', icon: Tag, label: t('brands_title'), roles: ['admin'] },
-    { href: '/admin/categories', icon: FolderTree, label: t('categories_title'), roles: ['admin'] },
-    { href: '/admin/catalog', icon: Car, label: t('catalog_title'), roles: ['admin'] },
-    { href: '/admin/pricing', icon: TrendingUp, label: t('pricing_title'), roles: ['admin'] },
-    { href: '/admin/users', icon: Users, label: t('users_title'), roles: ['admin'] },
-    { href: '/admin/roles', icon: Shield, label: t('roles_title'), roles: ['admin'] },
-	    { href: '/admin/tecdoc', icon: Database, label: t('tecdoc_title'), roles: ['admin'] },
-		    { href: '/admin/import', icon: FileDown, label: t('import_title'), roles: ['admin'] },
-    { href: '/admin/settings', icon: Settings, label: t('settings_title'), roles: ['admin'] },
-    { href: '/admin/footer', icon: FileText, label: t('footer_title'), roles: ['admin'] },
-  ];
+    {
+      href: '/admin',
+      icon: LayoutDashboard,
+      label: t('dashboard_title'),
+      roles: ['admin', 'manager', 'operator'],
+    },
+    {
+      href: '/admin/orders',
+      icon: ShoppingCart,
+      label: t('orders_title'),
+      roles: ['admin', 'manager', 'operator'],
+    },
+    {
+      href: '/admin/products',
+      icon: Package,
+      label: t('products_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/brands',
+      icon: Tag,
+      label: t('brands_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/categories',
+      icon: FolderTree,
+      label: t('categories_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/catalog',
+      icon: Car,
+      label: t('catalog_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/pricing',
+      icon: TrendingUp,
+      label: t('pricing_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/users',
+      icon: Users,
+      label: t('users_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/roles',
+      icon: Shield,
+      label: t('roles_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/tecdoc',
+      icon: Database,
+      label: t('tecdoc_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/import',
+      icon: FileDown,
+      label: t('import_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/settings',
+      icon: Settings,
+      label: t('settings_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/footer',
+      icon: FileText,
+      label: t('footer_title'),
+      roles: ['admin'],
+    },
+  ]
 
   return (
     <div className="flex min-h-screen bg-muted/10">
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="flex items-center justify-between h-16 px-4 border-b">
           <Link href="/admin" className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-1.5 rounded">
@@ -533,11 +812,18 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-1">
             {userRole && (
-              <Badge className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-sm`}>
+              <Badge
+                className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
                 {t(userRole) || userRole}
               </Badge>
             )}
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
               <X className="w-5 h-5" />
             </Button>
           </div>
@@ -547,7 +833,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           {navItems
             .filter((item) => hasRole(user, ...item.roles))
             .map((item) => {
-              const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+              const isActive =
+                item.href === '/admin'
+                  ? pathname === '/admin'
+                  : pathname.startsWith(item.href)
               return (
                 <Link
                   key={item.href}
@@ -562,25 +851,29 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                   <item.icon className="w-4 h-4" />
                   {item.label}
                 </Link>
-              );
+              )
             })}
         </nav>
       </aside>
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <Suspense fallback={null}><TopBar onMenuClick={() => setSidebarOpen(true)} /></Suspense>
-        <main className="flex-1 w-full">
-          {children}
-        </main>
+        <Suspense fallback={null}>
+          <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        </Suspense>
+        <main className="flex-1 w-full">{children}</main>
       </div>
     </div>
-  );
+  )
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <AdminLocaleProvider>
       <AdminLayoutInner>{children}</AdminLayoutInner>
     </AdminLocaleProvider>
-  );
+  )
 }

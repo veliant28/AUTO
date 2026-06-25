@@ -14,6 +14,7 @@ from .settings import SiteSettings
 from .imports import SupplierConfig, PriceImport, ImportSchedule
 from .pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from .nova_poshta import NovaPoshtaSenderProfile, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillEvent
+from .returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 
 __all__ = [
     "Base", 
@@ -33,4 +34,5 @@ __all__ = [
     "SupplierConfig", "PriceImport", "ImportSchedule",
     "PriceRule", "PriceRuleHistory", "PricingApplySnapshot",
     "NovaPoshtaSenderProfile", "OrderNovaPoshtaWaybill", "OrderNovaPoshtaWaybillEvent",
+    "ReturnRequest", "ReturnItem", "ReturnChangeLog", "ReturnStatus",
 ]

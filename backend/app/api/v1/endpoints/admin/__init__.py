@@ -14,6 +14,7 @@ from app.api.v1.endpoints.admin.schedules import router as schedules_router
 from app.api.v1.endpoints.admin.suppliers import router as suppliers_router
 from app.api.v1.endpoints.admin.workers import router as workers_router
 from app.api.v1.endpoints.admin.nova_poshta import router as nova_poshta_router
+from app.api.v1.endpoints.admin.returns import router as returns_router
 
 admin_router = APIRouter()
 
@@ -32,5 +33,6 @@ admin_router.include_router(schedules_router, tags=["Admin Schedules"])
 admin_router.include_router(suppliers_router, tags=["Admin Suppliers"])
 admin_router.include_router(workers_router, tags=["Admin Workers"])
 admin_router.include_router(nova_poshta_router, prefix="/nova-poshta", tags=["Nova Poshta"])
+admin_router.include_router(returns_router, tags=["Admin Returns"])
 
 __all__ = ["admin_router"]

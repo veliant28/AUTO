@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timedelta
 from app.core.db import get_db
 from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutSchema
 from app.models import Order, OrderItem, OrderStatus, Part
+from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user
 
 router = APIRouter()
@@ -24,6 +26,23 @@ def _items_with_brand(order, db):
         })
     return items
 
+def _can_return(order, db=None) -> bool:
+    """Check if the order is eligible for return (delivered within 14 days, no existing return)."""
+    if order.status != OrderStatus.DELIVERED:
+        return False
+    if not order.first_delivered_at:
+        return False
+    if datetime.utcnow() - order.first_delivered_at > timedelta(days=14):
+        return False
+    # Check if a return already exists for this order
+    if db:
+        existing = db.query(ReturnRequest).filter(
+            ReturnRequest.order_id == order.id,
+        ).first()
+        if existing:
+            return False
+    return True
+
 def _order_to_dict(order, db):
     return {
         "id": order.id,
@@ -41,6 +60,8 @@ def _order_to_dict(order, db):
         "delivery_warehouse": order.delivery_warehouse,
         "payment_method": order.payment_method,
         "created_at": order.created_at,
+        "first_delivered_at": order.first_delivered_at,
+        "can_return": _can_return(order, db),
         "items": _items_with_brand(order, db),
     }
 

@@ -35,6 +35,7 @@ class Order(Base):
     updated_by_name = Column(String, nullable=True)
     updated_by_group = Column(String, nullable=True)
     updated_at = Column(DateTime, nullable=True)
+    first_delivered_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
         Index("idx_order_user_status", "user_id", "status"),

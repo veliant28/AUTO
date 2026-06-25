@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.schemas.nova_poshta_schemas import (
     # Sender
@@ -523,7 +523,7 @@ async def calculate_price(
 async def get_order_waybill(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get waybill detail for an order (includes tracking events)."""
     service = NovaPoshtaWaybillService(db)
@@ -535,7 +535,7 @@ async def create_waybill(
     order_id: int,
     data: OrderNovaPoshtaWaybillUpsert,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.create")),
 ):
     """Create a new waybill (TTN) for an order."""
     service = NovaPoshtaWaybillService(db)
@@ -559,7 +559,7 @@ async def update_waybill(
     waybill_id: int,
     data: OrderNovaPoshtaWaybillUpsert,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.edit")),
 ):
     """Update an existing waybill."""
     service = NovaPoshtaWaybillService(db)
@@ -584,7 +584,7 @@ async def update_waybill(
 async def delete_waybill(
     waybill_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.delete")),
 ):
     """Delete a waybill via NP API and soft-delete locally."""
     service = NovaPoshtaWaybillService(db)
@@ -608,7 +608,7 @@ async def delete_waybill(
 async def sync_waybill_status(
     waybill_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.tracking")),
 ):
     """Sync tracking status for a waybill from NP API."""
     service = NovaPoshtaWaybillService(db)
@@ -630,7 +630,7 @@ async def sync_waybill_status(
 async def sync_order_waybill_status(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.tracking")),
 ):
     """Sync tracking status for an order's waybill."""
     service = NovaPoshtaWaybillService(db)
@@ -650,7 +650,7 @@ async def print_waybill(
     waybill_id: int,
     document_type: str = Query("ttn", regex="^(markings|ttn|html|pdf)$"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.print")),
 ):
     """Generate a printable document for a waybill."""
     service = NovaPoshtaWaybillService(db)
@@ -678,7 +678,7 @@ async def print_waybill(
 async def get_waybill_events(
     waybill_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get event history for a waybill."""
     service = NovaPoshtaWaybillService(db)
@@ -694,7 +694,7 @@ async def get_waybill_events(
 async def get_order_waybill_summary(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get lightweight waybill summary for an order (used by orders list)."""
     service = NovaPoshtaWaybillService(db)
@@ -709,7 +709,7 @@ async def get_order_waybill_summary(
 async def sync_all_waybills(
     max_waybills: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.tracking")),
 ):
     """Sync tracking status for all active waybills."""
     service = NovaPoshtaTrackingService(db)

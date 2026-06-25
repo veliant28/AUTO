@@ -272,13 +272,18 @@ export default function AdminOrdersPage() {
     combine: (results) => results.map((r) => r.data ?? null),
   })
 
-  const { data: orderDetail, isLoading: detailLoading } = useQuery({
+  const {
+    data: orderDetail,
+    isLoading: detailLoading,
+    refetch: refetchOrderDetail,
+  } = useQuery({
     queryKey: ['admin-order-detail', viewOrderId],
     queryFn: async () => {
       const { data } = await api.get(`/admin/orders/${viewOrderId}`)
       return data as AdminOrderDetail
     },
     enabled: !!viewOrderId,
+    refetchInterval: 10000,
   })
 
   const { data: allEvents } = useQuery({
@@ -288,6 +293,7 @@ export default function AdminOrdersPage() {
       return data as UnifiedEvent[]
     },
     enabled: !!viewOrderId && showHistory,
+    refetchInterval: 10000,
   })
 
   const editTotal = useMemo(() => {
@@ -331,6 +337,7 @@ export default function AdminOrdersPage() {
         queryKey: ['admin-order-all-events', viewOrderId],
       })
       broadcastStatusChange(variables.orderId, variables.status)
+      refetchOrderDetail()
       toast.success(t('status_updated'))
     },
   })
@@ -348,6 +355,7 @@ export default function AdminOrdersPage() {
         queryKey: ['admin-order-all-events', viewOrderId],
       })
       setEditMode(false)
+      refetchOrderDetail()
       toast.success(t('order_updated'))
     },
   })
