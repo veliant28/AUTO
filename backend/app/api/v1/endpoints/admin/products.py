@@ -5,6 +5,7 @@ from app.api.v1.deps import require_role
 from app.models import User, Part, SupplierOffer, Supplier
 from app.models.pricing import PriceRule
 from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse
+from datetime import datetime
 
 router = APIRouter()
 
@@ -43,6 +44,10 @@ async def list_products(
         query = query.filter(Part.offers.any(SupplierOffer.quantity > 0))
     elif status == "inactive":
         query = query.filter(~Part.offers.any(SupplierOffer.quantity > 0))
+    elif status == "enabled":
+        query = query.filter(Part.is_active == True)
+    elif status == "disabled":
+        query = query.filter(Part.is_active == False)
     if supplier:
         subq = db.query(SupplierOffer.part_id).join(Supplier).filter(Supplier.name == supplier)
         query = query.filter(Part.id.in_(subq))
@@ -112,6 +117,9 @@ async def list_products(
             "total_stock": total_stock,
             "best_supplier": best_offer["supplier_name"] if best_offer else None,
             "best_updated_at": best_offer["updated_at"] if best_offer else None,
+            "is_active": part.is_active,
+            "deactivated_at": part.deactivated_at,
+            "deactivation_reason": part.deactivation_reason,
         })
 
     return AdminProductListResponse(
@@ -137,6 +145,23 @@ async def delete_product(
     db.delete(part)
     db.commit()
     return {"ok": True}
+
+
+@router.put("/products/{product_id}/reactivate")
+async def reactivate_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Ручная реактивация товара."""
+    part = db.query(Part).filter(Part.id == product_id).first()
+    if not part:
+        raise HTTPException(404, "Product not found")
+    part.is_active = True
+    part.deactivated_at = None
+    part.deactivation_reason = None
+    db.commit()
+    return {"ok": True, "message": "Product reactivated"}
 
 
 @router.post("/products/generate-skus")

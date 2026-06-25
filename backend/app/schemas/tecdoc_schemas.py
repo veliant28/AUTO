@@ -98,6 +98,9 @@ class AdminProductItem(BaseModel):
     total_stock: int = 0
     best_supplier: Optional[str] = None
     best_updated_at: Optional[datetime] = None
+    is_active: bool = True
+    deactivated_at: Optional[datetime] = None
+    deactivation_reason: Optional[str] = None
 
     class Config:
         from_attributes = True

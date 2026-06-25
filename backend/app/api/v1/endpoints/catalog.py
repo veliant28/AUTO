@@ -303,11 +303,11 @@ async def get_parts(
     supplier_id: Optional[int] = Query(None),
     sort_by: Optional[str] = Query(None),
     sort_order: Optional[str] = Query("asc"),
-):
-    """Получить список запчастей для модификации и категории с пагинацией и фильтрами."""
-):
-    if mod_id == 0:
-        base_query = db.query(Part).filter(Part.category_id == sec_id)
+    ):
+        """Получить список запчастей для модификации и категории с пагинацией и фильтрами."""
+    ):
+        if mod_id == 0:
+            base_query = db.query(Part).filter(Part.category_id == sec_id, Part.is_active == True)
     else:
         local_mod = db.query(VehicleModification).filter(
             (VehicleModification.tecdoc_id == mod_id) | (VehicleModification.id == mod_id)
@@ -317,6 +317,7 @@ async def get_parts(
         base_query = db.query(Part).join(PartApplicability).filter(
             PartApplicability.mod_id == local_mod.id,
             Part.category_id == sec_id,
+            Part.is_active == True,
         )
 
     need_offer_join = any([in_stock_only, min_price is not None, max_price is not None, supplier_id is not None, sort_by == "price"])
@@ -368,6 +369,7 @@ async def search_parts(
 ):
     """Поиск запчастей по названию, артикулу и бренду."""
     results = db.query(Part).filter(
+        Part.is_active == True,
         or_(
             Part.article.ilike(f"%{q}%"),
             Part.name.ilike(f"%{q}%"),

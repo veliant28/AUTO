@@ -42411,3 +42411,56 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-06-25 18:40:00 - root - INFO - Health check called
 2026-06-25 18:40:30 - root - INFO - Health check called
 2026-06-25 18:41:00 - root - INFO - Health check called
+2026-06-25 18:41:24 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice payload: {'CitySender': 'db5c888c-391c-11dd-90d9-001a92567626', 'CityRecipient': 'db5c888c-391c-11dd-90d9-001a92567626', 'Weight': '3', 'ServiceType': 'WarehouseWarehouse', 'Cost': '10000', 'CargoType': 'Parcel', 'SeatsAmount': '1', 'OptionsSeat': [{'weight': 3.0, 'volumetricWidth': 24.0, 'volumetricLength': 20.0, 'volumetricHeight': 16.6, 'packRef': 'd01528d8-e0e2-498b-bef7-ab234ad6dd90'}], 'PackRef': 'd01528d8-e0e2-498b-bef7-ab234ad6dd90', 'PackCount': '1'}
+2026-06-25 18:41:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-25 18:41:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-25 18:41:24 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/searchSettlementStreets: success=false, errors=['StreetName has invalid characters'], codes=['20000500676'], msg=Параметр «Название улицы» содержит недопустимые символы
+2026-06-25 18:41:24 - app.services.nova_poshta.lookup_service - WARNING - Street search failed: Параметр «Название улицы» содержит недопустимые символы
+2026-06-25 18:41:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-25 18:41:24 - app.services.nova_poshta.client - WARNING - NP API error AddressGeneral/searchSettlementStreets: success=false, errors=['StreetName has invalid characters'], codes=['20000500676'], msg=Параметр «Название улицы» содержит недопустимые символы
+2026-06-25 18:41:24 - app.services.nova_poshta.lookup_service - WARNING - Street search failed: Параметр «Название улицы» содержит недопустимые символы
+2026-06-25 18:41:24 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-25 18:41:24 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice response: {'success': True, 'data': [{'Cost': 180, 'AssessedCost': 10000}], 'errors': [], 'warnings': ['VolumeWeight is changed', 'VolumeGeneral is changed', 'Weight is changed', 'DateTime is set to current', 'VolumeWeight is changed'], 'info': [], 'messageCodes': [], 'errorCodes': [], 'warningCodes': ['30000200888', '30000200889', '30000200881', '30000200880', '30000200888'], 'infoCodes': []}
+2026-06-25 18:41:24 - app.api.v1.endpoints.admin.nova_poshta - INFO - getDocumentPrice result: {'delivery_cost': '180', 'packaging_cost': '0', 'redelivery_cost': '0', 'assessed_cost': '10000'}
+2026-06-25 18:41:25 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-06-25 18:41:30 - root - INFO - Health check called
+2026-06-25 18:42:00 - root - INFO - Health check called
+2026-06-25 18:42:31 - root - INFO - Health check called
+2026-06-25 18:43:01 - root - INFO - Health check called
+2026-06-25 18:43:31 - root - INFO - Health check called
+2026-06-25 18:44:01 - root - INFO - Health check called
+2026-06-25 18:44:31 - root - INFO - Health check called
+2026-06-25 18:45:01 - root - INFO - Health check called
+2026-06-25 18:45:31 - root - INFO - Health check called
+2026-06-25 18:46:02 - root - INFO - Health check called
+2026-06-25 18:46:32 - root - INFO - Health check called
+2026-06-25 18:47:02 - root - INFO - Health check called
+2026-06-25 18:47:32 - root - INFO - Health check called
+2026-06-25 18:48:02 - root - INFO - Health check called
+2026-06-25 18:48:32 - root - INFO - Health check called
+2026-06-25 18:49:02 - root - INFO - Health check called
+2026-06-25 18:49:33 - root - INFO - Health check called
+2026-06-25 18:50:03 - root - INFO - Health check called
+2026-06-25 18:50:33 - root - INFO - Health check called
+2026-06-25 18:51:03 - root - INFO - Health check called
+2026-06-25 18:51:33 - root - INFO - Health check called
+2026-06-25 18:52:03 - root - INFO - Health check called
+2026-06-25 18:52:34 - root - INFO - Health check called
+2026-06-25 18:53:04 - root - INFO - Health check called
+2026-06-25 18:53:34 - root - INFO - Health check called
+2026-06-25 18:54:04 - root - INFO - Health check called
+2026-06-25 18:54:34 - root - INFO - Health check called
+2026-06-25 18:55:04 - root - INFO - Health check called
+2026-06-25 18:55:34 - root - INFO - Health check called
+2026-06-25 18:56:05 - root - INFO - Health check called
+2026-06-25 18:56:35 - root - INFO - Health check called
+2026-06-25 18:57:05 - root - INFO - Health check called
+2026-06-25 18:57:35 - root - INFO - Health check called
+2026-06-25 18:58:06 - root - INFO - Health check called
+2026-06-25 18:58:36 - root - INFO - Health check called
+2026-06-25 18:59:06 - root - INFO - Health check called
+2026-06-25 18:59:36 - root - INFO - Health check called
+2026-06-25 19:00:06 - root - INFO - Health check called
+2026-06-25 19:00:37 - root - INFO - Health check called
+2026-06-25 19:01:07 - root - INFO - Health check called
+2026-06-25 19:01:37 - root - INFO - Health check called
