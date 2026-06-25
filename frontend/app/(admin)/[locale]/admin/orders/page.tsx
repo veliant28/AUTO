@@ -41,6 +41,7 @@ import {
   Printer,
   RefreshCw,
   AlertTriangle,
+  ScanBarcode,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -856,7 +857,7 @@ export default function AdminOrdersPage() {
                                     <span>{t('waybill_' + ev.event_type)}</span>
                                     {ev.np_number && (
                                       <Badge
-                                        className={`border-0 text-sm font-mono ${
+                                        className={`border-0 text-sm font-mono gap-1.5 ${
                                           ev.event_type === 'delete'
                                             ? 'bg-red-500 text-white line-through'
                                             : ev.event_type === 'create'
@@ -864,6 +865,7 @@ export default function AdminOrdersPage() {
                                               : 'bg-blue-500 text-white'
                                         }`}
                                       >
+                                        <ScanBarcode className="w-3.5 h-3.5" />
                                         {ev.np_number}
                                       </Badge>
                                     )}
