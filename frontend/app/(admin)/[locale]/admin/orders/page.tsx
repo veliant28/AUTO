@@ -830,7 +830,7 @@ export default function AdminOrdersPage() {
                                   )}
                                 </span>
                               </div>
-                              <p className="text-muted-foreground pl-1">
+                              <div className="text-muted-foreground pl-1">
                                 {!isWaybill &&
                                 ev.event_type === 'status_change' ? (
                                   <span className="flex items-center gap-1">
@@ -875,7 +875,7 @@ export default function AdminOrdersPage() {
                                     (m) => t(m),
                                   )
                                 )}
-                              </p>
+                              </div>
                             </div>
                           )
                         })
