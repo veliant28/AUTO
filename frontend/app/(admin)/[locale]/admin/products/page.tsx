@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   Plus,
   Save,
-  ImageIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -626,7 +626,7 @@ export default function AdminProductsPage() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => openEdit(row.original)}
+                                  onClick={() => openEdit(item)}
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </Button>
@@ -733,7 +733,7 @@ export default function AdminProductsPage() {
               {/* Left: Photo */}
               <div className="space-y-4">
                 <div
-                  className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden"
+                  className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 cursor-pointer hover:opacity-90 transition-opacity relative overflow-hidden"
                   onClick={() =>
                     document.getElementById('product-image-input')?.click()
                   }
@@ -745,10 +745,11 @@ export default function AdminProductsPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <ImageIcon className="w-12 h-12" />
-                      <span className="text-sm">Фото товара</span>
-                    </div>
+                    <span className="text-6xl font-bold text-white/40 select-none">
+                      {editForm.brand
+                        ? editForm.brand.charAt(0).toUpperCase()
+                        : '?'}
+                    </span>
                   )}
                 </div>
                 <input
@@ -777,23 +778,23 @@ export default function AdminProductsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-1">
                     <span className="text-sm text-muted-foreground">
-                      {t('article')}
-                    </span>
-                    <Input
-                      value={editForm.article}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, article: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-1">
-                    <span className="text-sm text-muted-foreground">
                       {t('brand')}
                     </span>
                     <Input
                       value={editForm.brand}
                       onChange={(e) =>
                         setEditForm((f) => ({ ...f, brand: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t('article')}
+                    </span>
+                    <Input
+                      value={editForm.article}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, article: e.target.value }))
                       }
                     />
                   </div>
@@ -859,16 +860,11 @@ export default function AdminProductsPage() {
                     {t('status')}
                   </span>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={editForm.is_active}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          is_active: e.target.checked,
-                        }))
+                      onCheckedChange={(checked) =>
+                        setEditForm((f) => ({ ...f, is_active: !!checked }))
                       }
-                      className="rounded"
                     />
                     <span className="text-sm">
                       {editForm.is_active ? 'Активен' : 'Деактивирован'}
