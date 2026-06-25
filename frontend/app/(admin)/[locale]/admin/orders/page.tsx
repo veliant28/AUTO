@@ -853,6 +853,7 @@ export default function AdminOrdersPage() {
                                 ) : isWaybill ? (
                                   <span className="flex items-center gap-2">
                                     <IconComponent className="w-4 h-4 inline shrink-0" />
+                                    <span>{t('waybill_' + ev.event_type)}</span>
                                     {ev.np_number && (
                                       <Badge
                                         className={`border-0 text-sm font-mono ${
