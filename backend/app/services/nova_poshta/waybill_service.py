@@ -406,6 +406,20 @@ class NovaPoshtaWaybillService:
             wb.status_code = np_data.get("StatusCode", wb.status_code)
             wb.status_text = np_data.get("Status", wb.status_text)
 
+        # Collect diff of changed fields for event log
+        diff_parts = []
+        _check_str_diff(diff_parts, "одержувач", wb.recipient_name, data.recipient_name)
+        _check_str_diff(diff_parts, "телефон", wb.recipient_phone, data.recipient_phone)
+        _check_str_diff(diff_parts, "тип оплати", wb.payment_method, data.payment_method)
+        _check_str_diff(diff_parts, "платник", wb.payer_type, data.payer_type)
+        _check_str_diff(diff_parts, "тип доставки", wb.service_type, self._delivery_type_to_np(data.delivery_type) if data.delivery_type else None)
+        _check_str_diff(diff_parts, "тип вантажу", wb.cargo_type, data.cargo_type)
+        _check_decimal_diff(diff_parts, "вартість", wb.cost, data.cost)
+        _check_decimal_diff(diff_parts, "вага", wb.weight, data.weight)
+        if data.seats_amount and data.seats_amount != wb.seats_amount:
+            diff_parts.append(f"кількість місць: {wb.seats_amount} → {data.seats_amount}")
+        _check_str_diff(diff_parts, "опис", wb.description_snapshot, data.description)
+
         # Update editable fields from request
         wb.payer_type = data.payer_type or wb.payer_type
         wb.payment_method = data.payment_method or wb.payment_method
@@ -432,11 +446,16 @@ class NovaPoshtaWaybillService:
         self._save_seats(wb, data)
         self.db.flush()
 
+        # Build update message with diff details
+        update_msg = f"TTN {wb.np_number} оновлено"
+        if diff_parts:
+            update_msg += ": " + "; ".join(diff_parts)
+
         self._log_event(
             order_id=wb.order_id,
             waybill_id=wb.id,
             event_type=OrderNovaPoshtaWaybillEvent.EVENT_UPDATE,
-            message=f"TTN {wb.np_number} оновлено",
+            message=update_msg,
             payload=payload,
             raw_response=response,
             user_id=user_id,
@@ -965,7 +984,38 @@ class NovaPoshtaWaybillService:
             errors=event.errors or [],
             warnings=event.warnings or [],
             info=event.info or [],
-            created_by_name=actor_name,
-            created_by_group=actor_group,
-            created_at=event.created_at,
-        )
+	            created_by_name=actor_name,
+	            created_by_group=actor_group,
+	            created_at=event.created_at,
+	        )
+
+
+# ─── Module-level helpers for diff generation ───────────────────────────────
+
+def _check_str_diff(
+    parts: list[str],
+    label: str,
+    old_val: Optional[str],
+    new_val: Optional[str],
+) -> None:
+    """If new_val is set and differs from old_val, append a diff string."""
+    if new_val is not None and new_val != old_val:
+        old_display = old_val or "—"
+        parts.append(f"{label}: {old_display} → {new_val}")
+
+
+def _check_decimal_diff(
+    parts: list[str],
+    label: str,
+    old_val: Optional[Decimal],
+    new_val: Optional[str],
+) -> None:
+    """If new_val is set and differs from old_val, append a diff string."""
+    if new_val is not None:
+        try:
+            new_dec = Decimal(str(new_val))
+            if old_val is None or new_dec != old_val:
+                old_display = f"{old_val}" if old_val else "—"
+                parts.append(f"{label}: {old_display} → {new_val}")
+        except Exception:
+            pass

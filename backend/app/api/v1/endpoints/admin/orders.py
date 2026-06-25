@@ -8,9 +8,10 @@ from app.schemas.admin_schemas import (
     UpdateOrderStatusSchema,
     AdminOrderDetailResponse, AdminOrderItemSchema,
     AdminOrderUpdateSchema, AdminOrderAddItemSchema,
-    OrderChangeLogResponse,
+    OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
+from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent
 from datetime import datetime
 
 router = APIRouter()
@@ -472,3 +473,58 @@ async def get_order_history(
         OrderChangeLog.order_id == order_id
     ).order_by(OrderChangeLog.created_at.desc()).all()
     return logs
+
+
+@router.get("/orders/{order_id}/all-events", response_model=list[UnifiedEventResponse])
+async def get_order_all_events(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "manager", "operator")),
+):
+    """Получить объединённую историю заказа: изменения заказа + события ТТН."""
+    order_obj = db.query(Order).filter(Order.id == order_id).first()
+    if not order_obj:
+        raise HTTPException(404, "Order not found")
+
+    # 1) Order change logs
+    order_logs = db.query(OrderChangeLog).filter(
+        OrderChangeLog.order_id == order_id
+    ).all()
+
+    # 2) Waybill events (TTN)
+    waybill_events = db.query(OrderNovaPoshtaWaybillEvent).filter(
+        OrderNovaPoshtaWaybillEvent.order_id == order_id
+    ).all()
+
+    # Merge and sort by created_at desc
+    merged: list[UnifiedEventResponse] = []
+
+    for log in order_logs:
+        merged.append(UnifiedEventResponse(
+            id=log.id,
+            type="order",
+            event_type=log.action,
+            user_name=log.user_name,
+            user_group=log.user_group,
+            details=log.details,
+            created_at=log.created_at,
+        ))
+
+    for ev in waybill_events:
+        actor_name = ""
+        actor_group = ""
+        if ev.created_by:
+            actor_name = getattr(ev.created_by, "full_name", "") or getattr(ev.created_by, "name", "") or ""
+            actor_group = getattr(ev.created_by, "role_code", "") or ""
+        merged.append(UnifiedEventResponse(
+            id=ev.id,
+            type="waybill",
+            event_type=ev.event_type,
+            user_name=actor_name or None,
+            user_group=actor_group or None,
+            details=ev.message,
+            created_at=ev.created_at,
+        ))
+
+    merged.sort(key=lambda e: e.created_at, reverse=True)
+    return merged

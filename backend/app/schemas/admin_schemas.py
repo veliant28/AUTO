@@ -130,6 +130,17 @@ class OrderChangeLogResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class UnifiedEventResponse(BaseModel):
+    """Unified event for order history timeline — covers both order changes and waybill events."""
+    id: int
+    type: str  # "order" or "waybill"
+    event_type: str
+    user_name: Optional[str] = None
+    user_group: Optional[str] = None
+    details: Optional[str] = None
+    created_at: datetime
+
 # Role schemas
 class PermissionResponse(BaseModel):
     id: int

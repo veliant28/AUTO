@@ -37,6 +37,10 @@ import {
   MapPin,
   User,
   ScrollText,
+  FilePlus,
+  Printer,
+  RefreshCw,
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -132,6 +136,16 @@ interface OrderChangeLogEntry {
   user_name: string | null
   user_group: string | null
   action: string
+  details: string | null
+  created_at: string
+}
+
+interface UnifiedEvent {
+  id: number
+  type: 'order' | 'waybill'
+  event_type: string
+  user_name: string | null
+  user_group: string | null
   details: string | null
   created_at: string
 }
@@ -265,11 +279,11 @@ export default function AdminOrdersPage() {
     enabled: !!viewOrderId,
   })
 
-  const { data: historyLogs } = useQuery({
-    queryKey: ['admin-order-history', viewOrderId],
+  const { data: allEvents } = useQuery({
+    queryKey: ['admin-order-all-events', viewOrderId],
     queryFn: async () => {
-      const { data } = await api.get(`/admin/orders/${viewOrderId}/history`)
-      return data as OrderChangeLogEntry[]
+      const { data } = await api.get(`/admin/orders/${viewOrderId}/all-events`)
+      return data as UnifiedEvent[]
     },
     enabled: !!viewOrderId && showHistory,
   })
@@ -312,7 +326,7 @@ export default function AdminOrdersPage() {
         queryKey: ['admin-order-detail', viewOrderId],
       })
       queryClient.invalidateQueries({
-        queryKey: ['admin-order-history', viewOrderId],
+        queryKey: ['admin-order-all-events', viewOrderId],
       })
       broadcastStatusChange(variables.orderId, variables.status)
       toast.success(t('status_updated'))
@@ -329,7 +343,7 @@ export default function AdminOrdersPage() {
         queryKey: ['admin-order-detail', viewOrderId],
       })
       queryClient.invalidateQueries({
-        queryKey: ['admin-order-history', viewOrderId],
+        queryKey: ['admin-order-all-events', viewOrderId],
       })
       setEditMode(false)
       toast.success(t('order_updated'))
@@ -347,7 +361,7 @@ export default function AdminOrdersPage() {
       queryClient.setQueryData(['admin-order-detail', viewOrderId], data)
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
       queryClient.invalidateQueries({
-        queryKey: ['admin-order-history', viewOrderId],
+        queryKey: ['admin-order-all-events', viewOrderId],
       })
       toast.success(t('order_updated'))
     },
@@ -740,70 +754,119 @@ export default function AdminOrdersPage() {
                   {showHistory ? (
                     <div className="relative pl-12 space-y-0 overflow-y-auto h-full">
                       <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
-                      {!historyLogs || historyLogs.length === 0 ? (
+                      {!allEvents || allEvents.length === 0 ? (
                         <p className="text-muted-foreground py-8 text-center">
                           —
                         </p>
                       ) : (
-                        historyLogs.map((log, idx) => (
-                          <div key={log.id} className="relative pb-6">
+                        allEvents.map((ev, idx) => {
+                          const isWaybill = ev.type === 'waybill'
+                          // Dot color
+                          let dotColor = 'bg-blue-500'
+                          if (isWaybill) {
+                            if (ev.event_type === 'create')
+                              dotColor = 'bg-green-500'
+                            else if (ev.event_type === 'delete')
+                              dotColor = 'bg-red-500'
+                            else if (ev.event_type === 'print')
+                              dotColor = 'bg-orange-500'
+                            else if (ev.event_type === 'error')
+                              dotColor = 'bg-yellow-500'
+                            else if (ev.event_type === 'sync')
+                              dotColor = 'bg-purple-500'
+                            else dotColor = 'bg-blue-500'
+                          } else {
+                            dotColor =
+                              idx === 0 ? 'bg-green-500' : 'bg-blue-500'
+                          }
+                          // Icon
+                          let IconComponent = Clock
+                          if (isWaybill) {
+                            if (ev.event_type === 'create')
+                              IconComponent = FilePlus
+                            else if (ev.event_type === 'delete')
+                              IconComponent = Trash2
+                            else if (ev.event_type === 'print')
+                              IconComponent = Printer
+                            else if (ev.event_type === 'error')
+                              IconComponent = AlertTriangle
+                            else if (ev.event_type === 'sync')
+                              IconComponent = RefreshCw
+                            else if (ev.event_type === 'update')
+                              IconComponent = Pencil
+                          }
+                          return (
                             <div
-                              className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${idx === 0 ? 'bg-green-500' : 'bg-blue-500'}`}
-                            />
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              {log.user_group && (
-                                <Badge
-                                  className={`${ROLE_BADGE_COLORS[log.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
-                                >
-                                  {t(log.user_group)}
-                                </Badge>
-                              )}
-                              <span className="font-medium">
-                                {log.user_name || '—'}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                {new Date(log.created_at + 'Z').toLocaleString(
-                                  localeKey,
-                                  {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  },
+                              key={`${ev.type}-${ev.id}`}
+                              className="relative pb-6"
+                            >
+                              <div
+                                className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
+                              />
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                {ev.user_group && (
+                                  <Badge
+                                    className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
+                                  >
+                                    {t(ev.user_group)}
+                                  </Badge>
                                 )}
-                              </span>
-                            </div>
-                            <p className="text-muted-foreground pl-1">
-                              {log.action === 'status_change' ? (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4 inline" />
-                                  {(() => {
-                                    const m = log.details?.match(
-                                      /статус:\s*(\w+)\s*→\s*(\w+)/,
-                                    )
-                                    if (m)
-                                      return (
-                                        <span>
-                                          {t('status_changed')}:{' '}
-                                          {t('order_' + m[1])} →{' '}
-                                          {t('order_' + m[2])}
-                                        </span>
-                                      )
-                                    return log.details
-                                  })()}
+                                <span className="font-medium">
+                                  {ev.user_name || '—'}
                                 </span>
-                              ) : (
-                                formatPhonesInText(
-                                  log.details || log.action,
-                                ).replace(
-                                  /\b(warehouse|parcel_locker|courier)\b/g,
-                                  (m) => t(m),
-                                )
-                              )}
-                            </p>
-                          </div>
-                        ))
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(ev.created_at + 'Z').toLocaleString(
+                                    localeKey,
+                                    {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    },
+                                  )}
+                                </span>
+                              </div>
+                              <p className="text-muted-foreground pl-1">
+                                {!isWaybill &&
+                                ev.event_type === 'status_change' ? (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4 inline" />
+                                    {(() => {
+                                      const m = ev.details?.match(
+                                        /статус:\s*(\w+)\s*→\s*(\w+)/,
+                                      )
+                                      if (m)
+                                        return (
+                                          <span>
+                                            {t('status_changed')}:{' '}
+                                            {t('order_' + m[1])} →{' '}
+                                            {t('order_' + m[2])}
+                                          </span>
+                                        )
+                                      return ev.details
+                                    })()}
+                                  </span>
+                                ) : isWaybill ? (
+                                  <span className="flex items-center gap-1">
+                                    <IconComponent className="w-4 h-4 inline shrink-0" />
+                                    <span>
+                                      {t('waybill_' + ev.event_type)}:{' '}
+                                      {ev.details || ''}
+                                    </span>
+                                  </span>
+                                ) : (
+                                  formatPhonesInText(
+                                    ev.details || ev.event_type,
+                                  ).replace(
+                                    /\b(warehouse|parcel_locker|courier)\b/g,
+                                    (m) => t(m),
+                                  )
+                                )}
+                              </p>
+                            </div>
+                          )
+                        })
                       )}
                     </div>
                   ) : (
