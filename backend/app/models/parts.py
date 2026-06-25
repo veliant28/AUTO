@@ -32,6 +32,7 @@ class Part(Base):
     is_active = Column(Boolean, default=True, index=True)
     deactivated_at = Column(DateTime, nullable=True)
     deactivation_reason = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
 
     __table_args__ = (
         Index("idx_part_article_brand", "article", "brand"),

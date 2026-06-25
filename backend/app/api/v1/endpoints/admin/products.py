@@ -4,7 +4,7 @@ from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.models import User, Part, SupplierOffer, Supplier
 from app.models.pricing import PriceRule
-from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse
+from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse, ProductUpdateSchema
 from datetime import datetime
 
 router = APIRouter()
@@ -120,6 +120,7 @@ async def list_products(
             "is_active": part.is_active,
             "deactivated_at": part.deactivated_at,
             "deactivation_reason": part.deactivation_reason,
+            "image_url": part.image_url,
         })
 
     return AdminProductListResponse(
@@ -144,6 +145,26 @@ async def delete_product(
     db.query(SupplierOffer).filter(SupplierOffer.part_id == part.id).delete()
     db.delete(part)
     db.commit()
+    return {"ok": True}
+
+
+@router.put("/products/{product_id}")
+async def update_product(
+    product_id: int,
+    data: ProductUpdateSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Обновление товара."""
+    part = db.query(Part).filter(Part.id == product_id).first()
+    if not part:
+        raise HTTPException(404, "Product not found")
+
+    update_data = data.model_dump(exclude_none=True)
+    if update_data:
+        for key, value in update_data.items():
+            setattr(part, key, value)
+        db.commit()
     return {"ok": True}
 
 

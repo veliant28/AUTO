@@ -13,12 +13,15 @@ import {
   Search,
   AlertTriangle,
   Plus,
+  Save,
+  ImageIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -310,6 +313,17 @@ export default function AdminProductsPage() {
   const [status, setStatus] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<any>(null)
+  const [editProduct, setEditProduct] = useState<any>(null)
+  const [editForm, setEditForm] = useState({
+    article: '',
+    brand: '',
+    name: '',
+    sku: '',
+    description: '',
+    category_id: null as number | null,
+    is_active: true,
+    image_url: '',
+  })
   useEffect(() => {
     setHydrated(true)
   }, [])
@@ -327,6 +341,41 @@ export default function AdminProductsPage() {
       toast.error(t('products_delete_error'))
     },
   })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      await api.put(`/admin/products/${id}`, data)
+    },
+    onSuccess: () => {
+      toast.success(t('saved'))
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] })
+      setEditProduct(null)
+    },
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/categories', {
+        params: { page: 1, page_size: 500 },
+      })
+      return data?.items || []
+    },
+  })
+
+  const openEdit = (product: any) => {
+    setEditForm({
+      article: product.article || '',
+      brand: product.brand || '',
+      name: product.name || '',
+      sku: product.sku || '',
+      description: product.description || '',
+      category_id: product.category_id || null,
+      is_active: product.is_active ?? true,
+      image_url: product.image_url || '',
+    })
+    setEditProduct(product)
+  }
 
   const { data } = useQuery({
     queryKey: ['admin-products', page, pageSize, search, supplier, status],
@@ -574,7 +623,11 @@ export default function AdminProductsPage() {
                             <AddToOrderDropdown productId={item.id} t={t} />
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="outline" size="icon">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => openEdit(row.original)}
+                                >
                                   <Pencil className="w-4 h-4" />
                                 </Button>
                               </TooltipTrigger>
@@ -660,6 +713,203 @@ export default function AdminProductsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={!!editProduct}
+        onOpenChange={(open) => !open && setEditProduct(null)}
+      >
+        <DialogContent
+          className="w-[90vw] max-w-[1000px] h-[85vh] overflow-hidden flex flex-col !p-0 !gap-0"
+          aria-describedby={undefined}
+        >
+          <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
+            <DialogTitle className="text-2xl font-bold">
+              {t('edit')}
+            </DialogTitle>
+          </DialogHeader>
+          <Separator className="flex-shrink-0" />
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-[300px_1fr] gap-6 h-full">
+              {/* Left: Photo */}
+              <div className="space-y-4">
+                <div
+                  className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors relative overflow-hidden"
+                  onClick={() =>
+                    document.getElementById('product-image-input')?.click()
+                  }
+                >
+                  {editProduct?.image_url ? (
+                    <img
+                      src={editProduct.image_url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <ImageIcon className="w-12 h-12" />
+                      <span className="text-sm">Фото товара</span>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="product-image-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const url = URL.createObjectURL(file)
+                      setEditForm((f) => ({ ...f, image_url: url }))
+                    }
+                  }}
+                />
+                <Input
+                  placeholder="URL фото"
+                  value={editForm.image_url}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, image_url: e.target.value }))
+                  }
+                />
+              </div>
+              {/* Right: Fields */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t('article')}
+                    </span>
+                    <Input
+                      value={editForm.article}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, article: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t('brand')}
+                    </span>
+                    <Input
+                      value={editForm.brand}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, brand: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm text-muted-foreground">
+                    {t('name')}
+                  </span>
+                  <Input
+                    value={editForm.name}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, name: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">SKU</span>
+                    <Input
+                      value={editForm.sku || ''}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, sku: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t('category')}
+                    </span>
+                    <select
+                      value={editForm.category_id || ''}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          category_id: e.target.value
+                            ? Number(e.target.value)
+                            : null,
+                        }))
+                      }
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    >
+                      <option value="">—</option>
+                      {(categories || []).map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <span className="text-sm text-muted-foreground">
+                    Цена (только для просмотра)
+                  </span>
+                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                    {editProduct?.final_price
+                      ? `${editProduct.final_price} ₴`
+                      : '—'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">
+                    {t('status')}
+                  </span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editForm.is_active}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          is_active: e.target.checked,
+                        }))
+                      }
+                      className="rounded"
+                    />
+                    <span className="text-sm">
+                      {editForm.is_active ? 'Активен' : 'Деактивирован'}
+                    </span>
+                  </label>
+                </div>
+                {!editForm.is_active && (
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      Причина деактивации
+                    </span>
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                      {editProduct?.deactivation_reason || '—'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <Separator className="flex-shrink-0" />
+          <div className="flex-shrink-0 p-4 pt-3 flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setEditProduct(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() =>
+                updateMutation.mutate({ id: editProduct.id, data: editForm })
+              }
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t('save')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={!!deleteTarget}

@@ -101,6 +101,7 @@ class AdminProductItem(BaseModel):
     is_active: bool = True
     deactivated_at: Optional[datetime] = None
     deactivation_reason: Optional[str] = None
+    image_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -111,6 +112,18 @@ class AdminProductListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ProductUpdateSchema(BaseModel):
+    article: Optional[str] = None
+    brand: Optional[str] = None
+    brand_id: Optional[int] = None
+    name: Optional[str] = None
+    sku: Optional[str] = None
+    description: Optional[str] = None
+    category_id: Optional[int] = None
+    is_active: Optional[bool] = None
+    image_url: Optional[str] = None
 
 
 class BatchStartRequest(BaseModel):
