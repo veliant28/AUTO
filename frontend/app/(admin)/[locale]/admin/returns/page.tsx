@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   ScrollText,
   ScanBarcode,
+  ScanLine,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -105,6 +106,7 @@ interface AdminReturn {
   sender_name: string | null
   sender_city_label: string | null
   sender_address_label: string | null
+  ttn_number: string | null
   status: string
   total_refund: number
   items_count: number
@@ -540,6 +542,31 @@ export default function AdminReturnsPage() {
       columnHelper.accessor('created_at', {
         header: t('order_date'),
         cell: (info) => formatDate(info.getValue()),
+      }),
+      columnHelper.accessor('ttn_number', {
+        header: 'ТТН',
+        size: 180,
+        cell: (info) => {
+          const ttn = info.getValue<string | null>()
+          if (ttn) {
+            const formatted = ttn.replace(
+              /(\d{2})(\d{4})(\d{4})(\d{4})/,
+              '$1 $2 $3 $4',
+            )
+            return (
+              <Badge className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5">
+                <ScanBarcode className="w-3.5 h-3.5" />
+                {formatted}
+              </Badge>
+            )
+          }
+          return (
+            <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
+              <ScanLine className="w-3.5 h-3.5" />
+              XX XXXX XXXX XXXX
+            </Badge>
+          )
+        },
       }),
       columnHelper.display({
         id: 'actions',

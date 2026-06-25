@@ -87,6 +87,7 @@ class AdminReturnListItem(BaseModel):
     phone: Optional[str] = None
     status: str
     total_refund: float
+    ttn_number: Optional[str] = None
     items_count: int = 0
     created_at: Optional[datetime] = None
 

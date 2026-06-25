@@ -36,6 +36,7 @@ def _admin_return_to_list_dict(r: ReturnRequest) -> dict:
         "phone": r.order.phone if r.order else None,
         "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
         "total_refund": float(r.total_refund),
+        "ttn_number": r.ttn_number,
         "items_count": len(r.items) if r.items else 0,
         "created_at": r.created_at,
     }
