@@ -736,9 +736,9 @@ export default function AdminOrdersPage() {
 
                 <Separator className="flex-shrink-0" />
 
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-6">
+                <div className="flex-1 overflow-hidden p-6">
                   {showHistory ? (
-                    <div className="relative pl-12 space-y-0">
+                    <div className="relative pl-12 space-y-0 overflow-y-auto h-full">
                       <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
                       {!historyLogs || historyLogs.length === 0 ? (
                         <p className="text-muted-foreground py-8 text-center">
@@ -807,8 +807,8 @@ export default function AdminOrdersPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 min-h-full">
-                      <div className="border rounded-lg p-3 flex flex-col h-full">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
+                      <div className="border rounded-lg p-3 flex flex-col min-h-0">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <Package className="w-5 h-5" /> {t('order_items')}
                         </h4>
