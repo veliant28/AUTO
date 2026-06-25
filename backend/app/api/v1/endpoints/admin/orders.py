@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
@@ -11,7 +12,7 @@ from app.schemas.admin_schemas import (
     OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
-from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill
+from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent
 from datetime import datetime
 
 router = APIRouter()
@@ -519,15 +520,8 @@ async def get_order_all_events(
             parts = [user.last_name or '', user.first_name or '']
             actor_name = ' '.join(filter(None, parts)).strip() or user.full_name or ''
             actor_group = user.role.name if user.role else ''
-        # Look up TTN number from the waybill
-        wb = db.query(OrderNovaPoshtaWaybill).filter(
-            OrderNovaPoshtaWaybill.id == ev.waybill_id
-        ).first()
-        if wb and wb.np_number:
-            np_number = wb.np_number
-        # Fallback: extract from message "TTN XXXX ..."
-        if not np_number and ev.message:
-            import re
+        # Extract TTN number from event message "TTN 20451471413254 створено"
+        if ev.message:
             m = re.search(r'(\d{14})', ev.message)
             if m:
                 np_number = m.group(1)
