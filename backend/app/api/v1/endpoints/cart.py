@@ -40,6 +40,13 @@ async def add_to_cart(
     db: Session = Depends(get_db),
 ):
     """Добавить товар в корзину. Если товар уже есть — увеличивает количество."""
+    # Check product is active
+    part = db.query(Part).filter(Part.id == data.part_id).first()
+    if not part:
+        raise HTTPException(404, "Product not found")
+    if not part.is_active:
+        raise HTTPException(400, "Product is deactivated and cannot be added to cart")
+
     existing = db.query(CartItem).filter(
         CartItem.user_id == user_id,
         CartItem.part_id == data.part_id,
