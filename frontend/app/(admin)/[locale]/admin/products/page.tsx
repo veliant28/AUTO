@@ -865,19 +865,20 @@ export default function AdminProductsPage() {
                       onCheckedChange={(checked) =>
                         setEditForm((f) => ({ ...f, is_active: !!checked }))
                       }
+                      className="cursor-pointer"
                     />
-                    <span className="text-sm">
+                    <span className="text-sm cursor-pointer">
                       {editForm.is_active ? 'Активен' : 'Деактивирован'}
                     </span>
                   </label>
                 </div>
-                {!editForm.is_active && (
+                {!editForm.is_active && editProduct?.deactivation_reason && (
                   <div className="grid gap-1">
                     <span className="text-sm text-muted-foreground">
                       Причина деактивации
                     </span>
                     <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
-                      {editProduct?.deactivation_reason || '—'}
+                      {editProduct.deactivation_reason}
                     </div>
                   </div>
                 )}
