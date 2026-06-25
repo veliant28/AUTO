@@ -190,7 +190,7 @@ async def get_part_details(
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
     """Получить детальную информацию о запчасти по артикулу."""
-    parts = db.query(Part).filter(Part.article == article).all()
+    parts = db.query(Part).filter(Part.article == article, Part.is_active == True).all()
     part_data = None
     price_data = None
     if parts:
@@ -299,7 +299,7 @@ async def get_parts(
 ):
     """Получить запчасти для модификации по секции."""
     if mod_id == 0:
-        base_query = db.query(Part).filter(Part.category_id == sec_id)
+        base_query = db.query(Part).filter(Part.category_id == sec_id, Part.is_active == True)
     else:
         local_mod = db.query(VehicleModification).filter(
             (VehicleModification.tecdoc_id == mod_id) | (VehicleModification.id == mod_id)
@@ -309,6 +309,7 @@ async def get_parts(
         base_query = db.query(Part).join(PartApplicability).filter(
             PartApplicability.mod_id == local_mod.id,
             Part.category_id == sec_id,
+            Part.is_active == True,
         )
 
     need_offer_join = any([in_stock_only, min_price is not None, max_price is not None, supplier_id is not None, sort_by == "price"])
@@ -358,6 +359,7 @@ async def search_parts(
 ):
     """Поиск запчастей по артикулу или названию."""
     results = db.query(Part).filter(
+        Part.is_active == True,
         or_(
             Part.article.ilike(f"%{q}%"),
             Part.name.ilike(f"%{q}%"),

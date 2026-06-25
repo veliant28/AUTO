@@ -42849,3 +42849,90 @@ WHERE parts.id = %(id_1)s::INTEGER
 2026-06-25 20:28:36 - root - INFO - Health check called
 2026-06-25 20:29:06 - root - INFO - Health check called
 2026-06-25 20:29:36 - root - INFO - Health check called
+2026-06-25 20:30:12 - root - INFO - Health check called
+2026-06-25 20:30:42 - root - INFO - Health check called
+2026-06-25 20:31:12 - root - INFO - Health check called
+2026-06-25 20:31:42 - root - INFO - Health check called
+2026-06-25 20:32:12 - root - INFO - Health check called
+2026-06-25 20:32:42 - root - INFO - Health check called
+2026-06-25 20:33:13 - root - INFO - Health check called
+2026-06-25 20:33:20 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:33:43 - root - INFO - Health check called
+2026-06-25 20:34:13 - root - INFO - Health check called
+2026-06-25 20:34:43 - root - INFO - Health check called
+2026-06-25 20:35:13 - root - INFO - Health check called
+2026-06-25 20:35:40 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:35:41 - root - INFO - Health check called
+2026-06-25 20:36:11 - root - INFO - Health check called
+2026-06-25 20:36:41 - root - INFO - Health check called
+2026-06-25 20:37:11 - root - INFO - Health check called
+2026-06-25 20:37:41 - root - INFO - Health check called
+2026-06-25 20:38:11 - root - INFO - Health check called
+2026-06-25 20:38:42 - root - INFO - Health check called
+2026-06-25 20:39:12 - root - INFO - Health check called
+2026-06-25 20:39:42 - root - INFO - Health check called
+2026-06-25 20:40:12 - root - INFO - Health check called
+2026-06-25 20:40:24 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:40:24 - root - INFO - Health check called
+2026-06-25 20:40:55 - root - INFO - Health check called
+2026-06-25 20:41:25 - root - INFO - Health check called
+2026-06-25 20:41:55 - root - INFO - Health check called
+2026-06-25 20:42:25 - root - INFO - Health check called
+2026-06-25 20:42:58 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:42:59 - root - INFO - Health check called
+2026-06-25 20:43:32 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:44:26 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:44:27 - watchfiles.main - INFO - 1 change detected
+2026-06-25 20:44:38 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:44:58 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:45:23 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-06-25 20:46:14 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:46:15 - watchfiles.main - INFO - 1 change detected
+2026-06-25 20:46:15 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:46:37 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:46:38 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:47:00 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:47:00 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:47:21 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:47:22 - watchfiles.main - INFO - 3 changes detected
+2026-06-25 20:47:43 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'

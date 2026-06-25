@@ -375,6 +375,9 @@ async def search_parts(
             Part.name.ilike(f"%{q}%"),
         )
     ).limit(limit).all()
+    import logging; logging.warning(f"SEARCH DEBUG: q={q}, results={len(results)}, is_active_col={Part.is_active}")
+    for p in results:
+        logging.warning(f"  result: id={p.id}, article={p.article}, is_active={p.is_active}")
 
     enriched = []
     for part in results:
@@ -396,6 +399,7 @@ async def search_parts(
             "supplier_name": best["supplier_name"] if best else None,
             "currency": best["currency"] if best else "UAH",
             "sku": part.sku,
+            "is_active": part.is_active,
         })
     return enriched
 
