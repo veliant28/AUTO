@@ -853,19 +853,17 @@ export default function AdminOrdersPage() {
                                 ) : isWaybill ? (
                                   <span className="flex items-center gap-2">
                                     <IconComponent className="w-4 h-4 inline shrink-0" />
-                                    {ev.np_number && (
-                                      <Badge
-                                        className={`border-0 text-sm font-mono ${
-                                          ev.event_type === 'delete'
-                                            ? 'bg-red-500 text-white line-through'
-                                            : ev.event_type === 'create'
-                                              ? 'bg-green-500 text-white'
-                                              : 'bg-blue-500 text-white'
-                                        }`}
-                                      >
-                                        {ev.np_number}
-                                      </Badge>
-                                    )}
+                                    <Badge
+                                      className={`border-0 text-sm font-mono ${
+                                        ev.event_type === 'delete'
+                                          ? 'bg-red-500 text-white line-through'
+                                          : ev.event_type === 'create'
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-blue-500 text-white'
+                                      }`}
+                                    >
+                                      {ev.np_number || 'TTN'}
+                                    </Badge>
                                   </span>
                                 ) : (
                                   formatPhonesInText(
