@@ -322,6 +322,7 @@
     "order_shipped": "Shipped",
     "order_delivered": "Delivered",
     "order_cancelled": "Cancelled",
+    "system_actor": "System",
     "order_id": "ID",
     "order_customer": "Customer",
     "order_phone": "Phone",

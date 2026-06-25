@@ -517,6 +517,7 @@ class NovaPoshtaWaybillService:
         self,
         waybill_id: Optional[int] = None,
         order_id: Optional[int] = None,
+        user_id: Optional[int] = None,
     ) -> Optional[OrderNovaPoshtaWaybill]:
         """
         Sync a waybill's tracking status from NP API.
@@ -555,7 +556,7 @@ class NovaPoshtaWaybillService:
                 message=f"Помилка синхронізації: {str(e)}",
                 errors=e.errors or [],
                 error_codes=[],
-                user_id=None,
+                user_id=user_id,
             )
             return wb
 
@@ -573,11 +574,11 @@ class NovaPoshtaWaybillService:
                     order_id=wb.order_id,
                     waybill_id=wb.id,
                     event_type=OrderNovaPoshtaWaybillEvent.EVENT_SYNC,
-                    message=f"Статус оновлено: {wb.status_text or NovaPoshtaWaybillService._status_label(wb.status_code)}",
+                    message=f"TTN {wb.np_number}: статус {wb.status_text or NovaPoshtaWaybillService._status_label(wb.status_code)}",
                     status_code=wb.status_code,
                     status_text=wb.status_text,
                     raw_response=tracking,
-                    user_id=None,
+                    user_id=user_id,
                 )
 
             # If NP reports the waybill as deleted, sync our local state
@@ -591,7 +592,7 @@ class NovaPoshtaWaybillService:
                     status_code=wb.status_code,
                     status_text=wb.status_text,
                     raw_response=tracking,
-                    user_id=None,
+                    user_id=user_id,
                 )
 
         wb.last_sync_error = ""

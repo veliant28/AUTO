@@ -816,7 +816,7 @@ export default function AdminOrdersPage() {
                                   </Badge>
                                 )}
                                 <span className="font-medium">
-                                  {ev.user_name || '—'}
+                                  {ev.user_name || t('system_actor')}
                                 </span>
                                 <span className="text-sm text-muted-foreground">
                                   {new Date(ev.created_at + 'Z').toLocaleString(

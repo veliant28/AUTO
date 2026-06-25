@@ -323,6 +323,7 @@
     "order_shipped": "Отправлен",
     "order_delivered": "Доставлен",
     "order_cancelled": "Отменен",
+    "system_actor": "Система",
     "order_id": "ID",
     "order_customer": "Клиент",
     "order_phone": "Телефон",

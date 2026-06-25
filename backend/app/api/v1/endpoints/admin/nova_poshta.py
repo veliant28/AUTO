@@ -613,7 +613,7 @@ async def sync_waybill_status(
     """Sync tracking status for a waybill from NP API."""
     service = NovaPoshtaWaybillService(db)
     try:
-        wb = await service.sync_tracking_status(waybill_id=waybill_id)
+        wb = await service.sync_tracking_status(waybill_id=waybill_id, user_id=current_user.id)
     except NovaPoshtaWaybillNotFoundError as e:
         raise HTTPException(404, str(e))
     except NovaPoshtaApiError as e:
@@ -635,7 +635,7 @@ async def sync_order_waybill_status(
     """Sync tracking status for an order's waybill."""
     service = NovaPoshtaWaybillService(db)
     try:
-        wb = await service.sync_tracking_status(order_id=order_id)
+        wb = await service.sync_tracking_status(order_id=order_id, user_id=current_user.id)
     except NovaPoshtaApiError as e:
         raise HTTPException(502, detail=str(e))
 
