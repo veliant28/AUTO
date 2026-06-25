@@ -102,6 +102,8 @@ class AdminProductItem(BaseModel):
     deactivated_at: Optional[datetime] = None
     deactivation_reason: Optional[str] = None
     image_url: Optional[str] = None
+    category_id: Optional[int] = None
+    description: Optional[str] = None
 
     class Config:
         from_attributes = True

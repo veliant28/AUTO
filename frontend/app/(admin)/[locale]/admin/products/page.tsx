@@ -824,35 +824,54 @@ export default function AdminProductsPage() {
                     <span className="text-sm text-muted-foreground">
                       {t('category')}
                     </span>
-                    <select
-                      value={editForm.category_id || ''}
-                      onChange={(e) =>
+                    <Select
+                      value={editForm.category_id?.toString() || ''}
+                      onValueChange={(v) =>
                         setEditForm((f) => ({
                           ...f,
-                          category_id: e.target.value
-                            ? Number(e.target.value)
-                            : null,
+                          category_id: v ? Number(v) : null,
                         }))
                       }
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                     >
-                      <option value="">—</option>
-                      {(categories || []).map((cat: any) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="—" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(categories || []).map((cat: any) => (
+                          <SelectItem key={cat.id} value={cat.id.toString()}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-                <div className="grid gap-1">
-                  <span className="text-sm text-muted-foreground">
-                    Цена (только для просмотра)
-                  </span>
-                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
-                    {editProduct?.final_price
-                      ? `${editProduct.final_price} ₴`
-                      : '—'}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      Цена поставщика
+                    </span>
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                      {editProduct?.min_price
+                        ? `${editProduct.min_price} ₴`
+                        : '—'}
+                    </div>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      Цена с наценкой
+                    </span>
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                      {editProduct?.final_price
+                        ? `${editProduct.final_price} ₴`
+                        : '—'}
+                      {editProduct?.margin_percent != null &&
+                        editProduct.final_price != null && (
+                          <span className="text-muted-foreground ml-1">
+                            (+{editProduct.margin_percent}%)
+                          </span>
+                        )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

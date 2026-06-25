@@ -121,6 +121,8 @@ async def list_products(
             "deactivated_at": part.deactivated_at,
             "deactivation_reason": part.deactivation_reason,
             "image_url": part.image_url,
+            "category_id": part.category_id,
+            "description": part.description,
         })
 
     return AdminProductListResponse(
