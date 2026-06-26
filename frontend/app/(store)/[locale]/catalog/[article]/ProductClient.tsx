@@ -319,7 +319,7 @@ export default function ProductClient({ article }: { article: string }) {
                 <TableBody>
                   {crosses.map(
                     (
-                      cross: { article: string; brand_id?: number },
+                      cross: { article: string; brand_name?: string },
                       idx: number,
                     ) => (
                       <TableRow key={idx}>
@@ -327,7 +327,7 @@ export default function ProductClient({ article }: { article: string }) {
                           {cross.article}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {cross.brand_id ? `ID: ${cross.brand_id}` : '—'}
+                          {cross.brand_name || '—'}
                         </TableCell>
                       </TableRow>
                     ),
@@ -358,7 +358,7 @@ export default function ProductClient({ article }: { article: string }) {
                 <TableBody>
                   {oems.map(
                     (
-                      oem: { number: string; manufacturer_id?: number },
+                      oem: { number: string; brand_name?: string },
                       idx: number,
                     ) => (
                       <TableRow key={idx}>
@@ -366,9 +366,7 @@ export default function ProductClient({ article }: { article: string }) {
                           {oem.number}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {oem.manufacturer_id
-                            ? `ID: ${oem.manufacturer_id}`
-                            : '—'}
+                          {oem.brand_name || '—'}
                         </TableCell>
                       </TableRow>
                     ),

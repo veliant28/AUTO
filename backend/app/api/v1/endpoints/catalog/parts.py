@@ -293,15 +293,19 @@ async def get_part_details(
         ).fetchall()
 
         crosses = tecdoc_db.execute(
-            sa_text("""SELECT DISTINCT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
-                       WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
+            sa_text("""SELECT DISTINCT ac."PartsDataSupplierArticleNumber", man."description"
+                       FROM article_cross ac
+                       LEFT JOIN manufacturers man ON man.id = ac."manufacturerId"
+                       WHERE LOWER(ac."PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
             {"art": tecdoc_search},
         ).fetchall()
 
         oems = tecdoc_db.execute(
-            sa_text("""SELECT DISTINCT "OENbr", "manufacturerId" FROM article_oe
-                       WHERE LOWER("OENbr") = LOWER(:art)
-                       AND "OENbr" IS NOT NULL AND "OENbr" != ''
+            sa_text("""SELECT DISTINCT ae."OENbr", man."description"
+                       FROM article_oe ae
+                       LEFT JOIN manufacturers man ON man.id = ae."manufacturerId"
+                       WHERE LOWER(ae."OENbr") = LOWER(:art)
+                       AND ae."OENbr" IS NOT NULL AND ae."OENbr" != ''
                        LIMIT 20"""),
             {"art": tecdoc_search},
         ).fetchall()
@@ -316,8 +320,8 @@ async def get_part_details(
         "price": price_data,
         "info": info_data,
         "images": [{"name": r[0], "description": r[1] or ""} for r in images],
-        "crosses": [{"article": r[0], "brand_id": r[1]} for r in crosses],
-        "oem": [{"number": r[0], "manufacturer_id": r[1]} for r in oems],
+        "crosses": [{"article": r[0], "brand_name": r[1]} for r in crosses],
+        "oem": [{"number": r[0], "brand_name": r[1]} for r in oems],
         "applicability_count": app_count,
     }
 
