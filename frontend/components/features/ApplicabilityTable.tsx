@@ -159,7 +159,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
               {t('no_applicability')}
             </p>
           ) : (
-            <div className="overflow-y-auto max-h-56">
+            <div>
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((hg) => (
