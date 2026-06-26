@@ -33,6 +33,8 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         email_from_name=s.email_from_name,
         has_resend_api_key=bool(s.resend_api_key_encrypted),
         resend_api_key_masked=masked,
+        google_client_id=s.google_client_id,
+        has_google_secret=bool(s.google_client_secret_encrypted),
     )
 
 
@@ -88,9 +90,25 @@ async def update_settings(
         s.email_from = body.email_from
     if body.email_from_name is not None:
         s.email_from_name = body.email_from_name
+    if body.google_client_id is not None:
+        s.google_client_id = body.google_client_id or None
+    if body.google_client_secret is not None:
+        if body.google_client_secret:
+            s.google_client_secret_encrypted = encrypt_password(body.google_client_secret)
+        else:
+            s.google_client_secret_encrypted = None
     db.commit()
     db.refresh(s)
     return _build_settings_response(s)
+
+
+@router.get("/settings/google-client-id")
+async def get_google_client_id(db: Session = Depends(get_db)):
+    """Публично вернуть Google Client ID для фронтенда."""
+    s = _get_settings(db)
+    if s.google_client_id:
+        return {"client_id": s.google_client_id}
+    return {"client_id": None}
 
 
 @router.post("/admin/settings/test-email")

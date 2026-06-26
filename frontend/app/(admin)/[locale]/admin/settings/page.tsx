@@ -3,7 +3,7 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Eye, EyeOff, Settings, Mail, Send } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Settings, Mail, Send, LogIn } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,6 +54,12 @@ export default function SettingsPage() {
   const [emailFromName, setEmailFromName] = React.useState('')
   const [testEmail, setTestEmail] = React.useState('')
 
+  // Google OAuth fields
+  const [googleClientId, setGoogleClientId] = React.useState('')
+  const [googleClientSecret, setGoogleClientSecret] = React.useState('')
+  const [showGoogleSecret, setShowGoogleSecret] = React.useState(false)
+  const [hasGoogleSecret, setHasGoogleSecret] = React.useState(false)
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => {
@@ -65,6 +71,8 @@ export default function SettingsPage() {
         email_from_name: string | null
         has_resend_api_key: boolean
         resend_api_key_masked: string | null
+        google_client_id: string | null
+        has_google_secret: boolean
       }
     },
     enabled: !!user,
@@ -84,6 +92,14 @@ export default function SettingsPage() {
     } else {
       setSavedKeyMask(null)
     }
+    if (data?.google_client_id) setGoogleClientId(data.google_client_id)
+    if (data?.has_google_secret) {
+      setHasGoogleSecret(true)
+      setGoogleClientSecret('__saved__')
+    } else {
+      setHasGoogleSecret(false)
+      setGoogleClientSecret('')
+    }
   }, [data])
 
   const isKeyUnchanged = resendApiKey === savedKeyMask
@@ -94,6 +110,9 @@ export default function SettingsPage() {
       if (!isKeyUnchanged) payload.resend_api_key = resendApiKey
       if (emailFrom) payload.email_from = emailFrom
       if (emailFromName) payload.email_from_name = emailFromName
+      if (googleClientId) payload.google_client_id = googleClientId
+      if (googleClientSecret !== '__saved__')
+        payload.google_client_secret = googleClientSecret
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
@@ -286,6 +305,71 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Google OAuth Settings Card */}
+        <Card className="sm:col-span-1 lg:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <LogIn className="w-5 h-5 text-primary" />
+              {t('settings_google_title')}
+            </CardTitle>
+            <CardDescription>{t('settings_google_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_google_client_id')}
+                  </label>
+                  <Input
+                    value={googleClientId}
+                    onChange={(e) => setGoogleClientId(e.target.value)}
+                    placeholder="123456-xxxxx.apps.googleusercontent.com"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_google_client_secret')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showGoogleSecret ? 'text' : 'password'}
+                      value={
+                        googleClientSecret === '__saved__'
+                          ? ''
+                          : googleClientSecret
+                      }
+                      onChange={(e) => setGoogleClientSecret(e.target.value)}
+                      placeholder={
+                        hasGoogleSecret
+                          ? '•••••••• (saved)'
+                          : t('settings_google_client_secret_placeholder')
+                      }
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGoogleSecret(!showGoogleSecret)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showGoogleSecret ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>

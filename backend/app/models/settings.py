@@ -10,3 +10,5 @@ class SiteSettings(Base):
     resend_api_key_encrypted = Column(Text, nullable=True)
     email_from = Column(String, nullable=False, default="noreply@svom.com.ua")
     email_from_name = Column(String, nullable=True)
+    google_client_id = Column(String, nullable=True)
+    google_client_secret_encrypted = Column(Text, nullable=True)

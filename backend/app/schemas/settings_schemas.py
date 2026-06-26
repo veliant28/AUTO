@@ -8,6 +8,8 @@ class SettingsResponse(BaseModel):
     email_from_name: Optional[str] = None
     has_resend_api_key: bool = False
     resend_api_key_masked: Optional[str] = None
+    google_client_id: Optional[str] = None
+    has_google_secret: bool = False
 
 class SettingsUpdate(BaseModel):
     brand_name: Optional[str] = None
@@ -15,6 +17,8 @@ class SettingsUpdate(BaseModel):
     resend_api_key: Optional[str] = None
     email_from: Optional[str] = None
     email_from_name: Optional[str] = None
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
 
 class EmailTestRequest(BaseModel):
     to_email: str
