@@ -228,32 +228,32 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
     part_batch = []
     part_ids = {}
 
-	    for sp in rows:
-	        brand = sp.brand or ""
-	        key = (sp.article, brand)
-	        if key not in part_ids:
-	            part_batch.append({
-	                "article": sp.article,
-	                "brand": brand,
-	                "name": sp.name or sp.article,
-	                "brand_id": sp.tecdoc_brand_id or 0,
-	                "sku": sp.sku,
-	                "is_active": True,
-	            })
-	            part_ids[key] = None
-	
-	    for batch_start in range(0, len(part_batch), 1000):
-	        chunk = part_batch[batch_start:batch_start + 1000]
-	        stmt = pg_insert(Part).values(chunk)
-	        stmt = stmt.on_conflict_do_update(
-	            index_elements=["article", sa.text("COALESCE(brand, '')")],
-	            set_={
-	                "name": stmt.excluded.name,
-	                "brand_id": stmt.excluded.brand_id,
-	                "sku": stmt.excluded.sku,
-	                "is_active": True,
-	            },
-	        )
+    for sp in rows:
+        brand = sp.brand or ""
+        key = (sp.article, brand)
+        if key not in part_ids:
+            part_batch.append({
+                "article": sp.article,
+                "brand": brand,
+                "name": sp.name or sp.article,
+                "brand_id": sp.tecdoc_brand_id or 0,
+                "sku": sp.sku,
+                "is_active": True,
+            })
+            part_ids[key] = None
+
+    for batch_start in range(0, len(part_batch), 1000):
+        chunk = part_batch[batch_start:batch_start + 1000]
+        stmt = pg_insert(Part).values(chunk)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["article", sa.text("COALESCE(brand, '')")],
+            set_={
+                "name": stmt.excluded.name,
+                "brand_id": stmt.excluded.brand_id,
+                "sku": stmt.excluded.sku,
+                "is_active": True,
+            },
+        )
         db.execute(stmt)
         db.commit()
         if progress_cb:
