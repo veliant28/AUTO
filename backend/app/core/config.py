@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Sentry
     SENTRY_DSN: str = ""
 
+    # Resend (email)
+    RESEND_API_KEY: str = ""
+
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_WEBHOOK_URL: str = ""
