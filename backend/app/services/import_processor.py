@@ -334,7 +334,7 @@ def assign_gpl_categories(db: Session, supplier: str):
         tecdoc_id = GPL_CATEGORY_MAP.get(sp.category)
         if tecdoc_id is None:
             continue
-        cat_map.setdefault(tecdoc_id, []).append((sp.article, sp.brand or ""))
+        cat_map.setdefault(tecdoc_id, []).append((sp.article, sp.brand or "", sp.name or ""))
 
     if not cat_map:
         return 0
@@ -351,7 +351,7 @@ def assign_gpl_categories(db: Session, supplier: str):
 
     all_pairs = set()
     for pairs in cat_map.values():
-        for article, brand in pairs:
+        for article, brand, _ in pairs:
             all_pairs.add((article, brand))
 
     parts_lookup = {}
@@ -376,18 +376,33 @@ def assign_gpl_categories(db: Session, supplier: str):
         cat_id = tecdoc_to_cat.get(tecdoc_id)
         if cat_id is None:
             continue
-        for article, brand in article_brands:
+        for article, brand, name in article_brands:
             part_info = parts_lookup.get((article, brand))
-            if part_info and part_info[1] != cat_id:
-                updates.append({"id": part_info[0], "category_id": cat_id})
+            if not part_info:
+                continue
+            # Don't overwrite manually set categories
+            if part_info[1] is not None:
+                continue
+            # Keyword-based sub-categorization for belts
+            resolved_cat_id = cat_id
+            name_lower = name.lower()
+            if "грм" in name_lower:
+                if "комплект" in name_lower:
+                    resolved_cat_id = 149  # Комплект ремня ГРМ
+                else:
+                    resolved_cat_id = 148  # Ремень ГРМ
+            updates.append({"id": part_info[0], "category_id": resolved_cat_id})
 
     if not updates:
         db.commit()
         return 0
 
-    db.execute(
-        text("UPDATE parts SET category_id = :category_id WHERE id = :id"),
-        updates,
-    )
+    # Batch update
+    for i in range(0, len(updates), 500):
+        chunk = updates[i:i + 500]
+        db.execute(
+            text("UPDATE parts SET category_id = :category_id WHERE id = :id"),
+            chunk,
+        )
     db.commit()
     return len(updates)
