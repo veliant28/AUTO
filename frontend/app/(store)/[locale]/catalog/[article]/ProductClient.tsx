@@ -208,10 +208,20 @@ export default function ProductClient({ article }: { article: string }) {
                   .slice(0, 30)
                   .map((attr: { name: string; value: string }, idx: number) => (
                     <TableRow key={idx}>
-                      <TableCell className="text-muted-foreground text-sm font-medium w-1/2">
-                        {attr.name}
-                      </TableCell>
-                      <TableCell className="text-sm">{attr.value}</TableCell>
+                      {attr.name ? (
+                        <>
+                          <TableCell className="text-muted-foreground text-sm font-medium w-1/2">
+                            {attr.name}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {attr.value}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <TableCell className="text-sm" colSpan={2}>
+                          {attr.value}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
               </TableBody>
