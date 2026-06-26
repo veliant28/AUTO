@@ -190,7 +190,7 @@ export default function ProductClient({ article }: { article: string }) {
             <img
               src={imageUrl}
               alt={name}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain p-6"
             />
           ) : (
             <span className="text-5xl font-bold text-white/40 select-none">
