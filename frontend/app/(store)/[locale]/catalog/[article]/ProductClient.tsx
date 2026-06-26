@@ -301,7 +301,7 @@ export default function ProductClient({ article }: { article: string }) {
       <Separator className="my-6" />
 
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-80 overflow-y-auto">
+        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[400px] overflow-y-auto">
           <h4 className="font-semibold text-sm sticky top-0 bg-card pb-2">
             {t('analogs')}
           </h4>
@@ -340,7 +340,7 @@ export default function ProductClient({ article }: { article: string }) {
           )}
         </div>
 
-        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-80 overflow-y-auto">
+        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[400px] overflow-y-auto">
           <h4 className="font-semibold text-sm sticky top-0 bg-card pb-2">
             {t('oem')}
           </h4>
@@ -381,7 +381,7 @@ export default function ProductClient({ article }: { article: string }) {
           )}
         </div>
 
-        <div className="rounded-lg border bg-card p-4 max-h-80 overflow-y-auto">
+        <div className="rounded-lg border bg-card p-4 max-h-[400px] overflow-y-auto">
           <ApplicabilityTable article={article} count={appCount} />
         </div>
       </div>
