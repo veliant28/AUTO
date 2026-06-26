@@ -30,7 +30,6 @@ import {
   useApplicabilityModels,
   useApplicability,
 } from '@/hooks/usePartDetail'
-import { APPLICABILITY_LIMIT } from '@/lib/constants'
 
 type Vehicle = {
   mod_id: number
@@ -50,9 +49,8 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
   const [makeId, setMakeId] = useState<string>('all')
   const [modelId, setModelId] = useState<string>('all')
 
-  // When a make or model is selected, load all. Otherwise only 10.
-  const hasFilter = makeId !== 'all' || modelId !== 'all'
-  const limit = hasFilter ? APPLICABILITY_LIMIT : 10
+  // Always show only 10 items, scroll inside block
+  const limit = 10
 
   const { data: makes } = useApplicabilityMakes(article)
   const { data: models } = useApplicabilityModels(
@@ -161,7 +159,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
               {t('no_applicability')}
             </p>
           ) : (
-            <div className="overflow-hidden">
+            <div className="overflow-y-auto max-h-[400px]">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((hg) => (
