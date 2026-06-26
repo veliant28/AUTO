@@ -3,9 +3,23 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Eye, EyeOff, Settings, Mail, Send, LogIn } from 'lucide-react'
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  Settings,
+  Mail,
+  Send,
+  LogIn,
+  HelpCircle,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
 import {
   Card,
   CardContent,
@@ -217,13 +231,18 @@ export default function SettingsPage() {
         </Card>
 
         {/* SMTP / Email Settings Card */}
-        <Card className="sm:col-span-1 lg:col-span-3">
+        <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Mail className="w-5 h-5 text-primary" />
               {t('settings_email_title')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings_email_desc')}</TooltipContent>
+              </Tooltip>
             </CardTitle>
-            <CardDescription>{t('settings_email_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
@@ -234,31 +253,42 @@ export default function SettingsPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_resend_api_key')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={resendApiKey}
+                      onChange={(e) => setResendApiKey(e.target.value)}
+                      placeholder={t('settings_resend_api_key_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showApiKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
-                      {t('settings_resend_api_key')}
+                      {t('settings_email_from_name')}
                     </label>
-                    <div className="relative">
-                      <Input
-                        type={showApiKey ? 'text' : 'password'}
-                        value={resendApiKey}
-                        onChange={(e) => setResendApiKey(e.target.value)}
-                        placeholder={t('settings_resend_api_key_placeholder')}
-                        className="pr-10 font-mono text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                      >
-                        {showApiKey ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
+                    <Input
+                      value={emailFromName}
+                      onChange={(e) => setEmailFromName(e.target.value)}
+                      placeholder={brandName || 'SVOM'}
+                    />
                   </div>
                   <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
@@ -270,20 +300,10 @@ export default function SettingsPage() {
                       placeholder="noreply@svom.com.ua"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
-                      {t('settings_email_from_name')}
-                    </label>
-                    <Input
-                      value={emailFromName}
-                      onChange={(e) => setEmailFromName(e.target.value)}
-                      placeholder={brandName || 'SVOM'}
-                    />
-                  </div>
                 </div>
 
                 {/* Test Email */}
-                <div className="border-t pt-4 mt-2">
+                <div>
                   <label className="text-sm text-muted-foreground mb-2 block">
                     {t('settings_test_email')}
                   </label>
@@ -316,13 +336,18 @@ export default function SettingsPage() {
         </Card>
 
         {/* Google OAuth Settings Card */}
-        <Card className="sm:col-span-1 lg:col-span-3">
+        <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <LogIn className="w-5 h-5 text-primary" />
               {t('settings_google_title')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings_google_desc')}</TooltipContent>
+              </Tooltip>
             </CardTitle>
-            <CardDescription>{t('settings_google_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {isLoading ? (
@@ -331,7 +356,7 @@ export default function SettingsPage() {
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <>
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">
                     {t('settings_google_client_id')}
@@ -369,7 +394,7 @@ export default function SettingsPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
