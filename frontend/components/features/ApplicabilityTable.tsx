@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
 import {
   useApplicabilityMakes,
   useApplicabilityModels,
@@ -103,9 +104,16 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
 
   return (
     <div className="space-y-3">
-      <h4 className="font-semibold text-sm flex items-center gap-2">
-        <Car className="w-3.5 h-3.5" /> {t('applicability')}
-        <span className="text-muted-foreground font-normal">({count})</span>
+      <h4 className="font-semibold text-sm flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <Car className="w-3.5 h-3.5" /> {t('applicability')}
+          <span className="text-muted-foreground font-normal">({count})</span>
+        </span>
+        {makeId !== 'all' && (
+          <Badge className="bg-blue-500 text-white border-0 text-sm">
+            {t('applicability_compatible')}
+          </Badge>
+        )}
       </h4>
 
       {count === 0 ? (
