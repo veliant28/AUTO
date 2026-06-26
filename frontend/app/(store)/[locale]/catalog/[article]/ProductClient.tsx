@@ -306,7 +306,7 @@ export default function ProductClient({ article }: { article: string }) {
           <div className="overflow-y-auto max-h-[460px] px-4 pb-4">
             {crosses.length > 0 ? (
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card">
                   <TableRow>
                     <TableHead className="bg-muted/30 text-sm">
                       {t('article')}
@@ -345,7 +345,7 @@ export default function ProductClient({ article }: { article: string }) {
           <div className="overflow-y-auto max-h-[460px] px-4 pb-4">
             {oems.length > 0 ? (
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card">
                   <TableRow>
                     <TableHead className="bg-muted/30 text-sm">
                       {t('article')}

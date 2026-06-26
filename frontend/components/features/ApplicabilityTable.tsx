@@ -161,7 +161,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
           ) : (
             <div>
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card">
                   {table.getHeaderGroups().map((hg) => (
                     <TableRow key={hg.id}>
                       {hg.headers.map((header) => (
