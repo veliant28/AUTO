@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -14,6 +16,8 @@ from app.schemas.auth_schemas import (
     ForgotPasswordSchema, ResetPasswordSchema, GoogleAuthSchema
 )
 from app.models import User, Role, PasswordReset, OAuthAccount
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -108,7 +112,38 @@ async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_
     db.add(reset)
     db.commit()
     
-    return {"message": "If the email exists, a recovery link has been sent", "token": token}
+    # Try to send email via Resend if configured
+    from app.core.config import settings as app_settings
+    from app.models.settings import SiteSettings
+    from app.services.crypto_util import decrypt_password
+    from app.services.email_service import send_email, build_password_reset_html_ru
+
+    site_settings = db.query(SiteSettings).first()
+    api_key_encrypted = site_settings.resend_api_key_encrypted if site_settings else None
+    api_key = decrypt_password(api_key_encrypted) if api_key_encrypted else app_settings.RESEND_API_KEY
+    
+    if api_key:
+        reset_link = f"{'http://localhost:3080'}/ru/auth/reset-password?token={token}"
+        user_name = user.first_name or user.full_name or user.email
+        html = build_password_reset_html_ru(reset_link, user_name)
+        
+        from_email = site_settings.email_from if site_settings else "noreply@svom.com.ua"
+        from_name = site_settings.email_from_name if site_settings else None
+        
+        try:
+            await asyncio.to_thread(
+                send_email,
+                to_email=user.email,
+                subject="Восстановление пароля — SVOM Auto Parts",
+                html=html,
+                api_key=api_key,
+                from_email=from_email,
+                from_name=from_name,
+            )
+        except Exception as e:
+            logger.error("Failed to send password reset email to %s: %s", user.email, e)
+    
+    return {"message": "If the email exists, a recovery link has been sent"}
 
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db)):
