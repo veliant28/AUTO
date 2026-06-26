@@ -1276,6 +1276,7 @@
     "forgot_error": "Error",
     "reset_success": "Password changed",
     "reset_error": "Invalid or expired token",
-    "google_success": "Google login successful"
+    "google_success": "Google login successful",
+    "google_error": "Google login failed"
   }
 }

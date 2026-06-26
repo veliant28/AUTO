@@ -80,7 +80,7 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=data.email)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -93,7 +93,7 @@ async def login(data: LoginSchema, db: Session = Depends(get_db)):
     if not verify_password(data.password, user.password_hash):
         raise HTTPException(401, "Invalid credentials")
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=data.email)
 
 
 @router.post("/forgot-password")
@@ -167,17 +167,69 @@ async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db
 @router.post("/google", response_model=TokenResponse)
 async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
     """Вход/регистрация через Google. Принимает Google ID токен, возвращает JWT."""
-    email = f"{data.token}@gmail.com"
-    
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        retail_role = db.query(Role).filter(Role.name == "retail").first()
-        if not retail_role:
-            raise HTTPException(500, "Default role not found")
-        user = User(email=email, full_name="Google User", password_hash="", avatar_index=random.randint(1, 100), role_id=retail_role.id)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    
+    import httpx
+
+    # Verify the ID token via Google tokeninfo endpoint
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": data.token},
+        )
+
+    if resp.status_code != 200:
+        raise HTTPException(401, "Invalid Google token")
+
+    token_data = resp.json()
+
+    # Verify audience matches our client ID
+    if token_data.get("aud") != settings.GOOGLE_CLIENT_ID:
+        logger.warning("Google token audience mismatch: %s", token_data.get("aud"))
+        raise HTTPException(401, "Invalid Google token")
+
+    email = token_data.get("email")
+    if not email:
+        raise HTTPException(400, "Google account has no email")
+
+    google_sub = token_data.get("sub", "")
+    google_name = token_data.get("name", "") or ""
+
+    # Check if this Google account is already linked
+    oauth_link = db.query(OAuthAccount).filter(
+        OAuthAccount.provider == "google",
+        OAuthAccount.provider_user_id == google_sub,
+    ).first()
+
+    if oauth_link:
+        user = oauth_link.user
+    else:
+        # Check if user exists by email
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            # Create new user
+            retail_role = db.query(Role).filter(Role.name == "retail").first()
+            if not retail_role:
+                raise HTTPException(500, "Default role not found")
+            user = User(
+                email=email,
+                full_name=google_name,
+                first_name=google_name.split()[0] if google_name else None,
+                password_hash="",
+                avatar_index=random.randint(1, 100),
+                role_id=retail_role.id,
+            )
+            db.add(user)
+            db.flush()
+
+        # Link Google account
+        oauth = OAuthAccount(
+            user_id=user.id,
+            provider="google",
+            provider_user_id=google_sub,
+        )
+        db.add(oauth)
+
+    db.commit()
+    db.refresh(user)
+
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=email)

@@ -1277,6 +1277,7 @@
     "forgot_error": "Ошибка",
     "reset_success": "Пароль изменен",
     "reset_error": "Неверный или просроченный токен",
-    "google_success": "Вход через Google выполнен"
+    "google_success": "Вход через Google выполнен",
+    "google_error": "Ошибка входа через Google"
   }
 }

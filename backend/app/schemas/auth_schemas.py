@@ -17,6 +17,7 @@ class TokenResponse(BaseModel):
     user_id: int
     role: str
     avatar_index: Optional[int] = None
+    email: Optional[str] = None
 
 class ForgotPasswordSchema(BaseModel):
     email: EmailStr
