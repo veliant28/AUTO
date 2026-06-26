@@ -10,6 +10,7 @@ class SettingsResponse(BaseModel):
     resend_api_key_masked: Optional[str] = None
     google_client_id: Optional[str] = None
     has_google_secret: bool = False
+    google_client_secret_masked: Optional[str] = None
 
 class SettingsUpdate(BaseModel):
     brand_name: Optional[str] = None

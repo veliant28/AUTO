@@ -17,6 +17,21 @@ def _mask_api_key(api_key: str) -> str:
     return api_key[:3] + "*" * (len(api_key) - 7) + api_key[-4:]
 
 
+def _mask_google_secret(s: SiteSettings, decrypt_func) -> str | None:
+    """Вернуть маскированный Google Client Secret по длине."""
+    if not s.google_client_secret_encrypted:
+        return None
+    try:
+        secret = decrypt_func(s.google_client_secret_encrypted)
+        if not secret:
+            return None
+        if len(secret) < 8:
+            return "****"
+        return secret[:4] + "*" * (len(secret) - 8) + secret[-4:]
+    except Exception:
+        return "****"
+
+
 def _build_settings_response(s: SiteSettings) -> SettingsResponse:
     """Собрать SettingsResponse с маскированным API ключом."""
     masked = None
@@ -35,6 +50,7 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         resend_api_key_masked=masked,
         google_client_id=s.google_client_id,
         has_google_secret=bool(s.google_client_secret_encrypted),
+        google_client_secret_masked=_mask_google_secret(s, decrypt_password),
     )
 
 

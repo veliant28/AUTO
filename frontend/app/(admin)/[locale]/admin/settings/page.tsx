@@ -73,6 +73,7 @@ export default function SettingsPage() {
         resend_api_key_masked: string | null
         google_client_id: string | null
         has_google_secret: boolean
+        google_client_secret_masked: string | null
       }
     },
     enabled: !!user,
@@ -80,6 +81,9 @@ export default function SettingsPage() {
 
   // Track the original masked key to detect changes
   const [savedKeyMask, setSavedKeyMask] = React.useState<string | null>(null)
+  const [savedSecretMask, setSavedSecretMask] = React.useState<string | null>(
+    null,
+  )
 
   React.useEffect(() => {
     if (data?.brand_name) setBrandName(data.brand_name)
@@ -93,16 +97,19 @@ export default function SettingsPage() {
       setSavedKeyMask(null)
     }
     if (data?.google_client_id) setGoogleClientId(data.google_client_id)
-    if (data?.has_google_secret) {
+    if (data?.google_client_secret_masked) {
+      setGoogleClientSecret(data.google_client_secret_masked)
+      setSavedSecretMask(data.google_client_secret_masked)
       setHasGoogleSecret(true)
-      setGoogleClientSecret('__saved__')
     } else {
-      setHasGoogleSecret(false)
       setGoogleClientSecret('')
+      setSavedSecretMask(null)
+      setHasGoogleSecret(false)
     }
   }, [data])
 
   const isKeyUnchanged = resendApiKey === savedKeyMask
+  const isSecretUnchanged = googleClientSecret === savedSecretMask
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -111,8 +118,7 @@ export default function SettingsPage() {
       if (emailFrom) payload.email_from = emailFrom
       if (emailFromName) payload.email_from_name = emailFromName
       if (googleClientId) payload.google_client_id = googleClientId
-      if (googleClientSecret !== '__saved__')
-        payload.google_client_secret = googleClientSecret
+      if (!isSecretUnchanged) payload.google_client_secret = googleClientSecret
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
@@ -343,18 +349,12 @@ export default function SettingsPage() {
                   <div className="relative">
                     <Input
                       type={showGoogleSecret ? 'text' : 'password'}
-                      value={
-                        googleClientSecret === '__saved__'
-                          ? ''
-                          : googleClientSecret
-                      }
+                      value={googleClientSecret}
                       onChange={(e) => setGoogleClientSecret(e.target.value)}
-                      placeholder={
-                        hasGoogleSecret
-                          ? '•••••••• (saved)'
-                          : t('settings_google_client_secret_placeholder')
-                      }
-                      className="pr-10"
+                      placeholder={t(
+                        'settings_google_client_secret_placeholder',
+                      )}
+                      className="pr-10 font-mono text-sm"
                     />
                     <button
                       type="button"
