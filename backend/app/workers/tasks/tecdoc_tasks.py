@@ -1,13 +1,14 @@
 from celery import shared_task
 from app.workers import celery_app
 from app.core.db import SessionLocal, TecDocSessionLocal
-from app.models import SupplierPrice
+from app.models import SupplierPrice, Part
 from app.services.tecdoc_gateway import TecDocGateway, TecDocLimitExceeded, TecDocApiError
 from app.services.rate_limiter import rate_limiter
 from sqlalchemy import func, text as sa_text
 from datetime import datetime
 import asyncio
 import json
+import logging
 
 
 def save_article_info(tecdoc_db, article: str, brand_id: int, data: dict):
@@ -243,6 +244,46 @@ def process_tecdoc_batch(self, article_ids: list[int] = None, batch_size: int = 
             sp.last_attempt_at = datetime.utcnow()
             db.commit()
 
+    except Exception as e:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+        tecdoc_db.close()
+
+
+@celery_app.task(bind=True, name="sync_part_tecdoc_articles")
+def sync_part_tecdoc_articles(self):
+    """Sync Part.tecdoc_article from matched SupplierPrice records."""
+    db = SessionLocal()
+    tecdoc_db = TecDocSessionLocal()
+    try:
+        # Find SupplierPrice with valid tecdoc_article that differs from article
+        rows = db.query(SupplierPrice).filter(
+            SupplierPrice.supplier == "GPL",
+            SupplierPrice.tecdoc_article.isnot(None),
+            SupplierPrice.tecdoc_article != "",
+            SupplierPrice.match_status == "matched",
+        ).all()
+
+        updated = 0
+        for sp in rows:
+            if sp.tecdoc_article == sp.article:
+                continue  # same article, no enrichment needed
+            part = db.query(Part).filter(
+                Part.article == sp.article,
+                Part.brand == sp.brand,
+            ).first()
+            if not part:
+                continue
+            if part.tecdoc_article != sp.tecdoc_article:
+                part.tecdoc_article = sp.tecdoc_article
+                updated += 1
+
+        db.commit()
+        logger = logging.getLogger(__name__)
+        logger.info("sync_part_tecdoc_articles: %s parts updated", updated)
+        return {"updated": updated}
     except Exception as e:
         db.rollback()
         raise

@@ -205,6 +205,7 @@ async def get_part_details(
             "brand": part.brand,
             "brand_id": part.brand_id,
             "tecdoc_id": part.tecdoc_id,
+            "tecdoc_article": part.tecdoc_article,
             "sku": part.sku,
             "image_url": part.image_url,
         }
@@ -217,60 +218,67 @@ async def get_part_details(
                 "currency": best["currency"],
             }
 
-    info_row = tecdoc_db.execute(
-        sa_text("""SELECT "InformationText", "InformationType"
-                   FROM article_inf
-                   WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 1"""),
-        {"art": article},
-    ).fetchone()
-
-    attr_rows = tecdoc_db.execute(
-        sa_text("""SELECT "displaytitle", "displayvalue"
-                   FROM article_attributes
-                   WHERE LOWER("datasupplierarticlenumber") = LOWER(:art) LIMIT 30"""),
-        {"art": article},
-    ).fetchall()
-    attributes = [{"name": r[0] or "", "value": r[1] or ""} for r in attr_rows]
-
     info_data = None
-    if info_row:
-        info_data = {
-            "description": info_row[0] or "",
-            "type": info_row[1] or "",
-            "attributes": attributes,
-        }
-    elif attributes:
-        info_data = {
-            "description": "",
-            "type": "",
-            "attributes": attributes,
-        }
 
-    images = tecdoc_db.execute(
-        sa_text("""SELECT "PictureName", "Description"
-                   FROM article_images
-                   WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 10"""),
-        {"art": article},
-    ).fetchall()
+    # Determine the TecDoc search article: try part.tecdoc_article first, then the URL article
+    tecdoc_search = article
+    if part_data and part_data.get("tecdoc_article"):
+        tecdoc_search = part_data["tecdoc_article"]
 
-    crosses = tecdoc_db.execute(
-        sa_text("""SELECT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
-                   WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
-        {"art": article},
-    ).fetchall()
+    if tecdoc_search:
+        info_row = tecdoc_db.execute(
+            sa_text("""SELECT "InformationText", "InformationType"
+                       FROM article_inf
+                       WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 1"""),
+            {"art": tecdoc_search},
+        ).fetchone()
 
-    oems = tecdoc_db.execute(
-        sa_text("""SELECT "OENbr", "manufacturerId" FROM article_oe
-                   WHERE LOWER("OENbr") = LOWER(:art)
-                   AND "OENbr" IS NOT NULL AND "OENbr" != ''
-                   LIMIT 20"""),
-        {"art": article},
-    ).fetchall()
+        attr_rows = tecdoc_db.execute(
+            sa_text("""SELECT "displaytitle", "displayvalue"
+                       FROM article_attributes
+                       WHERE LOWER("datasupplierarticlenumber") = LOWER(:art) LIMIT 30"""),
+            {"art": tecdoc_search},
+        ).fetchall()
+        attributes = [{"name": r[0] or "", "value": r[1] or ""} for r in attr_rows]
 
-    app_count = tecdoc_db.execute(
-        sa_text("""SELECT COUNT(*) FROM article_li WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art)"""),
-        {"art": article},
-    ).scalar() or 0
+        if info_row:
+            info_data = {
+                "description": info_row[0] or "",
+                "type": info_row[1] or "",
+                "attributes": attributes,
+            }
+        elif attributes:
+            info_data = {
+                "description": "",
+                "type": "",
+                "attributes": attributes,
+            }
+
+        images = tecdoc_db.execute(
+            sa_text("""SELECT "PictureName", "Description"
+                       FROM article_images
+                       WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 10"""),
+            {"art": tecdoc_search},
+        ).fetchall()
+
+        crosses = tecdoc_db.execute(
+            sa_text("""SELECT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
+                       WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
+            {"art": tecdoc_search},
+        ).fetchall()
+
+        oems = tecdoc_db.execute(
+            sa_text("""SELECT "OENbr", "manufacturerId" FROM article_oe
+                       WHERE LOWER("OENbr") = LOWER(:art)
+                       AND "OENbr" IS NOT NULL AND "OENbr" != ''
+                       LIMIT 20"""),
+            {"art": tecdoc_search},
+        ).fetchall()
+
+        app_count = tecdoc_db.execute(
+            sa_text("""SELECT COUNT(*) FROM article_li WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art)"""),
+            {"art": tecdoc_search},
+        ).scalar() or 0
 
     return {
         "part": part_data,
