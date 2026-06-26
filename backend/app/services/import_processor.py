@@ -132,6 +132,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
                 "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
                 "match_status": stmt.excluded.match_status,
                 "category": stmt.excluded.category,
+                "image_url": stmt.excluded.image_url,
             },
         )
         db.execute(stmt)

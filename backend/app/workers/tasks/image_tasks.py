@@ -6,7 +6,7 @@ import httpx
 from sqlalchemy.orm import Session
 from app.core.db import SessionLocal
 from app.models.parts import Part
-from app.workers.celery_app import celery_app
+from app.workers import celery_app
 
 logger = logging.getLogger(__name__)
 

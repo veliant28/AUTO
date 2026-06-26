@@ -12,6 +12,7 @@ import app.workers.tasks.import_tasks  # noqa: F401
 import app.workers.tasks.pricing_tasks  # noqa: F401
 import app.workers.tasks.nova_poshta_tasks  # noqa: F401
 import app.workers.tasks.deactivation_tasks  # noqa: F401
+import app.workers.tasks.image_tasks  # noqa: F401
 
 celery_app.conf.beat_schedule = {
     'scheduler-tick': {
