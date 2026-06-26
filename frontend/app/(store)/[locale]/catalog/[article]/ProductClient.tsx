@@ -184,13 +184,13 @@ export default function ProductClient({ article }: { article: string }) {
 
       <div className="grid md:grid-cols-3 gap-8">
         <div
-          className={`aspect-square relative rounded-lg overflow-hidden flex items-center justify-center bg-gradient-to-br ${getBrandColor(brand)}`}
+          className={`aspect-square relative rounded-lg overflow-hidden flex items-center justify-center bg-gradient-to-br border ${getBrandColor(brand)}`}
         >
           {imageUrl ? (
             <img
               src={imageUrl}
               alt={name}
-              className="absolute inset-0 w-full h-full object-contain p-6"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
             <span className="text-5xl font-bold text-white/40 select-none">
