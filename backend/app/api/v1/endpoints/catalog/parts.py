@@ -304,7 +304,7 @@ async def get_part_details(
             sa_text("""SELECT DISTINCT ae."OENbr", man."description"
                        FROM article_oe ae
                        LEFT JOIN manufacturers man ON man.id = ae."manufacturerId"
-                       WHERE LOWER(ae."OENbr") = LOWER(:art)
+                       WHERE LOWER(ae."datasupplierarticlenumber") = LOWER(:art)
                        AND ae."OENbr" IS NOT NULL AND ae."OENbr" != ''
                        LIMIT 20"""),
             {"art": tecdoc_search},
