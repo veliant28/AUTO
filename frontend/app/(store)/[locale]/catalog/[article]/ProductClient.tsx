@@ -301,88 +301,90 @@ export default function ProductClient({ article }: { article: string }) {
       <Separator className="my-6" />
 
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[500px] overflow-y-auto">
-          <h4 className="font-semibold text-sm sticky top-0 bg-card pb-2">
-            {t('analogs')}
-          </h4>
-          {crosses.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="bg-muted/30 text-sm">
-                    {t('article')}
-                  </TableHead>
-                  <TableHead className="bg-muted/30 text-sm">
-                    {t('brand')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {crosses.map(
-                  (
-                    cross: { article: string; brand_id?: number },
-                    idx: number,
-                  ) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-sm">
-                        {cross.article}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {cross.brand_id ? `ID: ${cross.brand_id}` : '—'}
-                      </TableCell>
-                    </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t('no_analogs')}</p>
-          )}
+        <div className="rounded-lg border bg-card flex flex-col">
+          <h4 className="font-semibold text-sm p-4 pb-2">{t('analogs')}</h4>
+          <div className="overflow-y-auto max-h-[460px] px-4 pb-4">
+            {crosses.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="bg-muted/30 text-sm">
+                      {t('article')}
+                    </TableHead>
+                    <TableHead className="bg-muted/30 text-sm">
+                      {t('brand')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {crosses.map(
+                    (
+                      cross: { article: string; brand_id?: number },
+                      idx: number,
+                    ) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-mono text-sm">
+                          {cross.article}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {cross.brand_id ? `ID: ${cross.brand_id}` : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('no_analogs')}</p>
+            )}
+          </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[500px] overflow-y-auto">
-          <h4 className="font-semibold text-sm sticky top-0 bg-card pb-2">
-            {t('oem')}
-          </h4>
-          {oems.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="bg-muted/30 text-sm">
-                    {t('article')}
-                  </TableHead>
-                  <TableHead className="bg-muted/30 text-sm">
-                    {t('brand')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {oems.map(
-                  (
-                    oem: { number: string; manufacturer_id?: number },
-                    idx: number,
-                  ) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-sm">
-                        {oem.number}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {oem.manufacturer_id
-                          ? `ID: ${oem.manufacturer_id}`
-                          : '—'}
-                      </TableCell>
-                    </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t('no_oem')}</p>
-          )}
+        <div className="rounded-lg border bg-card flex flex-col">
+          <h4 className="font-semibold text-sm p-4 pb-2">{t('oem')}</h4>
+          <div className="overflow-y-auto max-h-[460px] px-4 pb-4">
+            {oems.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="bg-muted/30 text-sm">
+                      {t('article')}
+                    </TableHead>
+                    <TableHead className="bg-muted/30 text-sm">
+                      {t('brand')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {oems.map(
+                    (
+                      oem: { number: string; manufacturer_id?: number },
+                      idx: number,
+                    ) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-mono text-sm">
+                          {oem.number}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {oem.manufacturer_id
+                            ? `ID: ${oem.manufacturer_id}`
+                            : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('no_oem')}</p>
+            )}
+          </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4 max-h-[500px] overflow-y-auto">
-          <ApplicabilityTable article={article} count={appCount} />
+        <div className="rounded-lg border bg-card flex flex-col">
+          <div className="overflow-y-auto max-h-[500px] p-4">
+            <ApplicabilityTable article={article} count={appCount} />
+          </div>
         </div>
       </div>
     </div>
