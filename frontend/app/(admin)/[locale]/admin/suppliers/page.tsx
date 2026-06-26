@@ -578,14 +578,14 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
   if (left === null)
     return (
       <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500/20 text-blue-400 min-w-[85px] justify-center">
-        <Clock className="w-3 h-3" />
+        <Clock className="w-3.5 h-3.5" />
         00:00:00
       </Badge>
     )
   if (left <= 0)
     return (
       <Badge className="text-sm font-mono bg-green-500 text-white border-0 gap-1.5">
-        <Clock className="w-3 h-3" />
+        <Clock className="w-3.5 h-3.5" />
         Запуск...
       </Badge>
     )
@@ -596,7 +596,7 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
 
   return (
     <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500 text-white min-w-[85px] justify-center">
-      <Clock className="w-3 h-3" />
+      <Clock className="w-3.5 h-3.5" />
       {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:
       {String(s).padStart(2, '0')}
     </Badge>
@@ -741,11 +741,13 @@ function ScheduleRow({
       <td className="p-3">
         <Badge className={`${ssColor} border-0 text-sm gap-1`}>
           {s.schedule_status === 'in_progress' && (
-            <Loader className="w-3 h-3 animate-spin" />
+            <Loader className="w-3.5 h-3.5 animate-spin" />
           )}
-          {s.schedule_status === 'done' && <CheckCircle2 className="w-3 h-3" />}
-          {s.schedule_status === 'error' && <XCircle className="w-3 h-3" />}
-          {s.schedule_status === 'waiting' && <Clock className="w-3 h-3" />}
+          {s.schedule_status === 'done' && (
+            <CheckCircle2 className="w-3.5 h-3.5" />
+          )}
+          {s.schedule_status === 'error' && <XCircle className="w-3.5 h-3.5" />}
+          {s.schedule_status === 'waiting' && <Clock className="w-3.5 h-3.5" />}
           {statusLabel}
         </Badge>
       </td>
