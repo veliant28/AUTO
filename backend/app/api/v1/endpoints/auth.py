@@ -166,32 +166,28 @@ async def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db
 
 @router.post("/google", response_model=TokenResponse)
 async def google_auth(data: GoogleAuthSchema, db: Session = Depends(get_db)):
-    """Вход/регистрация через Google. Принимает Google ID токен, возвращает JWT."""
+    """Вход/регистрация через Google. Принимает Google access token, возвращает JWT."""
     import httpx
 
-    # Verify the ID token via Google tokeninfo endpoint
+    # Fetch user info from Google using the access token
     async with httpx.AsyncClient() as client:
         resp = await client.get(
-            "https://oauth2.googleapis.com/tokeninfo",
-            params={"id_token": data.token},
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {data.token}"},
         )
 
     if resp.status_code != 200:
         raise HTTPException(401, "Invalid Google token")
 
-    token_data = resp.json()
+    user_data = resp.json()
 
-    # Verify audience matches our client ID
-    if token_data.get("aud") != settings.GOOGLE_CLIENT_ID:
-        logger.warning("Google token audience mismatch: %s", token_data.get("aud"))
-        raise HTTPException(401, "Invalid Google token")
-
-    email = token_data.get("email")
+    email = user_data.get("email")
     if not email:
         raise HTTPException(400, "Google account has no email")
 
-    google_sub = token_data.get("sub", "")
-    google_name = token_data.get("name", "") or ""
+    google_sub = str(user_data.get("id", ""))
+    google_name = user_data.get("name", "") or ""
+    google_picture = user_data.get("picture", "") or ""
 
     # Check if this Google account is already linked
     oauth_link = db.query(OAuthAccount).filter(
