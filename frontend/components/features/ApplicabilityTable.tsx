@@ -25,8 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   useApplicabilityMakes,
   useApplicabilityModels,
@@ -51,9 +49,10 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
   const t = useTranslations('catalog')
   const [makeId, setMakeId] = useState<string>('all')
   const [modelId, setModelId] = useState<string>('all')
-  const [showAll, setShowAll] = useState(false)
 
-  const limit = showAll ? APPLICABILITY_LIMIT : 10
+  // When a make or model is selected, load all. Otherwise only 10.
+  const hasFilter = makeId !== 'all' || modelId !== 'all'
+  const limit = hasFilter ? APPLICABILITY_LIMIT : 10
 
   const { data: makes } = useApplicabilityMakes(article)
   const { data: models } = useApplicabilityModels(
@@ -63,8 +62,8 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
   const { data: vehiclesData, isLoading } = useApplicability(article, {
     page: 1,
     limit,
-    makeId: makeId ? Number(makeId) : null,
-    modelId: modelId && modelId !== 'all' ? Number(modelId) : null,
+    makeId: makeId !== 'all' ? Number(makeId) : null,
+    modelId: modelId !== 'all' ? Number(modelId) : null,
   })
 
   const vehicles = vehiclesData?.vehicles ?? []
@@ -108,12 +107,6 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
     <div className="space-y-3">
       <h4 className="font-semibold text-sm flex items-center gap-2">
         <Car className="w-3.5 h-3.5" /> {t('applicability')}
-        <span className="text-muted-foreground font-normal">({count})</span>
-        {makeId && makeId !== 'all' && (
-          <Badge className="bg-blue-500 text-white border-0 text-xs">
-            {t('applicability_compatible')}
-          </Badge>
-        )}
       </h4>
 
       {count === 0 ? (
@@ -199,17 +192,6 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
                 </TableBody>
               </Table>
             </div>
-          )}
-
-          {!makeId && count > 10 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full gap-1 text-xs"
-              onClick={() => setShowAll(!showAll)}
-            >
-              {showAll ? t('collapse') : `${t('show_all')} (${count})`}
-            </Button>
           )}
         </>
       )}
