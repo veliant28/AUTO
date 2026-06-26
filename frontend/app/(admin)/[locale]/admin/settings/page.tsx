@@ -64,23 +64,34 @@ export default function SettingsPage() {
         email_from: string
         email_from_name: string | null
         has_resend_api_key: boolean
+        resend_api_key_masked: string | null
       }
     },
     enabled: !!user,
   })
+
+  // Track the original masked key to detect changes
+  const [savedKeyMask, setSavedKeyMask] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (data?.brand_name) setBrandName(data.brand_name)
     if (data?.timezone) setTimezone(data.timezone)
     if (data?.email_from) setEmailFrom(data.email_from)
     if (data?.email_from_name) setEmailFromName(data.email_from_name)
-    if (data?.has_resend_api_key) setResendApiKey('__saved__')
+    if (data?.resend_api_key_masked) {
+      setResendApiKey(data.resend_api_key_masked)
+      setSavedKeyMask(data.resend_api_key_masked)
+    } else {
+      setSavedKeyMask(null)
+    }
   }, [data])
+
+  const isKeyUnchanged = resendApiKey === savedKeyMask
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: any = { brand_name: brandName, timezone }
-      if (resendApiKey !== '__saved__') payload.resend_api_key = resendApiKey
+      if (!isKeyUnchanged) payload.resend_api_key = resendApiKey
       if (emailFrom) payload.email_from = emailFrom
       if (emailFromName) payload.email_from_name = emailFromName
       await api.put('/admin/settings', payload)
@@ -88,7 +99,6 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.setQueryData(['public-settings'], { brand_name: brandName })
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] })
-      setResendApiKey('__saved__')
       toast.success(t('settings_saved'))
     },
     onError: () => toast.error(t('save_error')),
@@ -207,14 +217,10 @@ export default function SettingsPage() {
                     <div className="relative">
                       <Input
                         type={showApiKey ? 'text' : 'password'}
-                        value={resendApiKey === '__saved__' ? '' : resendApiKey}
+                        value={resendApiKey}
                         onChange={(e) => setResendApiKey(e.target.value)}
-                        placeholder={
-                          resendApiKey === '__saved__'
-                            ? '•••••••• (saved)'
-                            : t('settings_resend_api_key_placeholder')
-                        }
-                        className="pr-10"
+                        placeholder={t('settings_resend_api_key_placeholder')}
+                        className="pr-10 font-mono text-sm"
                       />
                       <button
                         type="button"

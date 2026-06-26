@@ -10,6 +10,32 @@ from app.services.crypto_util import encrypt_password, decrypt_password
 router = APIRouter()
 
 
+def _mask_api_key(api_key: str) -> str:
+    """Вернуть маскированный ключ: re_***************************_abcd."""
+    if not api_key or len(api_key) < 8:
+        return "****"
+    return api_key[:3] + "*" * (len(api_key) - 7) + api_key[-4:]
+
+
+def _build_settings_response(s: SiteSettings) -> SettingsResponse:
+    """Собрать SettingsResponse с маскированным API ключом."""
+    masked = None
+    if s.resend_api_key_encrypted:
+        try:
+            api_key = decrypt_password(s.resend_api_key_encrypted)
+            masked = _mask_api_key(api_key)
+        except Exception:
+            masked = "****"
+    return SettingsResponse(
+        brand_name=s.brand_name,
+        timezone=s.timezone,
+        email_from=s.email_from,
+        email_from_name=s.email_from_name,
+        has_resend_api_key=bool(s.resend_api_key_encrypted),
+        resend_api_key_masked=masked,
+    )
+
+
 def _get_settings(db: Session) -> SiteSettings:
     s = db.query(SiteSettings).first()
     if not s:
@@ -28,13 +54,7 @@ def _get_settings(db: Session) -> SiteSettings:
 async def get_public_settings(db: Session = Depends(get_db)):
     """Получить публичные настройки сайта."""
     s = _get_settings(db)
-    return SettingsResponse(
-        brand_name=s.brand_name,
-        timezone=s.timezone,
-        email_from=s.email_from,
-        email_from_name=s.email_from_name,
-        has_resend_api_key=bool(s.resend_api_key_encrypted),
-    )
+    return _build_settings_response(s)
 
 
 @router.get("/admin/settings", response_model=SettingsResponse)
@@ -44,13 +64,7 @@ async def get_admin_settings(
 ):
     """Получить настройки сайта для админа."""
     s = _get_settings(db)
-    return SettingsResponse(
-        brand_name=s.brand_name,
-        timezone=s.timezone,
-        email_from=s.email_from,
-        email_from_name=s.email_from_name,
-        has_resend_api_key=bool(s.resend_api_key_encrypted),
-    )
+    return _build_settings_response(s)
 
 
 @router.put("/admin/settings", response_model=SettingsResponse)
@@ -76,13 +90,7 @@ async def update_settings(
         s.email_from_name = body.email_from_name
     db.commit()
     db.refresh(s)
-    return SettingsResponse(
-        brand_name=s.brand_name,
-        timezone=s.timezone,
-        email_from=s.email_from,
-        email_from_name=s.email_from_name,
-        has_resend_api_key=bool(s.resend_api_key_encrypted),
-    )
+    return _build_settings_response(s)
 
 
 @router.post("/admin/settings/test-email")

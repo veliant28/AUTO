@@ -7,6 +7,7 @@ class SettingsResponse(BaseModel):
     email_from: str = "noreply@svom.com.ua"
     email_from_name: Optional[str] = None
     has_resend_api_key: bool = False
+    resend_api_key_masked: Optional[str] = None
 
 class SettingsUpdate(BaseModel):
     brand_name: Optional[str] = None
