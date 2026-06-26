@@ -78,48 +78,70 @@ async def get_sections(mod_id: int, db: Session = Depends(get_db)):
 @router.get("/parts/{article}/applicability/makes")
 async def get_part_applicability_makes(
     article: str,
+    db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
     """Получить производителей, для которых подходит деталь."""
-    art = article.lower()
-    rows = tecdoc_db.execute(
-        sa_text("""SELECT DISTINCT man.id, man."description"
-                   FROM article_li li
-                   JOIN passanger_cars pc ON pc.id = li."linkageId"
-                   JOIN models m ON m.id = pc.modelid
-                   JOIN manufacturers man ON man.id = m.manufacturerid
-                   WHERE LOWER(li."DataSupplierArticleNumber") = :art
-                   ORDER BY man."description" ASC"""),
-        {"art": art},
-    ).fetchall()
-    return [{"id": r[0], "name": r[1]} for r in rows]
+    # Try direct article first, then tecdoc_article
+    search_articles = [article.lower()]
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
+    if part and part.tecdoc_article:
+        td = part.tecdoc_article.lower()
+        if td != search_articles[0]:
+            search_articles.append(td)
+
+    for art in search_articles:
+        rows = tecdoc_db.execute(
+            sa_text("""SELECT DISTINCT man.id, man."description"
+                       FROM article_li li
+                       JOIN passanger_cars pc ON pc.id = li."linkageId"
+                       JOIN models m ON m.id = pc.modelid
+                       JOIN manufacturers man ON man.id = m.manufacturerid
+                       WHERE LOWER(li."DataSupplierArticleNumber") = :art
+                       ORDER BY man."description" ASC"""),
+            {"art": art},
+        ).fetchall()
+        if rows:
+            return [{"id": r[0], "name": r[1]} for r in rows]
+    return []
 
 
 @router.get("/parts/{article}/applicability/models")
 async def get_part_applicability_models(
     article: str,
     make_id: int = Query(...),
+    db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
     """Получить модели производителя, для которых подходит деталь."""
-    art = article.lower()
-    rows = tecdoc_db.execute(
-        sa_text("""SELECT DISTINCT m.id, m."description"
-                   FROM article_li li
-                   JOIN passanger_cars pc ON pc.id = li."linkageId"
-                   JOIN models m ON m.id = pc.modelid
-                   JOIN manufacturers man ON man.id = m.manufacturerid
-                   WHERE LOWER(li."DataSupplierArticleNumber") = :art
-                   AND man.id = :make_id
-                   ORDER BY m."description" ASC"""),
-        {"art": art, "make_id": make_id},
-    ).fetchall()
-    return [{"id": r[0], "name": r[1]} for r in rows]
+    search_articles = [article.lower()]
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
+    if part and part.tecdoc_article:
+        td = part.tecdoc_article.lower()
+        if td != search_articles[0]:
+            search_articles.append(td)
+
+    for art in search_articles:
+        rows = tecdoc_db.execute(
+            sa_text("""SELECT DISTINCT m.id, m."description"
+                       FROM article_li li
+                       JOIN passanger_cars pc ON pc.id = li."linkageId"
+                       JOIN models m ON m.id = pc.modelid
+                       JOIN manufacturers man ON man.id = m.manufacturerid
+                       WHERE LOWER(li."DataSupplierArticleNumber") = :art
+                       AND man.id = :make_id
+                       ORDER BY m."description" ASC"""),
+            {"art": art, "make_id": make_id},
+        ).fetchall()
+        if rows:
+            return [{"id": r[0], "name": r[1]} for r in rows]
+    return []
 
 
 @router.get("/parts/{article}/applicability")
 async def get_part_applicability(
     article: str,
+    db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
@@ -127,48 +149,56 @@ async def get_part_applicability(
     model_id: Optional[int] = Query(None),
 ):
     """Получить список автомобилей, для которых подходит деталь."""
-    art = article.lower()
+    search_articles = [article.lower()]
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
+    if part and part.tecdoc_article:
+        td = part.tecdoc_article.lower()
+        if td != search_articles[0]:
+            search_articles.append(td)
 
-    where = 'WHERE LOWER(li."DataSupplierArticleNumber") = :art'
-    params: dict = {"art": art}
+    for art in search_articles:
+        where = 'WHERE LOWER(li."DataSupplierArticleNumber") = :art'
+        params: dict = {"art": art}
 
-    if make_id:
-        where += ' AND man.id = :make_id'
-        params["make_id"] = make_id
-    if model_id:
-        where += ' AND m.id = :model_id'
-        params["model_id"] = model_id
+        if make_id:
+            where += ' AND man.id = :make_id'
+            params["make_id"] = make_id
+        if model_id:
+            where += ' AND m.id = :model_id'
+            params["model_id"] = model_id
 
-    ct = sa_text(f"""
-        SELECT COUNT(DISTINCT li."linkageId")
-        FROM article_li li
-        JOIN passanger_cars pc ON pc.id = li."linkageId"
-        JOIN models m ON m.id = pc.modelid
-        JOIN manufacturers man ON man.id = m.manufacturerid
-        {where}
-    """)
-    total = tecdoc_db.execute(ct, params).scalar() or 0
+        ct = sa_text(f"""
+            SELECT COUNT(DISTINCT li."linkageId")
+            FROM article_li li
+            JOIN passanger_cars pc ON pc.id = li."linkageId"
+            JOIN models m ON m.id = pc.modelid
+            JOIN manufacturers man ON man.id = m.manufacturerid
+            {where}
+        """)
+        total = tecdoc_db.execute(ct, params).scalar() or 0
+        if total == 0:
+            continue
 
-    offset = (page - 1) * limit
-    t = sa_text(f"""
-        SELECT DISTINCT li."linkageId",
-               man."description" as brand,
-               m."description" as model,
-               pc."description" as mod_name,
-               pc."constructioninterval" as years
-        FROM article_li li
-        JOIN passanger_cars pc ON pc.id = li."linkageId"
-        JOIN models m ON m.id = pc.modelid
-        JOIN manufacturers man ON man.id = m.manufacturerid
-        {where}
-        ORDER BY man."description" ASC, m."description" ASC
-        LIMIT :limit OFFSET :offset
-    """)
-    rows = tecdoc_db.execute(t, {**params, "limit": limit, "offset": offset}).fetchall()
+        offset = (page - 1) * limit
+        t = sa_text(f"""
+            SELECT DISTINCT li."linkageId",
+                   man."description" as brand,
+                   m."description" as model,
+                   pc."description" as mod_name,
+                   pc."constructioninterval" as years
+            FROM article_li li
+            JOIN passanger_cars pc ON pc.id = li."linkageId"
+            JOIN models m ON m.id = pc.modelid
+            JOIN manufacturers man ON man.id = m.manufacturerid
+            {where}
+            ORDER BY man."description" ASC, m."description" ASC
+            LIMIT :limit OFFSET :offset
+        """)
+        rows = tecdoc_db.execute(t, {**params, "limit": limit, "offset": offset}).fetchall()
 
-    vehicles = [{
-        "mod_id": r[0],
-        "brand_name": r[1],
+        vehicles = [{
+            "mod_id": r[0],
+            "brand_name": r[1],
         "model_name": r[2],
         "mod_name": r[3],
         "years": r[4] or "",
