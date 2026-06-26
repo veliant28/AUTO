@@ -84,6 +84,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isFooter = pathname.includes('/admin/footer')
   const isSettings = pathname.includes('/admin/settings')
   const isNovaposhta = pathname.includes('/admin/novaposhta')
+  const isSuppliers = pathname.includes('/admin/suppliers')
   const isImport = pathname.includes('/admin/import')
   const isPricing = pathname.includes('/admin/pricing')
   const isAdmin =
@@ -109,6 +110,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/roles': { icon: Shield, titleKey: 'roles_title' },
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
+    '/admin/suppliers': { icon: Truck, titleKey: 'suppliers_title' },
     '/admin/import': { icon: FileDown, titleKey: 'import_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
     '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
@@ -178,6 +180,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const settingsNavTabs = [
     { key: 'settings', label: ta('settings_title') },
     { key: 'novaposhta', label: ta('novaposhta_title') },
+    { key: 'suppliers', label: ta('suppliers_title') },
   ]
 
   const ordersNavTabs = [
@@ -227,17 +230,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </button>
             )
           })}
-        {(isSettings || isNovaposhta) &&
+        {(isSettings || isNovaposhta || isSuppliers) &&
           settingsNavTabs.map((t) => {
             const active =
               (t.key === 'settings' && isSettings) ||
-              (t.key === 'novaposhta' && isNovaposhta)
+              (t.key === 'novaposhta' && isNovaposhta) ||
+              (t.key === 'suppliers' && isSuppliers)
             return (
               <button
                 key={t.key}
                 onClick={() => {
                   const basePath = pathname.replace(
-                    /\/admin\/(settings|novaposhta).*/,
+                    /\/admin\/(settings|novaposhta|suppliers).*/,
                     '/admin',
                   )
                   router.push(`${basePath}/${t.key}`)
@@ -780,6 +784,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       href: '/admin/settings',
       icon: Settings,
       label: t('settings_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/suppliers',
+      icon: Truck,
+      label: t('suppliers_title'),
       roles: ['admin'],
     },
     {
