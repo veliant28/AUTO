@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 MEDIA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "media")
 PRODUCTS_DIR = os.path.join(MEDIA_DIR, "products")
+BACKEND_URL = os.environ.get("AUTO_PARTS_BACKEND_URL", "http://localhost:8080")
 
 
 def _local_path(part_id: int) -> str:
@@ -20,8 +21,8 @@ def _local_path(part_id: int) -> str:
 
 
 def _local_url(part_id: int) -> str:
-    """Return the public URL path for a part image."""
-    return f"/media/products/{part_id}.jpg"
+    """Return the full public URL for a part image."""
+    return f"{BACKEND_URL}/media/products/{part_id}.jpg"
 
 
 @celery_app.task(bind=True, name="download_product_images")
