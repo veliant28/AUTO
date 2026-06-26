@@ -206,6 +206,7 @@ async def get_part_details(
             "brand_id": part.brand_id,
             "tecdoc_id": part.tecdoc_id,
             "sku": part.sku,
+            "image_url": part.image_url,
         }
         if best:
             price_data = {
