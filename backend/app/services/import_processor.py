@@ -33,7 +33,7 @@ def build_xlsx_from_json(items: list) -> bytes:
         for item in items:
             # Try multiple possible field names for image
             img = ""
-            for img_key in ("image", "photo", "picture", "image_url", "img", "product_image", "photo_url", "зображення_товару"):
+            for img_key in ("image_path", "image", "photo", "picture", "image_url", "img", "product_image", "photo_url", "зображення_товару"):
                 val = item.get(img_key, "")
                 if val:
                     img = val
