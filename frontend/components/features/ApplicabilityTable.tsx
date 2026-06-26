@@ -107,6 +107,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
     <div className="space-y-3">
       <h4 className="font-semibold text-sm flex items-center gap-2">
         <Car className="w-3.5 h-3.5" /> {t('applicability')}
+        <span className="text-muted-foreground font-normal">({count})</span>
       </h4>
 
       {count === 0 ? (
