@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON, BigInteger
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON, BigInteger, UniqueConstraint
 from sqlalchemy.sql import func
 from .vehicles import Base
 
@@ -36,6 +36,10 @@ class SupplierPrice(Base):
     sku = Column(String, unique=True, nullable=True, index=True)
     supplier = Column(String, nullable=False)
     article = Column(String, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("supplier", "article", name="uq_supplier_prices_supplier_article"),
+    )
     brand = Column(String, nullable=True)
     name = Column(String, nullable=True)
     price = Column(Numeric(10, 2), nullable=True)
