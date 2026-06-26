@@ -31,6 +31,7 @@ import {
   useApplicabilityModels,
   useApplicability,
 } from '@/hooks/usePartDetail'
+import { useVehicleStore } from '@/store/vehicleStore'
 
 type Vehicle = {
   mod_id: number
@@ -49,6 +50,10 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
   const t = useTranslations('catalog')
   const [makeId, setMakeId] = useState<string>('all')
   const [modelId, setModelId] = useState<string>('all')
+  const selectedModId = useVehicleStore((s) => s.modId)
+
+  // Show badge when vehicle selected in header OR in applicability selects
+  const hasVehicleFilter = makeId !== 'all' || selectedModId !== null
 
   // Always show only 10 items, scroll inside block
   const limit = 10
@@ -109,7 +114,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
           <Car className="w-3.5 h-3.5" /> {t('applicability')}
           <span className="text-muted-foreground font-normal">({count})</span>
         </span>
-        {makeId !== 'all' && (
+        {hasVehicleFilter && (
           <Badge className="bg-blue-500 text-white border-0 text-sm">
             {t('applicability_compatible')}
           </Badge>
