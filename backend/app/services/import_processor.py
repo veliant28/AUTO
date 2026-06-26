@@ -239,21 +239,34 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
     part_batch = []
     part_ids = {}
 
+    # First pass: try to match by tecdoc_article (cross-supplier dedup)
     for sp in rows:
         brand = sp.brand or ""
         key = (sp.article, brand)
         if key not in part_ids:
-            part_batch.append({
-                "article": sp.article,
-                "supplier_article": sp.article,
-                "brand": brand,
-                "name": sp.name or sp.article,
-                "brand_id": sp.tecdoc_brand_id or 0,
-                "sku": sp.sku,
-                "is_active": True,
-                "image_url": sp.image_url,
-            })
-            part_ids[key] = None
+            existing = None
+            if sp.tecdoc_article:
+                existing = db.query(Part).filter(
+                    Part.article == sp.tecdoc_article,
+                    Part.brand == brand,
+                ).first()
+            if existing:
+                existing.supplier_article = sp.article
+                if sp.tecdoc_brand_id:
+                    existing.brand_id = sp.tecdoc_brand_id
+                part_ids[key] = existing.id
+            else:
+                part_batch.append({
+                    "article": sp.tecdoc_article or sp.article,
+                    "supplier_article": sp.article,
+                    "brand": brand,
+                    "name": sp.name or sp.article,
+                    "brand_id": sp.tecdoc_brand_id or 0,
+                    "sku": sp.sku,
+                    "is_active": True,
+                    "image_url": sp.image_url,
+                })
+                part_ids[key] = None
 
     for batch_start in range(0, len(part_batch), 1000):
         chunk = part_batch[batch_start:batch_start + 1000]
@@ -272,6 +285,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
         db.commit()
         if progress_cb:
             progress_cb(10 + int(30 * batch_start / max(len(part_batch), 1)))
+    db.commit()  # commit any existing Part updates from cross-supplier matching
 
     for part in db.query(Part).all():
         key = (part.supplier_article or part.article, part.brand or "")

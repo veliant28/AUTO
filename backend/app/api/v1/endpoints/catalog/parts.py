@@ -84,7 +84,7 @@ async def get_part_applicability_makes(
     """Получить производителей, для которых подходит деталь."""
     # Try direct article first, then tecdoc_article
     search_articles = [article.lower()]
-    part = db.query(Part).filter(or_(Part.article == article, Part.supplier_article == article), Part.is_active == True).first()
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
     if part and part.tecdoc_article:
         td = part.tecdoc_article.lower()
         if td != search_articles[0]:
@@ -115,7 +115,7 @@ async def get_part_applicability_models(
 ):
     """Получить модели производителя, для которых подходит деталь."""
     search_articles = [article.lower()]
-    part = db.query(Part).filter(or_(Part.article == article, Part.supplier_article == article), Part.is_active == True).first()
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
     if part and part.tecdoc_article:
         td = part.tecdoc_article.lower()
         if td != search_articles[0]:
@@ -150,7 +150,7 @@ async def get_part_applicability(
 ):
     """Получить список автомобилей, для которых подходит деталь."""
     search_articles = [article.lower()]
-    part = db.query(Part).filter(or_(Part.article == article, Part.supplier_article == article), Part.is_active == True).first()
+    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
     if part and part.tecdoc_article:
         td = part.tecdoc_article.lower()
         if td != search_articles[0]:
@@ -219,7 +219,7 @@ async def get_part_details(
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
     """Получить детальную информацию о запчасти по артикулу."""
-    parts = db.query(Part).filter(or_(Part.article == article, Part.supplier_article == article), Part.is_active == True).all()
+    parts = db.query(Part).filter(Part.article == article, Part.is_active == True).all()
     part_data = None
     price_data = None
     if parts:

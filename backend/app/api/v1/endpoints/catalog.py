@@ -190,7 +190,7 @@ async def get_part_details(
 ):
     """Получить детальную информацию о запчасти по артикулу."""
     # 1. Part + best offer from main DB
-    parts = db.query(Part).filter(or_(Part.article == article, Part.supplier_article == article)).all()
+    parts = db.query(Part).filter(Part.article == article).all()
     part_data = None
     price_data = None
     if parts:
