@@ -50,7 +50,7 @@ interface ApplicabilityTableProps {
 function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
   const t = useTranslations('catalog')
   const [makeId, setMakeId] = useState<string>('all')
-  const [modelId, setModelId] = useState<string>('')
+  const [modelId, setModelId] = useState<string>('all')
   const [showAll, setShowAll] = useState(false)
 
   const limit = showAll ? APPLICABILITY_LIMIT : 10
@@ -64,7 +64,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
     page: 1,
     limit,
     makeId: makeId ? Number(makeId) : null,
-    modelId: modelId ? Number(modelId) : null,
+    modelId: modelId && modelId !== 'all' ? Number(modelId) : null,
   })
 
   const vehicles = vehiclesData?.vehicles ?? []
@@ -140,13 +140,13 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
             <Select
               value={modelId}
               onValueChange={setModelId}
-              disabled={!makeId}
+              disabled={!makeId || makeId === 'all'}
             >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder={t('select_model')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('select_model')}</SelectItem>
+                <SelectItem value="all">{t('select_model')}</SelectItem>
                 {models?.map((m: { id: number; name: string }) => (
                   <SelectItem key={m.id} value={String(m.id)}>
                     {m.name}
