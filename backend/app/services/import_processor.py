@@ -245,6 +245,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
         if key not in part_ids:
             part_batch.append({
                 "article": sp.article,
+                "supplier_article": sp.article,
                 "brand": brand,
                 "name": sp.name or sp.article,
                 "brand_id": sp.tecdoc_brand_id or 0,
@@ -258,7 +259,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
         chunk = part_batch[batch_start:batch_start + 1000]
         stmt = pg_insert(Part).values(chunk)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["article", sa.text("COALESCE(brand, '')")],
+            index_elements=["supplier_article", "brand"],
             set_={
                 "name": stmt.excluded.name,
                 "brand_id": stmt.excluded.brand_id,
@@ -273,7 +274,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
             progress_cb(10 + int(30 * batch_start / max(len(part_batch), 1)))
 
     for part in db.query(Part).all():
-        key = (part.article, part.brand or "")
+        key = (part.supplier_article or part.article, part.brand or "")
         if key in part_ids:
             part_ids[key] = part.id
 
