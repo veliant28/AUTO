@@ -105,6 +105,8 @@ async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_
         token=token, 
         expires_at=datetime.utcnow() + timedelta(hours=1)
     )
+    db.add(reset)
+    db.commit()
     
     return {"message": "If the email exists, a recovery link has been sent", "token": token}
 

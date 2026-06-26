@@ -1,23 +1,20 @@
-from passlib.context import CryptContext
+import bcrypt
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверка пароля с bcrypt"""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
+        )
+    except Exception:
+        return False
+
 
 def get_password_hash(password: str) -> str:
     """Хеширование пароля с bcrypt"""
-    return pwd_context.hash(password)
-
-def verify_token_signature(token: str, secret_key: str) -> bool:
-    """Проверка подписи JWT токена"""
-    try:
-        payload, sig = token.rsplit(".", 1)
-        expected = pwd_context.hash(f"{payload}.{secret_key}")
-        return pwd_context.verify(sig, expected)
-    except:
-        return False
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
