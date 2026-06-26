@@ -293,13 +293,13 @@ async def get_part_details(
         ).fetchall()
 
         crosses = tecdoc_db.execute(
-            sa_text("""SELECT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
+            sa_text("""SELECT DISTINCT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
                        WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
             {"art": tecdoc_search},
         ).fetchall()
 
         oems = tecdoc_db.execute(
-            sa_text("""SELECT "OENbr", "manufacturerId" FROM article_oe
+            sa_text("""SELECT DISTINCT "OENbr", "manufacturerId" FROM article_oe
                        WHERE LOWER("OENbr") = LOWER(:art)
                        AND "OENbr" IS NOT NULL AND "OENbr" != ''
                        LIMIT 20"""),

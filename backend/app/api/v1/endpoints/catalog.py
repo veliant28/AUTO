@@ -258,7 +258,7 @@ async def get_part_details(
 
     # 5. Crosses
     crosses = tecdoc_db.execute(
-        sa_text("""SELECT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
+            sa_text("""SELECT DISTINCT "PartsDataSupplierArticleNumber", "manufacturerId" FROM article_cross
                    WHERE LOWER("PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
         {"art": article},
     ).fetchall()
