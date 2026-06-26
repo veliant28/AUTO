@@ -388,6 +388,7 @@ export interface OrderNovaPoshtaWaybillUpsert {
   pack_refs?: string[]
   pack_label?: string
   pack_cost?: string
+  pack_items?: any[]
   volumetric_width?: string
   volumetric_length?: string
   volumetric_height?: string

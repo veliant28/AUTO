@@ -509,7 +509,7 @@ export default function AdminReturnsPage() {
         header: t('order_customer'),
         cell: (info) => {
           const row = info.row.original
-          const parts = []
+          const parts: string[] = []
           if (row.user_last_name) parts.push(row.user_last_name)
           if (row.user_first_name) parts.push(row.user_first_name)
           return <span>{parts.join(' ') || row.user_name}</span>
