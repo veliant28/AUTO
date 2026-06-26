@@ -1,64 +1,75 @@
-'use client';
+'use client'
 
-import React, { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Car } from 'lucide-react';
+import React, { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Car } from 'lucide-react'
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-} from '@tanstack/react-table';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+} from '@tanstack/react-table'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table'
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useApplicabilityMakes, useApplicabilityModels, useApplicability } from '@/hooks/usePartDetail';
-import { APPLICABILITY_LIMIT } from '@/lib/constants';
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  useApplicabilityMakes,
+  useApplicabilityModels,
+  useApplicability,
+} from '@/hooks/usePartDetail'
+import { APPLICABILITY_LIMIT } from '@/lib/constants'
 
 type Vehicle = {
-  mod_id: number;
-  brand_name: string;
-  model_name: string;
-  mod_name: string;
-  years: string;
-};
+  mod_id: number
+  brand_name: string
+  model_name: string
+  mod_name: string
+  years: string
+}
 
 interface ApplicabilityTableProps {
-  article: string;
-  count: number;
+  article: string
+  count: number
 }
 
 function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
-  const t = useTranslations('catalog');
-  const [makeId, setMakeId] = useState<string>('');
-  const [modelId, setModelId] = useState<string>('');
-  const [showAll, setShowAll] = useState(false);
+  const t = useTranslations('catalog')
+  const [makeId, setMakeId] = useState<string>('all')
+  const [modelId, setModelId] = useState<string>('')
+  const [showAll, setShowAll] = useState(false)
 
-  const limit = showAll ? APPLICABILITY_LIMIT : 10;
+  const limit = showAll ? APPLICABILITY_LIMIT : 10
 
-  const { data: makes } = useApplicabilityMakes(article);
+  const { data: makes } = useApplicabilityMakes(article)
   const { data: models } = useApplicabilityModels(
     article,
-    makeId ? Number(makeId) : null,
-  );
+    makeId && makeId !== 'all' ? Number(makeId) : null,
+  )
   const { data: vehiclesData, isLoading } = useApplicability(article, {
     page: 1,
     limit,
     makeId: makeId ? Number(makeId) : null,
     modelId: modelId ? Number(modelId) : null,
-  });
+  })
 
-  const vehicles = vehiclesData?.vehicles ?? [];
+  const vehicles = vehiclesData?.vehicles ?? []
 
-  const columnHelper = createColumnHelper<Vehicle>();
+  const columnHelper = createColumnHelper<Vehicle>()
 
   const columns = useMemo(
     () => [
@@ -79,32 +90,36 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
       }),
     ],
     [t, columnHelper],
-  );
+  )
 
   const table = useReactTable({
     data: vehicles,
     columns,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
-  });
+  })
 
   const handleMakeChange = (value: string) => {
-    setMakeId(value);
-    setModelId('');
-  };
+    setMakeId(value)
+    setModelId('')
+  }
 
   return (
     <div className="space-y-3">
       <h4 className="font-semibold text-sm flex items-center gap-2">
         <Car className="w-3.5 h-3.5" /> {t('applicability')}
         <span className="text-muted-foreground font-normal">({count})</span>
-        {makeId && (
-          <Badge className="bg-blue-500 text-white border-0 text-xs">{t('applicability_compatible')}</Badge>
+        {makeId && makeId !== 'all' && (
+          <Badge className="bg-blue-500 text-white border-0 text-xs">
+            {t('applicability_compatible')}
+          </Badge>
         )}
       </h4>
 
       {count === 0 ? (
-        <p className="text-sm text-muted-foreground py-4">{t('no_applicability')}</p>
+        <p className="text-sm text-muted-foreground py-4">
+          {t('no_applicability')}
+        </p>
       ) : (
         <>
           <div className="flex flex-wrap gap-3">
@@ -113,7 +128,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
                 <SelectValue placeholder={t('select_make')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('select_make')}</SelectItem>
+                <SelectItem value="all">{t('select_make')}</SelectItem>
                 {makes?.map((m: { id: number; name: string }) => (
                   <SelectItem key={m.id} value={String(m.id)}>
                     {m.name}
@@ -148,7 +163,9 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
               <Skeleton className="h-8 w-full" />
             </div>
           ) : vehicles.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">{t('no_applicability')}</p>
+            <p className="text-sm text-muted-foreground py-4">
+              {t('no_applicability')}
+            </p>
           ) : (
             <div className="overflow-hidden">
               <Table>
@@ -157,7 +174,10 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
                     <TableRow key={hg.id}>
                       {hg.headers.map((header) => (
                         <TableHead key={header.id}>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                         </TableHead>
                       ))}
                     </TableRow>
@@ -168,7 +188,10 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
                     <TableRow key={row.id}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -191,7 +214,7 @@ function ApplicabilityTable({ article, count }: ApplicabilityTableProps) {
         </>
       )}
     </div>
-  );
+  )
 }
 
-export { ApplicabilityTable };
+export { ApplicabilityTable }
