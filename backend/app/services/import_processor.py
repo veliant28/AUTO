@@ -268,11 +268,11 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
                 })
                 part_ids[key] = None
 
-    for batch_start in range(0, len(part_batch), 1000):
+	    for batch_start in range(0, len(part_batch), 1000):
         chunk = part_batch[batch_start:batch_start + 1000]
         stmt = pg_insert(Part).values(chunk)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["supplier_article", "brand"],
+            index_elements=["article", sa.text("COALESCE(brand, '')")],
             set_={
                 "name": stmt.excluded.name,
                 "brand_id": stmt.excluded.brand_id,
