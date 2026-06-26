@@ -381,10 +381,8 @@ export default function ProductClient({ article }: { article: string }) {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card flex flex-col">
-          <div className="overflow-y-auto max-h-[500px] p-4">
-            <ApplicabilityTable article={article} count={appCount} />
-          </div>
+        <div className="rounded-lg border bg-card p-4">
+          <ApplicabilityTable article={article} count={appCount} />
         </div>
       </div>
     </div>
