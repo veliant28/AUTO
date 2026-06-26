@@ -28,8 +28,7 @@ async def get_cart(user_id: int = Depends(get_current_user), db: Session = Depen
             "price": float(offer.final_price) if offer and offer.final_price is not None else (float(offer.price) if offer else None),
             "supplier_name": supplier.name if supplier else None,
             "brand": part.brand if part else None,
-            "image_url": None,
-            "sku": part.sku if part else None,
+            "image_url": part.image_url if part else None,            "sku": part.sku if part else None,
         })
     return result
 

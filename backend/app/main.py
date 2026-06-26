@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.exceptions import (
@@ -56,6 +57,12 @@ app.add_exception_handler(Exception, catch_all_exception_handler)
 # Routes
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(health_router)
+
+# Static files (product images)
+import os
+media_dir = os.path.join(os.path.dirname(__file__), "..", "media")
+os.makedirs(os.path.join(media_dir, "products"), exist_ok=True)
+app.mount("/media", StaticFiles(directory=media_dir), name="media")
 
 @app.get("/")
 async def root():

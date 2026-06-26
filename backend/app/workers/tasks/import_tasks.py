@@ -192,6 +192,14 @@ def process_price_import(self, import_id: int):
             db.commit()
             LOG("GPL: import complete")
 
+            # Trigger background image download
+            try:
+                from app.workers.tasks.image_tasks import download_product_images
+                download_product_images.delay()
+                LOG("GPL: image download task queued")
+            except Exception as img_err:
+                LOG(f"GPL: failed to queue image download: {img_err}")
+
         elif pi.supplier.upper() == "UTR":
             LOG("UTR: requesting export...")
             utr_client = UTRAPIClient(client.config)

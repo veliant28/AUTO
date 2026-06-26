@@ -25,12 +25,19 @@ def build_xlsx_from_json(items: list) -> bytes:
     ws = wb.active
     ws.title = "Prices"
     headers = ["cid", "article", "brand", "category", "name", "price", "currency",
-               "stock_total", "stock_regions", "tecdoc_article"]
+               "stock_total", "stock_regions", "tecdoc_article", "image_url"]
     if not items:
         ws.append(headers)
     else:
         ws.append(headers)
         for item in items:
+            # Try multiple possible field names for image
+            img = ""
+            for img_key in ("image", "photo", "picture", "image_url", "img", "product_image", "photo_url", "зображення_товару"):
+                val = item.get(img_key, "")
+                if val:
+                    img = val
+                    break
             row = [
                 item.get("cid", ""),
                 item.get("article", ""),
@@ -42,6 +49,7 @@ def build_xlsx_from_json(items: list) -> bytes:
                 _sum_stock(item),
                 str(_extract_stock(item)),
                 item.get("tecdoc_article", ""),
+                img,
             ]
             ws.append(row)
     buf = io.BytesIO()
@@ -187,6 +195,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         match_status = "matched" if tecdoc_brand_id else "pending"
 
         category = str(values.get("category", "")).strip() or None
+        image_url = str(values.get("image_url", "")).strip() or None
 
         batch.append({
             "supplier": supplier,
@@ -201,6 +210,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             "tecdoc_brand_id": tecdoc_brand_id,
             "match_status": match_status,
             "category": category,
+            "image_url": image_url,
         })
         total += 1
 
@@ -239,6 +249,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
                 "brand_id": sp.tecdoc_brand_id or 0,
                 "sku": sp.sku,
                 "is_active": True,
+                "image_url": sp.image_url,
             })
             part_ids[key] = None
 
@@ -252,6 +263,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
                 "brand_id": stmt.excluded.brand_id,
                 "sku": stmt.excluded.sku,
                 "is_active": True,
+                "image_url": stmt.excluded.image_url,
             },
         )
         db.execute(stmt)

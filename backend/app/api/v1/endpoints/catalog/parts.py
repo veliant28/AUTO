@@ -44,8 +44,7 @@ def _part_to_result(part, db) -> dict:
         "quantity": best["quantity"] if best else None,
         "supplier_name": best["supplier_name"] if best else None,
         "currency": best["currency"] if best else "UAH",
-        "image_url": None,
-    }
+        "image_url": part.image_url,    }
 
 
 @router.get("/makes", response_model=List[BrandSchema])

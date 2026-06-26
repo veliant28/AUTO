@@ -55,8 +55,7 @@ async def get_favorites(
             "price": best["price"] if best else None,
             "quantity": best["quantity"] if best else None,
             "currency": best["currency"] if best else "UAH",
-            "image_url": None,
-        })
+            "image_url": part.image_url,        })
 
     return {"items": result, "total": total, "page": page, "page_size": page_size}
 
