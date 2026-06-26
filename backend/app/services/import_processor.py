@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+import sqlalchemy as sa
 from app.models.tecdoc import SupplierPrice
 from app.models.imports import PriceImport
 from app.models.parts import Part
@@ -244,7 +245,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
         chunk = part_batch[batch_start:batch_start + 1000]
         stmt = pg_insert(Part).values(chunk)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["article", "brand"],
+            index_elements=["article", sa.text("COALESCE(brand, '')")],
             set_={
                 "name": stmt.excluded.name,
                 "brand_id": stmt.excluded.brand_id,
