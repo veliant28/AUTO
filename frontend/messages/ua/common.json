@@ -680,6 +680,7 @@
     "workers_task_apply_margins": "Застосувати націнки",
     "workers_task_process_price_import": "Імпорт цін",
     "workers_task_process_tecdoc_batch": "TecDoc пакет",
+    "tecdoc_of": "з",
     "workers_task_promote_import_task": "Просування імпорту",
     "workers_task_scheduler_tick": "Планувальник",
     "workers_runtime": "Час",

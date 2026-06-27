@@ -159,7 +159,7 @@ def process_tecdoc_batch(self, article_ids: list[int] = None, batch_size: int = 
                     db.commit()
                     continue
 
-                sp.tecdoc_article = str(found_article)
+                sp.article = str(found_article)
                 sp.tecdoc_brand_id = int(found_brand_id)
 
                 enriched = False
@@ -252,40 +252,75 @@ def process_tecdoc_batch(self, article_ids: list[int] = None, batch_size: int = 
         tecdoc_db.close()
 
 
-@celery_app.task(bind=True, name="sync_part_tecdoc_articles")
-def sync_part_tecdoc_articles(self):
-    """Sync Part.tecdoc_article from matched SupplierPrice records."""
+@celery_app.task(bind=True, name="match_parts_with_tecdoc")
+def match_parts_with_tecdoc(self):
+    """Bulk-match Parts against local TecDoc DB by (article, brand_id).
+
+    Checks the standard TecDoc tables (articles, article_inf) for matching
+    data. When auto-db.pro API is connected, uses getArtInfo to enrich.
+
+    Sets Part.matched_at for matched items.
+    """
+    logger = logging.getLogger(__name__)
     db = SessionLocal()
     tecdoc_db = TecDocSessionLocal()
     try:
-        # Find SupplierPrice with valid tecdoc_article that differs from article
-        rows = db.query(SupplierPrice).filter(
-            SupplierPrice.supplier == "GPL",
-            SupplierPrice.tecdoc_article.isnot(None),
-            SupplierPrice.tecdoc_article != "",
-            SupplierPrice.match_status == "matched",
-        ).all()
+        batch_size = 500
+        total_matched = 0
+        total_not_found = 0
 
-        updated = 0
-        for sp in rows:
-            if sp.tecdoc_article == sp.article:
-                continue  # same article, no enrichment needed
-            part = db.query(Part).filter(
-                Part.article == sp.article,
-                Part.brand == sp.brand,
-            ).first()
-            if not part:
-                continue
-            if part.tecdoc_article != sp.tecdoc_article:
-                part.tecdoc_article = sp.tecdoc_article
-                updated += 1
+        while True:
+            parts = db.query(Part).filter(
+                Part.matched_at.is_(None),
+            ).limit(batch_size).all()
+            if not parts:
+                break
 
-        db.commit()
-        logger = logging.getLogger(__name__)
-        logger.info("sync_part_tecdoc_articles: %s parts updated", updated)
-        return {"updated": updated}
+            for part in parts:
+                if not part.brand_id or part.brand_id <= 0:
+                    total_not_found += 1
+                    continue
+
+                # Map our brand_id to TecDoc supplierId
+                # (our brand_id = tecdoc_brand_id = supplier.id in TecDoc)
+                bid = part.brand_id
+
+                # Check articles table (main article registration)
+                row = tecdoc_db.execute(
+                    sa_text("""SELECT 1 FROM articles
+                               WHERE "DataSupplierArticleNumber" = :art
+                               AND "supplierId" = :bid
+                               LIMIT 1"""),
+                    {"art": part.article, "bid": bid},
+                ).first()
+
+                # Also check article_inf for enrichment
+                has_inf = False
+                if row:
+                    has_inf = tecdoc_db.execute(
+                        sa_text("""SELECT 1 FROM article_inf
+                                   WHERE "DataSupplierArticleNumber" = :art
+                                   AND "supplierId" = :bid
+                                   LIMIT 1"""),
+                        {"art": part.article, "bid": bid},
+                    ).scalar() or False
+
+                if row:
+                    part.matched_at = datetime.utcnow()
+                    total_matched += 1
+                else:
+                    total_not_found += 1
+
+            db.commit()
+            logger.info("match_parts_with_tecdoc: batch done, matched=%s not_found=%s",
+                       total_matched, total_not_found)
+
+        logger.info("match_parts_with_tecdoc: complete, total matched=%s not_found=%s",
+                   total_matched, total_not_found)
+        return {"matched": total_matched, "not_found": total_not_found}
     except Exception as e:
         db.rollback()
+        logger.error("match_parts_with_tecdoc: ERROR — %s", e)
         raise
     finally:
         db.close()

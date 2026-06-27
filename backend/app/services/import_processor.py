@@ -24,8 +24,8 @@ def build_xlsx_from_json(items: list) -> bytes:
     wb = Workbook()
     ws = wb.active
     ws.title = "Prices"
-    headers = ["cid", "article", "brand", "category", "name", "price", "currency",
-               "stock_total", "stock_regions", "tecdoc_article", "image_url"]
+    headers = ["article", "brand", "category", "name", "price", "currency",
+               "stock_total", "stock_regions", "image_url"]
     if not items:
         ws.append(headers)
     else:
@@ -39,8 +39,7 @@ def build_xlsx_from_json(items: list) -> bytes:
                     img = val
                     break
             row = [
-                item.get("cid", ""),
-                item.get("article", ""),
+                item.get("tecdoc_article", item.get("article", "")),
                 item.get("brand", ""),
                 item.get("category", ""),
                 item.get("name", ""),
@@ -48,7 +47,6 @@ def build_xlsx_from_json(items: list) -> bytes:
                 "UAH",
                 _sum_stock(item),
                 str(_extract_stock(item)),
-                item.get("tecdoc_article", ""),
                 img,
             ]
             ws.append(row)
@@ -88,15 +86,10 @@ def _resolve_tecdoc_brand(tecdoc_db, brand_name: str) -> int | None:
         return None
     from sqlalchemy import text
     norm = brand_name.lower().strip()
+    # Standard TecDoc suppliers table
     row = tecdoc_db.execute(
-        text("SELECT id FROM autodb_suppliers WHERE LOWER(normalized_name) = :name OR LOWER(matchcode) = :match LIMIT 1"),
+        text("SELECT id FROM suppliers WHERE LOWER(description) = :name OR LOWER(matchcode) = :match LIMIT 1"),
         {"name": norm, "match": norm},
-    ).first()
-    if row:
-        return row[0]
-    row = tecdoc_db.execute(
-        text("SELECT id FROM autodb_suppliers WHERE LOWER(name) = :name LIMIT 1"),
-        {"name": norm},
     ).first()
     return row[0] if row else None
 
@@ -118,6 +111,14 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         nonlocal batch
         if not batch:
             return
+        # Deduplicate within batch — keep the last row for each (supplier, article)
+        seen = {}
+        for row in batch:
+            key = (row["supplier"], row["article"])
+            seen[key] = row
+        batch = list(seen.values())
+        if not batch:
+            return
         stmt = pg_insert(SupplierPrice).values(batch)
         stmt = stmt.on_conflict_do_update(
             index_elements=["supplier", "article"],
@@ -128,7 +129,6 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
                 "currency": stmt.excluded.currency,
                 "stock_total": stmt.excluded.stock_total,
                 "stock_regions": stmt.excluded.stock_regions,
-                "tecdoc_article": stmt.excluded.tecdoc_article,
                 "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
                 "match_status": stmt.excluded.match_status,
                 "category": stmt.excluded.category,
@@ -144,11 +144,12 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             continue
         values = {headers[i]: row[i] if row[i] is not None else "" for i in range(min(len(headers), len(row)))}
 
-        article = str(values.get("article", values.get("articul", values.get("oem", ""))))
+        # article = manufacturer's article (single source of truth)
+        article = str(values.get("article", "")).strip()
         if not article or article.lower() == "article":
             continue
 
-        brand = str(values.get("brand", values.get("producer", values.get("category", ""))))
+        brand = str(values.get("brand", values.get("producer", "")))
         name = str(values.get("name", values.get("title", values.get("description", ""))))
         price_str = str(values.get("price", values.get("price_currency_980", values.get("ррц", "0")))).replace(",", ".")
         try:
@@ -188,8 +189,6 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
 
         currency = str(values.get("currency", values.get("currency_code", "UAH"))).upper()
 
-        tecdoc_article = str(values.get("tecdoc_article", "")).strip() or None
-
         if brand not in brand_cache:
             brand_cache[brand] = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
         tecdoc_brand_id = brand_cache.get(brand)
@@ -200,14 +199,13 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
 
         batch.append({
             "supplier": supplier,
-            "article": str(article)[:100],
-            "brand": str(brand)[:100] if brand else None,
-            "name": str(name)[:500] if name else None,
+            "article": article[:100],
+            "brand": brand[:100] if brand else None,
+            "name": name[:500] if name else None,
             "price": price,
             "currency": currency,
             "stock_total": stock_total,
             "stock_regions": stock_regions if stock_regions else None,
-            "tecdoc_article": tecdoc_article,
             "tecdoc_brand_id": tecdoc_brand_id,
             "match_status": match_status,
             "category": category,
@@ -230,6 +228,7 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
     rows = db.query(SupplierPrice).filter(
         SupplierPrice.supplier == supplier,
         SupplierPrice.price.isnot(None),
+        SupplierPrice.price > 0,
     ).all()
 
     if not rows:
@@ -239,30 +238,26 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
     part_batch = []
     part_ids = {}
 
-    # First pass: try to match by tecdoc_article (cross-supplier dedup)
+    # First pass: match by manufacturer article (Part.article == sp.article)
     for sp in rows:
         brand = sp.brand or ""
         key = (sp.article, brand)
         if key not in part_ids:
-            existing = None
-            if sp.tecdoc_article:
-                existing = db.query(Part).filter(
-                    Part.article == sp.tecdoc_article,
-                    Part.brand == brand,
-                ).first()
+            existing = db.query(Part).filter(
+                Part.article == sp.article,
+                Part.brand == brand,
+            ).first()
             if existing:
-                existing.supplier_article = sp.article
                 if sp.tecdoc_brand_id:
                     existing.brand_id = sp.tecdoc_brand_id
                 part_ids[key] = existing.id
             else:
                 part_batch.append({
-                    "article": sp.tecdoc_article or sp.article,
-                    "supplier_article": sp.article,
+                    "article": sp.article,
                     "brand": brand,
                     "name": sp.name or sp.article,
                     "brand_id": sp.tecdoc_brand_id or 0,
-                    "sku": sp.sku,
+                    "sku": None,
                     "is_active": True,
                     "image_url": sp.image_url,
                 })
@@ -276,19 +271,18 @@ def promote_all_to_catalog(db: Session, supplier: str, progress_cb=None):
             set_={
                 "name": stmt.excluded.name,
                 "brand_id": stmt.excluded.brand_id,
-                "sku": stmt.excluded.sku,
                 "is_active": True,
                 "image_url": stmt.excluded.image_url,
             },
         )
         db.execute(stmt)
-        db.commit()
         if progress_cb:
             progress_cb(10 + int(30 * batch_start / max(len(part_batch), 1)))
-    db.commit()  # commit any existing Part updates from cross-supplier matching
+    db.commit()
 
+    # Second pass: fill part_ids for newly created Parts
     for part in db.query(Part).all():
-        key = (part.supplier_article or part.article, part.brand or "")
+        key = (part.article, part.brand or "")
         if key in part_ids:
             part_ids[key] = part.id
 

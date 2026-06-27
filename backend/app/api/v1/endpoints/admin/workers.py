@@ -77,19 +77,26 @@ def _collect_tasks(
     tasks: list[TaskItem] = []
     stuck: list[TaskItem] = []
 
+    # Fixed slot assignment by task name (stable — slots don't shift when tasks finish)
+    SLOT_MAP = {
+        "process_price_import": 1,
+        "apply_margins": 2,
+        "download_product_images": 3,
+        "match_parts_with_tecdoc": 4,
+    }
+
     def _append(source: dict | None, status: str, assign_slot: bool = False) -> None:
         if not source:
             return
         for worker_name, task_list in source.items():
             if not task_list:
                 continue
-            slot_counter = 0
             for task in task_list:
                 tid = task.get("id", "")
                 tname = task.get("name", "")
                 tstart = task.get("time_start")
                 runtime = round(now - tstart, 0) if tstart else 0.0
-                si = slot_counter if assign_slot else -1
+                si = SLOT_MAP.get(tname, 0) if assign_slot else -1
                 import_progress = None
                 import_status = None
                 import_stage = None
@@ -110,6 +117,21 @@ def _collect_tasks(
                                 stage_started_at = pi.stage_started_at.timestamp() if pi.stage_started_at else None
                     except Exception:
                         pass
+                elif status == "active" and tname in ("download_product_images", "match_parts_with_tecdoc"):
+                    # Read progress from Celery result backend (self.update_state meta)
+                    try:
+                        from celery.result import AsyncResult
+                        ar = AsyncResult(tid, app=celery_app)
+                        if ar.state == "PROGRESS" and ar.info:
+                            meta = ar.info
+                            current = meta.get("current", 0)
+                            total = meta.get("total", 0)
+                            if total > 0:
+                                import_progress = int(current / total * 100)
+                                import_stage = f"{current}/{total}"
+                                import_status = "processing"
+                    except Exception:
+                        pass
                 item = TaskItem(
                     id=tid,
                     name=tname,
@@ -127,8 +149,6 @@ def _collect_tasks(
                 tasks.append(item)
                 if status == "active" and tstart and now - tstart > stuck_threshold:
                     stuck.append(item)
-                if assign_slot:
-                    slot_counter += 1
 
     _append(active_raw, "active", assign_slot=True)
     _append(reserved_raw, "reserved")

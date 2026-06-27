@@ -43,13 +43,35 @@ def download_product_images(self):
 
         for idx, part in enumerate(parts):
             local_file = _local_path(part.id)
-            if os.path.exists(local_file):
+            url = part.image_url
+
+            # Already local — skip (not an error)
+            if not url or url.startswith('/media/'):
                 skipped += 1
+                self.update_state(state='PROGRESS', meta={
+                    'current': idx + 1, 'total': total,
+                    'downloaded': downloaded, 'skipped': skipped, 'errors': errors,
+                })
                 continue
 
-            url = part.image_url
-            if not url or not url.startswith("http"):
+            if not url.startswith("http"):
                 errors += 1
+                self.update_state(state='PROGRESS', meta={
+                    'current': idx + 1, 'total': total,
+                    'downloaded': downloaded, 'skipped': skipped, 'errors': errors,
+                })
+                continue
+
+            if os.path.exists(local_file):
+                # File already exists — just update URL to local path
+                part.image_url = _local_url(part.id)
+                skipped += 1
+                if (idx + 1) % 100 == 0:
+                    db.commit()
+                self.update_state(state='PROGRESS', meta={
+                    'current': idx + 1, 'total': total,
+                    'downloaded': downloaded, 'skipped': skipped, 'errors': errors,
+                })
                 continue
 
             try:
@@ -67,9 +89,13 @@ def download_product_images(self):
                 logger.error("Image download error for part %s (%s): %s", part.id, url, e)
                 errors += 1
 
-            # Batch commit every 100 parts
+            # Batch commit every 100 parts; update progress
             if (idx + 1) % 100 == 0:
                 db.commit()
+                self.update_state(state='PROGRESS', meta={
+                    'current': idx + 1, 'total': total,
+                    'downloaded': downloaded, 'skipped': skipped, 'errors': errors,
+                })
                 logger.info("Image download progress: %s/%s (downloaded=%s skipped=%s errors=%s)",
                           idx + 1, total, downloaded, skipped, errors)
 

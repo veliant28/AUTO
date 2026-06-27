@@ -35,18 +35,13 @@ class SupplierPrice(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     sku = Column(String, unique=True, nullable=True, index=True)
     supplier = Column(String, nullable=False)
-    article = Column(String, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint("supplier", "article", name="uq_supplier_prices_supplier_article"),
-    )
+    article = Column(String, nullable=False, index=True)
     brand = Column(String, nullable=True)
     name = Column(String, nullable=True)
     price = Column(Numeric(10, 2), nullable=True)
     currency = Column(String, nullable=True)
     stock_total = Column(Integer, default=0, nullable=False)
     stock_regions = Column(JSON, nullable=True)
-    tecdoc_article = Column(String, nullable=True)
     tecdoc_brand_id = Column(Integer, nullable=True)
     match_status = Column(String, default="pending", nullable=False)
     category = Column(String, nullable=True)
@@ -54,3 +49,7 @@ class SupplierPrice(Base):
     attempts = Column(Integer, default=0, nullable=False)
     last_attempt_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("supplier", "article", name="uq_supplier_prices_supplier_article"),
+    )

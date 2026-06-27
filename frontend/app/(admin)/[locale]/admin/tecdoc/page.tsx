@@ -731,6 +731,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                       <Checkbox
                         checked={selected.has(a.id)}
                         onCheckedChange={() => toggleSelect(a.id)}
+                        className="cursor-pointer"
                       />
                     </td>
                     <td className="p-3 font-mono text-sm">{a.article}</td>
@@ -744,19 +745,20 @@ function BatchTab({ t }: { t: (k: string) => string }) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge
-                            className={`border-0 h-6 w-6 p-0 flex items-center justify-center cursor-pointer ${
+                            className={`border-0 gap-1.5 px-3 h-7 w-fit flex items-center cursor-pointer text-sm font-normal whitespace-nowrap ${
                               a.match_status === 'matched_app'
-                                ? 'bg-green-500'
+                                ? 'bg-green-500 text-white'
                                 : a.match_status === 'matched'
-                                  ? 'bg-blue-500'
+                                  ? 'bg-blue-500 text-white'
                                   : a.match_status === 'unmatched'
-                                    ? 'bg-yellow-500'
+                                    ? 'bg-yellow-500 text-white'
                                     : a.match_status === 'not_found'
-                                      ? 'bg-red-500'
-                                      : 'bg-gray-400'
+                                      ? 'bg-red-500 text-white'
+                                      : 'bg-gray-400 text-white'
                             }`}
                           >
                             {statusIcons[a.match_status]}
+                            {t('tecdoc_' + a.match_status) || a.match_status}
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -789,7 +791,7 @@ function BatchTab({ t }: { t: (k: string) => string }) {
             <div className="flex items-center justify-between p-3 border-t">
               <span className="text-sm text-muted-foreground">
                 {(page - 1) * pageSize + 1}–
-                {Math.min(page * pageSize, data?.total || 0)} of{' '}
+                {Math.min(page * pageSize, data?.total || 0)} {t('tecdoc_of')}{' '}
                 {data?.total || 0}
               </span>
               <div className="flex items-center gap-1">

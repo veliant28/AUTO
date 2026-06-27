@@ -680,6 +680,7 @@
     "workers_task_apply_margins": "Apply margins",
     "workers_task_process_price_import": "Price import",
     "workers_task_process_tecdoc_batch": "TecDoc batch",
+    "tecdoc_of": "of",
     "workers_task_promote_import_task": "Import promote",
     "workers_task_scheduler_tick": "Scheduler",
     "workers_runtime": "Runtime",

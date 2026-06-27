@@ -33,12 +33,10 @@ class Part(Base):
     deactivated_at = Column(DateTime, nullable=True)
     deactivation_reason = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
-    tecdoc_article = Column(String, nullable=True, index=True)
-    supplier_article = Column(String, nullable=True, index=True)
+    matched_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
         Index("idx_part_article_brand", "article", "brand"),
-        Index("idx_part_supplier_article_brand", "supplier_article", "brand"),
     )
 
     category = relationship("PartCategory")

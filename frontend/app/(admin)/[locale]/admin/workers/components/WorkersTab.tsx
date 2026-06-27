@@ -346,6 +346,7 @@ export default function WorkersTab() {
 
   const activeSlots = (data?.tasks || []).filter((t) => t.status === 'active')
   const slotSet = new Set(activeSlots.map((t) => t.slot_index))
+  const maxSlot = Math.max(0, ...activeSlots.map((t) => t.slot_index), 4)
   const donutData: any[] = []
   if (activeCount === 0) {
     donutData.push({
@@ -354,11 +355,11 @@ export default function WorkersTab() {
       itemStyle: { color: '#9ca3af', opacity: 0.12, borderRadius: 6 },
     })
   } else {
-    for (let i = 0; i < concurrency; i++) {
+    for (let i = 0; i <= maxSlot; i++) {
       if (slotSet.has(i)) {
         donutData.push({
           value: 1 / activeCount,
-          name: `${t('workers_slot')} ${i + 1}`,
+          name: `${t('workers_slot')} ${i}`,
           itemStyle: {
             color: SLOT_COLORS[i % 4],
             borderRadius: 6,
@@ -456,7 +457,7 @@ export default function WorkersTab() {
             const truncatedId = task.id.slice(0, 8)
             const stage = task.import_stage || '—'
             const color = SLOT_COLORS[task.slot_index % 4]
-            html += `<div style="font-size:11px;margin-top:2px"><span style="color:${color}">■</span> ${t('workers_slot')} ${task.slot_index + 1}: ${truncatedId}... (${stage})</div>`
+            html += `<div style="font-size:11px;margin-top:2px"><span style="color:${color}">■</span> ${t('workers_slot')} ${task.slot_index}: ${truncatedId}... (${stage})</div>`
           })
         }
         return html
@@ -521,13 +522,29 @@ export default function WorkersTab() {
     columnHelper.accessor('name', {
       header: t('workers_task_name'),
       cell: (info) => {
+        const taskName = info.getValue()
         const stage = info.row.original.import_stage
+        const isProgressStage = stage?.includes('/')
+        const label =
+          taskName === 'download_product_images'
+            ? 'Фото'
+            : taskName === 'apply_margins'
+              ? 'Наценка'
+              : taskName === 'match_parts_with_tecdoc'
+                ? 'Матчинг'
+                : taskName === 'process_price_import'
+                  ? 'Импорт'
+                  : taskName
+        const display =
+          stage && isProgressStage
+            ? `${label}: ${stage}`
+            : stage || label || '—'
         return (
           <span
             className="text-sm truncate max-w-[200px] block"
-            title={stage || undefined}
+            title={display}
           >
-            {stage || '—'}
+            {display}
           </span>
         )
       },
@@ -577,10 +594,6 @@ export default function WorkersTab() {
             </div>
           )
         }
-        const pct = Math.min(
-          100,
-          Math.round((task.runtime_seconds / PROGRESS_THRESHOLD) * 100),
-        )
         return (
           <div className="flex items-center gap-2 min-w-[180px]">
             <Badge
@@ -595,12 +608,14 @@ export default function WorkersTab() {
             </Badge>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${isStuck ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}
-                style={{ width: `${pct}%` }}
+                className="h-full rounded-full bg-blue-500"
+                style={{ width: `${task.import_progress ?? 30}%` }}
               />
             </div>
             <span className="text-xs text-muted-foreground w-8 text-right">
-              {pct}%
+              {task.import_stage?.includes('/')
+                ? task.import_stage.split('/')[0]
+                : '~'}
             </span>
           </div>
         )

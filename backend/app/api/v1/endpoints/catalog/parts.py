@@ -82,13 +82,8 @@ async def get_part_applicability_makes(
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
     """Получить производителей, для которых подходит деталь."""
-    # Try direct article first, then tecdoc_article
     search_articles = [article.lower()]
     part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
-    if part and part.tecdoc_article:
-        td = part.tecdoc_article.lower()
-        if td != search_articles[0]:
-            search_articles.append(td)
 
     for art in search_articles:
         rows = tecdoc_db.execute(
@@ -116,10 +111,6 @@ async def get_part_applicability_models(
     """Получить модели производителя, для которых подходит деталь."""
     search_articles = [article.lower()]
     part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
-    if part and part.tecdoc_article:
-        td = part.tecdoc_article.lower()
-        if td != search_articles[0]:
-            search_articles.append(td)
 
     for art in search_articles:
         rows = tecdoc_db.execute(
@@ -150,11 +141,8 @@ async def get_part_applicability(
 ):
     """Получить список автомобилей, для которых подходит деталь."""
     search_articles = [article.lower()]
-    part = db.query(Part).filter(Part.article == article, Part.is_active == True).first()
-    if part and part.tecdoc_article:
-        td = part.tecdoc_article.lower()
-        if td != search_articles[0]:
-            search_articles.append(td)
+    vehicles = []
+    total = 0
 
     for art in search_articles:
         where = 'WHERE LOWER(li."DataSupplierArticleNumber") = :art'
@@ -199,10 +187,10 @@ async def get_part_applicability(
         vehicles = [{
             "mod_id": r[0],
             "brand_name": r[1],
-        "model_name": r[2],
-        "mod_name": r[3],
-        "years": r[4] or "",
-    } for r in rows]
+            "model_name": r[2],
+            "mod_name": r[3],
+            "years": r[4] or "",
+        } for r in rows]
 
     return {
         "total": total,
@@ -235,8 +223,6 @@ async def get_part_details(
             "brand": part.brand,
             "brand_id": part.brand_id,
             "tecdoc_id": part.tecdoc_id,
-            "tecdoc_article": part.tecdoc_article,
-            "supplier_article": part.supplier_article,
             "sku": part.sku,
             "image_url": part.image_url,
         }
@@ -251,10 +237,7 @@ async def get_part_details(
 
     info_data = None
 
-    # Determine the TecDoc search article: try part.tecdoc_article first, then the URL article
     tecdoc_search = article
-    if part_data and part_data.get("tecdoc_article"):
-        tecdoc_search = part_data["tecdoc_article"]
 
     if tecdoc_search:
         info_row = tecdoc_db.execute(

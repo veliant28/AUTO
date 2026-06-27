@@ -11,7 +11,7 @@ from app.services.import_processor import (
     assign_gpl_categories, _ensure_import_dir, IMPORT_DIR
 )
 from app.services.pricing_service import apply_margins_bulk
-from app.services.sku_generator import bulk_generate_skus
+from app.services.sku_generator import bulk_generate_skus, sync_skus_to_parts
 from app.models.pricing import PriceRule, PricingApplySnapshot
 import json
 import os
@@ -169,36 +169,43 @@ def process_price_import(self, import_id: int):
             LOG("GPL: generating SKUs...")
             set_stage(pi, db, "Создание товаров в каталоге")
             bulk_generate_skus(db)
+            sync_skus_to_parts(db, supplier="GPL")
             LOG("GPL: SKUs generated")
-
-            LOG("GPL: applying margins...")
-            apply_margins_bulk(db)
-            _snapshot_margins(db)
-            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            set_progress(pi, db, 85)
-            LOG("GPL: margins applied")
 
             LOG("GPL: assigning categories...")
             set_stage(pi, db, "Назначение категорий")
             cat_assigned = assign_gpl_categories(db, "GPL")
-            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            set_progress(pi, db, 90)
             LOG(f"GPL: categories assigned: {cat_assigned}")
 
+            # Import is complete — set status and launch 3 parallel tasks
             pi.progress = 100
             pi.status = "complete"
             pi.stage_name = ""
             pi.finished_at = datetime.utcnow()
             db.commit()
-            LOG("GPL: import complete")
+            LOG("GPL: import complete — launching parallel tasks (margins, photos, matching)")
 
-            # Trigger background image download
+            # 3 параллельных задачи (слоты 1, 2, 3)
+            try:
+                from app.workers.tasks.pricing_tasks import apply_margins_task
+                apply_margins_task.delay()
+                LOG("GPL: margins task queued [slot 1]")
+            except Exception as e:
+                LOG(f"GPL: failed to queue margins: {e}")
+
             try:
                 from app.workers.tasks.image_tasks import download_product_images
                 download_product_images.delay()
-                LOG("GPL: image download task queued")
-            except Exception as img_err:
-                LOG(f"GPL: failed to queue image download: {img_err}")
+                LOG("GPL: image download task queued [slot 2]")
+            except Exception as e:
+                LOG(f"GPL: failed to queue image download: {e}")
+
+            try:
+                from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
+                match_parts_with_tecdoc.delay()
+                LOG("GPL: tecdoc matching task queued [slot 3]")
+            except Exception as e:
+                LOG(f"GPL: failed to queue tecdoc matching: {e}")
 
         elif pi.supplier.upper() == "UTR":
             LOG("UTR: requesting export...")
@@ -269,21 +276,30 @@ def process_price_import(self, import_id: int):
             LOG("UTR: generating SKUs...")
             set_stage(pi, db, "Создание товаров в каталоге")
             bulk_generate_skus(db)
+            sync_skus_to_parts(db, supplier="UTR")
             LOG("UTR: SKUs generated")
-
-            LOG("UTR: applying margins...")
-            apply_margins_bulk(db)
-            _snapshot_margins(db)
-            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            set_progress(pi, db, 85)
-            LOG("UTR: margins applied")
 
             pi.progress = 100
             pi.status = "complete"
             pi.stage_name = ""
             pi.finished_at = datetime.utcnow()
             db.commit()
-            LOG("UTR: import complete")
+            LOG("UTR: import complete — launching parallel tasks (margins, matching)")
+
+            # 2 параллельных задачи (фото только для GPL)
+            try:
+                from app.workers.tasks.pricing_tasks import apply_margins_task
+                apply_margins_task.delay()
+                LOG("UTR: margins task queued [slot 1]")
+            except Exception as e:
+                LOG(f"UTR: failed to queue margins: {e}")
+
+            try:
+                from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
+                match_parts_with_tecdoc.delay()
+                LOG("UTR: tecdoc matching task queued [slot 3]")
+            except Exception as e:
+                LOG(f"UTR: failed to queue tecdoc matching: {e}")
 
         LOG("process_price_import: success")
         return {"status": pi.status, "items": pi.total_items, "matched": pi.matched_items}
@@ -337,6 +353,7 @@ def promote_import_task(self, import_id: int):
 
         LOG("promote: generating SKUs...")
         bulk_generate_skus(db)
+        sync_skus_to_parts(db, supplier=pi.supplier)
         LOG("promote: SKUs generated")
 
         LOG("promote: applying margins...")

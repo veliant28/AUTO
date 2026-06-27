@@ -119,21 +119,70 @@ async def list_articles(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
 ):
-    """Список артикулов поставщиков с фильтрацией."""
-    query = db.query(SupplierPrice)
+    """Список товаров из каталога (Part) с фильтрацией."""
+    from app.models.parts import Part
+    from app.models.suppliers import SupplierOffer
+    from app.models.tecdoc import SupplierPrice
+    from sqlalchemy import func
+
+    # Base: Parts that have GPL offers
+    query = db.query(Part).join(SupplierOffer, SupplierOffer.part_id == Part.id)
+    query = query.join(SupplierPrice, func.lower(SupplierPrice.article) == func.lower(Part.article))
+    query = query.filter(SupplierPrice.supplier == "GPL")
+
+    # Left join for match_status from the corresponding SupplierPrice
+    query = query.add_columns(
+        SupplierPrice.match_status,
+        SupplierPrice.brand.label("sp_brand"),
+        SupplierPrice.attempts,
+        SupplierPrice.last_attempt_at,
+    )
+
     if status:
         query = query.filter(SupplierPrice.match_status == status)
     if search:
         like = f"%{search}%"
-        query = query.filter(
-            SupplierPrice.article.ilike(like) | SupplierPrice.name.ilike(like)
-        )
+        query = query.filter(Part.article.ilike(like) | Part.name.ilike(like))
     if brand:
-        query = query.filter(SupplierPrice.brand.ilike(f"%{brand}%"))
+        query = query.filter(Part.brand.ilike(f"%{brand}%"))
+
     total = query.count()
-    items = query.order_by(SupplierPrice.id).offset((page - 1) * page_size).limit(page_size).all()
+    rows = query.order_by(Part.id).offset((page - 1) * page_size).limit(page_size).all()
+
+    items = []
+    for row in rows:
+        part = row[0] if hasattr(row, '__iter__') and not isinstance(row, Part) else row
+        if hasattr(row, '__iter__') and not isinstance(row, Part):
+            match_status = row[1] if len(row) > 1 else "pending"
+            sp_brand = row[2] if len(row) > 2 else part.brand
+            attempts = row[3] if len(row) > 3 else 0
+            last_attempt = row[4] if len(row) > 4 else None
+        else:
+            match_status = "pending"
+            sp_brand = part.brand
+            attempts = 0
+            last_attempt = None
+        # Get offer price/stock for display
+        offer = part.offers[0] if part.offers else None
+        items.append(SupplierPriceItem(
+            id=part.id,
+            supplier="GPL",
+            article=part.article,
+            name=part.name,
+            brand=part.brand or sp_brand,
+            price=offer.price if offer else 0,
+            currency=offer.currency if offer else "UAH",
+            stock_total=offer.quantity if offer else 0,
+            stock_regions=offer.stock_regions if offer else None,
+            sku=part.sku,
+            match_status=match_status,
+            attempts=attempts or 0,
+            last_attempt_at=last_attempt,
+            tecdoc_brand_id=part.brand_id,
+            tecdoc_article=None,
+        ))
     return SupplierPriceListResponse(
-        items=[SupplierPriceItem.model_validate(sp) for sp in items],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,
@@ -307,7 +356,7 @@ async def manual_bind(
     if not sp:
         raise HTTPException(404, "Product not found")
 
-    sp.tecdoc_article = data.tecdoc_article
+    sp.article = data.tecdoc_article
     sp.tecdoc_brand_id = data.tecdoc_brand_id
     sp.match_status = "matched_app"
     db.commit()
