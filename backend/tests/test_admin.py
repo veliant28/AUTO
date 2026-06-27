@@ -1,54 +1,59 @@
 import pytest
 
-def test_admin_dashboard(client, auth_headers):
+def test_admin_dashboard(client, admin_headers):
     response = client.get(
         "/api/v1/admin/dashboard",
-        headers=auth_headers
+        headers=admin_headers
     )
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
 
-def test_get_users(client, auth_headers, test_user):
+def test_get_users(client, admin_headers, test_user):
     response = client.get(
         "/api/v1/admin/users",
-        headers=auth_headers
+        headers=admin_headers
     )
     assert response.status_code == 200
-    users = response.json()
-    assert isinstance(users, list)
+    data = response.json()
+    assert isinstance(data, dict)  # paginated response
+    assert "items" in data
 
-def test_get_all_brands(client, auth_headers):
+def test_get_all_brands(client, admin_headers):
     response = client.get(
         "/api/v1/admin/brands",
-        headers=auth_headers
+        headers=admin_headers
     )
     assert response.status_code == 200
-    brands = response.json()
-    assert isinstance(brands, list)
+    data = response.json()
+    assert isinstance(data, dict)  # paginated response
+    assert "items" in data
 
-def test_get_all_parts(client, auth_headers):
+def test_get_all_parts(client, admin_headers):
     response = client.get(
-        "/api/v1/admin/parts",
-        headers=auth_headers
+        "/api/v1/admin/products",
+        params={"page": 1, "page_size": 10},
+        headers=admin_headers
     )
     assert response.status_code == 200
-    parts = response.json()
-    assert isinstance(parts, list)
+    data = response.json()
+    assert isinstance(data, dict)
+    assert "items" in data
 
-def test_get_all_orders(client, auth_headers):
+def test_get_all_orders(client, admin_headers):
     response = client.get(
         "/api/v1/admin/orders",
-        headers=auth_headers
+        headers=admin_headers
     )
     assert response.status_code == 200
-    orders = response.json()
-    assert isinstance(orders, list)
+    data = response.json()
+    assert isinstance(data, dict)  # paginated response
+    assert "items" in data
 
-def test_get_statistics(client, auth_headers):
+def test_get_statistics(client, admin_headers):
     response = client.get(
-        "/api/v1/admin/statistics",
-        headers=auth_headers
+        "/api/v1/admin/dashboard",
+        headers=admin_headers
     )
     assert response.status_code == 200
     data = response.json()

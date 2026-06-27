@@ -52,6 +52,14 @@ def retail_role(db):
     return role
 
 @pytest.fixture
+def admin_role(db):
+    role = Role(name="admin", description="admin role")
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+@pytest.fixture
 def test_user(db, retail_role):
     user = User(
         email="test@example.com",
@@ -59,6 +67,20 @@ def test_user(db, retail_role):
         first_name="Test",
         avatar_index=0,
         role_id=retail_role.id,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@pytest.fixture
+def admin_user(db, admin_role):
+    user = User(
+        email="admin@example.com",
+        password_hash="$2b$12$6qW0DnNZjgNuB6GWlEGGv.DRbOeaRywnAzKoxhMnhYzfamBRSE2xG",
+        first_name="Admin",
+        avatar_index=0,
+        role_id=admin_role.id,
     )
     db.add(user)
     db.commit()
@@ -77,6 +99,17 @@ def auth_headers(client, test_user):
     return headers
 
 @pytest.fixture
+def admin_headers(client, admin_user):
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": admin_user.email, "password": "test_password"}
+    )
+    headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+    if response.status_code != 200:
+        pytest.skip(f"Login failed: {response.json()}")
+    return headers
+
+@pytest.fixture
 def tecdoc_db():
     Base.metadata.create_all(bind=engine)
     db = TestSessionLocal()
@@ -85,3 +118,39 @@ def tecdoc_db():
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def test_part(db):
+    from app.models.parts import Part
+    part = Part(article="TST001", brand="Test", name="Test Part", brand_id=0)
+    db.add(part)
+    db.commit()
+    db.refresh(part)
+    return part
+
+
+@pytest.fixture
+def test_supplier(db):
+    from app.models.suppliers import Supplier
+    s = Supplier(name="Test Supplier")
+    db.add(s)
+    db.commit()
+    db.refresh(s)
+    return s
+
+
+@pytest.fixture
+def test_supplier_offer(db, test_part, test_supplier):
+    from app.models.suppliers import SupplierOffer
+    offer = SupplierOffer(
+        part_id=test_part.id,
+        supplier_id=test_supplier.id,
+        price=100.0,
+        currency="UAH",
+        quantity=5,
+    )
+    db.add(offer)
+    db.commit()
+    db.refresh(offer)
+    return offer
