@@ -472,68 +472,46 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <>
-              <style>{`
-                .col-fixed td, .col-fixed th { overflow: hidden !important; white-space: nowrap !important; }
-                .col-fixed td:nth-child(1), .col-fixed th:nth-child(1) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
-                .col-fixed td:nth-child(2), .col-fixed th:nth-child(2) { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
-                .col-fixed td:nth-child(3), .col-fixed th:nth-child(3) { width: auto !important; overflow: visible !important; white-space: normal !important; }
-                .col-fixed td:nth-child(4), .col-fixed th:nth-child(4) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; }
-                .col-fixed td:nth-child(5), .col-fixed th:nth-child(5) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
-                .col-fixed td:nth-child(6), .col-fixed th:nth-child(6) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
-                .col-fixed td:nth-child(7), .col-fixed th:nth-child(7) { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
-                .col-fixed td:nth-child(8), .col-fixed th:nth-child(8) { width: 180px !important; min-width: 180px !important; max-width: 180px !important; }
-                .col-fixed td:nth-child(9), .col-fixed th:nth-child(9) { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
-              `}</style>
-              <table
-                className="w-full text-sm col-fixed"
-                style={{ tableLayout: 'fixed' }}
-              >
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      SKU
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('products_article')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('products_name')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('products_brand')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('products_supplier')}
-                    </th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">
-                      {t('products_status')}
-                    </th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">
-                      {t('products_price')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('products_stock')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.items?.map((item: any) => (
-                    <tr
-                      key={item.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      <td
-                        className="p-3"
-                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                      >
+              <div className="w-full text-sm flex flex-col">
+                <div className="flex border-b bg-muted/50">
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px]">
+                    SKU
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[120px]">
+                    {t('products_article')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground flex-1 min-w-0">
+                    {t('products_name')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[80px]">
+                    {t('products_brand')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px]">
+                    {t('products_supplier')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px] text-center">
+                    {t('products_status')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[100px] text-right">
+                    {t('products_price')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[180px]">
+                    {t('products_stock')}
+                  </div>
+                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[100px]">
+                    {t('actions')}
+                  </div>
+                </div>
+                {data?.items?.map((item: any) => (
+                  <React.Fragment key={item.id}>
+                    <div className="flex border-b last:border-0 hover:bg-muted/30">
+                      <div className="p-3 shrink-0 w-[60px]">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
+                              className="w-7 h-7"
                               onClick={() => {
                                 navigator.clipboard.writeText(item.sku || '')
                                 toast.info(t('products_sku_copied'))
@@ -544,26 +522,17 @@ export default function AdminProductsPage() {
                           </TooltipTrigger>
                           <TooltipContent>{item.sku || '—'}</TooltipContent>
                         </Tooltip>
-                      </td>
-                      <td
-                        className="p-3 font-mono text-sm"
-                        style={{ width: 120, minWidth: 120, maxWidth: 120 }}
-                      >
+                      </div>
+                      <div className="p-3 font-mono text-sm shrink-0 w-[120px] truncate">
                         {item.article}
-                      </td>
-                      <td className="p-3 text-sm truncate">
+                      </div>
+                      <div className="p-3 text-sm truncate flex-1 min-w-0">
                         {item.name || '—'}
-                      </td>
-                      <td
-                        className="p-3 text-sm font-semibold truncate"
-                        style={{ width: 80, minWidth: 80, maxWidth: 80 }}
-                      >
+                      </div>
+                      <div className="p-3 text-sm font-semibold truncate shrink-0 w-[80px]">
                         {item.brand || '—'}
-                      </td>
-                      <td
-                        className="p-3"
-                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                      >
+                      </div>
+                      <div className="p-3 shrink-0 w-[60px] overflow-hidden">
                         <div className="flex gap-1 flex-wrap">
                           {item.offers?.map((o: any) => (
                             <Badge
@@ -579,11 +548,8 @@ export default function AdminProductsPage() {
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td
-                        className="p-3 text-left"
-                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                      >
+                      </div>
+                      <div className="p-3 text-left shrink-0 w-[60px]">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {item.is_active ? (
@@ -602,11 +568,8 @@ export default function AdminProductsPage() {
                               : t('products_inactive')}
                           </TooltipContent>
                         </Tooltip>
-                      </td>
-                      <td
-                        className="p-3 text-right text-sm"
-                        style={{ width: 100, minWidth: 100, maxWidth: 100 }}
-                      >
+                      </div>
+                      <div className="p-3 text-right text-sm shrink-0 w-[100px]">
                         {item.min_price != null ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -656,17 +619,11 @@ export default function AdminProductsPage() {
                         ) : (
                           '—'
                         )}
-                      </td>
-                      <td
-                        className="p-3"
-                        style={{ width: 180, minWidth: 180, maxWidth: 180 }}
-                      >
+                      </div>
+                      <div className="p-3 shrink-0 w-[180px]">
                         <StockSnake offers={item.offers || []} />
-                      </td>
-                      <td
-                        className="p-3"
-                        style={{ width: 100, minWidth: 100, maxWidth: 100 }}
-                      >
+                      </div>
+                      <div className="p-3 shrink-0 w-[100px]">
                         <div className="flex gap-2">
                           <AddToOrderDropdown productId={item.id} t={t} />
                           <Tooltip>
@@ -694,21 +651,16 @@ export default function AdminProductsPage() {
                             <TooltipContent>{t('delete')}</TooltipContent>
                           </Tooltip>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {(!data?.items || data.items.length === 0) && (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="p-6 text-center text-muted-foreground text-sm"
-                      >
-                        {t('products_empty') || t('roles_empty')}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ))}
+                {(!data?.items || data.items.length === 0) && (
+                  <div className="p-6 text-center text-muted-foreground text-sm">
+                    {t('products_empty') || t('roles_empty')}
+                  </div>
+                )}
+              </div>
               {totalPages > 1 && (
                 <div className="flex items-center justify-between p-3 border-t">
                   <span className="text-sm text-muted-foreground">
