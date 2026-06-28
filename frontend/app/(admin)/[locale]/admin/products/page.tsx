@@ -475,13 +475,13 @@ export default function AdminProductsPage() {
                 <table className="w-full text-sm table-fixed">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
-                        {t('products_sku')}
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[50px]">
+                        SKU
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">
                         {t('products_article')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[190px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground">
                         {t('products_name')}
                       </th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
