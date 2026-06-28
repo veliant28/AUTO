@@ -77,6 +77,13 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
             mod = entry.modification
             model = db.query(VehicleModel).filter(VehicleModel.id == mod.model_id).first()
             brand = db.query(VehicleBrand).filter(VehicleBrand.id == model.brand_id).first() if model else None
+            volume = None
+            engine = None
+            if entry.tecdoc_car_id:
+                vol_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'Capacity' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
+                if vol_row: volume = vol_row[0]
+                eng_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'EngineCode' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
+                if eng_row: engine = eng_row[0]
             result.append({
                 "id": entry.id,
                 "mod_id": mod.id,
@@ -84,6 +91,8 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                 "model_name": model.name if model else "",
                 "brand_name": brand.name if brand else "",
                 "tecdoc_car_id": entry.tecdoc_car_id,
+                "volume": volume,
+                "engine": engine,
                 "vehicle_type": brand.group if brand else None,
             })
         elif entry.tecdoc_car_id:
