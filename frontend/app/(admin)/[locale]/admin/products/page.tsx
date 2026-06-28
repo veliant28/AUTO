@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Plus,
   Save,
+  Copy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -510,8 +511,23 @@ export default function AdminProductsPage() {
                         key={item.id}
                         className="border-b last:border-0 hover:bg-muted/30"
                       >
-                        <td className="p-3 font-mono text-sm truncate">
-                          {item.sku || '—'}
+                        <td className="p-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.sku || '')
+                                  toast.success(t('products_sku_copied'))
+                                }}
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>SKU</TooltipContent>
+                          </Tooltip>
                         </td>
                         <td className="p-3 font-mono text-sm">
                           {item.article}

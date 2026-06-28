@@ -510,6 +510,7 @@
     "products_delete_confirm_title": "Удаление товара",
     "products_delete_confirm_message": "Вы уверены, что хотите удалить этот товар?",
     "products_delete_success": "Товар удалён",
+    "products_sku_copied": "SKU скопирован",
     "products_delete_error": "Ошибка при удалении",
     "pricing_title": "Цена",
     "pricing_general": "Общая наценка",

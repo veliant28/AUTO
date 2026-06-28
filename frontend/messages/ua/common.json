@@ -509,6 +509,7 @@
     "products_delete_confirm_title": "Видалення товару",
     "products_delete_confirm_message": "Ви впевнені, що хочете видалити цей товар?",
     "products_delete_success": "Товар видалено",
+    "products_sku_copied": "SKU скопійовано",
     "products_delete_error": "Помилка при видаленні",
     "pricing_title": "Ціна",
     "pricing_general": "Загальна націнка",
