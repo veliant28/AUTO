@@ -473,16 +473,16 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <style>{`
-                .col-fixed td, .col-fixed th { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-                .col-fixed td:nth-child(1), .col-fixed th:nth-child(1) { width: 60px; min-width: 60px; max-width: 60px; }
-                .col-fixed td:nth-child(2), .col-fixed th:nth-child(2) { width: 120px; min-width: 120px; max-width: 120px; }
-                .col-fixed td:nth-child(3), .col-fixed th:nth-child(3) { width: auto; overflow: visible; white-space: normal; }
-                .col-fixed td:nth-child(4), .col-fixed th:nth-child(4) { width: 80px; min-width: 80px; max-width: 80px; }
-                .col-fixed td:nth-child(5), .col-fixed th:nth-child(5) { width: 60px; min-width: 60px; max-width: 60px; }
-                .col-fixed td:nth-child(6), .col-fixed th:nth-child(6) { width: 60px; min-width: 60px; max-width: 60px; }
-                .col-fixed td:nth-child(7), .col-fixed th:nth-child(7) { width: 100px; min-width: 100px; max-width: 100px; }
-                .col-fixed td:nth-child(8), .col-fixed th:nth-child(8) { width: 180px; min-width: 180px; max-width: 180px; }
-                .col-fixed td:nth-child(9), .col-fixed th:nth-child(9) { width: 100px; min-width: 100px; max-width: 100px; }
+                .col-fixed td, .col-fixed th { overflow: hidden !important; white-space: nowrap !important; }
+                .col-fixed td:nth-child(1), .col-fixed th:nth-child(1) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
+                .col-fixed td:nth-child(2), .col-fixed th:nth-child(2) { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+                .col-fixed td:nth-child(3), .col-fixed th:nth-child(3) { width: auto !important; overflow: visible !important; white-space: normal !important; }
+                .col-fixed td:nth-child(4), .col-fixed th:nth-child(4) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; }
+                .col-fixed td:nth-child(5), .col-fixed th:nth-child(5) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
+                .col-fixed td:nth-child(6), .col-fixed th:nth-child(6) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; }
+                .col-fixed td:nth-child(7), .col-fixed th:nth-child(7) { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
+                .col-fixed td:nth-child(8), .col-fixed th:nth-child(8) { width: 180px !important; min-width: 180px !important; max-width: 180px !important; }
+                .col-fixed td:nth-child(9), .col-fixed th:nth-child(9) { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
               `}</style>
               <table
                 className="w-full text-sm col-fixed"
