@@ -103,7 +103,9 @@ async def vehicle_volumes(year: int = Query(...), model_id: int = Query(...), te
 @router.get("/vehicle/engines")
 async def vehicle_engines(year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
     """Получить коды двигателей для модели."""
-    vol_cond = f"AND a.displayvalue = :volume AND EXISTS (SELECT 1 FROM passanger_car_attributes a WHERE a.passangercarid = pc.id AND a.attributetype = 'Capacity' AND a.displayvalue = :volume)" if volume else ""
+    vol_cond = ""
+    if volume:
+        vol_cond = f"AND EXISTS (SELECT 1 FROM passanger_car_attributes a WHERE a.passangercarid = pc.id AND a.attributetype = 'Capacity' AND a.displayvalue = :volume)"
     rows = tecdoc_db.execute(sa_text(f"""
         SELECT DISTINCT attr.displayvalue FROM passanger_cars pc
         JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
