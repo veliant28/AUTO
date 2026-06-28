@@ -490,10 +490,7 @@ export default function AdminProductsPage() {
                     >
                       {t('products_article')}
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ minWidth: 0 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_name')}
                     </th>
                     <th
