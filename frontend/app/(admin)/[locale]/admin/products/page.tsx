@@ -472,34 +472,34 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[70px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
                         SKU
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[130px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">
                         {t('products_article')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[190px]">
                         {t('products_name')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[100px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
                         {t('products_brand')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[90px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
                         {t('products_supplier')}
                       </th>
-                      <th className="text-center p-3 font-medium text-muted-foreground min-w-[90px]">
+                      <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
                         {t('products_status')}
                       </th>
-                      <th className="text-right p-3 font-medium text-muted-foreground min-w-[100px]">
+                      <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">
                         {t('products_price')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[200px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
                         {t('products_stock')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground min-w-[100px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
                         {t('actions')}
                       </th>
                     </tr>
