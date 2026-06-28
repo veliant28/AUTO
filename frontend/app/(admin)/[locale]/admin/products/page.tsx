@@ -472,7 +472,7 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium text-muted-foreground w-[50px]">
