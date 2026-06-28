@@ -473,7 +473,7 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm table-fixed min-w-[870px]">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">
@@ -488,10 +488,10 @@ export default function AdminProductsPage() {
                       <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
                         {t('products_brand')}
                       </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[85px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">
                         {t('products_supplier')}
                       </th>
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[85px]">
+                      <th className="text-center p-3 font-medium text-muted-foreground w-[80px]">
                         {t('products_status')}
                       </th>
                       <th className="text-right p-3 font-medium text-muted-foreground w-[100px]">
