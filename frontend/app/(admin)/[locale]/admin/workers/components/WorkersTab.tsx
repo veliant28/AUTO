@@ -650,8 +650,6 @@ export default function WorkersTab() {
     getCoreRowModel: getCoreRowModel(),
   })
 
-  const stuck = data?.stuck_tasks || []
-
   return (
     <div className="space-y-4">
       {/* Top row: donut + CPU */}
@@ -749,78 +747,6 @@ export default function WorkersTab() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Stuck tasks */}
-      {stuck.length > 0 && (
-        <Card className="overflow-hidden border-red-200 dark:border-red-900">
-          <CardHeader className="py-3 px-4 flex flex-row items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-            <CardTitle className="text-sm text-red-500">
-              {t('workers_stuck_title')}
-            </CardTitle>
-            <Badge className="bg-red-500 text-white border-0 ml-auto">
-              {stuck.length}
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-red-50 dark:bg-red-950/30">
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('workers_task_id')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('workers_task_name')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('workers_progress')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stuck.map((task) => (
-                    <tr
-                      key={task.id}
-                      className="border-b last:border-0 hover:bg-red-50 dark:hover:bg-red-950/20"
-                    >
-                      <td className="p-3 font-mono text-xs">
-                        {task.id.slice(0, 8)}...
-                      </td>
-                      <td className="p-3 text-sm">
-                        {task.import_stage || '—'}
-                      </td>
-                      <td className="p-3">
-                        <Badge className="bg-red-500 text-white border-0 gap-1 text-sm font-mono animate-pulse">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatRuntime(task.runtime_seconds)}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => revokeMutation.mutate(task.id)}
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{t('workers_revoke')}</TooltipContent>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
