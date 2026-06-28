@@ -87,32 +87,30 @@ async def vehicle_cars(type: str = 'passenger', year: int = Query(...), model_id
 
 
 @router.get("/vehicle/volumes")
-async def vehicle_volumes(year: int = Query(...), model_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
-    """Получить объёмы двигателей для модели."""
+async def vehicle_volumes(year: int = Query(...), car_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить объёмы двигателей для выбранной модификации."""
     rows = tecdoc_db.execute(sa_text(f"""
-        SELECT DISTINCT attr.displayvalue FROM passanger_cars pc
-        JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
-        WHERE pc.modelid = :model_id AND {_YEAR_FILTER_DOT}
+        SELECT DISTINCT attr.displayvalue FROM passanger_car_attributes attr
+        WHERE attr.passangercarid = :car_id
         AND attr.attributetype = 'Capacity'
         AND attr.displayvalue IS NOT NULL AND attr.displayvalue != ''
         ORDER BY attr.displayvalue
-    """), {'model_id': model_id, 'year': year}).fetchall()
+    """), {'car_id': car_id}).fetchall()
     return [{'volume': r[0]} for r in rows]
 
 
 @router.get("/vehicle/engines")
-async def vehicle_engines(year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
-    """Получить коды двигателей для модели."""
+async def vehicle_engines(year: int = Query(...), car_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить коды двигателей для выбранной модификации."""
     vol_cond = ""
     if volume:
-        vol_cond = f"AND EXISTS (SELECT 1 FROM passanger_car_attributes a WHERE a.passangercarid = pc.id AND a.attributetype = 'Capacity' AND a.displayvalue = :volume)"
+        vol_cond = f"AND EXISTS (SELECT 1 FROM passanger_car_attributes a WHERE a.passangercarid = :car_id AND a.attributetype = 'Capacity' AND a.displayvalue = :volume)"
     rows = tecdoc_db.execute(sa_text(f"""
-        SELECT DISTINCT attr.displayvalue FROM passanger_cars pc
-        JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
-        WHERE pc.modelid = :model_id AND {_YEAR_FILTER_DOT}
+        SELECT DISTINCT attr.displayvalue FROM passanger_car_attributes attr
+        WHERE attr.passangercarid = :car_id
         AND attr.attributetype = 'EngineCode'
         {vol_cond}
         AND attr.displayvalue IS NOT NULL AND attr.displayvalue != ''
         ORDER BY attr.displayvalue
-    """), {'model_id': model_id, 'year': year, 'volume': volume}).fetchall()
+    """), {'car_id': car_id, 'volume': volume}).fetchall()
     return [{'engine': r[0]} for r in rows]

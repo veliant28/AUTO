@@ -83,10 +83,10 @@ export default function VehicleSelectorDialog({ children }: Props) {
     store.year,
     store.modelId,
   )
-  const { data: volumes } = useVehicleVolumes(store.year, store.modelId)
+  const { data: volumes } = useVehicleVolumes(store.year, store.modId)
   const { data: engines, isLoading: loadingEngines } = useVehicleEngines(
     store.year,
-    store.modelId,
+    store.modId,
     store.volume,
   )
 
