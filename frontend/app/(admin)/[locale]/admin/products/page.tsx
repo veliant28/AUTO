@@ -517,10 +517,9 @@ export default function AdminProductsPage() {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-7 w-7"
                                 onClick={() => {
                                   navigator.clipboard.writeText(item.sku || '')
-                                  toast.success(t('products_sku_copied'))
+                                  toast.info(t('products_sku_copied'))
                                 }}
                               >
                                 <Copy className="w-3.5 h-3.5" />
