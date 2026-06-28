@@ -16,7 +16,7 @@ def generate_sku(db: Session) -> str:
                 parts.append(''.join(random.choices(string.digits, k=random.randint(1, 2))))
         parts.append(''.join(random.choices(string.digits, k=random.randint(1, 2))))
         sku = ''.join(parts)
-        if len(sku) > 16:
+        if len(sku) > 12:
             continue
         # Check both SupplierPrice and Part tables — SKU must be globally unique
         exists_in_sp = db.query(SupplierPrice).filter(SupplierPrice.sku == sku).first()
