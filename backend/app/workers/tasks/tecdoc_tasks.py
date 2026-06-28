@@ -265,55 +265,36 @@ def match_parts_with_tecdoc(self):
     db = SessionLocal()
     tecdoc_db = TecDocSessionLocal()
     try:
-        batch_size = 500
         total_matched = 0
         total_not_found = 0
 
-        while True:
-            parts = db.query(Part).filter(
-                Part.matched_at.is_(None),
-            ).limit(batch_size).all()
-            if not parts:
-                break
+        # Process ALL unmatched parts in one go (no while loop — articles table is empty,
+        # so matched_at won't be set for unmatched parts, avoiding infinite loop)
+        all_parts = db.query(Part).filter(Part.matched_at.is_(None)).all()
 
-            for part in parts:
-                if not part.brand_id or part.brand_id <= 0:
-                    total_not_found += 1
-                    continue
+        for part in all_parts:
+            if not part.brand_id or part.brand_id <= 0:
+                total_not_found += 1
+                continue
 
-                # Map our brand_id to TecDoc supplierId
-                # (our brand_id = tecdoc_brand_id = supplier.id in TecDoc)
-                bid = part.brand_id
+            bid = part.brand_id
+            row = tecdoc_db.execute(
+                sa_text("""SELECT 1 FROM articles
+                           WHERE "DataSupplierArticleNumber" = :art
+                           AND "supplierId" = :bid
+                           LIMIT 1"""),
+                {"art": part.article, "bid": bid},
+            ).first()
 
-                # Check articles table (main article registration)
-                row = tecdoc_db.execute(
-                    sa_text("""SELECT 1 FROM articles
-                               WHERE "DataSupplierArticleNumber" = :art
-                               AND "supplierId" = :bid
-                               LIMIT 1"""),
-                    {"art": part.article, "bid": bid},
-                ).first()
+            if row:
+                part.matched_at = datetime.utcnow()
+                total_matched += 1
+            else:
+                total_not_found += 1
 
-                # Also check article_inf for enrichment
-                has_inf = False
-                if row:
-                    has_inf = tecdoc_db.execute(
-                        sa_text("""SELECT 1 FROM article_inf
-                                   WHERE "DataSupplierArticleNumber" = :art
-                                   AND "supplierId" = :bid
-                                   LIMIT 1"""),
-                        {"art": part.article, "bid": bid},
-                    ).scalar() or False
-
-                if row:
-                    part.matched_at = datetime.utcnow()
-                    total_matched += 1
-                else:
-                    total_not_found += 1
-
-            db.commit()
-            logger.info("match_parts_with_tecdoc: batch done, matched=%s not_found=%s",
-                       total_matched, total_not_found)
+        db.commit()
+        logger.info("match_parts_with_tecdoc: complete, matched=%s not_found=%s",
+                   total_matched, total_not_found)
 
         logger.info("match_parts_with_tecdoc: complete, total matched=%s not_found=%s",
                    total_matched, total_not_found)
