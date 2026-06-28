@@ -476,7 +476,7 @@ export default function AdminProductsPage() {
                 <table className="w-full text-sm table-fixed">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">
                         SKU
                       </th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">
