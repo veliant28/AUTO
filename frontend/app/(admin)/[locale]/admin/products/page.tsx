@@ -472,233 +472,209 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <>
-              <div className="w-full text-sm flex flex-col">
-                <div className="flex border-b bg-muted/50">
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 60 }}
-                  >
-                    SKU
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 120 }}
-                  >
-                    {t('products_article')}
-                  </div>
-                  <div className="p-3 font-medium text-muted-foreground flex-1 min-w-0">
-                    {t('products_name')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 80 }}
-                  >
-                    {t('products_brand')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 60 }}
-                  >
-                    {t('products_supplier')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0 text-center"
-                    style={{ width: 60 }}
-                  >
-                    {t('products_status')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0 text-right"
-                    style={{ width: 100 }}
-                  >
-                    {t('products_price')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 180 }}
-                  >
-                    {t('products_stock')}
-                  </div>
-                  <div
-                    className="p-3 font-medium text-muted-foreground shrink-0"
-                    style={{ width: 100 }}
-                  >
-                    {t('actions')}
-                  </div>
-                </div>
-                {data?.items?.map((item: any) => (
-                  <React.Fragment key={item.id}>
-                    <div className="flex border-b last:border-0 hover:bg-muted/30">
-                      <div className="p-3 shrink-0" style={{ width: 60 }}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="w-7 h-7"
-                              onClick={() => {
-                                navigator.clipboard.writeText(item.sku || '')
-                                toast.info(t('products_sku_copied'))
-                              }}
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{item.sku || '—'}</TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <div
-                        className="p-3 font-mono text-sm shrink-0 truncate"
-                        style={{ width: 120 }}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm table-fixed">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
+                        SKU
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">
+                        {t('products_article')}
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[190px]">
+                        {t('products_name')}
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
+                        {t('products_brand')}
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
+                        {t('products_supplier')}
+                      </th>
+                      <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
+                        {t('products_status')}
+                      </th>
+                      <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">
+                        {t('products_price')}
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
+                        {t('products_stock')}
+                      </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
+                        {t('actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data?.items?.map((item: any) => (
+                      <tr
+                        key={item.id}
+                        className="border-b last:border-0 hover:bg-muted/30"
                       >
-                        {item.article}
-                      </div>
-                      <div className="p-3 text-sm truncate flex-1 min-w-0">
-                        {item.name || '—'}
-                      </div>
-                      <div
-                        className="p-3 text-sm font-semibold truncate shrink-0"
-                        style={{ width: 80 }}
-                      >
-                        {item.brand || '—'}
-                      </div>
-                      <div
-                        className="p-3 shrink-0 overflow-hidden"
-                        style={{ width: 60 }}
-                      >
-                        <div className="flex gap-1 flex-wrap">
-                          {item.offers?.map((o: any) => (
-                            <Badge
-                              key={o.supplier_name}
-                              className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                            >
-                              {o.supplier_name}
-                            </Badge>
-                          ))}
-                          {(!item.offers || item.offers.length === 0) && (
-                            <span className="text-sm text-muted-foreground">
-                              —
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div
-                        className="p-3 text-left shrink-0"
-                        style={{ width: 60 }}
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            {item.is_active ? (
-                              <Badge className="bg-green-500 text-white border-0 text-sm">
-                                {t('products_active')}
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-gray-500 text-white border-0 text-sm">
-                                {t('products_inactive')}
-                              </Badge>
-                            )}
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {item.is_active
-                              ? t('products_active')
-                              : t('products_inactive')}
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <div
-                        className="p-3 text-right text-sm shrink-0"
-                        style={{ width: 100 }}
-                      >
-                        {item.min_price != null ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge className="bg-blue-500 text-white border-0 text-sm font-semibold cursor-pointer">
-                                {Number(item.min_price).toFixed(2)} UAH
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <div className="space-y-1 text-xs">
-                                {item.final_price != null && (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-semibold">FIN:</span>
-                                    <span>
-                                      {Number(item.final_price).toFixed(2)} UAH
-                                      {item.margin_percent != null && (
-                                        <span className="text-muted-foreground">
-                                          {' '}
-                                          (+{item.margin_percent}%)
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                )}
-                                {item.offers?.map((o: any, i: number) => (
-                                  <div key={i}>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-semibold">
-                                        {o.supplier_name}:
-                                      </span>
-                                      <span>
-                                        {Number(o.price).toFixed(2)}{' '}
-                                        {o.currency || 'UAH'}
-                                      </span>
-                                    </div>
-                                    <div className="leading-tight">
-                                      {o.updated_at
-                                        ? new Date(
-                                            o.updated_at + 'Z',
-                                          ).toLocaleString()
-                                        : '—'}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          '—'
-                        )}
-                      </div>
-                      <div className="p-3 shrink-0" style={{ width: 180 }}>
-                        <StockSnake offers={item.offers || []} />
-                      </div>
-                      <div className="p-3 shrink-0" style={{ width: 100 }}>
-                        <div className="flex gap-2">
-                          <AddToOrderDropdown productId={item.id} t={t} />
+                        <td className="p-3">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={() => openEdit(item)}
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.sku || '')
+                                  toast.success(t('products_sku_copied'))
+                                }}
                               >
-                                <Pencil className="w-4 h-4" />
+                                <Copy className="w-3.5 h-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>{t('edit')}</TooltipContent>
+                            <TooltipContent>SKU</TooltipContent>
                           </Tooltip>
+                        </td>
+                        <td className="p-3 font-mono text-sm">
+                          {item.article}
+                        </td>
+                        <td className="p-3 text-sm truncate">
+                          {item.name || '—'}
+                        </td>
+                        <td className="p-3 text-sm font-semibold truncate">
+                          {item.brand || '—'}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex gap-1 flex-wrap">
+                            {item.offers?.map((o: any) => (
+                              <Badge
+                                key={o.supplier_name}
+                                className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                              >
+                                {o.supplier_name}
+                              </Badge>
+                            ))}
+                            {(!item.offers || item.offers.length === 0) && (
+                              <span className="text-sm text-muted-foreground">
+                                —
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3 text-left">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => setDeleteTarget(item)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              {item.is_active ? (
+                                <Badge className="bg-green-500 text-white border-0 text-sm">
+                                  {t('products_active')}
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-gray-500 text-white border-0 text-sm">
+                                  {t('products_inactive')}
+                                </Badge>
+                              )}
                             </TooltipTrigger>
-                            <TooltipContent>{t('delete')}</TooltipContent>
+                            <TooltipContent>
+                              {item.is_active
+                                ? t('products_active')
+                                : t('products_inactive')}
+                            </TooltipContent>
                           </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
-                {(!data?.items || data.items.length === 0) && (
-                  <div className="p-6 text-center text-muted-foreground text-sm">
-                    {t('products_empty') || t('roles_empty')}
-                  </div>
-                )}
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {item.min_price != null ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge className="bg-blue-500 text-white border-0 text-sm font-semibold cursor-pointer">
+                                  {Number(item.min_price).toFixed(2)} UAH
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="space-y-1 text-xs">
+                                  {item.final_price != null && (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-semibold">
+                                        FIN:
+                                      </span>
+                                      <span>
+                                        {Number(item.final_price).toFixed(2)}{' '}
+                                        UAH
+                                        {item.margin_percent != null && (
+                                          <span className="text-muted-foreground">
+                                            {' '}
+                                            (+{item.margin_percent}%)
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {item.offers?.map((o: any, i: number) => (
+                                    <div key={i}>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold">
+                                          {o.supplier_name}:
+                                        </span>
+                                        <span>
+                                          {Number(o.price).toFixed(2)}{' '}
+                                          {o.currency || 'UAH'}
+                                        </span>
+                                      </div>
+                                      <div className="leading-tight">
+                                        {o.updated_at
+                                          ? new Date(
+                                              o.updated_at + 'Z',
+                                            ).toLocaleString()
+                                          : '—'}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <StockSnake offers={item.offers || []} />
+                        </td>
+                        <td className="p-3">
+                          <div className="flex gap-2">
+                            <AddToOrderDropdown productId={item.id} t={t} />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => openEdit(item)}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('edit')}</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  onClick={() => setDeleteTarget(item)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('delete')}</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!data?.items || data.items.length === 0) && (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="p-6 text-center text-muted-foreground text-sm"
+                        >
+                          {t('products_empty') || t('roles_empty')}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
               {totalPages > 1 && (
                 <div className="flex items-center justify-between p-3 border-t">
