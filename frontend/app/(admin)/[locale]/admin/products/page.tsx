@@ -525,7 +525,7 @@ export default function AdminProductsPage() {
                                 <Copy className="w-3.5 h-3.5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>SKU</TooltipContent>
+                            <TooltipContent>{item.sku || '—'}</TooltipContent>
                           </Tooltip>
                         </td>
                         <td className="p-3 font-mono text-sm">
