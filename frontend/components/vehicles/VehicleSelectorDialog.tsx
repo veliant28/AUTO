@@ -96,7 +96,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
   const handleSelectVehicle = () => {
     store.confirmVehicle()
     setOpen(false)
-    router.push('/catalog')
+    router.refresh()
   }
 
   const handleSaveToGarage = () => {
@@ -148,11 +148,10 @@ export default function VehicleSelectorDialog({ children }: Props) {
                         : t('selected_car')}
                   </Badge>
                   <div className="text-sm">
-                    {store.brandName && (
-                      <span className="font-medium">{store.brandName} </span>
-                    )}
+                    <span className="font-medium">{store.brandName}</span>
                     {store.modelName && (
                       <span className="text-muted-foreground">
+                        {' '}
                         {store.modelName}
                       </span>
                     )}
@@ -162,22 +161,23 @@ export default function VehicleSelectorDialog({ children }: Props) {
                         / {store.modName}
                       </span>
                     )}
-                    {store.power &&
-                      (() => {
-                        const match = store.power.match(/^([\d.]+)/)
-                        const kw = match ? parseFloat(match[1]) : null
-                        const hp = kw ? Math.round(kw * 1.34102) : null
-                        return hp ? (
-                          <span className="text-muted-foreground">
-                            {' '}
-                            / {hp} {t('horsepower')}
-                          </span>
-                        ) : null
-                      })()}
+                    {store.volume && (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        {store.volume}
+                      </span>
+                    )}
+                    {store.engine && (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        {store.engine}
+                      </span>
+                    )}
                     {(store.yearFrom || store.yearTo) && (
                       <span className="text-muted-foreground">
                         {' '}
-                        / {store.yearFrom || '?'}–{store.yearTo || '?'}
+                        {store.yearFrom || '?'}
+                        {store.yearTo ? `-${store.yearTo}` : '-...'}
                       </span>
                     )}
                   </div>

@@ -80,10 +80,19 @@ async def vehicle_cars(type: str = 'passenger', year: int = Query(...), model_id
         ORDER BY pc.description
     """)
     rows = tecdoc_db.execute(sql, {'model_id': model_id, 'year': year}).fetchall()
-    return [{
-        'id': r[0], 'name': r[2] or r[1] or '', 'year_from': None, 'year_to': None,
-        'capacity': '', 'engine': '', 'fuel': '', 'power': '', 'constructioninterval': r[3] or '',
-    } for r in rows]
+    result = []
+    for r in rows:
+        ci = r[3] or ''
+        # Parse years from constructioninterval like "03.2016 - " or "01.1997-12.2003"
+        import re
+        years = re.findall(r'(\d{4})', ci)
+        year_from = int(years[0]) if len(years) > 0 else None
+        year_to = int(years[1]) if len(years) > 1 else None
+        result.append({
+            'id': r[0], 'name': r[1] or '', 'year_from': year_from, 'year_to': year_to,
+            'capacity': '', 'engine': '', 'fuel': '', 'power': '', 'constructioninterval': ci,
+        })
+    return result
 
 
 @router.get("/vehicle/volumes")
