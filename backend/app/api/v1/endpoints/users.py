@@ -100,7 +100,8 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                  ", NULL::int as start_year, NULL::int as end_year, NULL::varchar as power"),
             ]):
                 row = tecdb.execute(sa_text(f"""
-                    SELECT pc.description, m.description as model, man.description as brand{extra_cols}
+                    SELECT pc.description, m.description as model, man.description as brand,
+                           pc.constructioninterval{extra_cols}
                     FROM {tbl}
                     WHERE pc.id = :car_id
                     LIMIT 1
@@ -109,6 +110,19 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                     type_idx = i
                     break
             if row:
+                ci = row[3] or ''
+                import re
+                years = re.findall(r'(\d{4})', ci)
+                year_from = int(years[0]) if len(years) > 0 else None
+                year_to = int(years[1]) if len(years) > 1 else None
+                # Get volume and engine if passenger
+                volume = None
+                engine = None
+                if type_idx == 0:
+                    vol_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'Capacity' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
+                    if vol_row: volume = vol_row[0]
+                    eng_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'EngineCode' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
+                    if eng_row: engine = eng_row[0]
                 result.append({
                     "id": entry.id,
                     "mod_id": 0,
@@ -116,9 +130,11 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                     "model_name": row[1] or "",
                     "brand_name": row[2] or "",
                     "tecdoc_car_id": entry.tecdoc_car_id,
-                    "power": row[5] or "" if len(row) > 5 else "",
-                    "year_from": row[3] if len(row) > 3 and row[3] else None,
-                    "year_to": row[4] if len(row) > 4 and row[4] else None,
+                    "volume": volume,
+                    "engine": engine,
+                    "power": row[6] or "" if len(row) > 6 else "",
+                    "year_from": year_from,
+                    "year_to": year_to,
                     "vehicle_type": type_names[type_idx],
                 })
     return result
