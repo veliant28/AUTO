@@ -68,6 +68,8 @@ async def change_password(data: ChangePasswordSchema, user_id: int = Depends(get
 
 @router.get("/garage", response_model=List[GarageVehicleSchema])
 async def get_garage(user_id: int = Depends(get_current_user), db: Session = Depends(get_db), tecdb: Session = Depends(get_tecdoc_db)):
+    import logging
+    logging.getLogger(__name__).info(f"MODIFIED get_garage called, has_new_code=True")
     """Получить список сохранённых автомобилей в гараже пользователя."""
     entries = user_service.get_user_garage(db, user_id)
     

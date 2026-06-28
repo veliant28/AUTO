@@ -31,3 +31,8 @@ celerybeat-schedule*
 imports/
 backend/app.db
 temp_np_pages/
+
+# pycache directories
+**/__pycache__/
+backend/logs/
+backend/media/

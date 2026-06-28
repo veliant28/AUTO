@@ -55,9 +55,28 @@ export default function GaragePage() {
       power: vehicle.power || null,
       yearFrom: vehicle.year_from ?? null,
       yearTo: vehicle.year_to ?? null,
+      confirmed: true,
     })
     toast.success(t('vehicle_selected'))
-    router.back()
+
+    // Если пришли с главной или каталога — возвращаемся обратно
+    const referrer = document.referrer || ''
+    const isFromCatalogOrHome =
+      referrer.includes('/catalog') ||
+      /\/[a-z]{2}\/?$/.test(referrer) ||
+      referrer.endsWith('/ru') ||
+      referrer.endsWith('/ua') ||
+      referrer.endsWith('/en') ||
+      referrer.endsWith('/ru/') ||
+      referrer.endsWith('/ua/') ||
+      referrer.endsWith('/en/') ||
+      referrer === window.location.origin + '/' ||
+      referrer === window.location.origin
+
+    if (isFromCatalogOrHome) {
+      router.back()
+    }
+    // иначе остаёмся на странице гаража
   }
 
   const confirmRemove = () => {
