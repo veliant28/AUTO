@@ -144,9 +144,9 @@ export default function CategoryNav() {
 
       if (groups.length > 0) {
         activePopup = (
-          <div className="flex gap-8">
+          <div className="columns-[200px_auto] gap-x-8 gap-y-0">
             {groups.map((group) => (
-              <div key={group.name} className="min-w-[150px]">
+              <div key={group.name} className="break-inside-avoid mb-4">
                 <p className="text-sm font-semibold text-muted-foreground mb-2">
                   {group.name}
                 </p>
