@@ -25,7 +25,7 @@ export default function CatalogPage() {
   const addItem = useCartStore((s) => s.addItem)
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite)
   const favoriteArticles = useFavoritesStore((s) => s.articles)
-  const modId = useVehicleStore((s) => s.modId)
+  const modId = useVehicleStore((s) => (s.confirmed ? s.modId : null))
 
   const page = parseInt(searchParams.get('page') || '1', 10)
   const categoryId = searchParams.get('categoryId')

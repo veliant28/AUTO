@@ -94,6 +94,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
   const hasSelection = !!store.modId
 
   const handleSelectVehicle = () => {
+    store.confirmVehicle()
     setOpen(false)
     router.push('/catalog')
   }
