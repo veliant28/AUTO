@@ -480,9 +480,9 @@ export default function AdminProductsPage() {
                   <col style={{ width: 100 }} />
                   <col style={{ width: 80 }} />
                   <col style={{ width: 80 }} />
-                  <col style={{ width: 100 }} />
+                  <col style={{ width: 120 }} />
                   <col style={{ width: 250 }} />
-                  <col style={{ width: 100 }} />
+                  <col style={{ width: 120 }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b bg-muted/50">
