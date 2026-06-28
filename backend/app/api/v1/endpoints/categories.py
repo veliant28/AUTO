@@ -125,6 +125,13 @@ async def categories_header(
                 CategoryChild(id=c.id, name=_localized_name(c, locale, db), name_ru=c.name, product_count=get_product_count(c.id))
                 for c in sorted(children_of.get(l2_cat.id, []), key=lambda x: x.name)
             ]
+            # Also add L2 category itself if it has products (as a virtual L3)
+            l2_products = get_product_count(l2_cat.id)
+            if l2_products > 0 and not children:
+                children.append(CategoryChild(
+                    id=l2_cat.id, name=_localized_name(l2_cat, locale, db),
+                    name_ru=l2_cat.name, product_count=l2_products
+                ))
             if children:
                 groups.append(CategoryGroup(name=_localized_name(l2_cat, locale, db), name_ru=l2_cat.name, children=children))
         if groups:
