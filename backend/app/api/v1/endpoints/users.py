@@ -91,8 +91,8 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
             type_idx = 0
             type_names = ['passenger', 'commercial', 'motorbike']
             for i, (tbl, joins, extra_cols) in enumerate([
-                ("autodb_passenger_cars pc JOIN autodb_models m ON m.id = pc.model_id JOIN autodb_manufacturers man ON man.id = m.manufacturer_id", "",
-                 ", pc.start_year, pc.end_year, "
+                ("passanger_cars pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", "",
+                 ", NULL::int as start_year, NULL::int as end_year, "
                  "(SELECT attr.displayvalue FROM passanger_car_attributes attr WHERE attr.passangercarid = pc.id AND attr.attributetype = 'Power' LIMIT 1) as power"),
                 ("commercial_vehicles pc JOIN models m ON m.id = pc.modelid JOIN manufacturers man ON man.id = m.manufacturerid", "",
                  ", NULL::int as start_year, NULL::int as end_year, NULL::varchar as power"),
