@@ -472,34 +472,48 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <>
-              <table className="w-full text-sm table-fixed">
+              <table
+                className="w-full text-sm"
+                style={{ tableLayout: 'fixed' }}
+              >
+                <colgroup>
+                  <col style={{ width: 60 }} />
+                  <col style={{ width: 120 }} />
+                  <col style={{ width: 'auto' }} />
+                  <col style={{ width: 80 }} />
+                  <col style={{ width: 60 }} />
+                  <col style={{ width: 60 }} />
+                  <col style={{ width: 100 }} />
+                  <col style={{ width: 180 }} />
+                  <col style={{ width: 100 }} />
+                </colgroup>
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       SKU
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_article')}
                     </th>
                     <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_name')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_brand')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_supplier')}
                     </th>
-                    <th className="text-center p-3 font-medium text-muted-foreground w-[60px]">
+                    <th className="text-center p-3 font-medium text-muted-foreground">
                       {t('products_status')}
                     </th>
-                    <th className="text-right p-3 font-medium text-muted-foreground w-[100px]">
+                    <th className="text-right p-3 font-medium text-muted-foreground">
                       {t('products_price')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_stock')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('actions')}
                     </th>
                   </tr>
