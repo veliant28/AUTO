@@ -476,44 +476,60 @@ export default function AdminProductsPage() {
                 className="w-full text-sm"
                 style={{ tableLayout: 'fixed' }}
               >
-                <colgroup>
-                  <col style={{ width: 60 }} />
-                  <col style={{ width: 120 }} />
-                  <col style={{ width: 'auto' }} />
-                  <col style={{ width: 80 }} />
-                  <col style={{ width: 60 }} />
-                  <col style={{ width: 60 }} />
-                  <col style={{ width: 100 }} />
-                  <col style={{ width: 180 }} />
-                  <col style={{ width: 100 }} />
-                </colgroup>
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                    >
                       SKU
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 120, minWidth: 120, maxWidth: 120 }}
+                    >
                       {t('products_article')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ minWidth: 0 }}
+                    >
                       {t('products_name')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 80, minWidth: 80, maxWidth: 80 }}
+                    >
                       {t('products_brand')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                    >
                       {t('products_supplier')}
                     </th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-center p-3 font-medium text-muted-foreground"
+                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                    >
                       {t('products_status')}
                     </th>
-                    <th className="text-right p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-right p-3 font-medium text-muted-foreground"
+                      style={{ width: 100, minWidth: 100, maxWidth: 100 }}
+                    >
                       {t('products_price')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 180, minWidth: 180, maxWidth: 180 }}
+                    >
                       {t('products_stock')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
+                    <th
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: 100, minWidth: 100, maxWidth: 100 }}
+                    >
                       {t('actions')}
                     </th>
                   </tr>
