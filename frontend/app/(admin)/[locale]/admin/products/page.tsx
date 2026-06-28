@@ -481,7 +481,7 @@ export default function AdminProductsPage() {
                   <col style={{ width: 80 }} />
                   <col style={{ width: 80 }} />
                   <col style={{ width: 100 }} />
-                  <col style={{ width: 180 }} />
+                  <col style={{ width: 250 }} />
                   <col style={{ width: 100 }} />
                 </colgroup>
                 <thead>
