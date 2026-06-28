@@ -155,12 +155,7 @@ export default function VehicleSelectorDialog({ children }: Props) {
                         {store.modelName}
                       </span>
                     )}
-                    {store.modName && (
-                      <span className="text-muted-foreground">
-                        {' '}
-                        / {store.modName}
-                      </span>
-                    )}
+
                     {store.volume && (
                       <span className="text-muted-foreground">
                         {' '}
