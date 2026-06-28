@@ -540,7 +540,10 @@ export default function AdminProductsPage() {
                       key={item.id}
                       className="border-b last:border-0 hover:bg-muted/30"
                     >
-                      <td className="p-3">
+                      <td
+                        className="p-3"
+                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -557,14 +560,25 @@ export default function AdminProductsPage() {
                           <TooltipContent>{item.sku || '—'}</TooltipContent>
                         </Tooltip>
                       </td>
-                      <td className="p-3 font-mono text-sm">{item.article}</td>
+                      <td
+                        className="p-3 font-mono text-sm"
+                        style={{ width: 120, minWidth: 120, maxWidth: 120 }}
+                      >
+                        {item.article}
+                      </td>
                       <td className="p-3 text-sm truncate">
                         {item.name || '—'}
                       </td>
-                      <td className="p-3 text-sm font-semibold truncate">
+                      <td
+                        className="p-3 text-sm font-semibold truncate"
+                        style={{ width: 80, minWidth: 80, maxWidth: 80 }}
+                      >
                         {item.brand || '—'}
                       </td>
-                      <td className="p-3">
+                      <td
+                        className="p-3"
+                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                      >
                         <div className="flex gap-1 flex-wrap">
                           {item.offers?.map((o: any) => (
                             <Badge
@@ -581,7 +595,10 @@ export default function AdminProductsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-left">
+                      <td
+                        className="p-3 text-left"
+                        style={{ width: 60, minWidth: 60, maxWidth: 60 }}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {item.is_active ? (
@@ -601,7 +618,10 @@ export default function AdminProductsPage() {
                           </TooltipContent>
                         </Tooltip>
                       </td>
-                      <td className="p-3 text-right text-sm">
+                      <td
+                        className="p-3 text-right text-sm"
+                        style={{ width: 100, minWidth: 100, maxWidth: 100 }}
+                      >
                         {item.min_price != null ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -652,10 +672,16 @@ export default function AdminProductsPage() {
                           '—'
                         )}
                       </td>
-                      <td className="p-3">
+                      <td
+                        className="p-3"
+                        style={{ width: 180, minWidth: 180, maxWidth: 180 }}
+                      >
                         <StockSnake offers={item.offers || []} />
                       </td>
-                      <td className="p-3">
+                      <td
+                        className="p-3"
+                        style={{ width: 100, minWidth: 100, maxWidth: 100 }}
+                      >
                         <div className="flex gap-2">
                           <AddToOrderDropdown productId={item.id} t={t} />
                           <Tooltip>
