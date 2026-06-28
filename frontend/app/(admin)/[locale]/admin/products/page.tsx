@@ -472,61 +472,49 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <>
+              <style>{`
+                .col-fixed td, .col-fixed th { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+                .col-fixed td:nth-child(1), .col-fixed th:nth-child(1) { width: 60px; min-width: 60px; max-width: 60px; }
+                .col-fixed td:nth-child(2), .col-fixed th:nth-child(2) { width: 120px; min-width: 120px; max-width: 120px; }
+                .col-fixed td:nth-child(3), .col-fixed th:nth-child(3) { width: auto; overflow: visible; white-space: normal; }
+                .col-fixed td:nth-child(4), .col-fixed th:nth-child(4) { width: 80px; min-width: 80px; max-width: 80px; }
+                .col-fixed td:nth-child(5), .col-fixed th:nth-child(5) { width: 60px; min-width: 60px; max-width: 60px; }
+                .col-fixed td:nth-child(6), .col-fixed th:nth-child(6) { width: 60px; min-width: 60px; max-width: 60px; }
+                .col-fixed td:nth-child(7), .col-fixed th:nth-child(7) { width: 100px; min-width: 100px; max-width: 100px; }
+                .col-fixed td:nth-child(8), .col-fixed th:nth-child(8) { width: 180px; min-width: 180px; max-width: 180px; }
+                .col-fixed td:nth-child(9), .col-fixed th:nth-child(9) { width: 100px; min-width: 100px; max-width: 100px; }
+              `}</style>
               <table
-                className="w-full text-sm"
+                className="w-full text-sm col-fixed"
                 style={{ tableLayout: 'fixed' }}
               >
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       SKU
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 120, minWidth: 120, maxWidth: 120 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_article')}
                     </th>
                     <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_name')}
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 80, minWidth: 80, maxWidth: 80 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_brand')}
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_supplier')}
                     </th>
-                    <th
-                      className="text-center p-3 font-medium text-muted-foreground"
-                      style={{ width: 60, minWidth: 60, maxWidth: 60 }}
-                    >
+                    <th className="text-center p-3 font-medium text-muted-foreground">
                       {t('products_status')}
                     </th>
-                    <th
-                      className="text-right p-3 font-medium text-muted-foreground"
-                      style={{ width: 100, minWidth: 100, maxWidth: 100 }}
-                    >
+                    <th className="text-right p-3 font-medium text-muted-foreground">
                       {t('products_price')}
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 180, minWidth: 180, maxWidth: 180 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('products_stock')}
                     </th>
-                    <th
-                      className="text-left p-3 font-medium text-muted-foreground"
-                      style={{ width: 100, minWidth: 100, maxWidth: 100 }}
-                    >
+                    <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('actions')}
                     </th>
                   </tr>
