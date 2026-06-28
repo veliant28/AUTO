@@ -356,7 +356,7 @@ export default function AdminProductsPage() {
     queryKey: ['admin-categories'],
     queryFn: async () => {
       const { data } = await api.get('/admin/categories', {
-        params: { page: 1, page_size: 500 },
+        params: { page: 1, page_size: 1000 },
       })
       return data?.items || []
     },
