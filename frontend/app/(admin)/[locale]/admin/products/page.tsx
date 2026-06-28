@@ -474,38 +474,62 @@ export default function AdminProductsPage() {
             <>
               <div className="w-full text-sm flex flex-col">
                 <div className="flex border-b bg-muted/50">
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 60 }}
+                  >
                     SKU
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[120px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 120 }}
+                  >
                     {t('products_article')}
                   </div>
                   <div className="p-3 font-medium text-muted-foreground flex-1 min-w-0">
                     {t('products_name')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[80px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 80 }}
+                  >
                     {t('products_brand')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 60 }}
+                  >
                     {t('products_supplier')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[60px] text-center">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0 text-center"
+                    style={{ width: 60 }}
+                  >
                     {t('products_status')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[100px] text-right">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0 text-right"
+                    style={{ width: 100 }}
+                  >
                     {t('products_price')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[180px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 180 }}
+                  >
                     {t('products_stock')}
                   </div>
-                  <div className="p-3 font-medium text-muted-foreground shrink-0 w-[100px]">
+                  <div
+                    className="p-3 font-medium text-muted-foreground shrink-0"
+                    style={{ width: 100 }}
+                  >
                     {t('actions')}
                   </div>
                 </div>
                 {data?.items?.map((item: any) => (
                   <React.Fragment key={item.id}>
                     <div className="flex border-b last:border-0 hover:bg-muted/30">
-                      <div className="p-3 shrink-0 w-[60px]">
+                      <div className="p-3 shrink-0" style={{ width: 60 }}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -523,16 +547,25 @@ export default function AdminProductsPage() {
                           <TooltipContent>{item.sku || '—'}</TooltipContent>
                         </Tooltip>
                       </div>
-                      <div className="p-3 font-mono text-sm shrink-0 w-[120px] truncate">
+                      <div
+                        className="p-3 font-mono text-sm shrink-0 truncate"
+                        style={{ width: 120 }}
+                      >
                         {item.article}
                       </div>
                       <div className="p-3 text-sm truncate flex-1 min-w-0">
                         {item.name || '—'}
                       </div>
-                      <div className="p-3 text-sm font-semibold truncate shrink-0 w-[80px]">
+                      <div
+                        className="p-3 text-sm font-semibold truncate shrink-0"
+                        style={{ width: 80 }}
+                      >
                         {item.brand || '—'}
                       </div>
-                      <div className="p-3 shrink-0 w-[60px] overflow-hidden">
+                      <div
+                        className="p-3 shrink-0 overflow-hidden"
+                        style={{ width: 60 }}
+                      >
                         <div className="flex gap-1 flex-wrap">
                           {item.offers?.map((o: any) => (
                             <Badge
@@ -549,7 +582,10 @@ export default function AdminProductsPage() {
                           )}
                         </div>
                       </div>
-                      <div className="p-3 text-left shrink-0 w-[60px]">
+                      <div
+                        className="p-3 text-left shrink-0"
+                        style={{ width: 60 }}
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {item.is_active ? (
@@ -569,7 +605,10 @@ export default function AdminProductsPage() {
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <div className="p-3 text-right text-sm shrink-0 w-[100px]">
+                      <div
+                        className="p-3 text-right text-sm shrink-0"
+                        style={{ width: 100 }}
+                      >
                         {item.min_price != null ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -620,10 +659,10 @@ export default function AdminProductsPage() {
                           '—'
                         )}
                       </div>
-                      <div className="p-3 shrink-0 w-[180px]">
+                      <div className="p-3 shrink-0" style={{ width: 180 }}>
                         <StockSnake offers={item.offers || []} />
                       </div>
-                      <div className="p-3 shrink-0 w-[100px]">
+                      <div className="p-3 shrink-0" style={{ width: 100 }}>
                         <div className="flex gap-2">
                           <AddToOrderDropdown productId={item.id} t={t} />
                           <Tooltip>
