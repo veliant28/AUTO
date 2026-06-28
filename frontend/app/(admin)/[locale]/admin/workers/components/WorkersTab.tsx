@@ -248,7 +248,7 @@ function statusBadge(
   const Icon =
     isStuck || isError ? AlertTriangle : status === 'active' ? Activity : Clock
   return (
-    <Badge className={`${color} border-0 gap-1 text-sm`}>
+    <Badge className={`${color} border-0 gap-1 text-sm h-6`}>
       <Icon className="w-3.5 h-3.5" />
       {isStuck || isError ? t('workers_stuck') : statusLabel(t, status)}
     </Badge>
