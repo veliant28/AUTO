@@ -410,17 +410,17 @@ export default function LoyaltyPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0"
+                    className="h-7 w-7 rounded-full shrink-0"
                     disabled={formType === 'delivery' || formPercent <= 0}
                     onClick={() => setFormPercent(Math.max(0, formPercent - 10))}
                   ><Minus className="w-4 h-4" /></Button>
-                  <div className="flex-1 text-center text-lg font-bold tabular-nums">
+                  <span className="w-12 text-center font-bold tabular-nums">
                     {formType === 'delivery' ? '100' : formPercent}%
-                  </div>
+                  </span>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 shrink-0"
+                    className="h-7 w-7 rounded-full shrink-0"
                     disabled={formType === 'delivery' || formPercent >= 100}
                     onClick={() => setFormPercent(Math.min(100, formPercent + 10))}
                   ><Plus className="w-4 h-4" /></Button>
