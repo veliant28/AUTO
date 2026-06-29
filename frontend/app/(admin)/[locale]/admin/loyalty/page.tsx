@@ -281,7 +281,7 @@ export default function LoyaltyPage() {
                               <div className="text-sm">
                                 <p className="font-medium truncate">{item.user_name || '—'}</p>
                                 {(item.user_phone || item.user_email) && (
-                                  <p className="text-xs text-muted-foreground truncate">{item.user_phone || item.user_email}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{formatPhone(item.user_phone) || item.user_email}</p>
                                 )}
                               </div>
                             </td>
