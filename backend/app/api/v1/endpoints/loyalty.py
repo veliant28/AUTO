@@ -62,18 +62,19 @@ async def get_my_promocodes(
         if p.issued_by:
             issued_by_name = ' '.join(filter(None, [p.issued_by.last_name, p.issued_by.first_name]))
 
-        result.append(PromocodeResponse(
-            id=p.id,
-            code=p.code,
-            type=p.type,
-            user_id=p.user_id,
-            reason=p.reason,
-            issued_by_id=p.issued_by_id,
-            issued_by_name=issued_by_name,
-            expires_at=p.expires_at,
-            used_at=p.used_at,
-            is_active=p.is_active,
-            created_at=p.created_at,
-        ))
+	        result.append(PromocodeResponse(
+	            id=p.id,
+	            code=p.code,
+	            type=p.type,
+	            user_id=p.user_id,
+	            discount_percent=p.discount_percent or 100,
+	            reason=p.reason,
+	            issued_by_id=p.issued_by_id,
+	            issued_by_name=issued_by_name,
+	            expires_at=p.expires_at,
+	            used_at=p.used_at,
+	            is_active=p.is_active,
+	            created_at=p.created_at,
+	        ))
 
     return result

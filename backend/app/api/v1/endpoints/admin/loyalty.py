@@ -54,6 +54,7 @@ def _promocode_to_response(p: Promocode) -> PromocodeResponse:
         user_name=user_name,
         user_phone=user_phone,
         user_email=user_email,
+        discount_percent=p.discount_percent or 100,
         reason=p.reason,
         issued_by_id=p.issued_by_id,
         issued_by_name=issued_by_name,
