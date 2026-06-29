@@ -1057,7 +1057,9 @@
     "promo_applied": "Промокод применён",
     "promo_force_sender": "Оплата доставки за счёт отправителя (промокод)",
     "loyalty_discount_percent": "Скидка",
-    "loyalty_delivery_fixed": "Для доставки скидка всегда 100%"
+    "loyalty_delivery_fixed": "Для доставки скидка всегда 100%",
+    "promocode": "Промокод",
+    "discount_label": "Скидка:"
   },
   "catalog": {
     "title": "Каталог",
