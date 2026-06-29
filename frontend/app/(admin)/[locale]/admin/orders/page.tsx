@@ -1576,15 +1576,16 @@ export default function AdminOrdersPage() {
                                 {t('order_total')}:
                               </span>
                               <span className="font-bold text-lg">
-                                {fmt(editMode ? editTotal : (orderDetail.original_total || orderDetail.total))}{' '}
+                                {fmt(editMode ? editTotal : orderDetail.total)}{' '}
                                 ₴
-                                {orderDetail.discount_amount > 0 && (
-                                  <span className="text-sm text-green-600 font-normal ml-1">
-                                    (-{fmt(orderDetail.discount_amount)} ₴)
-                                  </span>
-                                )}
                               </span>
                             </div>
+                            {orderDetail.discount_amount > 0 && (
+                              <div className="flex justify-between text-green-600 text-sm mt-1">
+                                <span>{t('discount_label')}</span>
+                                <span className="font-semibold">-{fmt(orderDetail.discount_amount)} ₴</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         {orderDetail.promocode_code && (
