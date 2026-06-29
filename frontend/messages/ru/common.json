@@ -1021,7 +1021,7 @@
     "delete_order_title": "Удаление заказа",
     "delete_order_confirm": "Вы уверены, что хотите удалить этот заказ? Это действие необратимо.",
     "order_deleted": "Заказ удалён",
-    "loyalty_title": "Программа лояльности",
+    "loyalty_title": "Лояльность",
     "loyalty_create": "Выдать промокод",
     "loyalty_type_delivery": "Скидка на доставку",
     "loyalty_type_margin": "Скидка на товар",

@@ -1021,7 +1021,7 @@
     "delete_order_title": "Delete order",
     "delete_order_confirm": "Are you sure you want to delete this order? This action cannot be undone.",
     "order_deleted": "Order deleted",
-    "loyalty_title": "Loyalty Program",
+    "loyalty_title": "Loyalty",
     "loyalty_create": "Issue promocode",
     "loyalty_type_delivery": "Delivery discount",
     "loyalty_type_margin": "Product discount",

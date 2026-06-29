@@ -1021,7 +1021,7 @@
     "delete_order_title": "Видалення замовлення",
     "delete_order_confirm": "Ви впевнені, що хочете видалити це замовлення? Цю дію не можна скасувати.",
     "order_deleted": "Замовлення видалено",
-    "loyalty_title": "Програма лояльності",
+    "loyalty_title": "Лояльність",
     "loyalty_create": "Видати промокод",
     "loyalty_type_delivery": "Знижка на доставку",
     "loyalty_type_margin": "Знижка на товар",
