@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import {
   Search, Copy, Loader2, Plus, Gift, AlertTriangle,
-  Building2, Truck, Zap, Minus, CalendarIcon,
+  Building2, Truck, Zap, Minus, CalendarIcon, Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -392,7 +392,10 @@ export default function LoyaltyPage() {
                             className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
                             onClick={() => { setFormUserId(u.id); setFormUser(u); setUserQuery('') }}
                           >
-                            <p className="font-medium">{u.name}</p>
+                            <p className="font-medium flex items-center gap-2">
+                              {formUserId === u.id && <Check className="w-4 h-4 text-primary shrink-0" />}
+                              {u.name}
+                            </p>
                             <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
                           </div>
                         ))
