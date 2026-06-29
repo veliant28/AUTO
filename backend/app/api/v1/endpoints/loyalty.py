@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 
-@router.post("/loyalty/validate", response_model=dict)
+@router.post("/validate", response_model=dict)
 async def validate_promocode(
     code: str,
     db: Session = Depends(get_db),
@@ -39,7 +39,7 @@ async def validate_promocode(
         "message": "Promocode is valid"
     }
 
-@router.get("/loyalty", response_model=List[PromocodeResponse])
+@router.get("", response_model=List[PromocodeResponse])
 async def get_my_promocodes(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
