@@ -7,6 +7,7 @@ import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, Gift, Check, Loader2 } fr
 import { useMutation } from '@tanstack/react-query';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
