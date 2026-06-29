@@ -181,7 +181,7 @@ export default function LoyaltyPage() {
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-6">
         {/* ── Stats chart ── */}
         <Card>
           <CardContent className="p-6">
