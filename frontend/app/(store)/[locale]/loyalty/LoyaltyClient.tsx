@@ -73,12 +73,12 @@ export default function LoyaltyClient() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">{t('loyalty_code')}</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('loyalty_discount_percent')}</th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">{t('loyalty_type')}</th>
-                      <th className="text-left p-3 font-medium text-muted-foreground">{t('loyalty_reason')}</th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_created_at')}</th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_expires_at')}</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_code')}</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">{t('loyalty_discount_percent')}</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_type')}</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('loyalty_reason')}</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">{t('loyalty_created_at')}</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">{t('loyalty_expires_at')}</th>
                     </tr>
                   </thead>
                   <tbody>
