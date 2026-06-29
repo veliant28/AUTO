@@ -1623,7 +1623,7 @@ export default function AdminOrdersPage() {
                                     </span>
                                   )}
                                 </div>
-                                {editMode && (
+                                {editMode ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0"
@@ -1638,6 +1638,8 @@ export default function AdminOrdersPage() {
                                     </TooltipTrigger>
                                     <TooltipContent>{t('remove')}</TooltipContent>
                                   </Tooltip>
+                                ) : (
+                                  <div className="w-10 h-10 shrink-0" />
                                 )}
                               </div>
                             </div>
