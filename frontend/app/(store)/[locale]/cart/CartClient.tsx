@@ -128,7 +128,12 @@ export default function CartPage() {
         toast.success(t('promo_applied'))
         setPromoInput('')
       } else {
-        toast.info(data.message)
+        toast.info(t(data.message === 'Promocode not found' ? 'promo_not_found' : 
+          data.message === 'Promocode is inactive' ? 'promo_inactive' :
+          data.message === 'Promocode expired' ? 'promo_expired' :
+          data.message === 'Promocode already used' ? 'promo_used' :
+          data.message === 'Promocode belongs to another user' ? 'promo_wrong_user' :
+          data.message))
       }
     },
     onError: (err: any) => {

@@ -250,7 +250,12 @@
     "apply": "Застосувати",
     "loyalty_discount_percent": "Знижка",
     "copy": "Копіювати",
-    "copied": "Скопійовано"
+    "copied": "Скопійовано",
+    "promo_not_found": "Промокод не знайдено",
+    "promo_inactive": "Промокод неактивний",
+    "promo_expired": "Термін дії промокоду закінчився",
+    "promo_used": "Промокод вже використано",
+    "promo_wrong_user": "Промокод належить іншому користувачу"
   },
   "header": {
     "catalog": "Каталог",
@@ -1062,7 +1067,12 @@
     "discount_label": "Знижка:",
     "remove": "Видалити",
     "promocode_placeholder": "ВВЕДІТЬ ПРОМОКОД",
-    "promo_error": "Помилка"
+    "promo_error": "Помилка",
+    "promo_not_found": "Промокод не знайдено",
+    "promo_inactive": "Промокод неактивний",
+    "promo_expired": "Термін дії промокоду закінчився",
+    "promo_used": "Промокод вже використано",
+    "promo_wrong_user": "Промокод належить іншому користувачу"
   },
   "catalog": {
     "title": "Каталог",

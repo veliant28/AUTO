@@ -250,7 +250,12 @@
     "apply": "Apply",
     "loyalty_discount_percent": "Discount",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "promo_not_found": "Promocode not found",
+    "promo_inactive": "Promocode is inactive",
+    "promo_expired": "Promocode expired",
+    "promo_used": "Promocode already used",
+    "promo_wrong_user": "Promocode belongs to another user"
   },
   "header": {
     "catalog": "Catalog",
@@ -1062,7 +1067,12 @@
     "discount_label": "Discount:",
     "remove": "Remove",
     "promocode_placeholder": "ENTER PROMOCODE",
-    "promo_error": "Error"
+    "promo_error": "Error",
+    "promo_not_found": "Promocode not found",
+    "promo_inactive": "Promocode is inactive",
+    "promo_expired": "Promocode expired",
+    "promo_used": "Promocode already used",
+    "promo_wrong_user": "Promocode belongs to another user"
   },
   "catalog": {
     "title": "Catalog",
