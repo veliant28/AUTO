@@ -87,12 +87,8 @@ export default function LoyaltyClient() {
                       return (
                         <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
                           <td className="p-3">
-                            <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1">
                               <code className="font-mono text-sm font-bold tracking-wider">{item.code}</code>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-6 w-6"
@@ -104,6 +100,8 @@ export default function LoyaltyClient() {
                               </Tooltip>
                             </div>
                           </td>
+                          <td className="p-3">
+                            <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
                           <td className="p-3">
                             <Badge className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}>
                               {item.type === 'delivery' ? t('loyalty_type_delivery') : t('loyalty_type_margin')}
