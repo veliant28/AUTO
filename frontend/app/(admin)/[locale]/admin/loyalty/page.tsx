@@ -380,7 +380,8 @@ export default function LoyaltyPage() {
                   placeholder={t('loyalty_client_search')}
                   value={userQuery}
                   onChange={(e) => { setUserQuery(e.target.value); setFormUserId(null); setFormUser(null) }}
-                  {userQuery.length >= 2 && userSearchResults && (
+                />
+                {userQuery.length >= 2 && userSearchResults && (
                     <div className="rounded-md border max-h-40 overflow-y-auto">
                       {userSearchResults.length === 0 ? (
                         <p className="text-sm text-muted-foreground p-3 text-center">{t('no_results')}</p>
