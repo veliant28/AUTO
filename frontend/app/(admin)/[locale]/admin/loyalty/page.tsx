@@ -432,7 +432,6 @@ export default function LoyaltyPage() {
 
               {/* Expires at */}
               <div className="space-y-2">
-              <div className="space-y-2">
                 <Label>{t('loyalty_expires_at')} *</Label>
                 <Input
                   type="date"
