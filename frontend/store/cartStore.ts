@@ -28,6 +28,7 @@ interface CartState {
   replaceItems: (items: CartItem[]) => void;
   totalItems: () => number;
   totalPrice: () => number;
+  originalTotal: () => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -70,9 +71,21 @@ export const useCartStore = create<CartState>()(
 
       replaceItems: (items) => set({ items }),
 
+      setPromocode: (code, type, percent, amount) => {
+        set({ promocode: code, promocodeType: type, discountPercent: percent, discountAmount: amount })
+      },
+
       totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
 
-      totalPrice: () =>
+      totalPrice: () => {
+        const subtotal = get().items.reduce(
+          (sum, i) => sum + (i.price || 0) * i.quantity,
+          0
+        )
+        return Math.max(subtotal - get().discountAmount, 0)
+      },
+
+      originalTotal: () =>
         get().items.reduce(
           (sum, i) => sum + (i.price || 0) * i.quantity,
           0
