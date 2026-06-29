@@ -960,11 +960,19 @@ export default function AdminReturnsPage() {
                                   className="flex gap-3 p-3 rounded-lg border bg-card transition-colors"
                                 >
                                   <div
-                                    className={`aspect-square w-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(item.brand)}`}
+                                    className={`w-[80px] h-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center ${item.image_url ? '' : `bg-gradient-to-br ${getBrandColor(item.brand)}`}`}
                                   >
-                                    <span className="text-3xl font-bold text-white/40 select-none">
-                                      {getBrandInitial(item.brand)}
-                                    </span>
+                                    {item.image_url ? (
+                                      <img
+                                        src={item.image_url}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="text-3xl font-bold text-white/40 select-none">
+                                        {getBrandInitial(item.brand)}
+                                      </span>
+                                    )}
                                   </div>
                                   <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-start justify-between gap-2">

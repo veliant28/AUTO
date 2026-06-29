@@ -46,6 +46,7 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
     # Build a map of part_id → order quantity for max_quantity
     max_qty_map: dict[int, int] = {}
     sku_map: dict[int, Optional[str]] = {}
+    image_map: dict[int, Optional[str]] = {}
     sender_info = {"sender_name": None, "sender_city_label": None, "sender_address_label": None}
     
     if db and r.order:
@@ -68,13 +69,14 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
             sender_info["sender_city_label"] = sp.city_label
             sender_info["sender_address_label"] = sp.address_label
 
-    # Build sku map from parts
+    # Build sku and image maps from parts
     from app.models import Part
     if db and r.items:
         part_ids = [item.part_id for item in r.items]
         parts = db.query(Part).filter(Part.id.in_(part_ids)).all()
         for p in parts:
             sku_map[p.id] = p.sku
+            image_map[p.id] = p.image_url
 
     items = [
         AdminReturnItemSchema(
@@ -86,6 +88,7 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
             quantity=item.quantity,
             max_quantity=max_qty_map.get(item.part_id, item.quantity),
             sku=sku_map.get(item.part_id),
+            image_url=image_map.get(item.part_id),
             price=float(item.price),
             total=float(item.total),
         )

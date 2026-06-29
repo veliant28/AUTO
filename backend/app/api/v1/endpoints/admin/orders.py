@@ -132,6 +132,7 @@ async def get_order_detail(
                 quantity=item.quantity,
                 price=float(item.price),
                 sku=item.part.sku,
+                image_url=item.part.image_url,
             )
             for item in order.items
         ],

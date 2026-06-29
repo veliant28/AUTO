@@ -70,6 +70,7 @@ class AdminReturnItemSchema(BaseModel):
     max_quantity: int = 0
     price: float
     total: float
+    image_url: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -71,6 +71,7 @@ class AdminOrderItemSchema(BaseModel):
     quantity: int
     price: float
     sku: Optional[str] = None
+    image_url: Optional[str] = None
 
     class Config:
         from_attributes = True
