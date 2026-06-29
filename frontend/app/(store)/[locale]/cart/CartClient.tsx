@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, Gift, Check, Loader2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -259,11 +260,53 @@ export default function CartPage() {
                   <span className="text-muted-foreground">{t('items_label')}</span>
                   <span className="font-medium">{totalItems()} {t('pcs')}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>{t('discount_label')}</span>
+                    <span className="font-semibold">-{fmt(discountAmount)} ₴</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('total_label')}:</span>
                   <span className="font-bold text-2xl">{fmt(totalPrice())} ₴</span>
                 </div>
               </div>
+              {!promocode ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t('promo_placeholder')}
+                    value={promoInput}
+                    maxLength={10}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    className="h-10 text-sm uppercase"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    disabled={promoInput.length < 10 || applyPromo.isPending}
+                    onClick={() => applyPromo.mutate(promoInput)}
+                  >
+                    {applyPromo.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Gift className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-lg px-3 py-2">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span className="font-mono font-bold tracking-wider">{promocode}</span>
+                  <button
+                    className="ml-auto text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => setPromocode(null, null, 0, 0)}
+                  >
+                    {t('remove')}
+                  </button>
+                </div>
+              )}
+              <Separator />
               <Separator />
               <Button className="w-full gap-2 bg-green-500 text-white hover:bg-green-600" size="lg" asChild>
                 <Link href="/checkout">{t('checkout')}</Link>

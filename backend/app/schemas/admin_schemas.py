@@ -100,6 +100,12 @@ class AdminOrderDetailResponse(BaseModel):
     delivery_street_label: Optional[str] = None
     delivery_house: Optional[str] = None
     delivery_apartment: Optional[str] = None
+    promocode_code: Optional[str] = None
+    discount_amount: Optional[float] = None
+    original_total: Optional[float] = None
+    promocode_code: Optional[str] = None
+    discount_amount: float = 0
+    original_total: Optional[float] = None
     payment_method: Optional[str] = None
     created_at: datetime
     updated_by_name: Optional[str] = None
@@ -137,6 +143,9 @@ class AdminOrderUpdateSchema(BaseModel):
     delivery_street_label: Optional[str] = None
     delivery_house: Optional[str] = None
     delivery_apartment: Optional[str] = None
+    promocode_code: Optional[str] = None
+    discount_amount: Optional[float] = None
+    original_total: Optional[float] = None
 
 class OrderChangeLogResponse(BaseModel):
     id: int

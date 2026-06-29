@@ -11,6 +11,7 @@ class PromocodeResponse(BaseModel):
     user_name: Optional[str] = None
     user_phone: Optional[str] = None
     user_email: Optional[str] = None
+    discount_percent: int = 100
     reason: str
     issued_by_id: int
     issued_by_name: Optional[str] = None
@@ -26,8 +27,16 @@ class PromocodeResponse(BaseModel):
 class PromocodeCreate(BaseModel):
     type: str  # 'delivery' | 'margin'
     user_id: Optional[int] = None
+    discount_percent: int = 100
     reason: str
     expires_at: datetime
+
+
+class PromocodeValidateResponse(BaseModel):
+    valid: bool
+    type: Optional[str] = None
+    discount_percent: int = 0
+    message: str = ""
 
 
 class PromocodeListResponse(BaseModel):

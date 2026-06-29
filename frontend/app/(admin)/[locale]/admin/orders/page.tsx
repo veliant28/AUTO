@@ -138,6 +138,9 @@ interface AdminOrderDetail {
   delivery_street_label: string | null
   delivery_house: string | null
   delivery_apartment: string | null
+  promocode_code: string | null
+  discount_amount: number
+  original_total: number | null
   payment_method: string | null
   created_at: string
   updated_by_name: string | null
@@ -1572,12 +1575,35 @@ export default function AdminOrdersPage() {
                                 {t('order_total')}:
                               </span>
                               <span className="font-bold text-lg">
-                                {fmt(editMode ? editTotal : orderDetail.total)}{' '}
+                                {fmt(editMode ? editTotal : (orderDetail.original_total || orderDetail.total))}{' '}
                                 ₴
+                                {orderDetail.discount_amount > 0 && (
+                                  <span className="text-sm text-green-600 font-normal ml-1">
+                                    (-{fmt(orderDetail.discount_amount)} ₴)
+                                  </span>
+                                )}
                               </span>
                             </div>
                           </div>
                         </div>
+                        {orderDetail.promocode_code && (
+                          <>
+                            <Separator className="my-3" />
+                            <div className="flex flex-col">
+                              <h4 className="font-semibold text-sm flex items-center gap-2">
+                                <Gift className="w-4 h-4" /> {t('promocode')}
+                              </h4>
+                              <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm mt-2">
+                                <div className="font-mono font-bold tracking-wider">{orderDetail.promocode_code}</div>
+                                {orderDetail.discount_amount > 0 && (
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {t('discount_label')}: -{fmt(orderDetail.discount_amount)} ₴
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
                         <Separator className="my-3" />
                         <div className="flex flex-col">
                           <h4 className="font-semibold text-lg flex items-center gap-2">

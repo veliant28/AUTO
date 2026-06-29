@@ -74,6 +74,7 @@ export default function LoyaltyClient() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">{t('loyalty_code')}</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('loyalty_discount_percent')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">{t('loyalty_type')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground">{t('loyalty_reason')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_created_at')}</th>
@@ -88,6 +89,10 @@ export default function LoyaltyClient() {
                           <td className="p-3">
                             <div className="flex items-center gap-1">
                               <code className="font-mono text-sm font-bold tracking-wider">{item.code}</code>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-6 w-6"

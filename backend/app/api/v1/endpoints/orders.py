@@ -67,6 +67,9 @@ def _order_to_dict(order, db):
         "delivery_street_label": order.delivery_street_label,
         "delivery_house": order.delivery_house,
         "delivery_apartment": order.delivery_apartment,
+        "promocode_code": order.promocode_code,
+        "discount_amount": float(order.discount_amount or 0),
+        "original_total": float(order.original_total or 0) if order.original_total else None,
         "payment_method": order.payment_method,
         "created_at": order.created_at,
         "first_delivered_at": order.first_delivered_at,
@@ -114,6 +117,8 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
     
     return _order_to_dict(order, db)
 
+from app.models.loyalty import Promocode
+
 @router.post("/checkout")
 async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
     """Оформить заказ. Принимает список товаров и данные доставки, создаёт заказ со статусом pending."""
@@ -121,6 +126,34 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         raise HTTPException(401, "Unauthorized")
     
     total = sum(item["price"] * item["quantity"] for item in data.items)
+    original_total = total
+    promocode_id = None
+    promocode_code = None
+    discount_amount = 0
+
+    # Validate and apply promocode
+    if data.promocode:
+        pc = db.query(Promocode).filter(Promocode.code == data.promocode).first()
+        if not pc:
+            raise HTTPException(400, "Promocode not found")
+        if not pc.is_active:
+            raise HTTPException(400, "Promocode is inactive")
+        if pc.expires_at < datetime.utcnow():
+            raise HTTPException(400, "Promocode expired")
+        if pc.used_at:
+            raise HTTPException(400, "Promocode already used")
+        if pc.user_id and pc.user_id != user_id:
+            raise HTTPException(400, "Promocode belongs to another user")
+        
+        promocode_id = pc.id
+        promocode_code = pc.code
+        
+        if pc.type == 'margin':
+            discount_amount = round(total * pc.discount_percent / 100, 2)
+            total = max(total - discount_amount, 0)
+        
+        pc.used_at = datetime.utcnow()
+    
     full_name = ' '.join(filter(None, [data.last_name, data.first_name, data.middle_name]))
     
     order = Order(
@@ -144,6 +177,10 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         delivery_street_label=data.delivery_street_label,
         delivery_house=data.delivery_house,
         delivery_apartment=data.delivery_apartment,
+        promocode_id=promocode_id,
+        promocode_code=promocode_code,
+        discount_amount=discount_amount,
+        original_total=original_total,
         payment_method=data.payment_method,
     )
     db.add(order)

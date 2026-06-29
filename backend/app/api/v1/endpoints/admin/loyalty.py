@@ -156,6 +156,7 @@ async def create_promocode(
         code=code,
         type=data.type,
         user_id=data.user_id,
+        discount_percent=data.discount_percent,
         reason=data.reason,
         issued_by_id=current_user.id,
         expires_at=data.expires_at,

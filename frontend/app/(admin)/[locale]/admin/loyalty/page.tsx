@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import {
   Search, Copy, Loader2, Plus, Gift, AlertTriangle,
-  Building2, Truck, Zap,
+  Building2, Truck, Zap, Minus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,13 +64,14 @@ export default function LoyaltyPage() {
   const [formUserId, setFormUserId] = useState<number | null>(null)
   const [formUserLabel, setFormUserLabel] = useState('')
   const [formReason, setFormReason] = useState('')
+  const [formPercent, setFormPercent] = useState(100)
   const [formExpires, setFormExpires] = useState('')
   const [userQuery, setUserQuery] = useState('')
 
   // Register global create opener
   useEffect(() => {
     (window as any).__openCreateLoyalty = () => {
-      setFormType('delivery'); setFormUserId(null); setFormUserLabel('')
+      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUserLabel('')
       setFormReason(''); setFormExpires(''); setUserQuery(''); setCreateOpen(true)
     }
     return () => { delete (window as any).__openCreateLoyalty }
@@ -245,6 +246,7 @@ export default function LoyaltyPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_code')}</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">{t('loyalty_discount_percent')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">{t('loyalty_type')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[180px]">{t('loyalty_client')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">{t('loyalty_reason')}</th>
@@ -261,6 +263,10 @@ export default function LoyaltyPage() {
                             <td className="p-3">
                               <div className="flex items-center gap-1">
                                 <code className="font-mono text-sm font-bold tracking-wider">{item.code}</code>
+                                            </div>
+                                          </td>
+                                          <td className="p-3">
+                                            <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-6 w-6"
@@ -398,7 +404,35 @@ export default function LoyaltyPage() {
                 />
               </div>
 
+              {/* Discount percent */}
+              <div className="space-y-2">
+                <Label>{t('loyalty_discount_percent')}</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    disabled={formType === 'delivery' || formPercent <= 0}
+                    onClick={() => setFormPercent(Math.max(0, formPercent - 10))}
+                  ><Minus className="w-4 h-4" /></Button>
+                  <div className="flex-1 text-center text-lg font-bold tabular-nums">
+                    {formType === 'delivery' ? '100' : formPercent}%
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    disabled={formType === 'delivery' || formPercent >= 100}
+                    onClick={() => setFormPercent(Math.min(100, formPercent + 10))}
+                  ><Plus className="w-4 h-4" /></Button>
+                </div>
+                {formType === 'delivery' && (
+                  <p className="text-xs text-muted-foreground">{t('loyalty_delivery_fixed')}</p>
+                )}
+              </div>
+
               {/* Expires at */}
+              <div className="space-y-2">
               <div className="space-y-2">
                 <Label>{t('loyalty_expires_at')} *</Label>
                 <Input
@@ -418,6 +452,7 @@ export default function LoyaltyPage() {
                   createMutation.mutate({
                     type: formType,
                     user_id: formUserId,
+                    discount_percent: formType === 'delivery' ? 100 : formPercent,
                     reason: formReason,
                     expires_at: new Date(formExpires + 'T23:59:59').toISOString(),
                   })

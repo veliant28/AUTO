@@ -19,6 +19,11 @@ interface CartState {
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  promocode: string | null
+  promocodeType: string | null
+  discountPercent: number
+  discountAmount: number
+  setPromocode: (code: string | null, type: string | null, percent: number, amount: number) => void
   clearCart: () => void;
   replaceItems: (items: CartItem[]) => void;
   totalItems: () => number;
@@ -28,7 +33,7 @@ interface CartState {
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
-      items: [],
+      items: [], promocode: null, promocodeType: null, discountPercent: 0, discountAmount: 0,
 
       addItem: (item) => {
         const existing = get().items.find((i) => i.part_id === item.part_id);
@@ -61,7 +66,7 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], promocode: null, promocodeType: null, discountPercent: 0, discountAmount: 0 }),
 
       replaceItems: (items) => set({ items }),
 

@@ -38,6 +38,9 @@ class OrderSchema(BaseModel):
     delivery_street_label: Optional[str] = None
     delivery_house: Optional[str] = None
     delivery_apartment: Optional[str] = None
+    promocode_code: Optional[str] = None
+    discount_amount: float = 0
+    original_total: Optional[float] = None
     payment_method: Optional[str] = None
     created_at: datetime
     first_delivered_at: Optional[datetime] = None
@@ -71,4 +74,5 @@ class CheckoutSchema(BaseModel):
     delivery_house: Optional[str] = None
     delivery_apartment: Optional[str] = None
     payment_method: str
+    promocode: Optional[str] = None
     items: List[dict]  # [{part_id, quantity, price}]

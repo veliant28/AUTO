@@ -242,7 +242,11 @@
     "loyalty_reason": "Reason",
     "loyalty_created_at": "Issued",
     "loyalty_expires_at": "Expires",
-    "loyalty_empty": "No promocodes yet"
+    "loyalty_empty": "No promocodes yet",
+    "promo_placeholder": "ENTER PROMOCODE",
+    "promo_applied": "Promocode applied",
+    "promo_error": "Error validating promocode",
+    "discount_label": "Discount"
   },
   "header": {
     "catalog": "Catalog",
@@ -1045,7 +1049,11 @@
     "loyalty_copy": "Copy code",
     "loyalty_copied": "Code copied",
     "days": "days",
-    "no_results": "No results"
+    "no_results": "No results",
+    "promo_applied": "Promocode applied",
+    "promo_force_sender": "Delivery paid by sender (promocode)",
+    "loyalty_discount_percent": "Discount",
+    "loyalty_delivery_fixed": "Delivery discount is always 100%"
   },
   "catalog": {
     "title": "Catalog",

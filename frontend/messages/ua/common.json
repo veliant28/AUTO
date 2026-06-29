@@ -242,7 +242,11 @@
     "loyalty_reason": "Причина",
     "loyalty_created_at": "Дата видачі",
     "loyalty_expires_at": "Термін дії",
-    "loyalty_empty": "У вас немає промокодів"
+    "loyalty_empty": "У вас немає промокодів",
+    "promo_placeholder": "ВВЕДІТЬ ПРОМОКОД",
+    "promo_applied": "Промокод застосовано",
+    "promo_error": "Помилка перевірки промокоду",
+    "discount_label": "Знижка"
   },
   "header": {
     "catalog": "Каталог",
@@ -1045,7 +1049,11 @@
     "loyalty_copy": "Скопіювати код",
     "loyalty_copied": "Код скопійовано",
     "days": "днів",
-    "no_results": "Нічого не знайдено"
+    "no_results": "Нічого не знайдено",
+    "promo_applied": "Промокод застосовано",
+    "promo_force_sender": "Оплата доставки за рахунок відправника (промокод)",
+    "loyalty_discount_percent": "Знижка",
+    "loyalty_delivery_fixed": "Для доставки знижка завжди 100%"
   },
   "catalog": {
     "title": "Каталог",

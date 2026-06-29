@@ -85,6 +85,8 @@ export default function CheckoutPage() {
     queryClient.invalidateQueries({ queryKey: ['profile'] })
   }, [queryClient])
 
+  const promocode = useCartStore((s) => s.promocode)
+
   // ── NP delivery refs (tracked outside form because setValue without register doesn't submit) ──
   const [npRefs, setNpRefs] = useState({
     delivery_city_ref: '',
@@ -194,6 +196,7 @@ export default function CheckoutPage() {
         delivery_house: npRefs.delivery_house,
         delivery_apartment: npRefs.delivery_apartment,
         payment_method: formData.payment_method,
+        promocode: promocode,
         items: orderItems,
       })
       return data

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .vehicles import Base
@@ -11,6 +11,7 @@ class Promocode(Base):
     code = Column(String(10), unique=True, nullable=False, index=True)
     type = Column(String, nullable=False)  # 'delivery' | 'margin'
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    discount_percent = Column(Integer, default=100)
     reason = Column(String, nullable=False)
     issued_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     expires_at = Column(DateTime, nullable=False)

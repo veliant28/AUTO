@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
@@ -9,6 +10,34 @@ from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
 
+
+
+
+@router.post("/loyalty/validate", response_model=dict)
+async def validate_promocode(
+    code: str,
+    db: Session = Depends(get_db),
+):
+    """Validate a promocode and return its details."""
+    from app.models.loyalty import Promocode
+    from app.schemas.loyalty_schemas import PromocodeValidateResponse
+    
+    pc = db.query(Promocode).filter(Promocode.code == code).first()
+    if not pc:
+        return {"valid": False, "message": "Promocode not found", "type": None, "discount_percent": 0}
+    if not pc.is_active:
+        return {"valid": False, "message": "Promocode is inactive", "type": pc.type, "discount_percent": pc.discount_percent}
+    if pc.expires_at < datetime.utcnow():
+        return {"valid": False, "message": "Promocode expired", "type": pc.type, "discount_percent": pc.discount_percent}
+    if pc.used_at:
+        return {"valid": False, "message": "Promocode already used", "type": pc.type, "discount_percent": pc.discount_percent}
+    
+    return {
+        "valid": True,
+        "type": pc.type,
+        "discount_percent": pc.discount_percent or 100,
+        "message": "Promocode is valid"
+    }
 
 @router.get("/loyalty", response_model=List[PromocodeResponse])
 async def get_my_promocodes(

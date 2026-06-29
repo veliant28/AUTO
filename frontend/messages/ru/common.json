@@ -242,7 +242,11 @@
     "loyalty_reason": "Причина",
     "loyalty_created_at": "Дата выдачи",
     "loyalty_expires_at": "Срок действия",
-    "loyalty_empty": "У вас нет промокодов"
+    "loyalty_empty": "У вас нет промокодов",
+    "promo_placeholder": "ВВЕДИТЕ ПРОМОКОД",
+    "promo_applied": "Промокод применён",
+    "promo_error": "Ошибка проверки промокода",
+    "discount_label": "Скидка"
   },
   "header": {
     "catalog": "Каталог",
@@ -1045,7 +1049,11 @@
     "loyalty_copy": "Скопировать код",
     "loyalty_copied": "Код скопирован",
     "days": "дней",
-    "no_results": "Ничего не найдено"
+    "no_results": "Ничего не найдено",
+    "promo_applied": "Промокод применён",
+    "promo_force_sender": "Оплата доставки за счёт отправителя (промокод)",
+    "loyalty_discount_percent": "Скидка",
+    "loyalty_delivery_fixed": "Для доставки скидка всегда 100%"
   },
   "catalog": {
     "title": "Каталог",
