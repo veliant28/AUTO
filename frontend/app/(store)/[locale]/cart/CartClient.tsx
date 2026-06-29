@@ -111,6 +111,34 @@ export default function CartPage() {
     return <CartSkeleton />;
   }
 
+  const [promoInput, setPromoInput] = useState('')
+  const promocode = useCartStore((s) => s.promocode)
+  const discountAmount = useCartStore((s) => s.discountAmount)
+  const setPromocode = useCartStore((s) => s.setPromocode)
+
+  const applyPromo = useMutation({
+    mutationFn: async (code: string) => {
+      const { data } = await api.post('/loyalty/validate', { code })
+      return data
+    },
+    onSuccess: (data: any) => {
+      if (data.valid) {
+        const subtotal = totalPrice()
+        if (data.type === 'margin') {
+          const disc = Math.round(subtotal * data.discount_percent / 100)
+          setPromocode(promoInput, data.type, data.discount_percent, disc)
+        } else {
+          setPromocode(promoInput, data.type, data.discount_percent, 0)
+        }
+        toast.success(t('promo_applied'))
+        setPromoInput('')
+      } else {
+        toast.info(data.message)
+      }
+    },
+    onError: () => toast.error(t('promo_error')),
+  })
+
   const linkPath = typeof window !== 'undefined'
     ? (localStorage.getItem('cartReturnPath') || '/')
     : '/';
