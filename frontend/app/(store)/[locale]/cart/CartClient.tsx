@@ -115,12 +115,16 @@ export default function CartPage() {
 
   const applyPromo = useMutation({
     mutationFn: async (code: string) => {
-      const { data } = await api.post('/loyalty/validate', { code })
+      const { data } = await api.post('/loyalty/validate', {
+        code,
+        items: items.map((i) => ({ part_id: i.part_id, price: i.price, quantity: i.quantity })),
+      })
       return data
     },
     onSuccess: (data: any) => {
       if (data.valid) {
-        setPromocode(promoInput, data.type, data.discount_percent, 0)
+        const disc = data.discount_amount || 0
+        setPromocode(promoInput, data.type, data.discount_percent, disc)
         toast.success(t('promo_applied'))
         setPromoInput('')
       } else {

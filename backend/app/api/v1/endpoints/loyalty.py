@@ -18,22 +18,44 @@ async def validate_promocode(
     data: dict,
     db: Session = Depends(get_db),
 ):
-    """Validate a promocode and return its details."""
+    """Validate a promocode and return its details. If items provided, returns discount_amount."""
+    from app.models.suppliers import SupplierOffer
     code = data.get("code", "")
+    items = data.get("items", [])
     pc = db.query(Promocode).filter(Promocode.code == code).first()
     if not pc:
-        return {"valid": False, "message": "Promocode not found", "type": None, "discount_percent": 0}
+        return {"valid": False, "message": "Promocode not found", "type": None, "discount_percent": 0, "discount_amount": 0}
     if not pc.is_active:
-        return {"valid": False, "message": "Promocode is inactive", "type": pc.type, "discount_percent": pc.discount_percent}
+        return {"valid": False, "message": "Promocode is inactive", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
     if pc.expires_at < datetime.utcnow():
-        return {"valid": False, "message": "Promocode expired", "type": pc.type, "discount_percent": pc.discount_percent}
+        return {"valid": False, "message": "Promocode expired", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
     if pc.used_at:
-        return {"valid": False, "message": "Promocode already used", "type": pc.type, "discount_percent": pc.discount_percent}
+        return {"valid": False, "message": "Promocode already used", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
+    
+    discount_amount = 0
+    if items and pc.type == 'margin':
+        total_margin = 0
+        for item in items:
+            part_id = item.get("part_id")
+            item_price = item.get("price", 0)
+            item_qty = item.get("quantity", 1)
+            offer = db.query(SupplierOffer).filter(
+                SupplierOffer.part_id == part_id,
+                SupplierOffer.final_price.isnot(None)
+            ).first()
+            if offer and offer.price and float(offer.price) > 0:
+                base_price = float(offer.price)
+                margin_per_item = item_price - base_price
+                if margin_per_item > 0:
+                    total_margin += margin_per_item * item_qty
+        if total_margin > 0:
+            discount_amount = round(total_margin * (pc.discount_percent or 100) / 100, 2)
     
     return {
         "valid": True,
         "type": pc.type,
         "discount_percent": pc.discount_percent or 100,
+        "discount_amount": discount_amount,
         "message": "Promocode is valid"
     }
 
