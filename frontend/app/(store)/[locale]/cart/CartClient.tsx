@@ -133,7 +133,10 @@ export default function CartPage() {
         toast.info(data.message)
       }
     },
-    onError: () => toast.error(t('promo_error')),
+    onError: (err: any) => {
+      console.error('Promo error:', err?.response?.status, err?.response?.data, err?.message)
+      toast.error(t('promo_error'))
+    },
   })
 
   if (!mounted) {
