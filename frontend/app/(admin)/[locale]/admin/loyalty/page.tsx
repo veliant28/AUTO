@@ -38,10 +38,9 @@ function formatPhone(phone: string | null | undefined): string {
   if (rest.startsWith('380')) rest = rest.slice(3)
   else if (rest.startsWith('38')) rest = rest.slice(2)
   if (rest.length < 8) return phone
-  if (rest.startsWith('0')) {
-    return `+38 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8)}`
-  }
-  return phone
+  // Ensure leading 0 for formatting
+  if (!rest.startsWith('0')) rest = '0' + rest
+  return `+38 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8, 10)}`
 }
 
 export default function LoyaltyPage() {
@@ -375,7 +374,7 @@ export default function LoyaltyPage() {
                         <div
                           key={u.id}
                           className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
-                          onClick={() => { setFormUserId(u.id); setFormUserLabel(`${u.name} — ${u.email || u.phone}`); setUserQuery('') }}
+                          onClick={() => { setFormUserId(u.id); setFormUserLabel(`${u.name} — ${u.email || formatPhone(u.phone)}`); setUserQuery('') }}
                         >
                           <p className="font-medium">{u.name}</p>
                           <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
