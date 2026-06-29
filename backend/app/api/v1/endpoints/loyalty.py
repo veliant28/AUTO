@@ -15,13 +15,11 @@ router = APIRouter()
 
 @router.post("/validate", response_model=dict)
 async def validate_promocode(
-    code: str,
+    data: dict,
     db: Session = Depends(get_db),
 ):
     """Validate a promocode and return its details."""
-    from app.models.loyalty import Promocode
-    from app.schemas.loyalty_schemas import PromocodeValidateResponse
-    
+    code = data.get("code", "")
     pc = db.query(Promocode).filter(Promocode.code == code).first()
     if not pc:
         return {"valid": False, "message": "Promocode not found", "type": None, "discount_percent": 0}
