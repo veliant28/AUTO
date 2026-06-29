@@ -261,6 +261,7 @@ export default function LoyaltyPage() {
                         <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_type')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">{t('loyalty_client')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('loyalty_reason')}</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('status')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_staff')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_created_at')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_expires_at')}</th>
@@ -276,9 +277,9 @@ export default function LoyaltyPage() {
                                 <code className="font-mono text-sm font-bold tracking-wider">{item.code}</code>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6"
+                                    <Button variant="ghost" size="icon" className="h-10 w-10"
                                       onClick={() => { navigator.clipboard.writeText(item.code); toast.success(t('loyalty_copied')) }}>
-                                      <Copy className="w-3.5 h-3.5" />
+                                      <Copy className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>{t('loyalty_copy')}</TooltipContent>
@@ -302,6 +303,19 @@ export default function LoyaltyPage() {
                               </div>
                             </td>
                             <td className="p-3 text-sm truncate">{item.reason}</td>
+                            <td className="p-3">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}>
+                                    {item.used_at ? t('status_used') : expired ? t('status_expired') : t('status_unused')}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {item.used_at ? `${t('loyalty_used_at')}: ${new Date(item.used_at + 'Z').toLocaleString()}` : ''}
+                                  {!item.used_at && expired ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}` : ''}
+                                </TooltipContent>
+                              </Tooltip>
+                            </td>
                             <td className="p-3 text-sm">{item.issued_by_name || '—'}</td>
                             <td className="p-3 text-sm text-muted-foreground">
                               {new Date(item.created_at + 'Z').toLocaleString()}

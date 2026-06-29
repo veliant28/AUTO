@@ -1072,7 +1072,12 @@
     "promo_inactive": "Промокод неактивний",
     "promo_expired": "Термін дії промокоду закінчився",
     "promo_used": "Промокод вже використано",
-    "promo_wrong_user": "Промокод належить іншому користувачу"
+    "promo_wrong_user": "Промокод належить іншому користувачу",
+    "status_used": "Використано",
+    "status_unused": "Не використано",
+    "status_expired": "Прострочено",
+    "loyalty_used_at": "Використано",
+    "loyalty_expired_at": "Прострочено"
   },
   "catalog": {
     "title": "Каталог",

@@ -1072,7 +1072,12 @@
     "promo_inactive": "Promocode is inactive",
     "promo_expired": "Promocode expired",
     "promo_used": "Promocode already used",
-    "promo_wrong_user": "Promocode belongs to another user"
+    "promo_wrong_user": "Promocode belongs to another user",
+    "status_used": "Used",
+    "status_unused": "Unused",
+    "status_expired": "Expired",
+    "loyalty_used_at": "Used",
+    "loyalty_expired_at": "Expired"
   },
   "catalog": {
     "title": "Catalog",
