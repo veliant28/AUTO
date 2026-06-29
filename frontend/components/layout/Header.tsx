@@ -13,7 +13,7 @@ import {
   Search,
   Heart,
   ClipboardList,
-  RotateCcw,
+  RotateCcw, Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -199,6 +199,11 @@ export default function Header() {
                       <DropdownMenuItem asChild>
                         <Link href="/returns">
                           <RotateCcw className="mr-2 h-4 w-4" /> {t('returns')}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/loyalty">
+                          <Award className="mr-2 h-4 w-4" /> {t('loyalty')}
                         </Link>
                       </DropdownMenuItem>
                       {user?.role &&

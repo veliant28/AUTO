@@ -33,6 +33,7 @@ import {
   Minus,
   SlidersHorizontal,
   Truck,
+  Gift,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -91,6 +92,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname)
   const isOrders = pathname.includes('/admin/orders')
   const isReturns = pathname.includes('/admin/returns')
+  const isLoyalty = pathname.includes('/admin/loyalty')
 
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
@@ -101,6 +103,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin': { icon: LayoutDashboard, titleKey: 'dashboard_title' },
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
     '/admin/returns': { icon: RotateCcw, titleKey: 'returns_title' },
+    '/admin/loyalty': { icon: Gift, titleKey: 'loyalty_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/categories': { icon: FolderTree, titleKey: 'categories_title' },
@@ -186,6 +189,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const ordersNavTabs = [
     { key: 'orders', label: ta('orders_title') },
     { key: 'returns', label: ta('returns_title') },
+    { key: 'loyalty', label: ta('loyalty_title') },
   ]
 
   return (
@@ -260,13 +264,14 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           ordersNavTabs.map((t) => {
             const active =
               (t.key === 'orders' && isOrders) ||
-              (t.key === 'returns' && isReturns)
+              (t.key === 'returns' && isReturns) ||
+              (t.key === 'loyalty' && isLoyalty)
             return (
               <button
                 key={t.key}
                 onClick={() => {
                   const basePath = pathname.replace(
-                    /\/admin\/(orders|returns).*/,
+                    /\/admin\/(orders|returns|loyalty).*/,
                     '/admin',
                   )
                   router.push(`${basePath}/${t.key}`)
@@ -434,7 +439,19 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
-        {pathname.includes('/admin/novaposhta') && (
+        {pathname.includes('/admin/loyalty') && (
+            <div className="border-r pr-2 self-stretch flex items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" onClick={() => (window as any).__openCreateLoyalty?.()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('loyalty_create')}</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+          {pathname.includes('/admin/novaposhta') && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -790,6 +807,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       href: '/admin/suppliers',
       icon: Truck,
       label: t('suppliers_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/loyalty',
+      icon: Gift,
+      label: t('loyalty_title'),
       roles: ['admin'],
     },
     {
