@@ -1046,7 +1046,7 @@
     "loyalty_client_search": "Search client...",
     "loyalty_reason_placeholder": "E.g. for order delay",
     "loyalty_expires_placeholder": "Select date",
-    "loyalty_generated": "Promocode generated",
+    "loyalty_generated": "Promocode will be generated automatically",
     "loyalty_copy": "Copy code",
     "loyalty_copied": "Code copied",
     "days": "days",

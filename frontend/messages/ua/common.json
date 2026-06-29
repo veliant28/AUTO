@@ -1046,7 +1046,7 @@
     "loyalty_client_search": "Пошук клієнта...",
     "loyalty_reason_placeholder": "Наприклад: за затримку замовлення",
     "loyalty_expires_placeholder": "Виберіть дату",
-    "loyalty_generated": "Промокод згенеровано",
+    "loyalty_generated": "Промокод буде згенеровано автоматично",
     "loyalty_copy": "Скопіювати код",
     "loyalty_copied": "Код скопійовано",
     "days": "днів",
