@@ -1060,7 +1060,9 @@
     "loyalty_delivery_fixed": "Для доставки знижка завжди 100%",
     "promocode": "Промокод",
     "discount_label": "Знижка:",
-    "remove": "Видалити"
+    "remove": "Видалити",
+    "promocode_placeholder": "ВВЕДІТЬ ПРОМОКОД",
+    "promo_error": "Помилка"
   },
   "catalog": {
     "title": "Каталог",

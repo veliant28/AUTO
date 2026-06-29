@@ -1060,7 +1060,9 @@
     "loyalty_delivery_fixed": "Delivery discount is always 100%",
     "promocode": "Promocode",
     "discount_label": "Discount:",
-    "remove": "Remove"
+    "remove": "Remove",
+    "promocode_placeholder": "ENTER PROMOCODE",
+    "promo_error": "Error"
   },
   "catalog": {
     "title": "Catalog",

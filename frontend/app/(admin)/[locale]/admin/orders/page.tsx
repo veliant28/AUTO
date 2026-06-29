@@ -253,6 +253,34 @@ export default function AdminOrdersPage() {
     staleTime: 30000,
   })
   // ───────────────────────────────────────────────────────────────
+  const [promoInput, setPromoInput] = useState('')
+  const applyPromo = useMutation({
+    mutationFn: async (code: string) => {
+      const { data } = await api.post('/loyalty/validate', {
+        code,
+        items: orderDetail?.items?.map((i: any) => ({
+          part_id: i.part_id, price: i.price, quantity: editQuantities[i.id] ?? i.quantity,
+        })) || [],
+      })
+      return data
+    },
+    onSuccess: (data: any) => {
+      if (data.valid) {
+        updateMutation.mutate({
+          promocode_code: promoInput,
+          discount_amount: data.discount_amount || 0,
+          original_total: orderDetail.total,
+          total: Math.max((orderDetail.total || 0) - (data.discount_amount || 0), 0),
+        })
+        toast.success(t('order_updated'))
+        setPromoInput('')
+      } else {
+        toast.info(data.message)
+      }
+    },
+    onError: () => toast.error(t('promo_error')),
+  })
+
   const localeKey = useMemo(() => {
     try {
       const p = window.location.pathname.match(/^\/(ru|ua|en)/)?.[1]
@@ -1605,35 +1633,51 @@ export default function AdminOrdersPage() {
                                 ₴
                               </span>
                             </div>
-                          </div>
-                          {orderDetail.promocode_code && (
-                          <>
-                            <Separator className="my-3" />
-                            <div className="flex flex-col gap-2">
-                              <h4 className="font-semibold text-lg flex items-center gap-2">
-                                <Gift className="w-5 h-5" /> {t('promocode')}
-                              </h4>
+                          </div>                          <Separator className="my-3" />
+                          <div className="flex flex-col gap-2">
+                            <h4 className="font-semibold text-lg flex items-center gap-2">
+                              <Gift className="w-5 h-5" /> {t('promocode')}
+                            </h4>
+                            {editMode && !orderDetail.promocode_code ? (
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder={t('promocode_placeholder')}
+                                  value={promoInput}
+                                  maxLength={10}
+                                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                                  className="h-10 text-sm uppercase flex-1"
+                                />
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0"
+                                      disabled={promoInput.length < 10}
+                                      onClick={() => applyPromo.mutate(promoInput)}>
+                                      <Gift className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{t('apply')}</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            ) : (
                               <div className="flex gap-2">
                                 <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm gap-2">
                                   <Check className="w-4 h-4 text-green-600 shrink-0" />
-                                  <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">{orderDetail.promocode_code}</span>
+                                  <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">
+                                    {orderDetail.promocode_code || '—'}
+                                  </span>
                                   {orderDetail.discount_amount > 0 && (
                                     <span className="text-xs text-green-600 ml-auto">
                                       -{fmt(orderDetail.discount_amount)} ₴
                                     </span>
                                   )}
                                 </div>
-                                {editMode ? (
+                                {editMode && orderDetail.promocode_code ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0"
                                         onClick={() => removePromocodeMutation.mutate()}
                                         disabled={removePromocodeMutation.isPending}>
-                                        {removePromocodeMutation.isPending ? (
-                                          <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                          <Trash2 className="w-4 h-4" />
-                                        )}
+                                        <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>{t('remove')}</TooltipContent>
@@ -1642,9 +1686,8 @@ export default function AdminOrdersPage() {
                                   <div className="w-10 h-10 shrink-0" />
                                 )}
                               </div>
-                            </div>
-                          </>
-                        )}
+                            )}
+                          </div>
                         <Separator className="my-3" />
                         <div className="flex flex-col">
                           <h4 className="font-semibold text-lg flex items-center gap-2">

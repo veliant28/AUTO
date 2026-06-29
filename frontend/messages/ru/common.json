@@ -1060,7 +1060,9 @@
     "loyalty_delivery_fixed": "Для доставки скидка всегда 100%",
     "promocode": "Промокод",
     "discount_label": "Скидка:",
-    "remove": "Удалить"
+    "remove": "Удалить",
+    "promocode_placeholder": "ВВЕДИТЕ ПРОМОКОД",
+    "promo_error": "Ошибка"
   },
   "catalog": {
     "title": "Каталог",
