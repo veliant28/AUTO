@@ -211,6 +211,16 @@ async def update_order(
     if data.delivery_apartment is not None and order.delivery_apartment != data.delivery_apartment:
         order.delivery_apartment = data.delivery_apartment
 
+    # Handle promocode removal (explicitly check for None/Optional fields)
+    if 'promocode_code' in data.model_dump(exclude_unset=True):
+        order.promocode_code = data.promocode_code
+    if 'discount_amount' in data.model_dump(exclude_unset=True):
+        order.discount_amount = data.discount_amount or 0
+    if 'original_total' in data.model_dump(exclude_unset=True):
+        order.original_total = data.original_total
+    if 'total' in data.model_dump(exclude_unset=True):
+        order.total = data.total
+
     if changes:
         order.updated_by_user_id = current_user.id
         order.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
