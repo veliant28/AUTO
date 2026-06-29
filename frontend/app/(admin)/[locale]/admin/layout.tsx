@@ -743,6 +743,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('orders_title'),
       roles: ['admin', 'manager', 'operator'],
     },
+	    {
+	      href: '/admin/loyalty',
+      icon: Gift,
+      label: t('loyalty_title'),
+      roles: ['admin'],
+    },
     {
       href: '/admin/products',
       icon: Package,
@@ -809,12 +815,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('suppliers_title'),
       roles: ['admin'],
     },
-    {
-      href: '/admin/loyalty',
-      icon: Gift,
-      label: t('loyalty_title'),
-      roles: ['admin'],
-    },
+
     {
       href: '/admin/footer',
       icon: FileText,
