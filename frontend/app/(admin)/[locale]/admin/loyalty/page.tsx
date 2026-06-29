@@ -406,7 +406,7 @@ export default function LoyaltyPage() {
               {/* Discount percent */}
               <div className="space-y-2">
                 <Label>{t('loyalty_discount_percent')}</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   <Button
                     variant="outline"
                     size="icon"
