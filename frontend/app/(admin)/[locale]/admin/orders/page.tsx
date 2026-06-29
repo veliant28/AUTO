@@ -1571,6 +1571,12 @@ export default function AdminOrdersPage() {
                               </span>
                               <span>{orderDetail.items.length} шт.</span>
                             </div>
+                            {orderDetail.discount_amount > 0 && (
+                              <div className="flex justify-between text-green-600 text-sm">
+                                <span>{t('discount_label')}</span>
+                                <span className="font-semibold">-{fmt(orderDetail.discount_amount)} ₴</span>
+                              </div>
+                            )}
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">
                                 {t('order_total')}:
@@ -1580,10 +1586,6 @@ export default function AdminOrdersPage() {
                                 ₴
                               </span>
                             </div>
-                            {orderDetail.discount_amount > 0 && (
-                              <div className="flex justify-between text-green-600 text-sm mt-1">
-                                <span>{t('discount_label')}</span>
-                                <span className="font-semibold">-{fmt(orderDetail.discount_amount)} ₴</span>
                               </div>
                             )}
                           </div>
