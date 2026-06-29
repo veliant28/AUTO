@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from app.core.db import get_db
@@ -50,7 +50,7 @@ async def get_my_promocodes(
     query = db.query(Promocode).filter(
         Promocode.user_id == user_id
     ).options(
-        *[getattr(Promocode, rel) for rel in ['user', 'issued_by'] if hasattr(Promocode, rel)]
+        joinedload(Promocode.user), joinedload(Promocode.issued_by)
     ).order_by(Promocode.created_at.desc())
 
     total = query.count()
