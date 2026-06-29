@@ -261,7 +261,7 @@ export default function LoyaltyPage() {
                         <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_type')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">{t('loyalty_client')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('loyalty_reason')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('status')}</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">{t('status')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_staff')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_created_at')}</th>
                         <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_expires_at')}</th>
