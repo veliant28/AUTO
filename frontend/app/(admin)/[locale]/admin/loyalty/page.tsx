@@ -31,6 +31,16 @@ import { useAuthStore } from '@/store/authStore'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  const digits = phone.replace(/\D/g, '')
+  const normalized = digits.length >= 12 ? digits.slice(-10) : digits
+  if (normalized.length === 10) {
+    return `+38 (${normalized.slice(0, 3)}) ${normalized.slice(3, 6)}-${normalized.slice(6, 8)}-${normalized.slice(8)}`
+  }
+  return phone
+}
+
 export default function LoyaltyPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
@@ -365,7 +375,7 @@ export default function LoyaltyPage() {
                           onClick={() => { setFormUserId(u.id); setFormUserLabel(`${u.name} — ${u.email || u.phone}`); setUserQuery('') }}
                         >
                           <p className="font-medium">{u.name}</p>
-                          <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${u.phone}` : ''}</p>
+                          <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
                         </div>
                       ))
                     )}
