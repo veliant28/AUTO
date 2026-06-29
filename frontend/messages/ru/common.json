@@ -247,7 +247,9 @@
     "promo_applied": "Промокод применён",
     "promo_error": "Ошибка проверки промокода",
     "discount_label": "Скидка",
-    "apply": "Применить"
+    "apply": "Применить",
+    "loyalty_discount_percent": "Скидка",
+    "copy": "Копировать"
   },
   "header": {
     "catalog": "Каталог",
