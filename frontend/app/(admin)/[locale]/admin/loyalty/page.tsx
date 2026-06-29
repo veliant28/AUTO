@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import {
   Search, Copy, Loader2, Plus, Gift, AlertTriangle,
-  Building2, Truck, Zap, Minus,
+  Building2, Truck, Zap, Minus, CalendarIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,10 +24,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { format } from 'date-fns'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -66,12 +69,13 @@ export default function LoyaltyPage() {
   const [formReason, setFormReason] = useState('')
   const [formPercent, setFormPercent] = useState(100)
   const [formExpires, setFormExpires] = useState('')
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [userQuery, setUserQuery] = useState('')
 
   // Register global create opener
   useEffect(() => {
     (window as any).__openCreateLoyalty = () => {
-      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUserLabel('')
+      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUserLabel(''); setFormExpires('')
       setFormReason(''); setFormExpires(''); setUserQuery(''); setCreateOpen(true)
     }
     return () => { delete (window as any).__openCreateLoyalty }
@@ -430,11 +434,36 @@ export default function LoyaltyPage() {
               {/* Expires at */}
               <div className="space-y-2">
                 <Label>{t('loyalty_expires_at')} *</Label>
-                <Input
-                  type="date"
-                  value={formExpires}
-                  onChange={(e) => setFormExpires(e.target.value)}
-                />
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                      {formExpires
+                        ? format(new Date(formExpires + 'T00:00:00'), 'dd.MM.yyyy')
+                        : t('loyalty_expires_placeholder')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div style={{ pointerEvents: 'auto' }}>
+                      <Calendar
+                        mode="single"
+                        className="rounded-md"
+                        navLayout="around"
+                        selected={formExpires ? new Date(formExpires + 'T00:00:00') : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFormExpires(format(date, 'yyyy-MM-dd'))
+                            setDatePickerOpen(false)
+                          }
+                        }}
+                        disabled={{ before: new Date() }}
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
