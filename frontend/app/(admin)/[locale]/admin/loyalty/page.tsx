@@ -72,7 +72,7 @@ export default function LoyaltyPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [formType, setFormType] = useState('delivery')
   const [formUserId, setFormUserId] = useState<number | null>(null)
-  const [formUserLabel, setFormUserLabel] = useState('')
+  const [formUser, setFormUser] = useState<any>(null)
   const [formReason, setFormReason] = useState('')
   const [formPercent, setFormPercent] = useState(100)
   const [formExpires, setFormExpires] = useState('')
@@ -82,7 +82,7 @@ export default function LoyaltyPage() {
   // Register global create opener
   useEffect(() => {
     (window as any).__openCreateLoyalty = () => {
-      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUserLabel(''); setFormExpires('')
+      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUser(null); setFormExpires('')
       setFormReason(''); setFormExpires(''); setUserQuery(''); setCreateOpen(true)
     }
     return () => { delete (window as any).__openCreateLoyalty }
@@ -379,29 +379,31 @@ export default function LoyaltyPage() {
                 <Input
                   placeholder={t('loyalty_client_search')}
                   value={userQuery}
-                  onChange={(e) => { setUserQuery(e.target.value); setFormUserId(null); setFormUserLabel('') }}
-                />
-                {userQuery.length >= 2 && userSearchResults && (
-                  <div className="rounded-md border max-h-40 overflow-y-auto">
-                    {userSearchResults.length === 0 ? (
-                      <p className="text-sm text-muted-foreground p-3 text-center">{t('no_results')}</p>
-                    ) : (
-                      userSearchResults.map((u: any) => (
-                        <div
-                          key={u.id}
-                          className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
-                          onClick={() => { setFormUserId(u.id); setFormUserLabel(`${u.name} — ${u.email || formatPhone(u.phone)}`); setUserQuery('') }}
-                        >
-                          <p className="font-medium">{u.name}</p>
-                          <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-                {formUserLabel && (
-                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">{formUserLabel}</div>
-                )}
+                  onChange={(e) => { setUserQuery(e.target.value); setFormUserId(null); setFormUser(null) }}
+                  {userQuery.length >= 2 && userSearchResults && (
+                    <div className="rounded-md border max-h-40 overflow-y-auto">
+                      {userSearchResults.length === 0 ? (
+                        <p className="text-sm text-muted-foreground p-3 text-center">{t('no_results')}</p>
+                      ) : (
+                        userSearchResults.map((u: any) => (
+                          <div
+                            key={u.id}
+                            className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
+                            onClick={() => { setFormUserId(u.id); setFormUser(u); setUserQuery('') }}
+                          >
+                            <p className="font-medium">{u.name}</p>
+                            <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  {formUser && (
+                    <div className="rounded-md border bg-muted/30 p-3">
+                      <p className="font-medium text-sm">{formUser.name}</p>
+                      <p className="text-xs text-muted-foreground">{formUser.email} {formUser.phone ? `• ${formatPhone(formUser.phone)}` : ''}</p>
+                    </div>
+                  )}
               </div>
 
               {/* Reason */}
