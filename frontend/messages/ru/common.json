@@ -1059,7 +1059,8 @@
     "loyalty_discount_percent": "Скидка",
     "loyalty_delivery_fixed": "Для доставки скидка всегда 100%",
     "promocode": "Промокод",
-    "discount_label": "Скидка:"
+    "discount_label": "Скидка:",
+    "remove": "Удалить"
   },
   "catalog": {
     "title": "Каталог",
