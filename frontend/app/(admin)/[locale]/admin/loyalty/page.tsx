@@ -181,7 +181,7 @@ export default function LoyaltyPage() {
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-4">
         {/* ── Stats chart ── */}
         <Card>
           <CardContent className="p-6">
@@ -207,7 +207,7 @@ export default function LoyaltyPage() {
         </Card>
 
         {/* ── Filters ── */}
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex gap-4 flex-wrap mb-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
