@@ -229,7 +229,7 @@ export default function LoyaltyPage() {
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
-          <Select value={staffFilter} onValueChange={(v) => { setStaffFilter(v); setPage(1) }}>
+          <Select value={staffFilter} onValueChange={(v) => { setStaffFilter(v === 'all' ? '' : v); setPage(1) }}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={t('loyalty_staff')} />
             </SelectTrigger>

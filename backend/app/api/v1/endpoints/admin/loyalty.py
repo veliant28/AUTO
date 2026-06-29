@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, text
 
 from app.core.db import get_db
@@ -75,7 +75,7 @@ async def list_promocodes(
 ):
     """List promocodes with pagination, search, and staff filter."""
     query = db.query(Promocode).options(
-        *[getattr(Promocode, rel) for rel in ['user', 'issued_by'] if hasattr(Promocode, rel)]
+        joinedload(Promocode.user), joinedload(Promocode.issued_by)
     )
 
     if search:
