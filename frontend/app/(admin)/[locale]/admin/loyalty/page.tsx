@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import {
@@ -31,8 +32,12 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { format } from 'date-fns'
+import type { Locale } from 'date-fns'
+import { ru, uk, enUS } from 'date-fns/locale'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
+
+const DATE_FNS_LOCALE: Record<string, Locale> = { ru, uk, enUS }
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return ''
@@ -49,6 +54,8 @@ function formatPhone(phone: string | null | undefined): string {
 export default function LoyaltyPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const locale = useLocale()
+  const dateLocale = DATE_FNS_LOCALE[locale] || ru
   const queryClient = useQueryClient()
 
   // ── List state ──
@@ -452,6 +459,7 @@ export default function LoyaltyPage() {
                         mode="single"
                         className="rounded-md"
                         navLayout="around"
+                        locale={dateLocale}
                         selected={formExpires ? new Date(formExpires + 'T00:00:00') : undefined}
                         onSelect={(date) => {
                           if (date) {
