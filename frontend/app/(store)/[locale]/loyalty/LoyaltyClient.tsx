@@ -74,7 +74,6 @@ export default function LoyaltyClient() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_code')}</th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">{t('loyalty_discount_percent')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_type')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('loyalty_reason')}</th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">{t('loyalty_created_at')}</th>
@@ -99,9 +98,6 @@ export default function LoyaltyClient() {
                                 <TooltipContent>{t('copy')}</TooltipContent>
                               </Tooltip>
                             </div>
-                          </td>
-                          <td className="p-3">
-                            <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
                           </td>
                           <td className="p-3">
                             <Badge className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}>
