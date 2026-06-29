@@ -249,7 +249,8 @@
     "discount_label": "Знижка",
     "apply": "Застосувати",
     "loyalty_discount_percent": "Знижка",
-    "copy": "Копіювати"
+    "copy": "Копіювати",
+    "copied": "Скопійовано"
   },
   "header": {
     "catalog": "Каталог",

@@ -249,7 +249,8 @@
     "discount_label": "Discount",
     "apply": "Apply",
     "loyalty_discount_percent": "Discount",
-    "copy": "Copy"
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "header": {
     "catalog": "Catalog",

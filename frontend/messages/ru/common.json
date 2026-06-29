@@ -249,7 +249,8 @@
     "discount_label": "Скидка",
     "apply": "Применить",
     "loyalty_discount_percent": "Скидка",
-    "copy": "Копировать"
+    "copy": "Копировать",
+    "copied": "Скопировано"
   },
   "header": {
     "catalog": "Каталог",
