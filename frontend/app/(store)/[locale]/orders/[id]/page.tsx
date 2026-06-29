@@ -281,6 +281,12 @@ export default function OrderDetailPage() {
                 ))}
               </div>
               <Separator />
+              {order.discount_amount > 0 && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="font-semibold text-base">{t('discount_label')}</span>
+                  <span className="font-bold text-lg">-{fmt(order.discount_amount)} ₴</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-base">
                   {t('total_label')}:
