@@ -381,7 +381,7 @@ export default function LoyaltyPage() {
                   value={userQuery}
                   onChange={(e) => { setUserQuery(e.target.value); setFormUserId(null); setFormUser(null) }}
                 />
-                {(userQuery.length >= 2 || formUser) && userSearchResults && (
+                {userQuery.length >= 2 && userSearchResults && (
                     <div className="rounded-md border max-h-40 overflow-y-auto">
                       {userSearchResults.length === 0 ? (
                         <p className="text-sm text-muted-foreground p-3 text-center">{t('no_results')}</p>
@@ -404,7 +404,10 @@ export default function LoyaltyPage() {
                   )}
                   {formUser && (
                     <div className="rounded-md border bg-muted/30 p-3">
-                      <p className="font-medium text-sm">{formUser.name}</p>
+                      <p className="font-medium text-sm flex items-center gap-2">
+                        <Check className="w-4 h-4 text-primary shrink-0" />
+                        {formUser.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">{formUser.email} {formUser.phone ? `• ${formatPhone(formUser.phone)}` : ''}</p>
                     </div>
                   )}
