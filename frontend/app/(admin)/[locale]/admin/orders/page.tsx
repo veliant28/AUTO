@@ -44,6 +44,7 @@ import {
   ScanBarcode,
   Warehouse,
   Gift,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -461,10 +462,28 @@ export default function AdminOrdersPage() {
       setDeleteTarget(null)
       setViewOrderId(null)
     },
-    onError: () => toast.error(t('error')),
-  })
+	    onError: () => toast.error(t('error')),
+	  })
 
-  const openView = useCallback(
+	  const removePromocodeMutation = useMutation({
+	    mutationFn: async () => {
+	      const newTotal = orderDetail.original_total || orderDetail.total
+	      await api.put(`/admin/orders/${viewOrderId}`, {
+	        promocode_code: null,
+	        discount_amount: 0,
+	        original_total: null,
+	        total: newTotal,
+	      })
+	    },
+	    onSuccess: () => {
+	      toast.success(t('order_updated'))
+	      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', viewOrderId] })
+	      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+	    },
+	    onError: () => toast.error(t('error')),
+	  })
+
+	  const openView = useCallback(
     async (orderId: number) => {
       setEditMode(false)
       setShowHistory(false)
@@ -1590,16 +1609,35 @@ export default function AdminOrdersPage() {
                           {orderDetail.promocode_code && (
                           <>
                             <Separator className="my-3" />
-                            <div className="flex flex-col">
-                              <h4 className="font-semibold text-sm flex items-center gap-2">
-                                <Gift className="w-4 h-4" /> {t('promocode')}
+                            <div className="flex flex-col gap-2">
+                              <h4 className="font-semibold text-lg flex items-center gap-2">
+                                <Gift className="w-5 h-5" /> {t('promocode')}
                               </h4>
-                              <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm mt-2">
-                                <div className="font-mono font-bold tracking-wider">{orderDetail.promocode_code}</div>
-                                {orderDetail.discount_amount > 0 && (
-                                  <div className="text-xs text-muted-foreground mt-0.5">
-                                    {t('discount_label')}: -{fmt(orderDetail.discount_amount)} ₴
-                                  </div>
+                              <div className="flex gap-2">
+                                <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm gap-2">
+                                  <Check className="w-4 h-4 text-green-600 shrink-0" />
+                                  <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">{orderDetail.promocode_code}</span>
+                                  {orderDetail.discount_amount > 0 && (
+                                    <span className="text-xs text-green-600 ml-auto">
+                                      -{fmt(orderDetail.discount_amount)} ₴
+                                    </span>
+                                  )}
+                                </div>
+                                {editMode && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0"
+                                        onClick={() => removePromocodeMutation.mutate()}
+                                        disabled={removePromocodeMutation.isPending}>
+                                        {removePromocodeMutation.isPending ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <Trash2 className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{t('remove')}</TooltipContent>
+                                  </Tooltip>
                                 )}
                               </div>
                             </div>
@@ -1617,6 +1655,7 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
                   )}
                 </div>
 

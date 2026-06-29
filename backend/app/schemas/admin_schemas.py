@@ -103,6 +103,7 @@ class AdminOrderDetailResponse(BaseModel):
     promocode_code: Optional[str] = None
     discount_amount: Optional[float] = None
     original_total: Optional[float] = None
+    total: Optional[float] = None
     promocode_code: Optional[str] = None
     discount_amount: float = 0
     original_total: Optional[float] = None
@@ -146,6 +147,7 @@ class AdminOrderUpdateSchema(BaseModel):
     promocode_code: Optional[str] = None
     discount_amount: Optional[float] = None
     original_total: Optional[float] = None
+    total: Optional[float] = None
 
 class OrderChangeLogResponse(BaseModel):
     id: int
