@@ -120,13 +120,7 @@ export default function CartPage() {
     },
     onSuccess: (data: any) => {
       if (data.valid) {
-        const subtotal = totalPrice()
-        if (data.type === 'margin') {
-          const disc = Math.round(subtotal * data.discount_percent / 100)
-          setPromocode(promoInput, data.type, data.discount_percent, disc)
-        } else {
-          setPromocode(promoInput, data.type, data.discount_percent, 0)
-        }
+        setPromocode(promoInput, data.type, data.discount_percent, 0)
         toast.success(t('promo_applied'))
         setPromoInput('')
       } else {

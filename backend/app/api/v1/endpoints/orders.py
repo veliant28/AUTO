@@ -149,8 +149,25 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         promocode_code = pc.code
         
         if pc.type == 'margin':
-            discount_amount = round(total * pc.discount_percent / 100, 2)
-            total = max(total - discount_amount, 0)
+            # Calculate discount from margin only: (final_price - base_price) per item
+            from app.models.suppliers import SupplierOffer
+            total_margin = 0
+            for item_data in data.items:
+                part_id = item_data["part_id"]
+                item_price = item_data["price"]
+                item_qty = item_data["quantity"]
+                offer = db.query(SupplierOffer).filter(
+                    SupplierOffer.part_id == part_id,
+                    SupplierOffer.final_price.isnot(None)
+                ).first()
+                if offer and offer.price and float(offer.price) > 0:
+                    base_price = float(offer.price)
+                    margin_per_item = item_price - base_price
+                    if margin_per_item > 0:
+                        total_margin += margin_per_item * item_qty
+            if total_margin > 0:
+                discount_amount = round(total_margin * pc.discount_percent / 100, 2)
+                total = max(total - discount_amount, 0)
         
         pc.used_at = datetime.utcnow()
     
