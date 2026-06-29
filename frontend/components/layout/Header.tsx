@@ -13,7 +13,7 @@ import {
   Search,
   Heart,
   ClipboardList,
-  RotateCcw, Award,
+	  RotateCcw, Gift,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -203,7 +203,7 @@ export default function Header() {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/loyalty">
-                          <Award className="mr-2 h-4 w-4" /> {t('loyalty')}
+                          <Gift className="mr-2 h-4 w-4" /> {t('loyalty')}
                         </Link>
                       </DropdownMenuItem>
                       {user?.role &&

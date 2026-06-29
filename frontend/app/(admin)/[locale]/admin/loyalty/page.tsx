@@ -278,7 +278,7 @@ export default function LoyaltyPage() {
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-6 w-6"
                                       onClick={() => { navigator.clipboard.writeText(item.code); toast.success(t('loyalty_copied')) }}>
-                                      <Copy className="w-3 h-3" />
+                                      <Copy className="w-3.5 h-3.5" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>{t('loyalty_copy')}</TooltipContent>
