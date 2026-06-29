@@ -246,7 +246,7 @@
     "promo_placeholder": "ENTER PROMOCODE",
     "promo_applied": "Promocode applied",
     "promo_error": "Error validating promocode",
-    "discount_label": "Discount",
+    "discount_label": "Discount:",
     "apply": "Apply",
     "loyalty_discount_percent": "Discount",
     "copy": "Copy",
