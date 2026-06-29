@@ -1586,11 +1586,8 @@ export default function AdminOrdersPage() {
                                 ₴
                               </span>
                             </div>
-                              </div>
-                            )}
                           </div>
-                        </div>
-                        {orderDetail.promocode_code && (
+                          {orderDetail.promocode_code && (
                           <>
                             <Separator className="my-3" />
                             <div className="flex flex-col">
