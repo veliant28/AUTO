@@ -42,6 +42,7 @@ import {
   RefreshCw,
   AlertTriangle,
   ScanBarcode,
+  Warehouse,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,6 +61,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Tooltip,
@@ -80,6 +83,7 @@ import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import OrderWaybillModal from '../components/OrderWaybillModal'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import OrderWaybillTrackingModal from '../components/OrderWaybillTrackingModal'
 
 const fmt = (n: number) =>
@@ -124,6 +128,15 @@ interface AdminOrderDetail {
   delivery_type: string | null
   delivery_city: string | null
   delivery_warehouse: string | null
+  delivery_city_ref: string | null
+  delivery_settlement_ref: string | null
+  delivery_city_label: string | null
+  delivery_warehouse_ref: string | null
+  delivery_warehouse_label: string | null
+  delivery_street_ref: string | null
+  delivery_street_label: string | null
+  delivery_house: string | null
+  delivery_apartment: string | null
   payment_method: string | null
   created_at: string
   updated_by_name: string | null
@@ -194,6 +207,46 @@ export default function AdminOrdersPage() {
     {},
   )
   const [editRecipient, setEditRecipient] = useState<Record<string, string>>({})
+  const [deleteTarget, setDeleteTarget] = useState<any>(null)
+
+  // ── NP online search for delivery section ─────────────────────
+  const deliveryCityRef = editRecipient.delivery_city_ref || ''
+  const deliveryType = editRecipient.delivery_type || ''
+  const settlementRef = editRecipient.delivery_settlement_ref || ''
+
+  const [cityQuery, setCityQuery] = useState('')
+  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
+    queryKey: ['admin-order-np-cities', cityQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchSettlements({ query: cityQuery })
+        .then((r) => r.data as any[]),
+    enabled: cityQuery.length >= 2,
+    staleTime: 30000,
+  })
+
+  const [warehouseQuery, setWarehouseQuery] = useState('')
+  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
+    queryKey: ['admin-order-np-warehouses', deliveryCityRef, warehouseQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchWarehouses({ city_ref: deliveryCityRef, query: warehouseQuery })
+        .then((r) => r.data as any[]),
+    enabled: !!deliveryCityRef && warehouseQuery.length >= 1,
+    staleTime: 30000,
+  })
+
+  const [streetQuery, setStreetQuery] = useState('')
+  const { data: streets = [], isFetching: streetsLoading } = useQuery({
+    queryKey: ['admin-order-np-streets', settlementRef, streetQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchStreets({ settlement_ref: settlementRef, query: streetQuery })
+        .then((r) => r.data as any[]),
+    enabled: !!settlementRef && streetQuery.length >= 2,
+    staleTime: 30000,
+  })
+  // ───────────────────────────────────────────────────────────────
   const localeKey = useMemo(() => {
     try {
       const p = window.location.pathname.match(/^\/(ru|ua|en)/)?.[1]
@@ -314,7 +367,22 @@ export default function AdminOrdersPage() {
         delivery_type: orderDetail.delivery_type || '',
         delivery_city: orderDetail.delivery_city || '',
         delivery_warehouse: orderDetail.delivery_warehouse || '',
+        delivery_city_ref: orderDetail.delivery_city_ref || '',
+        delivery_settlement_ref: orderDetail.delivery_settlement_ref || '',
+        delivery_city_label: orderDetail.delivery_city_label || '',
+        delivery_warehouse_ref: orderDetail.delivery_warehouse_ref || '',
+        delivery_warehouse_label: orderDetail.delivery_warehouse_label || '',
+        delivery_street_ref: orderDetail.delivery_street_ref || '',
+        delivery_street_label: orderDetail.delivery_street_label || '',
+        delivery_house: orderDetail.delivery_house || '',
+        delivery_apartment: orderDetail.delivery_apartment || '',
       })
+      // Sync search queries for SearchableSelect display
+      if (orderDetail.delivery_city) setCityQuery(orderDetail.delivery_city)
+      if (orderDetail.delivery_warehouse)
+        setWarehouseQuery(orderDetail.delivery_warehouse)
+      if (orderDetail.delivery_street_label)
+        setStreetQuery(orderDetail.delivery_street_label)
     }
   }, [orderDetail])
 
@@ -378,6 +446,19 @@ export default function AdminOrdersPage() {
     onError: () => toast.error(t('error')),
   })
 
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: number) => {
+      await api.delete(`/admin/orders/${orderId}`)
+    },
+    onSuccess: () => {
+      toast.success(t('order_deleted'))
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      setDeleteTarget(null)
+      setViewOrderId(null)
+    },
+    onError: () => toast.error(t('error')),
+  })
+
   const openView = useCallback(
     async (orderId: number) => {
       setEditMode(false)
@@ -425,7 +506,24 @@ export default function AdminOrdersPage() {
         editRecipient.delivery_type !== (orderDetail.delivery_type || '') ||
         editRecipient.delivery_city !== (orderDetail.delivery_city || '') ||
         editRecipient.delivery_warehouse !==
-          (orderDetail.delivery_warehouse || ''))
+          (orderDetail.delivery_warehouse || '') ||
+        editRecipient.delivery_city_ref !==
+          (orderDetail.delivery_city_ref || '') ||
+        editRecipient.delivery_settlement_ref !==
+          (orderDetail.delivery_settlement_ref || '') ||
+        editRecipient.delivery_city_label !==
+          (orderDetail.delivery_city_label || '') ||
+        editRecipient.delivery_warehouse_ref !==
+          (orderDetail.delivery_warehouse_ref || '') ||
+        editRecipient.delivery_warehouse_label !==
+          (orderDetail.delivery_warehouse_label || '') ||
+        editRecipient.delivery_street_ref !==
+          (orderDetail.delivery_street_ref || '') ||
+        editRecipient.delivery_street_label !==
+          (orderDetail.delivery_street_label || '') ||
+        editRecipient.delivery_house !== (orderDetail.delivery_house || '') ||
+        editRecipient.delivery_apartment !==
+          (orderDetail.delivery_apartment || ''))
     if (recipientChanged) {
       Object.assign(changes, editRecipient)
     }
@@ -528,11 +626,24 @@ export default function AdminOrdersPage() {
               </TooltipTrigger>
               <TooltipContent>{t('novaposhta_waybill')}</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  disabled={user?.role !== 'admin'}
+                  onClick={() => setDeleteTarget(row.original)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('delete_order')}</TooltipContent>
+            </Tooltip>
           </div>
         ),
       }),
     ],
-    [t, statusMutation, openView, handleWaybillOpen],
+    [t, statusMutation, openView, handleWaybillOpen, setDeleteTarget, user],
   )
 
   const table = useReactTable({
@@ -893,7 +1004,7 @@ export default function AdminOrdersPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
+                    <div className="grid grid-cols-[2fr_1fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
                       <div className="border rounded-lg p-3 flex flex-col min-h-0">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <Package className="w-5 h-5" /> {t('order_items')}
@@ -908,7 +1019,7 @@ export default function AdminOrdersPage() {
                                 className="flex gap-3 p-3 rounded-lg border bg-card transition-colors"
                               >
                                 <div
-                                  className={`aspect-square w-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(item.brand)}`}
+                                  className={`w-[80px] h-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(item.brand)}`}
                                 >
                                   <span className="text-3xl font-bold text-white/40 select-none">
                                     {getBrandInitial(item.brand)}
@@ -1031,18 +1142,6 @@ export default function AdminOrdersPage() {
 
                       <div className="border rounded-lg p-4 flex flex-col h-full">
                         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                          <CreditCard className="w-5 h-5" />{' '}
-                          {t('payment_method')}
-                        </h4>
-                        <div className="flex-1 flex items-center justify-center">
-                          <p className="text-sm text-muted-foreground text-center">
-                            {t('payment_placeholder')}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="border rounded-lg p-4 flex flex-col h-full">
-                        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                           <User className="w-5 h-5" /> {t('recipient_data')}
                         </h4>
                         <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
@@ -1115,16 +1214,43 @@ export default function AdminOrdersPage() {
                             <MapPin className="w-4 h-4" /> {t('delivery_info')}
                           </h5>
                           <RadioGroup
-                            value={editRecipient.delivery_type}
+                            value={editRecipient.delivery_type || ''}
                             onValueChange={(v) =>
                               setEditRecipient((p) => ({
                                 ...p,
                                 delivery_type: v,
+                                // Reset dependent fields
+                                delivery_warehouse: '',
+                                delivery_warehouse_ref: '',
+                                delivery_warehouse_label: '',
+                                delivery_street_ref: '',
+                                delivery_street_label: '',
+                                delivery_house: '',
+                                delivery_apartment: '',
                               }))
                             }
                             disabled={!editMode}
                             className="grid grid-cols-3 gap-2"
                           >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer opacity-50">
+                                  <RadioGroupItem
+                                    value="pickup"
+                                    id="dpickup"
+                                    className="cursor-pointer"
+                                    disabled
+                                  />
+                                  <Label
+                                    htmlFor="dpickup"
+                                    className="cursor-pointer"
+                                  >
+                                    <Package className="w-5 h-5" />
+                                  </Label>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>{t('pickup')}</TooltipContent>
+                            </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
@@ -1147,26 +1273,6 @@ export default function AdminOrdersPage() {
                               <TooltipTrigger asChild>
                                 <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
                                   <RadioGroupItem
-                                    value="parcel_locker"
-                                    id="dpl"
-                                    className="cursor-pointer"
-                                  />
-                                  <Label
-                                    htmlFor="dpl"
-                                    className="cursor-pointer"
-                                  >
-                                    <Container className="w-5 h-5" />
-                                  </Label>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('parcel_locker')}
-                              </TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
-                                  <RadioGroupItem
                                     value="courier"
                                     id="dc"
                                     className="cursor-pointer"
@@ -1182,39 +1288,259 @@ export default function AdminOrdersPage() {
                               <TooltipContent>{t('courier')}</TooltipContent>
                             </Tooltip>
                           </RadioGroup>
-                          {['delivery_city', 'delivery_warehouse'].map(
-                            (field) => (
-                              <div key={field} className="grid gap-1">
+
+                          {/* City */}
+                          <div className="grid gap-1">
+                            <span className="text-muted-foreground text-sm">
+                              {t('city')}
+                            </span>
+                            {editMode ? (
+                              <SearchableSelect<any>
+                                items={settlements}
+                                isLoading={citiesLoading}
+                                value={editRecipient.delivery_city || ''}
+                                onChange={(item) =>
+                                  setEditRecipient((p) => ({
+                                    ...p,
+                                    delivery_city: item.label,
+                                    delivery_city_ref:
+                                      item.delivery_city_ref || item.ref,
+                                    delivery_settlement_ref:
+                                      item.settlement_ref || '',
+                                    delivery_city_label: item.label,
+                                    delivery_warehouse: '',
+                                    delivery_warehouse_ref: '',
+                                    delivery_warehouse_label: '',
+                                    delivery_street_ref: '',
+                                    delivery_street_label: '',
+                                    delivery_house: '',
+                                    delivery_apartment: '',
+                                  }))
+                                }
+                                searchQuery={cityQuery}
+                                onSearchChange={setCityQuery}
+                                getKey={(item: any) => item.ref}
+                                getLabel={(item: any) => item.label}
+                                renderItem={(item: any) => (
+                                  <>
+                                    <div className="font-medium leading-tight">
+                                      {item.label}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                      {[item.area, item.region]
+                                        .filter(Boolean)
+                                        .join(' — ')}
+                                      {item.warehouses_count &&
+                                      item.warehouses_count !== '0' ? (
+                                        <span className="ml-2 inline-flex items-center gap-1">
+                                          <Warehouse className="w-3 h-3" />×
+                                          {item.warehouses_count}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </>
+                                )}
+                                placeholder={t('city')}
+                                minSearchLength={2}
+                                noResultsMessage={t('novaposhta_no_results')}
+                                typeToSearchMessage={t(
+                                  'novaposhta_type_to_search',
+                                )}
+                                hideSearchIcon
+                              />
+                            ) : (
+                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                <span
+                                  className={
+                                    orderDetail.delivery_city
+                                      ? 'truncate'
+                                      : 'truncate text-muted-foreground'
+                                  }
+                                >
+                                  {orderDetail.delivery_city || '—'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Warehouse / Postomat */}
+                          {deliveryType === 'warehouse' && (
+                            <div className="grid gap-1">
+                              <span className="text-muted-foreground text-sm">
+                                {t('warehouse')}
+                              </span>
+                              {editMode ? (
+                                <SearchableSelect<any>
+                                  items={warehouses}
+                                  isLoading={warehousesLoading}
+                                  value={editRecipient.delivery_warehouse || ''}
+                                  onChange={(item) =>
+                                    setEditRecipient((p) => ({
+                                      ...p,
+                                      delivery_warehouse: item.label,
+                                      delivery_warehouse_ref: item.ref,
+                                      delivery_warehouse_label: item.label,
+                                    }))
+                                  }
+                                  searchQuery={warehouseQuery}
+                                  onSearchChange={setWarehouseQuery}
+                                  getKey={(item: any) => item.ref}
+                                  getLabel={(item: any) => item.label}
+                                  renderItem={(item: any) => {
+                                    const isPostomat = item.type === 'Postomat'
+                                    return (
+                                      <div className="font-medium leading-tight flex items-center gap-2">
+                                        {isPostomat ? (
+                                          <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                            {t('novaposhta_postomat')}
+                                          </span>
+                                        ) : (
+                                          <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                            №{item.number}
+                                          </span>
+                                        )}
+                                        <span className="truncate">
+                                          {item.label.includes(':')
+                                            ? item.label.slice(
+                                                0,
+                                                item.label.indexOf(':'),
+                                              )
+                                            : item.label}
+                                        </span>
+                                      </div>
+                                    )
+                                  }}
+                                  placeholder={t('warehouse')}
+                                  minSearchLength={1}
+                                  noResultsMessage={t('novaposhta_no_results')}
+                                  typeToSearchMessage={t(
+                                    'novaposhta_type_to_search',
+                                  )}
+                                  hideSearchIcon
+                                />
+                              ) : (
+                                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                  <span
+                                    className={
+                                      orderDetail.delivery_warehouse
+                                        ? 'truncate'
+                                        : 'truncate text-muted-foreground'
+                                    }
+                                  >
+                                    {orderDetail.delivery_warehouse || '—'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Courier: street + house + apartment */}
+                          {deliveryType === 'courier' && (
+                            <>
+                              <div className="grid gap-1">
                                 <span className="text-muted-foreground text-sm">
-                                  {t(field)}
+                                  {t('street')}
                                 </span>
                                 {editMode ? (
-                                  <Input
-                                    className="h-10 w-full text-sm"
-                                    value={editRecipient[field] || ''}
-                                    maxLength={200}
-                                    onChange={(e) =>
+                                  <SearchableSelect<any>
+                                    items={streets}
+                                    isLoading={streetsLoading}
+                                    value={
+                                      editRecipient.delivery_street_label || ''
+                                    }
+                                    onChange={(item) =>
                                       setEditRecipient((p) => ({
                                         ...p,
-                                        [field]: e.target.value,
+                                        delivery_street_ref: item.street_ref,
+                                        delivery_street_label: item.label,
                                       }))
                                     }
+                                    searchQuery={streetQuery}
+                                    onSearchChange={setStreetQuery}
+                                    getKey={(item: any) => item.street_ref}
+                                    getLabel={(item: any) => item.label}
+                                    renderItem={(item: any) => (
+                                      <div className="font-medium leading-tight">
+                                        {item.street_type &&
+                                        item.label &&
+                                        !item.label.startsWith(item.street_type)
+                                          ? `${item.street_type}. ${item.label}`
+                                          : item.label}
+                                      </div>
+                                    )}
+                                    placeholder={t('street')}
+                                    minSearchLength={2}
+                                    noResultsMessage={t(
+                                      'novaposhta_no_results',
+                                    )}
+                                    typeToSearchMessage={t(
+                                      'novaposhta_type_to_search',
+                                    )}
+                                    hideSearchIcon
                                   />
                                 ) : (
                                   <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
                                     <span
                                       className={
-                                        (orderDetail as any)[field]
+                                        orderDetail.delivery_street_label
                                           ? 'truncate'
                                           : 'truncate text-muted-foreground'
                                       }
                                     >
-                                      {(orderDetail as any)[field] || '—'}
+                                      {orderDetail.delivery_street_label || '—'}
                                     </span>
                                   </div>
                                 )}
                               </div>
-                            ),
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="grid gap-1">
+                                  <span className="text-muted-foreground text-sm">
+                                    {t('house')}
+                                  </span>
+                                  {editMode ? (
+                                    <Input
+                                      className="h-10 w-full text-sm"
+                                      value={editRecipient.delivery_house || ''}
+                                      maxLength={20}
+                                      onChange={(e) =>
+                                        setEditRecipient((p) => ({
+                                          ...p,
+                                          delivery_house: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                  ) : (
+                                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                                      {orderDetail.delivery_house || '—'}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="grid gap-1">
+                                  <span className="text-muted-foreground text-sm">
+                                    {t('apartment')}
+                                  </span>
+                                  {editMode ? (
+                                    <Input
+                                      className="h-10 w-full text-sm"
+                                      value={
+                                        editRecipient.delivery_apartment || ''
+                                      }
+                                      maxLength={20}
+                                      onChange={(e) =>
+                                        setEditRecipient((p) => ({
+                                          ...p,
+                                          delivery_apartment: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                  ) : (
+                                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
+                                      {orderDetail.delivery_apartment || '—'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </>
                           )}
                         </div>
                       </div>
@@ -1224,7 +1550,7 @@ export default function AdminOrdersPage() {
                           <ScrollText className="w-5 h-5" />{' '}
                           {t('order_summary')}
                         </h4>
-                        <div className="flex-1 mt-3">
+                        <div className="mt-3">
                           <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">
@@ -1242,6 +1568,16 @@ export default function AdminOrdersPage() {
                               </span>
                             </div>
                           </div>
+                        </div>
+                        <Separator className="my-3" />
+                        <div className="flex flex-col">
+                          <h4 className="font-semibold text-lg flex items-center gap-2">
+                            <CreditCard className="w-5 h-5" />{' '}
+                            {t('payment_method')}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {t('payment_placeholder')}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1321,6 +1657,56 @@ export default function AdminOrdersPage() {
             onOpenChange={handleTrackingClose}
           />
         )}
+
+        <Dialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <DialogTitle>{t('delete_order_title')}</DialogTitle>
+                  <DialogDescription>
+                    {t('delete_order_confirm')}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            {deleteTarget && (
+              <div className="rounded-lg bg-muted p-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <strong>{deleteTarget.order_number}</strong>
+                  <span className="text-muted-foreground">—</span>
+                  <span className="text-muted-foreground">
+                    {deleteTarget.full_name}
+                  </span>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => deleteOrderMutation.mutate(deleteTarget.id)}
+                disabled={deleteOrderMutation.isPending}
+                className="gap-2"
+              >
+                {deleteOrderMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {t('delete')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   )

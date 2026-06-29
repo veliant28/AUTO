@@ -20,6 +20,15 @@ class UserSchema(UserBase):
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
+    delivery_city_ref: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -33,6 +42,15 @@ class ProfileUpdate(BaseModel):
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
+    delivery_city_ref: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
 
 class ChangePasswordSchema(BaseModel):
     current_password: str

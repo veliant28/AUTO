@@ -27,6 +27,15 @@ def _user_to_schema(user: User) -> UserSchema:
         delivery_type=user.delivery_type,
         delivery_city=user.delivery_city,
         delivery_warehouse=user.delivery_warehouse,
+        delivery_city_ref=user.delivery_city_ref,
+        delivery_settlement_ref=user.delivery_settlement_ref,
+        delivery_city_label=user.delivery_city_label,
+        delivery_warehouse_ref=user.delivery_warehouse_ref,
+        delivery_warehouse_label=user.delivery_warehouse_label,
+        delivery_street_ref=user.delivery_street_ref,
+        delivery_street_label=user.delivery_street_label,
+        delivery_house=user.delivery_house,
+        delivery_apartment=user.delivery_apartment,
     )
 
 

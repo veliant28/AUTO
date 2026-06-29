@@ -3,7 +3,13 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ArrowLeft, Heart, ShoppingCart, Package } from 'lucide-react'
+import {
+  ArrowLeft,
+  Heart,
+  ShoppingCart,
+  CircleCheckBig,
+  Package,
+} from 'lucide-react'
 import { usePartDetail } from '@/hooks/usePartDetail'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,12 +43,14 @@ export default function ProductClient({ article }: { article: string }) {
   const tc = useTranslations('common')
   const router = useRouter()
   const addItem = useCartStore((s) => s.addItem)
+  const cartItems = useCartStore((s) => s.items)
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite)
   const favoriteArticles = useFavoritesStore((s) => s.articles)
 
   const { data, isLoading } = usePartDetail(article)
 
   const isFavorite = favoriteArticles.includes(article)
+  const isInCart = cartItems.some((i) => i.part_id === (data?.part?.id ?? 0))
 
   const handleAddToCart = () => {
     const imgs = data?.images || []
@@ -296,13 +304,19 @@ export default function ProductClient({ article }: { article: string }) {
               <TooltipTrigger asChild>
                 <Button
                   size="icon"
-                  className="h-10 w-10 bg-green-500 text-white hover:bg-green-600"
+                  className={`h-10 w-10 ${isInCart ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-green-500 text-white hover:bg-green-600'}`}
                   onClick={handleAddToCart}
                 >
-                  <ShoppingCart className="h-5 w-5" />
+                  {isInCart ? (
+                    <CircleCheckBig className="h-5 w-5" />
+                  ) : (
+                    <ShoppingCart className="h-5 w-5" />
+                  )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{tc('add_to_cart')}</TooltipContent>
+              <TooltipContent>
+                {isInCart ? tc('in_cart') : tc('add_to_cart')}
+              </TooltipContent>
             </Tooltip>
           </div>
         </div>

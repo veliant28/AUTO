@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   FileDown,
-  Loader2,
   Search,
   Trash2,
   AlertTriangle,
@@ -13,7 +12,7 @@ import {
   Clock,
   Download,
   XCircle,
-  Loader,
+  Loader2,
   RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -55,7 +54,7 @@ const statusIcons: Record<string, any> = {
   complete: CheckCircle2,
   promoted: CheckCircle2,
   failed: XCircle,
-  processing: Loader,
+  processing: Loader2,
   in_queue: Clock,
 }
 
@@ -327,7 +326,9 @@ export default function ImportPage() {
                           <Badge
                             className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
                           >
-                            <StatusIcon className="w-3.5 h-3.5" />
+                            <StatusIcon
+                              className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
+                            />
                             {t(`import_${item.status}`)}
                           </Badge>
                         )}

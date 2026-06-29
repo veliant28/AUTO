@@ -1,25 +1,59 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import React, { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import {
-  User, Mail, Phone, Package, Lock, Camera, Send, Pencil, Save,
-  CheckCircle, XCircle, Loader2, Eye, EyeOff,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { useAuthStore } from '@/store/authStore';
-import { getAvatarUrl, getInitials } from '@/lib/avatar';
-import { useProfile } from '@/hooks/useProfile';
-import { PhoneInput, phoneToApi, apiToPhone, formatPhone } from '@/components/ui/PhoneInput';
-import { toast } from '@/lib/toast';
-import api from '@/lib/api';
-import { Skeleton } from '@/components/ui/skeleton';
+  User,
+  Mail,
+  Phone,
+  Package,
+  Lock,
+  Camera,
+  Send,
+  Pencil,
+  Save,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Building2,
+  Truck,
+  MapPin,
+  Warehouse,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@/components/ui/tooltip'
+import { useAuthStore } from '@/store/authStore'
+import { getAvatarUrl, getInitials } from '@/lib/avatar'
+import { useProfile } from '@/hooks/useProfile'
+import {
+  PhoneInput,
+  phoneToApi,
+  apiToPhone,
+  formatPhone,
+} from '@/components/ui/PhoneInput'
+import { toast } from '@/lib/toast'
+import api from '@/lib/api'
+import { Skeleton } from '@/components/ui/skeleton'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
+import { useQuery } from '@tanstack/react-query'
+import { novaPoshtaPublicApi } from '@/lib/api/nova-poshta-public'
+import type {
+  NovaPoshtaLookupSettlement,
+  NovaPoshtaLookupWarehouse,
+  NovaPoshtaLookupStreet,
+} from '@/lib/types/nova-poshta'
 
 const roleBadgeColors: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -27,96 +61,168 @@ const roleBadgeColors: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
-};
+}
 
-const deliveryTypes = ['warehouse', 'parcel_locker', 'courier'] as const;
+const deliveryTypes = ['warehouse', 'courier'] as const
 
 export default function ProfilePage() {
-  const t = useTranslations('profile');
-  const tc = useTranslations('common');
-  const tg = useTranslations('telegram');
-  const ta = useTranslations('admin');
+  const t = useTranslations('profile')
+  const tc = useTranslations('common')
+  const tg = useTranslations('telegram')
+  const ta = useTranslations('admin')
 
-  const { user, isAuthenticated } = useAuthStore();
-  const { profile, isLoading, updateProfile, updating, changePassword, changingPassword } = useProfile();
+  const { user, isAuthenticated } = useAuthStore()
+  const {
+    profile,
+    isLoading,
+    updateProfile,
+    updating,
+    changePassword,
+    changingPassword,
+  } = useProfile()
 
-  const [editing, setEditing] = useState(false);
-  const [lastName, setLastName] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [editing, setEditing] = useState(false)
+  const [lastName, setLastName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [middleName, setMiddleName] = useState('')
+  const [phone, setPhone] = useState('')
 
-  const [deliveryType, setDeliveryType] = useState<string>('');
-  const [deliveryCity, setDeliveryCity] = useState('');
-  const [deliveryWarehouse, setDeliveryWarehouse] = useState('');
+  const [deliveryType, setDeliveryType] = useState<string>('')
+  const [deliveryCity, setDeliveryCity] = useState('')
+  const [deliveryWarehouse, setDeliveryWarehouse] = useState('')
 
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPass, setNewPass] = useState('');
-  const [confirmPass, setConfirmPass] = useState('');
+  // ── NP refs for profile delivery ──
+  const [npCityRef, setNpCityRef] = useState('')
+  const [npSettlementRef, setNpSettlementRef] = useState('')
+  const [npCityLabel, setNpCityLabel] = useState('')
+  const [npWarehouseRef, setNpWarehouseRef] = useState('')
+  const [npWarehouseLabel, setNpWarehouseLabel] = useState('')
+  const [npStreetRef, setNpStreetRef] = useState('')
+  const [npStreetLabel, setNpStreetLabel] = useState('')
+  const [npHouse, setNpHouse] = useState('')
+  const [npApartment, setNpApartment] = useState('')
 
-  const [selectedAvatar, setSelectedAvatar] = useState<number>(profile?.avatar_index || 1);
+  // ── NP search queries ──
+  const [cityQuery, setCityQuery] = useState('')
+  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
+    queryKey: ['profile-np-cities', cityQuery],
+    queryFn: () =>
+      novaPoshtaPublicApi
+        .searchSettlements(cityQuery)
+        .then((r) => r.data as NovaPoshtaLookupSettlement[]),
+    enabled: cityQuery.length >= 2,
+    staleTime: 30000,
+  })
+  const [warehouseQuery, setWarehouseQuery] = useState('')
+  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
+    queryKey: ['profile-np-warehouses', npCityRef, warehouseQuery],
+    queryFn: () =>
+      novaPoshtaPublicApi
+        .searchWarehouses(npCityRef!, warehouseQuery)
+        .then((r) => r.data as NovaPoshtaLookupWarehouse[]),
+    enabled: !!npCityRef && warehouseQuery.length >= 1,
+    staleTime: 30000,
+  })
+  const [streetQuery, setStreetQuery] = useState('')
+  const { data: streets = [], isFetching: streetsLoading } = useQuery({
+    queryKey: ['profile-np-streets', npSettlementRef, streetQuery],
+    queryFn: () =>
+      novaPoshtaPublicApi
+        .searchStreets(npSettlementRef!, streetQuery)
+        .then((r) => r.data as NovaPoshtaLookupStreet[]),
+    enabled: !!npSettlementRef && streetQuery.length >= 2,
+    staleTime: 30000,
+  })
 
-  const [code, setCode] = useState<string | null>(null);
-  const [botUsername, setBotUsername] = useState('SVOMBot');
-  const [tgConnected, setTgConnected] = useState(false);
-  const [tgUsername, setTgUsername] = useState<string | null>(null);
-  const [tgLoading, setTgLoading] = useState(false);
-  const [tgStatusLoading, setTgStatusLoading] = useState(true);
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPass, setNewPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
+
+  const [selectedAvatar, setSelectedAvatar] = useState<number>(
+    profile?.avatar_index || 1,
+  )
+
+  const [code, setCode] = useState<string | null>(null)
+  const [botUsername, setBotUsername] = useState('SVOMBot')
+  const [tgConnected, setTgConnected] = useState(false)
+  const [tgUsername, setTgUsername] = useState<string | null>(null)
+  const [tgLoading, setTgLoading] = useState(false)
+  const [tgStatusLoading, setTgStatusLoading] = useState(true)
 
   useEffect(() => {
     if (profile) {
-      setLastName(profile.last_name || '');
-      setFirstName(profile.first_name || '');
-      setMiddleName(profile.middle_name || '');
-      setPhone(apiToPhone(profile.phone));
-      setDeliveryType(profile.delivery_type || '');
-      setDeliveryCity(profile.delivery_city || '');
-      setDeliveryWarehouse(profile.delivery_warehouse || '');
-      setSelectedAvatar(profile.avatar_index || 1);
+      setLastName(profile.last_name || '')
+      setFirstName(profile.first_name || '')
+      setMiddleName(profile.middle_name || '')
+      setPhone(apiToPhone(profile.phone))
+      setDeliveryType(profile.delivery_type || '')
+      setDeliveryCity(profile.delivery_city || '')
+      setDeliveryWarehouse(profile.delivery_warehouse || '')
+      setNpCityRef(profile.delivery_city_ref || '')
+      setNpSettlementRef(profile.delivery_settlement_ref || '')
+      setNpCityLabel(profile.delivery_city_label || '')
+      setNpWarehouseRef(profile.delivery_warehouse_ref || '')
+      setNpWarehouseLabel(profile.delivery_warehouse_label || '')
+      setNpStreetRef(profile.delivery_street_ref || '')
+      setNpStreetLabel(profile.delivery_street_label || '')
+      setNpHouse(profile.delivery_house || '')
+      setNpApartment(profile.delivery_apartment || '')
+      // Sync search queries for SearchableSelect display
+      if (profile.delivery_city) setCityQuery(profile.delivery_city)
+      if (profile.delivery_warehouse)
+        setWarehouseQuery(profile.delivery_warehouse)
+      if (profile.delivery_street_label)
+        setStreetQuery(profile.delivery_street_label)
+      setSelectedAvatar(profile.avatar_index || 1)
     }
-  }, [profile]);
+  }, [profile])
 
   const checkTelegramStatus = useCallback(async () => {
     try {
-      const { data } = await api.get('/telegram/status');
-      setTgConnected(data.connected);
-      setTgUsername(data.username);
+      const { data } = await api.get('/telegram/status')
+      setTgConnected(data.connected)
+      setTgUsername(data.username)
     } catch {
     } finally {
-      setTgStatusLoading(false);
+      setTgStatusLoading(false)
     }
-  }, []);
+  }, [])
 
-  useEffect(() => { if (isAuthenticated) checkTelegramStatus(); }, [isAuthenticated, checkTelegramStatus]);
+  useEffect(() => {
+    if (isAuthenticated) checkTelegramStatus()
+  }, [isAuthenticated, checkTelegramStatus])
 
   const handleConnectTelegram = async () => {
-    setTgLoading(true);
+    setTgLoading(true)
     try {
-      const { data } = await api.post('/telegram/start');
-      setCode(data.code);
-      setBotUsername(data.bot_username);
-      window.open(`https://t.me/${data.bot_username}?start=${data.code}`, '_blank');
-      toast.success(tg('code_sent'));
+      const { data } = await api.post('/telegram/start')
+      setCode(data.code)
+      setBotUsername(data.bot_username)
+      window.open(
+        `https://t.me/${data.bot_username}?start=${data.code}`,
+        '_blank',
+      )
+      toast.success(tg('code_sent'))
     } catch {
-      toast.error(tg('connect_error'));
+      toast.error(tg('connect_error'))
     } finally {
-      setTgLoading(false);
+      setTgLoading(false)
     }
-  };
+  }
 
   const handleDisconnectTelegram = async () => {
     try {
-      await api.post('/telegram/disconnect');
-      setTgConnected(false);
-      setTgUsername(null);
-      toast.success(tg('disconnect_success'));
+      await api.post('/telegram/disconnect')
+      setTgConnected(false)
+      setTgUsername(null)
+      toast.success(tg('disconnect_success'))
     } catch {
-      toast.error(tg('disconnect_error'));
+      toast.error(tg('disconnect_error'))
     }
-  };
+  }
 
   const handleSaveProfile = () => {
     updateProfile({
@@ -127,28 +233,37 @@ export default function ProfilePage() {
       delivery_type: deliveryType || null,
       delivery_city: deliveryCity || null,
       delivery_warehouse: deliveryWarehouse || null,
-    });
-    setEditing(false);
-  };
+      delivery_city_ref: npCityRef || null,
+      delivery_settlement_ref: npSettlementRef || null,
+      delivery_city_label: npCityLabel || null,
+      delivery_warehouse_ref: npWarehouseRef || null,
+      delivery_warehouse_label: npWarehouseLabel || null,
+      delivery_street_ref: npStreetRef || null,
+      delivery_street_label: npStreetLabel || null,
+      delivery_house: npHouse || null,
+      delivery_apartment: npApartment || null,
+    })
+    setEditing(false)
+  }
 
   const handleChangePassword = () => {
     if (!currentPassword || !newPass || !confirmPass) {
-      toast.error(tc('required_field'));
-      return;
+      toast.error(tc('required_field'))
+      return
     }
     if (newPass !== confirmPass) {
-      toast.error(tc('passwords_mismatch'));
-      return;
+      toast.error(tc('passwords_mismatch'))
+      return
     }
     if (newPass.length < 6) {
-      toast.error(tc('password_min_length', { min: 6 }));
-      return;
+      toast.error(tc('password_min_length', { min: 6 }))
+      return
     }
-    changePassword({ current_password: currentPassword, new_password: newPass });
-    setCurrentPassword('');
-    setNewPass('');
-    setConfirmPass('');
-  };
+    changePassword({ current_password: currentPassword, new_password: newPass })
+    setCurrentPassword('')
+    setNewPass('')
+    setConfirmPass('')
+  }
 
   if (!isAuthenticated) {
     return (
@@ -158,12 +273,18 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold">{tc('login_title')}</h1>
           <p className="text-muted-foreground">{tc('login_desc')}</p>
           <div className="flex gap-4 justify-center">
-            <Link href="/auth/login"><Button size="lg">{tc('login')}</Button></Link>
-            <Link href="/auth/register"><Button variant="outline" size="lg">{tc('register')}</Button></Link>
+            <Link href="/auth/login">
+              <Button size="lg">{tc('login')}</Button>
+            </Link>
+            <Link href="/auth/register">
+              <Button variant="outline" size="lg">
+                {tc('register')}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (isLoading) {
@@ -238,9 +359,12 @@ export default function ProfilePage() {
                 <Skeleton className="h-6 w-28" />
               </CardHeader>
               <CardContent>
-              <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: 10 }).map((_, i) => (
-                    <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+                    <Skeleton
+                      key={i}
+                      className="aspect-square w-full rounded-lg"
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -248,28 +372,38 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
-  const name = firstName || profile?.first_name || user?.first_name || tc('user');
+  const name =
+    firstName || profile?.first_name || user?.first_name || tc('user')
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
         {/* Column 1: Avatar + Personal Info + Delivery */}
         <div className="space-y-6">
-
           {/* Avatar header */}
           <Card className="relative">
             <CardContent className="p-4">
-              <Badge className={`absolute top-3 right-3 ${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}>
+              <Badge
+                className={`absolute top-3 right-3 ${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
                 {ta(profile?.role || user?.role || 'retail')}
               </Badge>
               <div className="flex items-center gap-4">
                 <Avatar className="w-[120px] h-[120px] ring-4 ring-border shrink-0">
-                  <AvatarImage src={getAvatarUrl(profile?.avatar_index, profile?.full_name || profile?.email || profile?.full_name)} />
-                  <AvatarFallback className="text-3xl">{getInitials(user?.full_name || '', user?.email)}</AvatarFallback>
+                  <AvatarImage
+                    src={getAvatarUrl(
+                      profile?.avatar_index,
+                      profile?.full_name ||
+                        profile?.email ||
+                        profile?.full_name,
+                    )}
+                  />
+                  <AvatarFallback className="text-3xl">
+                    {getInitials(user?.full_name || '', user?.email)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -277,12 +411,16 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground mt-1">
                     <Mail className="w-5 h-5 shrink-0" />
-                    <span className="text-sm truncate">{profile?.email || user?.email}</span>
+                    <span className="text-sm truncate">
+                      {profile?.email || user?.email}
+                    </span>
                   </div>
-                  {(profile?.phone) && (
+                  {profile?.phone && (
                     <div className="flex items-center gap-2 text-muted-foreground mt-1">
                       <Phone className="w-5 h-5 shrink-0" />
-                      <span className="text-sm">{formatPhone(profile.phone)}</span>
+                      <span className="text-sm">
+                        {formatPhone(profile.phone)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -293,8 +431,18 @@ export default function ProfilePage() {
                 {editing && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="default" size="icon" className="h-10 w-10" onClick={handleSaveProfile} disabled={updating}>
-                        {updating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                      <Button
+                        variant="default"
+                        size="icon"
+                        className="h-10 w-10"
+                        onClick={handleSaveProfile}
+                        disabled={updating}
+                      >
+                        {updating ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">{t('save')}</TooltipContent>
@@ -302,7 +450,12 @@ export default function ProfilePage() {
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setEditing(!editing)}>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10"
+                      onClick={() => setEditing(!editing)}
+                    >
                       <Pencil className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
@@ -322,20 +475,46 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">{t('last_name')}</label>
-                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={!editing} placeholder={t('last_name')} className="h-10" />
+                  <label className="text-sm text-muted-foreground mb-1 block">
+                    {t('last_name')}
+                  </label>
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={!editing}
+                    placeholder={t('last_name')}
+                    className="h-10"
+                  />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">{t('first_name')}</label>
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={!editing} placeholder={t('first_name')} className="h-10" />
+                  <label className="text-sm text-muted-foreground mb-1 block">
+                    {t('first_name')}
+                  </label>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={!editing}
+                    placeholder={t('first_name')}
+                    className="h-10"
+                  />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">{t('middle_name')}</label>
-                  <Input value={middleName} onChange={(e) => setMiddleName(e.target.value)} disabled={!editing} placeholder={t('middle_name')} className="h-10" />
+                  <label className="text-sm text-muted-foreground mb-1 block">
+                    {t('middle_name')}
+                  </label>
+                  <Input
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    disabled={!editing}
+                    placeholder={t('middle_name')}
+                    className="h-10"
+                  />
                 </div>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{t('phone')}</label>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {t('phone')}
+                </label>
                 <PhoneInput
                   value={phone}
                   onChange={setPhone}
@@ -356,12 +535,24 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_type')}</label>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {t('delivery_type')}
+                </label>
                 <div className="flex gap-2 flex-wrap">
                   {deliveryTypes.map((dt) => (
                     <button
                       key={dt}
-                      onClick={() => editing && setDeliveryType(dt)}
+                      onClick={() => {
+                        if (!editing) return
+                        setDeliveryType(dt)
+                        setDeliveryWarehouse('')
+                        setNpWarehouseRef('')
+                        setNpWarehouseLabel('')
+                        setNpStreetRef('')
+                        setNpStreetLabel('')
+                        setNpHouse('')
+                        setNpApartment('')
+                      }}
                       disabled={!editing}
                       className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
                         deliveryType === dt
@@ -374,24 +565,204 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
+
+              {/* City search */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_city')}</label>
-                <Input value={deliveryCity} onChange={(e) => setDeliveryCity(e.target.value)} disabled={!editing} placeholder={t('city_placeholder')} className="h-10" />
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {t('delivery_city')}
+                </label>
+                {editing ? (
+                  <SearchableSelect<NovaPoshtaLookupSettlement>
+                    items={settlements}
+                    isLoading={citiesLoading}
+                    value={deliveryCity}
+                    onChange={(item) => {
+                      setDeliveryCity(item.label)
+                      setNpCityRef(item.delivery_city_ref || item.ref)
+                      setNpSettlementRef(item.settlement_ref || '')
+                      setNpCityLabel(item.label)
+                      setDeliveryWarehouse('')
+                      setNpWarehouseRef('')
+                      setNpWarehouseLabel('')
+                      setNpStreetRef('')
+                      setNpStreetLabel('')
+                      setNpHouse('')
+                      setNpApartment('')
+                      setWarehouseQuery('')
+                      setStreetQuery('')
+                    }}
+                    searchQuery={cityQuery}
+                    onSearchChange={setCityQuery}
+                    getKey={(item) => item.ref}
+                    getLabel={(item) => item.label}
+                    placeholder={t('city_placeholder')}
+                    minSearchLength={2}
+                    renderItem={(item) => (
+                      <>
+                        <div className="font-medium leading-tight">
+                          {item.label}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {[item.area, item.region].filter(Boolean).join(' — ')}
+                          {item.warehouses_count &&
+                          item.warehouses_count !== '0' ? (
+                            <span className="ml-2 inline-flex items-center gap-1">
+                              <Warehouse className="w-3 h-3" />×
+                              {item.warehouses_count}
+                            </span>
+                          ) : null}
+                        </div>
+                      </>
+                    )}
+                  />
+                ) : (
+                  <div className="flex items-center rounded-lg border bg-muted/30 px-3 py-2 text-sm h-auto min-h-[2.5rem] whitespace-normal break-words">
+                    {deliveryCity || '—'}
+                  </div>
+                )}
               </div>
-              {deliveryType !== 'courier' && (
+
+              {/* Warehouse / Postomat (for warehouse type) */}
+              {deliveryType === 'warehouse' && (
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">{t('delivery_warehouse_number')}</label>
-                  <Input value={deliveryWarehouse} onChange={(e) => setDeliveryWarehouse(e.target.value)} disabled={!editing} placeholder="№ 1" className="h-10" />
+                  <label className="text-sm text-muted-foreground mb-1 block">
+                    {t('delivery_warehouse_number')}
+                  </label>
+                  {editing ? (
+                    <SearchableSelect<NovaPoshtaLookupWarehouse>
+                      items={warehouses}
+                      isLoading={warehousesLoading}
+                      value={deliveryWarehouse}
+                      onChange={(item) => {
+                        setDeliveryWarehouse(item.label)
+                        setNpWarehouseRef(item.ref)
+                        setNpWarehouseLabel(item.label)
+                      }}
+                      searchQuery={warehouseQuery}
+                      onSearchChange={setWarehouseQuery}
+                      getKey={(item) => item.ref}
+                      getLabel={(item) => item.label}
+                      placeholder="№ 1"
+                      minSearchLength={1}
+                      renderItem={(item) => {
+                        const isPostomat = item.type === 'Postomat'
+                        return (
+                          <>
+                            <div className="font-medium leading-tight flex items-center gap-2">
+                              {isPostomat ? (
+                                <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                  {t('delivery_parcel_locker')}
+                                </span>
+                              ) : (
+                                <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                                  №{item.number}
+                                </span>
+                              )}
+                              <span className="truncate">
+                                {item.label.includes(':')
+                                  ? item.label.slice(0, item.label.indexOf(':'))
+                                  : item.label}
+                              </span>
+                            </div>
+                            {(() => {
+                              const afterColon = item.label.includes(':')
+                                ? item.label
+                                    .slice(item.label.indexOf(':') + 1)
+                                    .trim()
+                                : ''
+                              const desc = afterColon || item.description || ''
+                              return desc ? (
+                                <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                                  {desc}
+                                </div>
+                              ) : null
+                            })()}
+                          </>
+                        )
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center rounded-lg border bg-muted/30 px-3 py-2 text-sm h-auto min-h-[2.5rem] whitespace-normal break-words">
+                      {deliveryWarehouse || '—'}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Courier: street + house + apartment */}
+              {deliveryType === 'courier' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-1 block">
+                      {t('delivery_street')}
+                    </label>
+                    {editing ? (
+                      <SearchableSelect<NovaPoshtaLookupStreet>
+                        items={streets}
+                        isLoading={streetsLoading}
+                        value={npStreetLabel}
+                        onChange={(item) => {
+                          setNpStreetRef(item.street_ref)
+                          setNpStreetLabel(item.label)
+                        }}
+                        searchQuery={streetQuery}
+                        onSearchChange={setStreetQuery}
+                        getKey={(item) => item.street_ref}
+                        getLabel={(item) => item.label}
+                        placeholder={t('delivery_street')}
+                        minSearchLength={2}
+                        renderItem={(item) => (
+                          <div className="font-medium leading-tight">
+                            {item.street_type &&
+                            item.label &&
+                            !item.label.startsWith(item.street_type)
+                              ? `${item.street_type}. ${item.label}`
+                              : item.label}
+                          </div>
+                        )}
+                      />
+                    ) : (
+                      <div className="flex items-center rounded-lg border bg-muted/30 px-3 py-2 text-sm h-auto min-h-[2.5rem] whitespace-normal break-words">
+                        {npStreetLabel || '—'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">
+                        {t('delivery_house')}
+                      </label>
+                      <Input
+                        value={npHouse}
+                        onChange={(e) => setNpHouse(e.target.value)}
+                        disabled={!editing}
+                        placeholder={t('delivery_house')}
+                        autoComplete="off"
+                        className="h-10"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-1 block">
+                        {t('delivery_apartment')}
+                      </label>
+                      <Input
+                        value={npApartment}
+                        onChange={(e) => setNpApartment(e.target.value)}
+                        disabled={!editing}
+                        placeholder={t('delivery_apartment')}
+                        autoComplete="off"
+                        className="h-10"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
-
         </div>
 
         {/* Column 2: Security + Telegram */}
         <div className="space-y-6">
-
           {/* Security */}
           <Card>
             <CardHeader>
@@ -401,34 +772,88 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{t('current_password')}</label>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {t('current_password')}
+                </label>
                 <div className="relative">
-                  <Input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-10 pr-10" placeholder={t('current_password')} />
-                  <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <Input
+                    type={showCurrent ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="h-10 pr-10"
+                    placeholder={t('current_password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showCurrent ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{t('new_password')}</label>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {t('new_password')}
+                </label>
                 <div className="relative">
-                  <Input type={showNew ? 'text' : 'password'} value={newPass} onChange={(e) => setNewPass(e.target.value)} className="h-10 pr-10" placeholder={t('new_password')} />
-                  <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <Input
+                    type={showNew ? 'text' : 'password'}
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    className="h-10 pr-10"
+                    placeholder={t('new_password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNew(!showNew)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showNew ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">{tc('confirm_password')}</label>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  {tc('confirm_password')}
+                </label>
                 <div className="relative">
-                  <Input type={showConfirm ? 'text' : 'password'} value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} className="h-10 pr-10" placeholder={tc('confirm_password')} />
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-                    {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <Input
+                    type={showConfirm ? 'text' : 'password'}
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    className="h-10 pr-10"
+                    placeholder={tc('confirm_password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showConfirm ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
-              <Button size="lg" onClick={handleChangePassword} disabled={changingPassword}>
-                {changingPassword ? <Loader2 className="w-5 h-5 mr-1 animate-spin" /> : null}
+              <Button
+                size="lg"
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+              >
+                {changingPassword ? (
+                  <Loader2 className="w-5 h-5 mr-1 animate-spin" />
+                ) : null}
                 {t('change_password')}
               </Button>
             </CardContent>
@@ -451,9 +876,18 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <span className="font-medium">{tg('connected')}</span>
-                    {tgUsername && <Badge variant="outline" className="text-sm">@{tgUsername}</Badge>}
+                    {tgUsername && (
+                      <Badge variant="outline" className="text-sm">
+                        @{tgUsername}
+                      </Badge>
+                    )}
                   </div>
-                  <Button variant="outline" size="lg" className="text-destructive" onClick={handleDisconnectTelegram}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-destructive"
+                    onClick={handleDisconnectTelegram}
+                  >
                     <XCircle className="w-5 h-5 mr-1" /> {tg('disconnect')}
                   </Button>
                 </div>
@@ -464,33 +898,49 @@ export default function ProfilePage() {
                     <span>{tg('send_code')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Input value={code} readOnly className="w-32 font-mono text-lg text-center h-10" />
-                    <span className="text-sm text-muted-foreground">→ @{botUsername}</span>
+                    <Input
+                      value={code}
+                      readOnly
+                      className="w-32 font-mono text-lg text-center h-10"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      → @{botUsername}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{tg('check_after_send')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {tg('check_after_send')}
+                  </p>
                   <div className="flex gap-2">
                     <Button size="lg" onClick={checkTelegramStatus}>
                       <Loader2 className="w-3 h-3 mr-1" /> {tg('check')}
                     </Button>
-                    <Button variant="outline" size="lg" onClick={() => setCode(null)}>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setCode(null)}
+                    >
                       {tc('cancel')}
                     </Button>
                   </div>
                 </div>
               ) : (
-                <Button size="lg" onClick={handleConnectTelegram} disabled={tgLoading}>
-                  {tgLoading ? <Loader2 className="w-5 h-5 mr-1 animate-spin" /> : null}
+                <Button
+                  size="lg"
+                  onClick={handleConnectTelegram}
+                  disabled={tgLoading}
+                >
+                  {tgLoading ? (
+                    <Loader2 className="w-5 h-5 mr-1 animate-spin" />
+                  ) : null}
                   {tg('connect')}
                 </Button>
               )}
             </CardContent>
           </Card>
-
         </div>
 
         {/* Column 3: Avatar Selection */}
         <div className="space-y-6">
-
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -503,8 +953,8 @@ export default function ProfilePage() {
                   <button
                     key={index}
                     onClick={() => {
-                      setSelectedAvatar(index);
-                      updateProfile({ avatar_index: index });
+                      setSelectedAvatar(index)
+                      updateProfile({ avatar_index: index })
                     }}
                     className={`flex items-center justify-center aspect-square p-1 rounded-lg border transition-colors cursor-pointer overflow-hidden ${
                       (profile?.avatar_index || selectedAvatar) === index
@@ -513,17 +963,18 @@ export default function ProfilePage() {
                     }`}
                   >
                     <Avatar className="w-full h-full">
-                      <AvatarImage src={getAvatarUrl(index)} className="w-full h-full object-cover" />
+                      <AvatarImage
+                        src={getAvatarUrl(index)}
+                        className="w-full h-full object-cover"
+                      />
                     </Avatar>
                   </button>
                 ))}
               </div>
             </CardContent>
           </Card>
-
         </div>
-
       </div>
     </div>
-  );
+  )
 }

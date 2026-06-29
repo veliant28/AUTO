@@ -12,7 +12,7 @@ from app.schemas.admin_schemas import (
     OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
-from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent
+from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from datetime import datetime
 
 router = APIRouter()
@@ -108,6 +108,15 @@ async def get_order_detail(
         delivery_type=order.delivery_type,
         delivery_city=order.delivery_city,
         delivery_warehouse=order.delivery_warehouse,
+        delivery_city_ref=order.delivery_city_ref,
+        delivery_settlement_ref=order.delivery_settlement_ref,
+        delivery_city_label=order.delivery_city_label,
+        delivery_warehouse_ref=order.delivery_warehouse_ref,
+        delivery_warehouse_label=order.delivery_warehouse_label,
+        delivery_street_ref=order.delivery_street_ref,
+        delivery_street_label=order.delivery_street_label,
+        delivery_house=order.delivery_house,
+        delivery_apartment=order.delivery_apartment,
         payment_method=order.payment_method,
         created_at=order.created_at,
         updated_by_name=order.updated_by_name,
@@ -179,6 +188,24 @@ async def update_order(
     if data.delivery_warehouse is not None and order.delivery_warehouse != data.delivery_warehouse:
         changes.append(f"отделение: {order.delivery_warehouse or ''} → {data.delivery_warehouse}")
         order.delivery_warehouse = data.delivery_warehouse
+    if data.delivery_city_ref is not None and order.delivery_city_ref != data.delivery_city_ref:
+        order.delivery_city_ref = data.delivery_city_ref
+    if data.delivery_settlement_ref is not None and order.delivery_settlement_ref != data.delivery_settlement_ref:
+        order.delivery_settlement_ref = data.delivery_settlement_ref
+    if data.delivery_city_label is not None and order.delivery_city_label != data.delivery_city_label:
+        order.delivery_city_label = data.delivery_city_label
+    if data.delivery_warehouse_ref is not None and order.delivery_warehouse_ref != data.delivery_warehouse_ref:
+        order.delivery_warehouse_ref = data.delivery_warehouse_ref
+    if data.delivery_warehouse_label is not None and order.delivery_warehouse_label != data.delivery_warehouse_label:
+        order.delivery_warehouse_label = data.delivery_warehouse_label
+    if data.delivery_street_ref is not None and order.delivery_street_ref != data.delivery_street_ref:
+        order.delivery_street_ref = data.delivery_street_ref
+    if data.delivery_street_label is not None and order.delivery_street_label != data.delivery_street_label:
+        order.delivery_street_label = data.delivery_street_label
+    if data.delivery_house is not None and order.delivery_house != data.delivery_house:
+        order.delivery_house = data.delivery_house
+    if data.delivery_apartment is not None and order.delivery_apartment != data.delivery_apartment:
+        order.delivery_apartment = data.delivery_apartment
 
     if changes:
         order.updated_by_user_id = current_user.id
@@ -260,6 +287,15 @@ async def delete_order_item(
         delivery_type=order.delivery_type,
         delivery_city=order.delivery_city,
         delivery_warehouse=order.delivery_warehouse,
+        delivery_city_ref=order.delivery_city_ref,
+        delivery_settlement_ref=order.delivery_settlement_ref,
+        delivery_city_label=order.delivery_city_label,
+        delivery_warehouse_ref=order.delivery_warehouse_ref,
+        delivery_warehouse_label=order.delivery_warehouse_label,
+        delivery_street_ref=order.delivery_street_ref,
+        delivery_street_label=order.delivery_street_label,
+        delivery_house=order.delivery_house,
+        delivery_apartment=order.delivery_apartment,
         payment_method=order.payment_method,
         created_at=order.created_at,
         updated_by_name=order.updated_by_name,
@@ -279,6 +315,41 @@ async def delete_order_item(
             for i in remaining
         ],
     )
+
+
+@router.delete("/orders/{order_id}")
+async def delete_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "manager")),
+):
+    """Полностью удалить заказ вместе с товарами, изменениями и ТТН."""
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    # Delete TTN (waybill + seats + events)
+    waybill = db.query(OrderNovaPoshtaWaybill).filter(
+        OrderNovaPoshtaWaybill.order_id == order_id
+    ).first()
+    if waybill:
+        db.query(OrderNovaPoshtaWaybillEvent).filter(
+            OrderNovaPoshtaWaybillEvent.waybill_id == waybill.id
+        ).delete()
+        db.query(OrderNovaPoshtaWaybillSeat).filter(
+            OrderNovaPoshtaWaybillSeat.waybill_id == waybill.id
+        ).delete()
+        db.delete(waybill)
+
+    # Delete change logs
+    db.query(OrderChangeLog).filter(OrderChangeLog.order_id == order_id).delete()
+
+    # Delete order items
+    db.query(OrderItem).filter(OrderItem.order_id == order_id).delete()
+
+    db.delete(order)
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/orders/{order_id}/items", response_model=AdminOrderDetailResponse)
@@ -402,6 +473,15 @@ async def add_order_item(
         delivery_type=order.delivery_type,
         delivery_city=order.delivery_city,
         delivery_warehouse=order.delivery_warehouse,
+        delivery_city_ref=order.delivery_city_ref,
+        delivery_settlement_ref=order.delivery_settlement_ref,
+        delivery_city_label=order.delivery_city_label,
+        delivery_warehouse_ref=order.delivery_warehouse_ref,
+        delivery_warehouse_label=order.delivery_warehouse_label,
+        delivery_street_ref=order.delivery_street_ref,
+        delivery_street_label=order.delivery_street_label,
+        delivery_house=order.delivery_house,
+        delivery_apartment=order.delivery_apartment,
         payment_method=order.payment_method,
         created_at=order.created_at,
         updated_by_name=order.updated_by_name,

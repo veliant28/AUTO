@@ -5,6 +5,7 @@ from app.services.pricing_service import apply_margins_bulk
 import json
 from app.models.pricing import PriceRule, PricingApplySnapshot
 from app.services.notifications import send_telegram_notification
+from app.workers.tasks.deactivation_tasks import check_product_deactivation
 
 
 @celery_app.task(bind=True, name="apply_margins")
@@ -12,9 +13,9 @@ def apply_margins_task(self, part_ids=None):
     db = SessionLocal()
     try:
         self.update_state(state="PROGRESS", meta={"progress": 0})
-        
+
         count = apply_margins_bulk(db, part_ids)
-        
+
         # Snapshot current rules after successful apply
         from sqlalchemy import text
         general = db.query(PriceRule).filter(
@@ -32,14 +33,17 @@ def apply_margins_task(self, part_ids=None):
         )
         db.add(snapshot)
         db.commit()
-        
+
         self.update_state(state="SUCCESS", meta={"progress": 100, "updated": count})
-        
+
         # Notify admins
         send_telegram_notification(
             f"✅ Наценка применена: {count} товаров обновлены"
         )
-        
+
+        # Запустить проверку деактивации — чтобы реактивировать товары у которых теперь есть final_price
+        check_product_deactivation.delay()
+
         return {"status": "success", "updated": count}
     except Exception as e:
         send_telegram_notification(

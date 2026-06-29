@@ -443,8 +443,8 @@ export default function AdminProductsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('products_filter_all')}</SelectItem>
-            <SelectItem value="active">{t('products_active')}</SelectItem>
-            <SelectItem value="inactive">{t('products_inactive')}</SelectItem>
+            <SelectItem value="enabled">{t('products_active')}</SelectItem>
+            <SelectItem value="disabled">{t('products_inactive')}</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -558,11 +558,11 @@ export default function AdminProductsPage() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               {item.is_active ? (
-                                <Badge className="bg-green-500 text-white border-0 text-sm">
+                                <Badge className="bg-green-500 text-white border-0 text-sm cursor-pointer">
                                   {t('products_active')}
                                 </Badge>
                               ) : (
-                                <Badge className="bg-gray-500 text-white border-0 text-sm">
+                                <Badge className="bg-gray-500 text-white border-0 text-sm cursor-pointer">
                                   {t('products_inactive')}
                                 </Badge>
                               )}
@@ -570,7 +570,11 @@ export default function AdminProductsPage() {
                             <TooltipContent>
                               {item.is_active
                                 ? t('products_active')
-                                : t('products_inactive')}
+                                : item.deactivation_reason
+                                  ? t(
+                                      `deactivation_${item.deactivation_reason}`,
+                                    )
+                                  : t('products_inactive')}
                             </TooltipContent>
                           </Tooltip>
                         </td>
@@ -900,17 +904,19 @@ export default function AdminProductsPage() {
                       className="cursor-pointer"
                     />
                     <span className="text-sm cursor-pointer">
-                      {editForm.is_active ? 'Активен' : 'Деактивирован'}
+                      {editForm.is_active
+                        ? t('products_active')
+                        : t('products_inactive')}
                     </span>
                   </label>
                 </div>
                 {!editForm.is_active && editProduct?.deactivation_reason && (
                   <div className="grid gap-1">
                     <span className="text-sm text-muted-foreground">
-                      Причина деактивации
+                      {t('deactivation_reason')}
                     </span>
                     <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
-                      {editProduct.deactivation_reason}
+                      {t(`deactivation_${editProduct.deactivation_reason}`)}
                     </div>
                   </div>
                 )}

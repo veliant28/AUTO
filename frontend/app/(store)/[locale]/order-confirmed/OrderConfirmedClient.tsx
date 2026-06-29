@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { CheckCircle, Package, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { CheckCircle, Package, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function OrderConfirmedPage() {
-  const t = useTranslations('common');
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get('id');
+  const t = useTranslations('common')
+  const searchParams = useSearchParams()
+  const orderNumber = searchParams.get('order')
 
   return (
     <div className="container mx-auto py-20 px-4 max-w-lg text-center space-y-8">
@@ -20,15 +20,15 @@ export default function OrderConfirmedPage() {
 
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">{t('order_success')}</h1>
-        <p className="text-muted-foreground">
-          {t('order_success_desc')}
-        </p>
+        <p className="text-muted-foreground">{t('order_success_desc')}</p>
       </div>
 
-      {orderId && (
+      {orderNumber && (
         <div className="inline-flex items-center gap-2 px-6 py-3 bg-muted rounded-full">
           <Package className="w-5 h-5 text-primary" />
-          <span className="font-medium">{t('order_number')}: #{orderId}</span>
+          <span className="font-medium">
+            {t('order_number')}: #{orderNumber}
+          </span>
         </div>
       )}
 
@@ -45,5 +45,5 @@ export default function OrderConfirmedPage() {
         </Link>
       </div>
     </div>
-  );
+  )
 }

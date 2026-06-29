@@ -58,6 +58,15 @@ def _order_to_dict(order, db):
         "delivery_type": order.delivery_type,
         "delivery_city": order.delivery_city,
         "delivery_warehouse": order.delivery_warehouse,
+        "delivery_city_ref": order.delivery_city_ref,
+        "delivery_settlement_ref": order.delivery_settlement_ref,
+        "delivery_city_label": order.delivery_city_label,
+        "delivery_warehouse_ref": order.delivery_warehouse_ref,
+        "delivery_warehouse_label": order.delivery_warehouse_label,
+        "delivery_street_ref": order.delivery_street_ref,
+        "delivery_street_label": order.delivery_street_label,
+        "delivery_house": order.delivery_house,
+        "delivery_apartment": order.delivery_apartment,
         "payment_method": order.payment_method,
         "created_at": order.created_at,
         "first_delivered_at": order.first_delivered_at,
@@ -126,6 +135,15 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         delivery_type=data.delivery_type,
         delivery_city=data.delivery_city,
         delivery_warehouse=data.delivery_warehouse,
+        delivery_city_ref=data.delivery_city_ref,
+        delivery_settlement_ref=data.delivery_settlement_ref,
+        delivery_city_label=data.delivery_city_label,
+        delivery_warehouse_ref=data.delivery_warehouse_ref,
+        delivery_warehouse_label=data.delivery_warehouse_label,
+        delivery_street_ref=data.delivery_street_ref,
+        delivery_street_label=data.delivery_street_label,
+        delivery_house=data.delivery_house,
+        delivery_apartment=data.delivery_apartment,
         payment_method=data.payment_method,
     )
     db.add(order)
@@ -146,4 +164,4 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
     db.commit()
     db.refresh(order)
     
-    return {"message": "Order created", "order_id": order.id}
+    return {"message": "Order created", "order_id": order.id, "order_number": order.order_number}

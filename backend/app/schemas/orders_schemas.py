@@ -29,6 +29,15 @@ class OrderSchema(BaseModel):
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
+    delivery_city_ref: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
     payment_method: Optional[str] = None
     created_at: datetime
     first_delivered_at: Optional[datetime] = None
@@ -52,5 +61,14 @@ class CheckoutSchema(BaseModel):
     delivery_type: str
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
+    delivery_city_ref: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
     payment_method: str
     items: List[dict]  # [{part_id, quantity, price}]

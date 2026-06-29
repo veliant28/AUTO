@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { Heart, ShoppingCart } from 'lucide-react'
+import { Heart, ShoppingCart, CircleCheckBig } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { saveCatalogReturnState } from '@/lib/catalog-navigation-state'
+import { useCartStore } from '@/store/cartStore'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
 
 const fmt = (n: number) =>
@@ -44,6 +45,8 @@ export default function ProductTile({
 }: ProductTileProps) {
   const t = useTranslations('common')
   const inStock = product.quantity > 0
+  const cartItems = useCartStore((state) => state.items)
+  const isInCart = cartItems.some((i) => i.part_id === product.id)
 
   const handleClick = () => {
     if (typeof window === 'undefined') return
@@ -151,16 +154,22 @@ export default function ProductTile({
             <TooltipTrigger asChild>
               <Button
                 size="icon"
-                className="h-10 w-10 bg-green-500 text-white hover:bg-green-600"
+                className={`h-10 w-10 ${isInCart ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-green-500 text-white hover:bg-green-600'}`}
                 onClick={(e) => {
                   e.preventDefault()
                   onAddToCart(product)
                 }}
               >
-                <ShoppingCart className="h-5 w-5" />
+                {isInCart ? (
+                  <CircleCheckBig className="h-5 w-5" />
+                ) : (
+                  <ShoppingCart className="h-5 w-5" />
+                )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{t('add_to_cart')}</TooltipContent>
+            <TooltipContent>
+              {isInCart ? t('in_cart') : t('add_to_cart')}
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>
