@@ -102,6 +102,7 @@ export default function LoyaltyClient() {
                           </td>
                           <td className="p-3">
                             <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
+                          </td>
                           <td className="p-3">
                             <Badge className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}>
                               {item.type === 'delivery' ? t('loyalty_type_delivery') : t('loyalty_type_margin')}
