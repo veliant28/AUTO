@@ -34,9 +34,12 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return ''
   const digits = phone.replace(/\D/g, '')
-  const normalized = digits.length >= 12 ? digits.slice(-10) : digits
-  if (normalized.length === 10) {
-    return `+38 (${normalized.slice(0, 3)}) ${normalized.slice(3, 6)}-${normalized.slice(6, 8)}-${normalized.slice(8)}`
+  let rest = digits
+  if (rest.startsWith('380')) rest = rest.slice(3)
+  else if (rest.startsWith('38')) rest = rest.slice(2)
+  if (rest.length < 8) return phone
+  if (rest.startsWith('0')) {
+    return `+38 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8)}`
   }
   return phone
 }
