@@ -309,19 +309,24 @@ export default function CartPage() {
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                     className="h-10 text-sm uppercase"
                   />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    disabled={promoInput.length < 10 || applyPromo.isPending}
-                    onClick={() => applyPromo.mutate(promoInput)}
-                  >
-                    {applyPromo.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Gift className="w-4 h-4" />
-                    )}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        disabled={promoInput.length < 10 || applyPromo.isPending}
+                        onClick={() => applyPromo.mutate(promoInput)}
+                      >
+                        {applyPromo.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Gift className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('apply')}</TooltipContent>
+                  </Tooltip>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-lg px-3 py-2">

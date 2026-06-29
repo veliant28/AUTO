@@ -425,9 +425,6 @@ export default function LoyaltyPage() {
                     onClick={() => setFormPercent(Math.min(100, formPercent + 10))}
                   ><Plus className="w-4 h-4" /></Button>
                 </div>
-                {formType === 'delivery' && (
-                  <p className="text-xs text-muted-foreground">{t('loyalty_delivery_fixed')}</p>
-                )}
               </div>
 
               {/* Expires at */}

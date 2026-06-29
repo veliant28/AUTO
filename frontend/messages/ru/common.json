@@ -246,7 +246,8 @@
     "promo_placeholder": "ВВЕДИТЕ ПРОМОКОД",
     "promo_applied": "Промокод применён",
     "promo_error": "Ошибка проверки промокода",
-    "discount_label": "Скидка"
+    "discount_label": "Скидка",
+    "apply": "Применить"
   },
   "header": {
     "catalog": "Каталог",
