@@ -330,15 +330,24 @@ export default function CartPage() {
                   </Tooltip>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 rounded-lg px-3 py-2">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span className="font-mono font-bold tracking-wider">{promocode}</span>
-                  <button
-                    className="ml-auto text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                    onClick={() => setPromocode(null, null, 0, 0)}
-                  >
-                    {t('remove')}
-                  </button>
+                <div className="flex gap-2">
+                  <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm">
+                    <Check className="w-4 h-4 text-green-600 shrink-0 mr-2" />
+                    <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">{promocode}</span>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => setPromocode(null, null, 0, 0)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('remove')}</TooltipContent>
+                  </Tooltip>
                 </div>
               )}
               <Separator />
