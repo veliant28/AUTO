@@ -1043,7 +1043,9 @@
     "loyalty_expires_placeholder": "Select date",
     "loyalty_generated": "Promocode generated",
     "loyalty_copy": "Copy code",
-    "loyalty_copied": "Code copied"
+    "loyalty_copied": "Code copied",
+    "days": "days",
+    "no_results": "No results"
   },
   "catalog": {
     "title": "Catalog",

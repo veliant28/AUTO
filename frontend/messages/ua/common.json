@@ -1043,7 +1043,9 @@
     "loyalty_expires_placeholder": "Виберіть дату",
     "loyalty_generated": "Промокод згенеровано",
     "loyalty_copy": "Скопіювати код",
-    "loyalty_copied": "Код скопійовано"
+    "loyalty_copied": "Код скопійовано",
+    "days": "днів",
+    "no_results": "Нічого не знайдено"
   },
   "catalog": {
     "title": "Каталог",

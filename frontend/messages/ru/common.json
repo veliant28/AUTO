@@ -1043,7 +1043,9 @@
     "loyalty_expires_placeholder": "Выберите дату",
     "loyalty_generated": "Промокод сгенерирован",
     "loyalty_copy": "Скопировать код",
-    "loyalty_copied": "Код скопирован"
+    "loyalty_copied": "Код скопирован",
+    "days": "дней",
+    "no_results": "Ничего не найдено"
   },
   "catalog": {
     "title": "Каталог",
