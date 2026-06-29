@@ -107,10 +107,6 @@ export default function CartPage() {
     });
   }, [items]);
 
-  if (!mounted) {
-    return <CartSkeleton />;
-  }
-
   const [promoInput, setPromoInput] = useState('')
   const promocode = useCartStore((s) => s.promocode)
   const discountAmount = useCartStore((s) => s.discountAmount)
@@ -138,6 +134,10 @@ export default function CartPage() {
     },
     onError: () => toast.error(t('promo_error')),
   })
+
+  if (!mounted) {
+    return <CartSkeleton />;
+  }
 
   const linkPath = typeof window !== 'undefined'
     ? (localStorage.getItem('cartReturnPath') || '/')
