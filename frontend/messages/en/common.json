@@ -254,7 +254,8 @@
     "my_garage": "My Garage",
     "my_account": "Account",
     "admin_panel": "Admin Panel",
-    "maintenance_parts": "Maintenance Parts"
+    "maintenance_parts": "Maintenance Parts",
+    "loyalty": "Loyalty"
   },
   "footer": {
     "description": "The largest online auto parts store with TecDoc integration. Instant search and precise applicability.",
