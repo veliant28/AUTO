@@ -404,9 +404,9 @@ export default function LoyaltyPage() {
                   )}
                   {formUser && (
                     <div className="rounded-md border bg-muted/30 p-3">
-                      <p className="font-medium text-sm flex items-center gap-2">
-                        <Check className="w-4 h-4 text-primary shrink-0" />
+                      <p className="font-medium text-sm flex items-center gap-2 justify-between">
                         {formUser.name}
+                        <Check className="w-4 h-4 text-primary shrink-0" />
                       </p>
                       <p className="text-xs text-muted-foreground">{formUser.email} {formUser.phone ? `• ${formatPhone(formUser.phone)}` : ''}</p>
                     </div>
