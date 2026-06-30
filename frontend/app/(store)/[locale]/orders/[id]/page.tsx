@@ -291,22 +291,22 @@ export default function OrderDetailPage() {
                   </span>
                 </div>
               )}
-              {order.promocode_type === 'delivery' && (
-                <div className="flex justify-between items-center text-green-600">
-                  <span className="font-semibold text-base">
-                    {t('delivery_label')}
-                  </span>
-                  <span className="font-bold text-lg">
-                    {t('delivery_free')}
-                  </span>
-                </div>
-              )}
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-base">
                   {t('total_label')}:
                 </span>
                 <span className="font-bold text-2xl">{fmt(order.total)} ₴</span>
               </div>
+              {order.promocode_type === 'delivery' && (
+                <div className="flex justify-between items-center text-green-600 pt-1">
+                  <span className="font-semibold text-base">
+                    {t('delivery_label')}:
+                  </span>
+                  <span className="font-bold text-lg">
+                    {t('delivery_free')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
