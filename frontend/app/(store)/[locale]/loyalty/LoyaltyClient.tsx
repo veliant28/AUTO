@@ -183,6 +183,9 @@ export default function LoyaltyClient() {
                                 {!item.used_at && expired
                                   ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
                                   : ''}
+                                {!item.used_at && !expired
+                                  ? `${t('loyalty_valid_until')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                  : ''}
                               </TooltipContent>
                             </Tooltip>
                           </td>

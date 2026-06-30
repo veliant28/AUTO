@@ -262,7 +262,8 @@
     "loyalty_status_unused": "Не использован",
     "loyalty_status_expired": "Истёк",
     "loyalty_used_at": "Использован",
-    "loyalty_expired_at": "Истёк"
+    "loyalty_expired_at": "Истёк",
+    "loyalty_valid_until": "Действует до"
   },
   "header": {
     "catalog": "Каталог",
@@ -1087,6 +1088,7 @@
     "status_expired": "Истёк",
     "loyalty_used_at": "Использован",
     "loyalty_expired_at": "Истёк",
+    "loyalty_valid_until": "Действует до",
     "loyalty_status_used": "Использован",
     "loyalty_status_unused": "Не использован",
     "loyalty_status_expired": "Истёк"

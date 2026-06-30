@@ -263,7 +263,8 @@
     "loyalty_status_unused": "Не використано",
     "loyalty_status_expired": "Прострочено",
     "loyalty_used_at": "Використано",
-    "loyalty_expired_at": "Прострочено"
+    "loyalty_expired_at": "Прострочено",
+    "loyalty_valid_until": "Діє до"
   },
   "header": {
     "catalog": "Каталог",
@@ -1088,6 +1089,7 @@
     "status_expired": "Прострочено",
     "loyalty_used_at": "Використано",
     "loyalty_expired_at": "Прострочено",
+    "loyalty_valid_until": "Діє до",
     "loyalty_status_used": "Використано",
     "loyalty_status_unused": "Не використано",
     "loyalty_status_expired": "Прострочено"

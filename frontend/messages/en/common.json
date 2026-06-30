@@ -262,7 +262,8 @@
     "loyalty_status_unused": "Unused",
     "loyalty_status_expired": "Expired",
     "loyalty_used_at": "Used",
-    "loyalty_expired_at": "Expired"
+    "loyalty_expired_at": "Expired",
+    "loyalty_valid_until": "Valid until"
   },
   "header": {
     "catalog": "Catalog",
@@ -1087,6 +1088,7 @@
     "status_expired": "Expired",
     "loyalty_used_at": "Used",
     "loyalty_expired_at": "Expired",
+    "loyalty_valid_until": "Valid until",
     "loyalty_status_used": "Used",
     "loyalty_status_unused": "Unused",
     "loyalty_status_expired": "Expired"

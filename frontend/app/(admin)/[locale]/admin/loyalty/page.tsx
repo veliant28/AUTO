@@ -6,8 +6,18 @@ import { useLocale } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import {
-  Search, Copy, Loader2, Plus, Gift, AlertTriangle,
-  Building2, Truck, Zap, Minus, CalendarIcon, Check,
+  Search,
+  Copy,
+  Loader2,
+  Plus,
+  Gift,
+  AlertTriangle,
+  Building2,
+  Truck,
+  Zap,
+  Minus,
+  CalendarIcon,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,16 +26,32 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
 } from '@/components/ui/tooltip'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
@@ -63,7 +89,9 @@ export default function LoyaltyPage() {
   const [search, setSearch] = useState('')
   const [staffFilter, setStaffFilter] = useState('')
   const [hydrated, setHydrated] = useState(false)
-  useEffect(() => { setHydrated(true) }, [])
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   // ── Stats period ──
   const [statsDays, setStatsDays] = useState('30')
@@ -81,11 +109,20 @@ export default function LoyaltyPage() {
 
   // Register global create opener
   useEffect(() => {
-    (window as any).__openCreateLoyalty = () => {
-      setFormType('delivery'); setFormPercent(100); setFormUserId(null); setFormUser(null); setFormExpires('')
-      setFormReason(''); setFormExpires(''); setUserQuery(''); setCreateOpen(true)
+    ;(window as any).__openCreateLoyalty = () => {
+      setFormType('delivery')
+      setFormPercent(100)
+      setFormUserId(null)
+      setFormUser(null)
+      setFormExpires('')
+      setFormReason('')
+      setFormExpires('')
+      setUserQuery('')
+      setCreateOpen(true)
     }
-    return () => { delete (window as any).__openCreateLoyalty }
+    return () => {
+      delete (window as any).__openCreateLoyalty
+    }
   }, [])
 
   // ── Queries ──
@@ -104,7 +141,9 @@ export default function LoyaltyPage() {
   const { data: statsData } = useQuery({
     queryKey: ['admin-loyalty-stats', statsDays],
     queryFn: async () => {
-      const { data } = await api.get('/admin/loyalty/stats', { params: { days: statsDays } })
+      const { data } = await api.get('/admin/loyalty/stats', {
+        params: { days: statsDays },
+      })
       return data
     },
     enabled: hydrated && !!user,
@@ -122,8 +161,15 @@ export default function LoyaltyPage() {
   const { data: userSearchResults } = useQuery({
     queryKey: ['admin-loyalty-users', userQuery],
     queryFn: async () => {
-      const { data } = await api.get('/admin/loyalty/search-users', { params: { q: userQuery } })
-      return data as { id: number; name: string; email: string; phone: string }[]
+      const { data } = await api.get('/admin/loyalty/search-users', {
+        params: { q: userQuery },
+      })
+      return data as {
+        id: number
+        name: string
+        email: string
+        phone: string
+      }[]
     },
     enabled: userQuery.length >= 2,
     staleTime: 10000,
@@ -167,14 +213,20 @@ export default function LoyaltyPage() {
         },
       },
       grid: { left: 50, right: 20, top: 20, bottom: 30 },
-      xAxis: { type: 'category' as const, data: dates, axisLabel: { rotate: 45, fontSize: 11 } },
+      xAxis: {
+        type: 'category' as const,
+        data: dates,
+        axisLabel: { rotate: 45, fontSize: 11 },
+      },
       yAxis: { type: 'value' as const, minInterval: 1 },
-      series: [{
-        type: 'bar' as const,
-        data: counts,
-        itemStyle: { color: '#22c55e', borderRadius: [4, 4, 0, 0] },
-        barMaxWidth: 40,
-      }],
+      series: [
+        {
+          type: 'bar' as const,
+          data: counts,
+          itemStyle: { color: '#22c55e', borderRadius: [4, 4, 0, 0] },
+          barMaxWidth: 40,
+        },
+      ],
     }
   }, [statsData])
 
@@ -226,17 +278,28 @@ export default function LoyaltyPage() {
               className="pl-9"
               placeholder={t('loyalty_search')}
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
             />
           </div>
-          <Select value={staffFilter} onValueChange={(v) => { setStaffFilter(v === 'all' ? '' : v); setPage(1) }}>
+          <Select
+            value={staffFilter}
+            onValueChange={(v) => {
+              setStaffFilter(v === 'all' ? '' : v)
+              setPage(1)
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={t('loyalty_staff')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('products_filter_all')}</SelectItem>
               {(staffList || []).map((s: any) => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -248,7 +311,9 @@ export default function LoyaltyPage() {
             {isLoading ? (
               <div className="space-y-3 p-4">
                 <Skeleton className="h-10 w-full" />
-                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
               </div>
             ) : (
               <>
@@ -256,100 +321,198 @@ export default function LoyaltyPage() {
                   <table className="w-full text-sm table-fixed">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[130px]">{t('loyalty_code')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">{t('loyalty_discount_percent')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">{t('loyalty_type')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">{t('loyalty_client')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">{t('loyalty_reason')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">{t('status')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">{t('loyalty_staff')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_created_at')}</th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">{t('loyalty_expires_at')}</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[130px]">
+                          {t('loyalty_code')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">
+                          {t('loyalty_discount_percent')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
+                          {t('loyalty_type')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">
+                          {t('loyalty_client')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
+                          {t('loyalty_reason')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">
+                          {t('status')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">
+                          {t('loyalty_staff')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">
+                          {t('loyalty_created_at')}
+                        </th>
+                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">
+                          {t('loyalty_expires_at')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {items.map((item: any) => {
                         const expired = new Date(item.expires_at) < new Date()
                         return (
-                          <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
+                          <tr
+                            key={item.id}
+                            className="border-b last:border-0 hover:bg-muted/30"
+                          >
                             <td className="p-3">
                               <div className="flex items-center gap-1">
-                                <code className="font-mono text-sm font-bold tracking-wider">{item.code}</code>
+                                <code className="font-mono text-sm font-bold tracking-wider">
+                                  {item.code}
+                                </code>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10"
-                                      onClick={() => { navigator.clipboard.writeText(item.code); toast.success(t('loyalty_copied')) }}>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(item.code)
+                                        toast.success(t('loyalty_copied'))
+                                      }}
+                                    >
                                       <Copy className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>{t('loyalty_copy')}</TooltipContent>
+                                  <TooltipContent>
+                                    {t('loyalty_copy')}
+                                  </TooltipContent>
                                 </Tooltip>
                               </div>
                             </td>
                             <td className="p-3">
-                              <span className="text-sm font-semibold">{item.discount_percent || 100}%</span>
+                              <span className="text-sm font-semibold">
+                                {item.discount_percent || 100}%
+                              </span>
                             </td>
                             <td className="p-3">
-                              <Badge className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}>
-                                {item.type === 'delivery' ? t('loyalty_type_delivery') : t('loyalty_type_margin')}
+                              <Badge
+                                className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
+                              >
+                                {item.type === 'delivery'
+                                  ? t('loyalty_type_delivery')
+                                  : t('loyalty_type_margin')}
                               </Badge>
                             </td>
                             <td className="p-3">
                               <div className="text-sm">
-                                <p className="font-medium truncate">{item.user_name || '—'}</p>
+                                <p className="font-medium truncate">
+                                  {item.user_name || '—'}
+                                </p>
                                 {(item.user_phone || item.user_email) && (
-                                  <p className="text-xs text-muted-foreground truncate">{formatPhone(item.user_phone) || item.user_email}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {formatPhone(item.user_phone) ||
+                                      item.user_email}
+                                  </p>
                                 )}
                               </div>
                             </td>
-                            <td className="p-3 text-sm truncate">{item.reason}</td>
+                            <td className="p-3 text-sm truncate">
+                              {item.reason}
+                            </td>
                             <td className="p-3">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}>
-                                    {item.used_at ? t('status_used') : expired ? t('status_expired') : t('status_unused')}
+                                  <Badge
+                                    className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
+                                  >
+                                    {item.used_at
+                                      ? t('status_used')
+                                      : expired
+                                        ? t('status_expired')
+                                        : t('status_unused')}
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  {item.used_at ? `${t('loyalty_used_at')}: ${new Date(item.used_at + 'Z').toLocaleString()}` : ''}
-                                  {!item.used_at && expired ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}` : ''}
+                                  {item.used_at
+                                    ? `${t('loyalty_used_at')}: ${new Date(item.used_at + 'Z').toLocaleString()}`
+                                    : ''}
+                                  {!item.used_at && expired
+                                    ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                    : ''}
+                                  {!item.used_at && !expired
+                                    ? `${t('loyalty_valid_until')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                    : ''}
                                 </TooltipContent>
                               </Tooltip>
                             </td>
-                            <td className="p-3 text-sm">{item.issued_by_name || '—'}</td>
+                            <td className="p-3 text-sm">
+                              {item.issued_by_name || '—'}
+                            </td>
                             <td className="p-3 text-sm text-muted-foreground">
                               {new Date(item.created_at + 'Z').toLocaleString()}
                             </td>
                             <td className="p-3">
-                              <span className={`text-sm ${expired ? 'text-red-500' : 'text-muted-foreground'}`}>
-                                {new Date(item.expires_at + 'Z').toLocaleString()}
+                              <span
+                                className={`text-sm ${expired ? 'text-red-500' : 'text-muted-foreground'}`}
+                              >
+                                {new Date(
+                                  item.expires_at + 'Z',
+                                ).toLocaleString()}
                               </span>
                             </td>
                           </tr>
                         )
                       })}
                       {items.length === 0 && (
-                        <tr><td colSpan={7} className="p-6 text-center text-muted-foreground text-sm">{t('loyalty_empty')}</td></tr>
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="p-6 text-center text-muted-foreground text-sm"
+                          >
+                            {t('loyalty_empty')}
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>
                 </div>
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between p-3 border-t">
-                    <span className="text-sm text-muted-foreground">{t('page_of', { page, total: totalPages })}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {t('page_of', { page, total: totalPages })}
+                    </span>
                     <div className="flex items-center gap-1">
-                      <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>{t('prev_page')}</Button>
-                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                        let p: number
-                        if (totalPages <= 5) p = i + 1
-                        else if (page <= 3) p = i + 1
-                        else if (page >= totalPages - 2) p = totalPages - 4 + i
-                        else p = page - 2 + i
-                        return (
-                          <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}>{p}</Button>
-                        )
-                      })}
-                      <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>{t('next_page')}</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        {t('prev_page')}
+                      </Button>
+                      {Array.from(
+                        { length: Math.min(totalPages, 5) },
+                        (_, i) => {
+                          let p: number
+                          if (totalPages <= 5) p = i + 1
+                          else if (page <= 3) p = i + 1
+                          else if (page >= totalPages - 2)
+                            p = totalPages - 4 + i
+                          else p = page - 2 + i
+                          return (
+                            <Button
+                              key={p}
+                              variant={p === page ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setPage(p)}
+                            >
+                              {p}
+                            </Button>
+                          )
+                        },
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        {t('next_page')}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -359,8 +522,14 @@ export default function LoyaltyPage() {
         </Card>
 
         {/* ── Create dialog ── */}
-        <Dialog open={createOpen} onOpenChange={(open) => !open && setCreateOpen(false)}>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" aria-describedby={undefined}>
+        <Dialog
+          open={createOpen}
+          onOpenChange={(open) => !open && setCreateOpen(false)}
+        >
+          <DialogContent
+            className="max-w-lg max-h-[80vh] overflow-y-auto"
+            aria-describedby={undefined}
+          >
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10">
@@ -368,7 +537,9 @@ export default function LoyaltyPage() {
                 </div>
                 <div>
                   <DialogTitle>{t('loyalty_create')}</DialogTitle>
-                  <DialogDescription>{t('loyalty_generated')}</DialogDescription>
+                  <DialogDescription>
+                    {t('loyalty_generated')}
+                  </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
@@ -377,12 +548,18 @@ export default function LoyaltyPage() {
               {/* Type */}
               <div className="space-y-2">
                 <Label>{t('loyalty_type')}</Label>
-                <RadioGroup value={formType} onValueChange={setFormType} className="grid grid-cols-2 gap-3">
+                <RadioGroup
+                  value={formType}
+                  onValueChange={setFormType}
+                  className="grid grid-cols-2 gap-3"
+                >
                   <Label className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
-                    <RadioGroupItem value="delivery" /> <Truck className="w-5 h-5" /> {t('loyalty_type_delivery')}
+                    <RadioGroupItem value="delivery" />{' '}
+                    <Truck className="w-5 h-5" /> {t('loyalty_type_delivery')}
                   </Label>
                   <Label className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer">
-                    <RadioGroupItem value="margin" /> <Zap className="w-5 h-5" /> {t('loyalty_type_margin')}
+                    <RadioGroupItem value="margin" />{' '}
+                    <Zap className="w-5 h-5" /> {t('loyalty_type_margin')}
                   </Label>
                 </RadioGroup>
               </div>
@@ -393,38 +570,56 @@ export default function LoyaltyPage() {
                 <Input
                   placeholder={t('loyalty_client_search')}
                   value={userQuery}
-                  onChange={(e) => { setUserQuery(e.target.value); setFormUserId(null); setFormUser(null) }}
+                  onChange={(e) => {
+                    setUserQuery(e.target.value)
+                    setFormUserId(null)
+                    setFormUser(null)
+                  }}
                 />
                 {userQuery.length >= 2 && userSearchResults && (
-                    <div className="rounded-md border max-h-40 overflow-y-auto">
-                      {userSearchResults.length === 0 ? (
-                        <p className="text-sm text-muted-foreground p-3 text-center">{t('no_results')}</p>
-                      ) : (
-                        userSearchResults.map((u: any) => (
-                          <div
-                            key={u.id}
-                            className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
-                            onClick={() => { setFormUserId(u.id); setFormUser(u); setUserQuery('') }}
-                          >
-                            <p className="font-medium flex items-center gap-2">
-                              {formUserId === u.id && <Check className="w-4 h-4 text-primary shrink-0" />}
-                              {u.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{u.email} {u.phone ? `• ${formatPhone(u.phone)}` : ''}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                  {formUser && (
-                    <div className="rounded-md border bg-muted/30 p-3">
-                      <p className="font-medium text-sm flex items-center gap-2 justify-between">
-                        {formUser.name}
-                        <Check className="w-4 h-4 text-primary shrink-0" />
+                  <div className="rounded-md border max-h-40 overflow-y-auto">
+                    {userSearchResults.length === 0 ? (
+                      <p className="text-sm text-muted-foreground p-3 text-center">
+                        {t('no_results')}
                       </p>
-                      <p className="text-xs text-muted-foreground">{formUser.email} {formUser.phone ? `• ${formatPhone(formUser.phone)}` : ''}</p>
-                    </div>
-                  )}
+                    ) : (
+                      userSearchResults.map((u: any) => (
+                        <div
+                          key={u.id}
+                          className={`p-3 text-sm cursor-pointer hover:bg-muted ${formUserId === u.id ? 'bg-primary/10' : ''}`}
+                          onClick={() => {
+                            setFormUserId(u.id)
+                            setFormUser(u)
+                            setUserQuery('')
+                          }}
+                        >
+                          <p className="font-medium flex items-center gap-2">
+                            {formUserId === u.id && (
+                              <Check className="w-4 h-4 text-primary shrink-0" />
+                            )}
+                            {u.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {u.email}{' '}
+                            {u.phone ? `• ${formatPhone(u.phone)}` : ''}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                {formUser && (
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <p className="font-medium text-sm flex items-center gap-2 justify-between">
+                      {formUser.name}
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formUser.email}{' '}
+                      {formUser.phone ? `• ${formatPhone(formUser.phone)}` : ''}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Reason */}
@@ -447,8 +642,12 @@ export default function LoyaltyPage() {
                     size="icon"
                     className="h-7 w-7 rounded-full shrink-0"
                     disabled={formType === 'delivery' || formPercent <= 0}
-                    onClick={() => setFormPercent(Math.max(0, formPercent - 10))}
-                  ><Minus className="w-4 h-4" /></Button>
+                    onClick={() =>
+                      setFormPercent(Math.max(0, formPercent - 10))
+                    }
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
                   <span className="w-12 text-center font-bold tabular-nums">
                     {formType === 'delivery' ? '100' : formPercent}%
                   </span>
@@ -457,15 +656,23 @@ export default function LoyaltyPage() {
                     size="icon"
                     className="h-7 w-7 rounded-full shrink-0"
                     disabled={formType === 'delivery' || formPercent >= 100}
-                    onClick={() => setFormPercent(Math.min(100, formPercent + 10))}
-                  ><Plus className="w-4 h-4" /></Button>
+                    onClick={() =>
+                      setFormPercent(Math.min(100, formPercent + 10))
+                    }
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
 
               {/* Expires at */}
               <div className="space-y-2">
                 <Label>{t('loyalty_expires_at')} *</Label>
-                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
+                <Popover
+                  open={datePickerOpen}
+                  onOpenChange={setDatePickerOpen}
+                  modal={false}
+                >
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -473,7 +680,10 @@ export default function LoyaltyPage() {
                     >
                       <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
                       {formExpires
-                        ? format(new Date(formExpires + 'T00:00:00'), 'dd.MM.yyyy')
+                        ? format(
+                            new Date(formExpires + 'T00:00:00'),
+                            'dd.MM.yyyy',
+                          )
                         : t('loyalty_expires_placeholder')}
                     </Button>
                   </PopoverTrigger>
@@ -484,7 +694,11 @@ export default function LoyaltyPage() {
                         className="rounded-md"
                         navLayout="around"
                         locale={dateLocale}
-                        selected={formExpires ? new Date(formExpires + 'T00:00:00') : undefined}
+                        selected={
+                          formExpires
+                            ? new Date(formExpires + 'T00:00:00')
+                            : undefined
+                        }
                         onSelect={(date) => {
                           if (date) {
                             setFormExpires(format(date, 'yyyy-MM-dd'))
@@ -500,21 +714,32 @@ export default function LoyaltyPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>{t('cancel')}</Button>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                {t('cancel')}
+              </Button>
               <Button
                 className="gap-2"
-                disabled={createMutation.isPending || !formReason || !formExpires}
+                disabled={
+                  createMutation.isPending || !formReason || !formExpires
+                }
                 onClick={() => {
                   createMutation.mutate({
                     type: formType,
                     user_id: formUserId,
-                    discount_percent: formType === 'delivery' ? 100 : formPercent,
+                    discount_percent:
+                      formType === 'delivery' ? 100 : formPercent,
                     reason: formReason,
-                    expires_at: new Date(formExpires + 'T23:59:59').toISOString(),
+                    expires_at: new Date(
+                      formExpires + 'T23:59:59',
+                    ).toISOString(),
                   })
                 }}
               >
-                {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {createMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
                 {t('loyalty_create')}
               </Button>
             </DialogFooter>
