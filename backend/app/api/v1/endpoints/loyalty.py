@@ -5,7 +5,7 @@ from typing import List
 
 from app.core.db import get_db
 from app.models.loyalty import Promocode
-from app.schemas.loyalty_schemas import PromocodeResponse
+from app.schemas.loyalty_schemas import PromocodeResponse, PromocodeMyListResponse
 from app.api.v1.endpoints.auth import get_current_user
 
 router = APIRouter()
@@ -62,7 +62,7 @@ async def validate_promocode(
         "message": "Promocode is valid"
     }
 
-@router.get("", response_model=List[PromocodeResponse])
+@router.get("", response_model=PromocodeMyListResponse)
 async def get_my_promocodes(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
@@ -100,4 +100,9 @@ async def get_my_promocodes(
             created_at=p.created_at,
         ))
 
-    return result
+    return PromocodeMyListResponse(
+        items=result,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )

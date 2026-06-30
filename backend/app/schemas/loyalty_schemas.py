@@ -55,3 +55,10 @@ class PromocodeStatsItem(BaseModel):
 class PromocodeStatsResponse(BaseModel):
     items: List[PromocodeStatsItem]
     total: int
+
+
+class PromocodeMyListResponse(BaseModel):
+    items: List[PromocodeResponse]
+    total: int
+    page: int
+    page_size: int
