@@ -283,8 +283,22 @@ export default function OrderDetailPage() {
               <Separator />
               {order.discount_amount > 0 && (
                 <div className="flex justify-between items-center text-green-600">
-                  <span className="font-semibold text-base">{t('discount_label')}</span>
-                  <span className="font-bold text-lg">-{fmt(order.discount_amount)} ₴</span>
+                  <span className="font-semibold text-base">
+                    {t('discount_label')}
+                  </span>
+                  <span className="font-bold text-lg">
+                    -{fmt(order.discount_amount)} ₴
+                  </span>
+                </div>
+              )}
+              {order.promocode_type === 'delivery' && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="font-semibold text-base">
+                    {t('delivery_label')}
+                  </span>
+                  <span className="font-bold text-lg">
+                    {t('delivery_free')}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between items-center">

@@ -110,6 +110,8 @@
     "items_label": "Товаров:",
     "pcs": "шт.",
     "total_label": "Сумма",
+    "delivery_label": "Доставка",
+    "delivery_free": "Бесплатно",
     "receipt": "Чек",
     "continue_shopping": "Продолжить покупки",
     "removed_from_favorites": "Удалено из избранного",

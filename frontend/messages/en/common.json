@@ -106,6 +106,8 @@
     "items_label": "Items:",
     "pcs": "pcs",
     "total_label": "Total",
+    "delivery_label": "Delivery",
+    "delivery_free": "Free",
     "receipt": "Receipt",
     "continue_shopping": "Continue shopping",
     "removed_from_favorites": "Removed from favorites",

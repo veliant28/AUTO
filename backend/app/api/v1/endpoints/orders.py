@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from app.core.db import get_db
 from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutSchema
 from app.models import Order, OrderItem, OrderStatus, Part
+from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user
 
@@ -44,6 +45,12 @@ def _can_return(order, db=None) -> bool:
     return True
 
 def _order_to_dict(order, db):
+    # Look up promocode type if a code is set
+    promocode_type = None
+    if order.promocode_code:
+        pc = db.query(Promocode).filter(Promocode.code == order.promocode_code).first()
+        if pc:
+            promocode_type = pc.type
     return {
         "id": order.id,
         "order_number": order.order_number or f"ORD-{order.id:010d}",
@@ -68,6 +75,7 @@ def _order_to_dict(order, db):
         "delivery_house": order.delivery_house,
         "delivery_apartment": order.delivery_apartment,
         "promocode_code": order.promocode_code,
+        "promocode_type": promocode_type,
         "discount_amount": float(order.discount_amount or 0),
         "original_total": float(order.original_total or 0) if order.original_total else None,
         "payment_method": order.payment_method,

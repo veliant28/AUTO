@@ -39,6 +39,7 @@ class OrderSchema(BaseModel):
     delivery_house: Optional[str] = None
     delivery_apartment: Optional[str] = None
     promocode_code: Optional[str] = None
+    promocode_type: Optional[str] = None
     discount_amount: float = 0
     original_total: Optional[float] = None
     payment_method: Optional[str] = None
