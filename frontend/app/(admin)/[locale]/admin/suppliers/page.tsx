@@ -152,18 +152,22 @@ function TokenBadge({
 
   if (
     data?.token_status === 'expired' ||
-    (secondsLeft === 0 && data?.token_status)
-  ) {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5 text-red-500 border-red-300"
-        onClick={onRefresh}
-      >
-        <RefreshCw className="w-4 h-4" />
-        {ta('settings_token_refresh')}
-      </Button>
+	    (secondsLeft === 0 && data?.token_status)
+	  ) {
+	    return (
+	      <Tooltip>
+	        <TooltipTrigger asChild>
+	          <Button
+	            variant="outline"
+	            size="icon"
+	            className="h-10 w-10 text-red-500 border-red-300"
+	            onClick={onRefresh}
+	          >
+	            <RefreshCw className="w-4 h-4" />
+	          </Button>
+	        </TooltipTrigger>
+	        <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
+	      </Tooltip>
     )
   }
 
