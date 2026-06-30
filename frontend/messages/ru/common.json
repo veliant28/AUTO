@@ -1061,6 +1061,8 @@
     "no_results": "Ничего не найдено",
     "promo_applied": "Промокод применён",
     "promo_force_sender": "Оплата доставки за счёт отправителя (промокод)",
+    "promo_force_sender_hint": "При промокоде на доставку доставка оплачивается отправителем",
+    "promo_delivery_disabled_tooltip": "Недоступно при промокоде на доставку",
     "loyalty_discount_percent": "Скидка",
     "loyalty_delivery_fixed": "Для доставки скидка всегда 100%",
     "promocode": "Промокод",

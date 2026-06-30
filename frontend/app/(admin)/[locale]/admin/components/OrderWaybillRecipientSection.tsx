@@ -211,18 +211,20 @@ export default function OrderWaybillRecipientSection({
   // This field searches warehouses (incl. postomats) when no comma,
   // and searches streets when a comma is present.
   const [addressDisplay, setAddressDisplay] = useState(() => {
+    if (deliveryType === 'warehouse' || deliveryType === 'postomat') {
+      return recipientAddressLabel || ''
+    }
     if (recipientStreetLabel && recipientHouse) {
       return `${recipientStreetLabel}, ${recipientHouse}`
     }
-    if (recipientAddressLabel) {
-      return recipientAddressLabel
-    }
-    return ''
+    return recipientAddressLabel || ''
   })
 
   // Sync display when props change (e.g. waybill loaded)
   useEffect(() => {
-    if (recipientStreetLabel && recipientHouse) {
+    if (deliveryType === 'warehouse' || deliveryType === 'postomat') {
+      setAddressDisplay(recipientAddressLabel || '')
+    } else if (recipientStreetLabel && recipientHouse) {
       setAddressDisplay(`${recipientStreetLabel}, ${recipientHouse}`)
     } else if (recipientAddressLabel) {
       setAddressDisplay(recipientAddressLabel)
@@ -232,7 +234,12 @@ export default function OrderWaybillRecipientSection({
       setAddressDisplay('')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipientStreetLabel, recipientHouse, recipientAddressLabel])
+  }, [
+    recipientStreetLabel,
+    recipientHouse,
+    recipientAddressLabel,
+    deliveryType,
+  ])
 
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

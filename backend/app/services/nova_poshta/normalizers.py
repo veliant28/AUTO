@@ -11,24 +11,33 @@ class NovaPoshtaDataNormalizer:
     @staticmethod
     def phone(phone: str) -> str:
         """
-        Normalise a phone number to NP format: +380XXXXXXXXX.
+        Normalise a phone number to NP format: 380XXXXXXXXX (12 digits, no +).
 
-        Accepts various formats and strips non-digit characters.
+        Accepts various formats, strips non-digit characters.
+        Always returns exactly 12 digits (380XXXXXXXXX) or empty string.
         """
         if not phone:
             return ""
-        cleaned = re.sub(r"[^\d+]", "", phone)
-        cleaned = cleaned.removeprefix("+")
+        cleaned = re.sub(r"[^\d]", "", phone)
         if cleaned.startswith("380") and len(cleaned) == 12:
-            return f"+{cleaned}"
+            return cleaned
         if cleaned.startswith("80") and len(cleaned) == 11:
-            return f"+3{cleaned}"
-        if cleaned.startswith("0") and len(cleaned) == 10:
-            return f"+380{cleaned[1:]}"
-        # Already valid-ish
-        if cleaned.startswith("380") and len(cleaned) == 12:
-            return f"+{cleaned}"
-        return f"+{cleaned}" if not cleaned.startswith("+") else f"+{cleaned}"
+            result = f"3{cleaned}"
+            if len(result) > 12:
+                result = result[:12]
+            return result
+        if cleaned.startswith("0") and len(cleaned) <= 11:
+            result = f"380{cleaned[1:]}"
+            if len(result) > 12:
+                result = result[:12]
+            return result
+        if len(cleaned) >= 12:
+            return cleaned[:12]
+        if len(cleaned) >= 11:
+            return f"38{cleaned}"[:12]
+        if len(cleaned) >= 10:
+            return f"38{cleaned}"[:12]
+        return cleaned
 
     @staticmethod
     def weight(value: Optional[str]) -> str:

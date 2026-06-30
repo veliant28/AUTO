@@ -1061,6 +1061,8 @@
     "no_results": "Нічого не знайдено",
     "promo_applied": "Промокод застосовано",
     "promo_force_sender": "Оплата доставки за рахунок відправника (промокод)",
+    "promo_force_sender_hint": "При промокоді на доставку доставка оплачується відправником",
+    "promo_delivery_disabled_tooltip": "Недоступно при промокоді на доставку",
     "loyalty_discount_percent": "Знижка",
     "loyalty_delivery_fixed": "Для доставки знижка завжди 100%",
     "promocode": "Промокод",

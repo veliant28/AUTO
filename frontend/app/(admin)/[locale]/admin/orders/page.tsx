@@ -258,9 +258,12 @@ export default function AdminOrdersPage() {
     mutationFn: async (code: string) => {
       const { data } = await api.post('/loyalty/validate', {
         code,
-        items: orderDetail?.items?.map((i: any) => ({
-          part_id: i.part_id, price: i.price, quantity: editQuantities[i.id] ?? i.quantity,
-        })) || [],
+        items:
+          orderDetail?.items?.map((i: any) => ({
+            part_id: i.part_id,
+            price: i.price,
+            quantity: editQuantities[i.id] ?? i.quantity,
+          })) || [],
       })
       return data
     },
@@ -270,17 +273,29 @@ export default function AdminOrdersPage() {
           promocode_code: promoInput,
           discount_amount: data.discount_amount || 0,
           original_total: orderDetail.total,
-          total: Math.max((orderDetail.total || 0) - (data.discount_amount || 0), 0),
+          total: Math.max(
+            (orderDetail.total || 0) - (data.discount_amount || 0),
+            0,
+          ),
         })
         toast.success(t('order_updated'))
         setPromoInput('')
       } else {
-        toast.info(t(data.message === 'Promocode not found' ? 'promo_not_found' : 
-          data.message === 'Promocode is inactive' ? 'promo_inactive' :
-          data.message === 'Promocode expired' ? 'promo_expired' :
-          data.message === 'Promocode already used' ? 'promo_used' :
-          data.message === 'Promocode belongs to another user' ? 'promo_wrong_user' :
-          data.message))
+        toast.info(
+          t(
+            data.message === 'Promocode not found'
+              ? 'promo_not_found'
+              : data.message === 'Promocode is inactive'
+                ? 'promo_inactive'
+                : data.message === 'Promocode expired'
+                  ? 'promo_expired'
+                  : data.message === 'Promocode already used'
+                    ? 'promo_used'
+                    : data.message === 'Promocode belongs to another user'
+                      ? 'promo_wrong_user'
+                      : data.message,
+          ),
+        )
       }
     },
     onError: () => toast.error(t('promo_error')),
@@ -495,28 +510,30 @@ export default function AdminOrdersPage() {
       setDeleteTarget(null)
       setViewOrderId(null)
     },
-	    onError: () => toast.error(t('error')),
-	  })
+    onError: () => toast.error(t('error')),
+  })
 
-	  const removePromocodeMutation = useMutation({
-	    mutationFn: async () => {
-	      const newTotal = orderDetail.original_total || orderDetail.total
-	      await api.put(`/admin/orders/${viewOrderId}`, {
-	        promocode_code: null,
-	        discount_amount: 0,
-	        original_total: null,
-	        total: newTotal,
-	      })
-	    },
-	    onSuccess: () => {
-	      toast.success(t('order_updated'))
-	      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', viewOrderId] })
-	      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
-	    },
-	    onError: () => toast.error(t('error')),
-	  })
+  const removePromocodeMutation = useMutation({
+    mutationFn: async () => {
+      const newTotal = orderDetail.original_total || orderDetail.total
+      await api.put(`/admin/orders/${viewOrderId}`, {
+        promocode_code: null,
+        discount_amount: 0,
+        original_total: null,
+        total: newTotal,
+      })
+    },
+    onSuccess: () => {
+      toast.success(t('order_updated'))
+      queryClient.invalidateQueries({
+        queryKey: ['admin-order-detail', viewOrderId],
+      })
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+    },
+    onError: () => toast.error(t('error')),
+  })
 
-	  const openView = useCallback(
+  const openView = useCallback(
     async (orderId: number) => {
       setEditMode(false)
       setShowHistory(false)
@@ -1626,7 +1643,9 @@ export default function AdminOrdersPage() {
                             {orderDetail.discount_amount > 0 && (
                               <div className="flex justify-between text-green-600 text-sm">
                                 <span>{t('discount_label')}</span>
-                                <span className="font-semibold">-{fmt(orderDetail.discount_amount)} ₴</span>
+                                <span className="font-semibold">
+                                  -{fmt(orderDetail.discount_amount)} ₴
+                                </span>
                               </div>
                             )}
                             <div className="flex justify-between">
@@ -1638,7 +1657,8 @@ export default function AdminOrdersPage() {
                                 ₴
                               </span>
                             </div>
-                          </div>                          <Separator className="my-3" />
+                          </div>{' '}
+                          <Separator className="my-3" />
                           <div className="flex flex-col gap-2">
                             <h4 className="font-semibold text-lg flex items-center gap-2">
                               <Gift className="w-5 h-5" /> {t('promocode')}
@@ -1649,14 +1669,22 @@ export default function AdminOrdersPage() {
                                   placeholder={t('promocode_placeholder')}
                                   value={promoInput}
                                   maxLength={10}
-                                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                                  onChange={(e) =>
+                                    setPromoInput(e.target.value.toUpperCase())
+                                  }
                                   className="h-10 text-sm uppercase flex-1"
                                 />
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0"
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-10 w-10 shrink-0"
                                       disabled={promoInput.length < 10}
-                                      onClick={() => applyPromo.mutate(promoInput)}>
+                                      onClick={() =>
+                                        applyPromo.mutate(promoInput)
+                                      }
+                                    >
                                       <Gift className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
@@ -1679,13 +1707,23 @@ export default function AdminOrdersPage() {
                                 {editMode && orderDetail.promocode_code ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0"
-                                        onClick={() => removePromocodeMutation.mutate()}
-                                        disabled={removePromocodeMutation.isPending}>
+                                      <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="h-10 w-10 shrink-0"
+                                        onClick={() =>
+                                          removePromocodeMutation.mutate()
+                                        }
+                                        disabled={
+                                          removePromocodeMutation.isPending
+                                        }
+                                      >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>{t('remove')}</TooltipContent>
+                                    <TooltipContent>
+                                      {t('remove')}
+                                    </TooltipContent>
                                   </Tooltip>
                                 ) : (
                                   <div className="w-10 h-10 shrink-0" />
@@ -1693,19 +1731,19 @@ export default function AdminOrdersPage() {
                               </div>
                             )}
                           </div>
-                        <Separator className="my-3" />
-                        <div className="flex flex-col">
-                          <h4 className="font-semibold text-lg flex items-center gap-2">
-                            <CreditCard className="w-5 h-5" />{' '}
-                            {t('payment_method')}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {t('payment_placeholder')}
-                          </p>
+                          <Separator className="my-3" />
+                          <div className="flex flex-col">
+                            <h4 className="font-semibold text-lg flex items-center gap-2">
+                              <CreditCard className="w-5 h-5" />{' '}
+                              {t('payment_method')}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {t('payment_placeholder')}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   )}
                 </div>
 
@@ -1725,6 +1763,42 @@ export default function AdminOrdersPage() {
                         variant="outline"
                         onClick={() => {
                           setEditMode(false)
+                          // Reset editRecipient to original orderDetail values
+                          if (orderDetail) {
+                            setEditRecipient({
+                              phone: orderDetail.phone || '',
+                              last_name: orderDetail.last_name || '',
+                              first_name: orderDetail.first_name || '',
+                              middle_name: orderDetail.middle_name || '',
+                              delivery_type: orderDetail.delivery_type || '',
+                              delivery_city: orderDetail.delivery_city || '',
+                              delivery_warehouse:
+                                orderDetail.delivery_warehouse || '',
+                              delivery_city_ref:
+                                orderDetail.delivery_city_ref || '',
+                              delivery_settlement_ref:
+                                orderDetail.delivery_settlement_ref || '',
+                              delivery_city_label:
+                                orderDetail.delivery_city_label || '',
+                              delivery_warehouse_ref:
+                                orderDetail.delivery_warehouse_ref || '',
+                              delivery_warehouse_label:
+                                orderDetail.delivery_warehouse_label || '',
+                              delivery_street_ref:
+                                orderDetail.delivery_street_ref || '',
+                              delivery_street_label:
+                                orderDetail.delivery_street_label || '',
+                              delivery_house: orderDetail.delivery_house || '',
+                              delivery_apartment:
+                                orderDetail.delivery_apartment || '',
+                            })
+                            if (orderDetail.delivery_city)
+                              setCityQuery(orderDetail.delivery_city)
+                            if (orderDetail.delivery_warehouse)
+                              setWarehouseQuery(orderDetail.delivery_warehouse)
+                            if (orderDetail.delivery_street_label)
+                              setStreetQuery(orderDetail.delivery_street_label)
+                          }
                         }}
                       >
                         {t('cancel')}
@@ -1772,6 +1846,7 @@ export default function AdminOrdersPage() {
             orderId={selectedNpOrderId}
             open={waybillModalOpen}
             onOpenChange={handleWaybillClose}
+            promocodeCode={orderDetail?.promocode_code || null}
           />
         )}
         {selectedNpOrderId !== null && trackingModalOpen && (

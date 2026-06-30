@@ -3,10 +3,12 @@
 import { useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
+const MAX_DIGITS = 12 // 380 + 9 digits
+
 export function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '')
   if (!digits) return ''
-  const withoutPlus = digits.startsWith('+') ? digits.slice(1) : digits
+  const withoutPlus = digits.replace(/^\+/, '')
   if (withoutPlus.length <= 2) return '+' + withoutPlus
   const d = withoutPlus.replace(/^38/, '').slice(0, 10)
   if (!d) return '+38'
@@ -42,8 +44,10 @@ export function PhoneInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' || e.key === 'Delete') {
       const digits = value.replace(/\D/g, '')
-      if (digits) {
+      if (digits.length > 3) {
         onChange('+' + digits.slice(0, -1))
+      } else {
+        onChange('')
       }
       e.preventDefault()
     }
@@ -55,11 +59,12 @@ export function PhoneInput({
       onChange('')
       return
     }
-    if (!cleaned.startsWith('+')) {
-      onChange('+' + cleaned)
-    } else {
-      onChange(cleaned)
-    }
+    // Ensure it starts with +
+    const withPlus = cleaned.startsWith('+') ? cleaned : '+' + cleaned
+    // Strip + for digit count: +380 + 9 = 12 digits total
+    const digits = withPlus.replace(/\D/g, '')
+    const trimmed = digits.slice(0, MAX_DIGITS)
+    onChange('+' + trimmed)
   }
 
   return (
@@ -81,9 +86,12 @@ export function PhoneInput({
 
 export function phoneToApi(value: string): string {
   const d = value.replace(/\D/g, '')
-  return d ? '+' + d : ''
+  if (!d) return ''
+  return '+' + d.slice(0, MAX_DIGITS)
 }
 
 export function apiToPhone(value: string | null | undefined): string {
-  return value || ''
+  if (!value) return ''
+  const d = value.replace(/\D/g, '')
+  return '+' + d.slice(0, MAX_DIGITS)
 }

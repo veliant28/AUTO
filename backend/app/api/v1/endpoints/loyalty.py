@@ -51,11 +51,14 @@ async def validate_promocode(
         if total_margin > 0:
             discount_amount = round(total_margin * (pc.discount_percent or 100) / 100, 2)
     
+    is_delivery_free = pc.type == 'delivery'
+
     return {
         "valid": True,
         "type": pc.type,
         "discount_percent": pc.discount_percent or 100,
         "discount_amount": discount_amount,
+        "is_delivery_free": is_delivery_free,
         "message": "Promocode is valid"
     }
 

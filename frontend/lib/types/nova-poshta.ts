@@ -546,6 +546,16 @@ export interface OrderRecipientInfo {
   middle_name: string
   order_number: string
   order_total: string
+  delivery_city_ref?: string | null
+  delivery_city_label?: string | null
+  delivery_settlement_ref?: string | null
+  delivery_warehouse_ref?: string | null
+  delivery_warehouse_label?: string | null
+  delivery_street_ref?: string | null
+  delivery_street_label?: string | null
+  delivery_house?: string | null
+  delivery_apartment?: string | null
+  delivery_type?: string | null
 }
 
 export interface OrderNovaPoshtaWaybillDetailResponse {

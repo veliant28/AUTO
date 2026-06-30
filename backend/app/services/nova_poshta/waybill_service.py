@@ -144,6 +144,16 @@ class NovaPoshtaWaybillService:
                 middle_name=order.middle_name or "",
                 order_number=order.order_number or f"ORD-{order.id:010d}",
                 order_total=str(order.total) if order.total else "0",
+                delivery_city_ref=order.delivery_city_ref or None,
+                delivery_city_label=order.delivery_city_label or None,
+                delivery_settlement_ref=order.delivery_settlement_ref or None,
+                delivery_warehouse_ref=order.delivery_warehouse_ref or None,
+                delivery_warehouse_label=order.delivery_warehouse_label or None,
+                delivery_street_ref=order.delivery_street_ref or None,
+                delivery_street_label=order.delivery_street_label or None,
+                delivery_house=order.delivery_house or None,
+                delivery_apartment=order.delivery_apartment or None,
+                delivery_type=order.delivery_type or None,
             )
 
         if not wb:

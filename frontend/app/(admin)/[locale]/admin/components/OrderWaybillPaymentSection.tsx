@@ -67,6 +67,8 @@ interface Props {
   priceError?: boolean
   /** Sum of selected packaging items costs (from pack_items) */
   localPackagingCost?: number
+  /** When true, force Sender + Cash (delivery promocode) */
+  forceSenderCash?: boolean
 }
 
 /** Map of service ref → parameter field name for simple services */
@@ -113,6 +115,7 @@ export default function OrderWaybillPaymentSection({
   priceLoading = false,
   priceError = false,
   localPackagingCost = 0,
+  forceSenderCash = false,
 }: Props) {
   const t = useTranslations('admin')
 
@@ -358,6 +361,7 @@ export default function OrderWaybillPaymentSection({
   // ThirdPerson: always NonCash only, requires thirdPersonRef
   const isPayerAllowed = useCallback(
     (payer: PayerType, method: PaymentMethod): boolean => {
+      if (forceSenderCash) return payer === 'Sender'
       if (payer === 'ThirdPerson')
         return method === 'NonCash' && !!thirdPersonRef
       if (method === 'Cash') return true // Sender & Recipient always allow Cash
@@ -372,11 +376,12 @@ export default function OrderWaybillPaymentSection({
       }
       return true
     },
-    [senderType, recipientCounterpartyType, thirdPersonRef],
+    [senderType, recipientCounterpartyType, thirdPersonRef, forceSenderCash],
   )
 
   const isPaymentAllowed = useCallback(
     (method: PaymentMethod, payer: PayerType): boolean => {
+      if (forceSenderCash) return method === 'Cash'
       if (payer === 'ThirdPerson')
         return method === 'NonCash' && !!thirdPersonRef
       if (method === 'Cash') return true // Sender & Recipient always allow Cash
@@ -389,10 +394,11 @@ export default function OrderWaybillPaymentSection({
       }
       return true
     },
-    [senderType, recipientCounterpartyType, thirdPersonRef],
+    [senderType, recipientCounterpartyType, thirdPersonRef, forceSenderCash],
   )
 
   const handlePayerType = (value: PayerType) => {
+    if (forceSenderCash && value !== 'Sender') return // blocked by delivery promocode
     onChange('payer_type', value)
     // Auto-switch payment method if current one is incompatible
     if (!isPaymentAllowed(paymentMethod, value)) {
@@ -404,6 +410,7 @@ export default function OrderWaybillPaymentSection({
   }
 
   const handlePaymentMethod = (value: PaymentMethod) => {
+    if (forceSenderCash && value !== 'Cash') return // blocked by delivery promocode
     onChange('payment_method', value)
     // Auto-switch payer type if current one is incompatible
     if (!isPayerAllowed(payerType, value)) {
@@ -855,7 +862,9 @@ export default function OrderWaybillPaymentSection({
                 )
                 if (btnDisabled && !disabled) {
                   let tooltipKey: string
-                  if (value === 'Sender') {
+                  if (forceSenderCash) {
+                    tooltipKey = 'promo_delivery_disabled_tooltip'
+                  } else if (value === 'Sender') {
                     tooltipKey = 'novaposhta_payer_sender_disabled_tooltip'
                   } else if (value === 'Recipient') {
                     tooltipKey = 'novaposhta_payer_recipient_disabled_tooltip'
@@ -898,9 +907,9 @@ export default function OrderWaybillPaymentSection({
                   )
                   // Show tooltip only when disabled by business rule
                   if (btnDisabled && !disabled) {
-                    // NonCash can be disabled because Sender or Recipient is a private person
-                    const tooltipKey =
-                      value === 'NonCash'
+                    const tooltipKey = forceSenderCash
+                      ? 'promo_delivery_disabled_tooltip'
+                      : value === 'NonCash'
                         ? payerType === 'Sender'
                           ? 'novaposhta_payer_sender_disabled_tooltip'
                           : 'novaposhta_payer_recipient_disabled_tooltip'

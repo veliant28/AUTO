@@ -567,6 +567,16 @@ class OrderRecipientInfo(BaseModel):
     middle_name: str = ""
     order_number: str = ""
     order_total: str = ""
+    delivery_city_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
+    delivery_type: Optional[str] = None
 
 
 class NovaPoshtaWaybillSummary(BaseModel):

@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from '@/lib/toast'
+import api from '@/lib/api'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type {
   OrderNovaPoshtaWaybillUpsert,
@@ -155,6 +156,7 @@ interface Props {
   orderId: number
   open: boolean
   onOpenChange: (open: boolean) => void
+  promocodeCode?: string | null
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -165,10 +167,29 @@ export default function OrderWaybillModal({
   orderId,
   open,
   onOpenChange,
+  promocodeCode,
 }: Props) {
   const t = useTranslations('admin')
   const queryClient = useQueryClient()
   const formInitialized = React.useRef(false)
+
+  // ── Delivery promocode state ──────────────────────────────────────────────
+  const [forceSenderCash, setForceSenderCash] = useState(false)
+  const deliveryToastShown = useRef(false)
+
+  // ── Fetch order detail to get promocode code if not passed as prop ──────
+  const { data: orderDetail } = useQuery({
+    queryKey: ['admin-order-detail', orderId],
+    queryFn: async () => {
+      const { data } = await api.get(`/admin/orders/${orderId}`)
+      return data as
+        | { promocode_code: string | null; discount_amount: number }
+        | undefined
+    },
+    enabled: open && !promocodeCode,
+  })
+  const effectivePromocodeCode =
+    promocodeCode ?? orderDetail?.promocode_code ?? null
 
   // ── Fetch waybill if exists ──────────────────────────────────────────────
   const { data: detail, isLoading: loadingWaybill } = useQuery({
@@ -417,6 +438,53 @@ export default function OrderWaybillModal({
     }
   }, [open])
 
+  // ── Validate delivery promocode when modal opens ─────────────────────────
+  useEffect(() => {
+    if (!open || !effectivePromocodeCode) {
+      setForceSenderCash(false)
+      deliveryToastShown.current = false
+      return
+    }
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data } = await api.post('/loyalty/validate', {
+          code: effectivePromocodeCode,
+        })
+        if (cancelled) return
+        if (data.is_delivery_free) {
+          setForceSenderCash(true)
+          if (!deliveryToastShown.current) {
+            deliveryToastShown.current = true
+            toast.info(t('promo_force_sender'))
+          }
+        }
+      } catch {
+        // Silently ignore — non-critical feature
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open, effectivePromocodeCode, t])
+
+  // ── Apply forceSenderCash to form AFTER waybill finishes loading ────────
+  // Must run AFTER the waybill-fill effect below to ensure override sticks.
+  useEffect(() => {
+    if (forceSenderCash && !loadingWaybill) {
+      // Use a microtask delay so waybill-fill effect runs first
+      const id = setTimeout(() => {
+        setForm((prev) => ({
+          ...prev,
+          payer_type: 'Sender',
+          payment_method: 'Cash',
+        }))
+      }, 0)
+      return () => clearTimeout(id)
+    }
+  }, [forceSenderCash, loadingWaybill])
+
   useEffect(() => {
     if (waybill && !waybill.is_deleted) {
       // When afterpayment_amount is set, sync cost to match (COD always overrides cost)
@@ -479,11 +547,11 @@ export default function OrderWaybillModal({
           : [],
         volumetric_width: waybill.options_seat?.[0]?.volumetric_width || '',
         volumetric_length: waybill.options_seat?.[0]?.volumetric_length || '',
-	        volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
-	        pack_label: waybill.options_seat?.[0]?.pack_label || '',
-	        pack_cost: waybill.options_seat?.[0]?.pack_cost || '',
-	        pack_items: buildPackItemsFromSeat(waybill.options_seat?.[0]),
-	        options_seat:
+        volumetric_height: waybill.options_seat?.[0]?.volumetric_height || '',
+        pack_label: waybill.options_seat?.[0]?.pack_label || '',
+        pack_cost: waybill.options_seat?.[0]?.pack_cost || '',
+        pack_items: buildPackItemsFromSeat(waybill.options_seat?.[0]),
+        options_seat:
           hasAfterpayment && seats > 1
             ? (Array.from({ length: seats }, (_, i) => ({
                 ...(waybill.options_seat?.[i]
@@ -545,6 +613,29 @@ export default function OrderWaybillModal({
         recipient_last_name: orderData?.last_name || prev.recipient_last_name,
         recipient_middle_name:
           orderData?.middle_name || prev.recipient_middle_name,
+        // Auto-fill delivery address from order
+        recipient_city_ref:
+          orderData?.delivery_city_ref || prev.recipient_city_ref,
+        recipient_city_label:
+          orderData?.delivery_city_label || prev.recipient_city_label,
+        recipient_address_ref:
+          orderData?.delivery_warehouse_ref ||
+          orderData?.delivery_street_ref ||
+          prev.recipient_address_ref,
+        recipient_address_label:
+          orderData?.delivery_warehouse_label ||
+          orderData?.delivery_street_label ||
+          prev.recipient_address_label,
+        recipient_street_ref:
+          orderData?.delivery_street_ref || prev.recipient_street_ref,
+        recipient_street_label:
+          orderData?.delivery_street_label || prev.recipient_street_label,
+        recipient_house: orderData?.delivery_house || prev.recipient_house,
+        recipient_apartment:
+          orderData?.delivery_apartment || prev.recipient_apartment,
+        delivery_type:
+          (orderData?.delivery_type as 'warehouse' | 'postomat' | 'address') ||
+          prev.delivery_type,
         // Auto-fill for new TTNs
         description: `${brandName} Автозапчасти`,
         ...(orderData?.order_number
@@ -554,6 +645,13 @@ export default function OrderWaybillModal({
           ? { cost: String(Math.round(Number(orderData.order_total))) }
           : {}),
       }))
+      // Restore city/address search queries so SearchableSelect shows saved labels
+      if (orderData?.delivery_city_label) {
+        setCityQuery(orderData.delivery_city_label)
+      }
+      if (orderData?.delivery_warehouse_label) {
+        setAddressQuery(orderData.delivery_warehouse_label)
+      }
       formInitialized.current = true
     } else if (
       !waybill &&
@@ -698,8 +796,7 @@ export default function OrderWaybillModal({
       toast.success(t('novaposhta_waybill_updated'))
       onOpenChange(false)
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   const updateMutation = useMutation({
@@ -716,8 +813,7 @@ export default function OrderWaybillModal({
       toast.success(t('novaposhta_waybill_updated'))
       onOpenChange(false)
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   const deleteMutation = useMutation({
@@ -728,8 +824,7 @@ export default function OrderWaybillModal({
       toast.success(t('novaposhta_waybill_deleted'))
       onOpenChange(false)
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   const syncMutation = useMutation({
@@ -748,8 +843,7 @@ export default function OrderWaybillModal({
         toast.info(t('novaposhta_waybill_sync', { number: '' }))
       }
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   const printMarkingsMutation = useMutation({
@@ -760,8 +854,7 @@ export default function OrderWaybillModal({
       else toast.error(t('novaposhta_print_no_url'))
       queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   const printTtnMutation = useMutation({
@@ -772,8 +865,7 @@ export default function OrderWaybillModal({
       else toast.error(t('novaposhta_print_no_url'))
       queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
     },
-    onError: (err: any) =>
-      showNpError(err, t('novaposhta_error_api')),
+    onError: (err: any) => showNpError(err, t('novaposhta_error_api')),
   })
 
   // ── Form change handler ─────────────────────────────────────────────────
@@ -1408,6 +1500,7 @@ export default function OrderWaybillModal({
                   priceLoading={priceLoading}
                   priceError={priceError}
                   localPackagingCost={localPackagingCost}
+                  forceSenderCash={forceSenderCash}
                 />
               </div>
             </div>
