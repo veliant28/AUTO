@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { Gift, Copy, ArrowLeft, Loader2, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -91,6 +91,9 @@ export default function LoyaltyClient() {
                       <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
                         {t('loyalty_reason')}
                       </th>
+                      <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
+                        {t('status')}
+                      </th>
                       <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">
                         {t('loyalty_created_at')}
                       </th>
@@ -140,6 +143,29 @@ export default function LoyaltyClient() {
                             </Badge>
                           </td>
                           <td className="p-3 text-sm">{item.reason}</td>
+                          <td className="p-3">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
+                                >
+                                  {item.used_at
+                                    ? t('loyalty_status_used')
+                                    : expired
+                                      ? t('loyalty_status_expired')
+                                      : t('loyalty_status_unused')}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {item.used_at
+                                  ? `${t('loyalty_used_at')}: ${new Date(item.used_at + 'Z').toLocaleString()}`
+                                  : ''}
+                                {!item.used_at && expired
+                                  ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                  : ''}
+                              </TooltipContent>
+                            </Tooltip>
+                          </td>
                           <td className="p-3 text-sm text-muted-foreground">
                             {new Date(item.created_at + 'Z').toLocaleString()}
                           </td>

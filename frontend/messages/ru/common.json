@@ -257,7 +257,12 @@
     "promo_inactive": "Промокод неактивен",
     "promo_expired": "Промокод истёк",
     "promo_used": "Промокод уже использован",
-    "promo_wrong_user": "Промокод принадлежит другому пользователю"
+    "promo_wrong_user": "Промокод принадлежит другому пользователю",
+    "loyalty_status_used": "Использован",
+    "loyalty_status_unused": "Не использован",
+    "loyalty_status_expired": "Истёк",
+    "loyalty_used_at": "Использован",
+    "loyalty_expired_at": "Истёк"
   },
   "header": {
     "catalog": "Каталог",
@@ -1081,7 +1086,10 @@
     "status_unused": "Не использован",
     "status_expired": "Истёк",
     "loyalty_used_at": "Использован",
-    "loyalty_expired_at": "Истёк"
+    "loyalty_expired_at": "Истёк",
+    "loyalty_status_used": "Использован",
+    "loyalty_status_unused": "Не использован",
+    "loyalty_status_expired": "Истёк"
   },
   "catalog": {
     "title": "Каталог",

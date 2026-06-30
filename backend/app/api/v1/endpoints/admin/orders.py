@@ -12,6 +12,7 @@ from app.schemas.admin_schemas import (
     OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
+from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from datetime import datetime
 
@@ -213,7 +214,18 @@ async def update_order(
 
     # Handle promocode removal (explicitly check for None/Optional fields)
     if 'promocode_code' in data.model_dump(exclude_unset=True):
+        old_code = order.promocode_code
         order.promocode_code = data.promocode_code
+
+        # Sync promocode used_at: set when applied, clear when removed
+        if data.promocode_code:
+            pc = db.query(Promocode).filter(Promocode.code == data.promocode_code).first()
+            if pc and not pc.used_at:
+                pc.used_at = datetime.utcnow()
+        elif old_code:
+            pc = db.query(Promocode).filter(Promocode.code == old_code).first()
+            if pc:
+                pc.used_at = None
     if 'discount_amount' in data.model_dump(exclude_unset=True):
         order.discount_amount = data.discount_amount or 0
     if 'original_total' in data.model_dump(exclude_unset=True):

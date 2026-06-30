@@ -257,7 +257,12 @@
     "promo_inactive": "Promocode is inactive",
     "promo_expired": "Promocode expired",
     "promo_used": "Promocode already used",
-    "promo_wrong_user": "Promocode belongs to another user"
+    "promo_wrong_user": "Promocode belongs to another user",
+    "loyalty_status_used": "Used",
+    "loyalty_status_unused": "Unused",
+    "loyalty_status_expired": "Expired",
+    "loyalty_used_at": "Used",
+    "loyalty_expired_at": "Expired"
   },
   "header": {
     "catalog": "Catalog",
@@ -1081,7 +1086,10 @@
     "status_unused": "Unused",
     "status_expired": "Expired",
     "loyalty_used_at": "Used",
-    "loyalty_expired_at": "Expired"
+    "loyalty_expired_at": "Expired",
+    "loyalty_status_used": "Used",
+    "loyalty_status_unused": "Unused",
+    "loyalty_status_expired": "Expired"
   },
   "catalog": {
     "title": "Catalog",
