@@ -354,6 +354,7 @@ async def search_parts(
         or_(
             Part.article.ilike(f"%{q}%"),
             Part.name.ilike(f"%{q}%"),
+            Part.sku.ilike(f"%{q}%"),
         )
     ).limit(limit).all()
 
@@ -392,6 +393,7 @@ async def autocomplete(
         or_(
             Part.article.ilike(f"{q}%"),
             Part.name.ilike(f"%{q}%"),
+            Part.sku.ilike(f"%{q}%"),
         )
     ).limit(limit).all()
 
