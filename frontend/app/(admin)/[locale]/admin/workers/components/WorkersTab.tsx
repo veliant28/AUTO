@@ -588,7 +588,7 @@ export default function WorkersTab() {
               </Badge>
               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[60px]">
                 <div
-                  className={`h-full rounded-full transition-all duration-1000 ${isFailed ? 'bg-red-500' : 'bg-blue-500'}`}
+                  className={`h-full rounded-full transition-all duration-[2500ms] ${isFailed ? 'bg-red-500' : 'bg-blue-500'}`}
                   style={{ width: `${ip}%` }}
                 />
               </div>

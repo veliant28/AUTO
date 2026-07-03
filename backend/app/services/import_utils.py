@@ -59,34 +59,49 @@ def queue_post_import_tasks(supplier: str):
       2. apply_margins_task          — apply pricing rules (also triggers 30h fallback)
       3. download_product_images     — GPL only
       4. match_parts_with_tecdoc     — TecDoc cross-reference
+
+    Each task is only queued if it is not already running (dedup via inspect).
     """
+    from app.api.v1.endpoints.admin.workers import is_task_active
     from app.workers.tasks.deactivation_tasks import deactivate_orphaned_offers
 
-    try:
-        deactivate_orphaned_offers.delay(supplier)
-        logger.info("%s: orphaned offers deactivation queued", supplier)
-    except Exception as e:
-        logger.warning("%s: failed to queue orphan deactivation: %s", supplier, e)
+    if not is_task_active("deactivate_orphaned_offers"):
+        try:
+            deactivate_orphaned_offers.delay(supplier)
+            logger.info("%s: orphaned offers deactivation queued", supplier)
+        except Exception as e:
+            logger.warning("%s: failed to queue orphan deactivation: %s", supplier, e)
+    else:
+        logger.info("%s: deactivate_orphaned_offers already active, skipped", supplier)
 
     from app.workers.tasks.pricing_tasks import apply_margins_task
 
-    try:
-        apply_margins_task.delay()
-        logger.info("%s: margins task queued", supplier)
-    except Exception as e:
-        logger.warning("%s: failed to queue margins: %s", supplier, e)
+    if not is_task_active("apply_margins"):
+        try:
+            apply_margins_task.delay()
+            logger.info("%s: margins task queued", supplier)
+        except Exception as e:
+            logger.warning("%s: failed to queue margins: %s", supplier, e)
+    else:
+        logger.info("%s: apply_margins already active, skipped", supplier)
 
     if supplier.upper() == "GPL":
-        try:
-            from app.workers.tasks.image_tasks import download_product_images
-            download_product_images.delay()
-            logger.info("GPL: image download task queued")
-        except Exception as e:
-            logger.warning("GPL: failed to queue image download: %s", e)
+        if not is_task_active("download_product_images"):
+            try:
+                from app.workers.tasks.image_tasks import download_product_images
+                download_product_images.delay()
+                logger.info("GPL: image download task queued")
+            except Exception as e:
+                logger.warning("GPL: failed to queue image download: %s", e)
+        else:
+            logger.info("GPL: download_product_images already active, skipped")
 
-    try:
-        from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
-        match_parts_with_tecdoc.delay()
-        logger.info("%s: tecdoc matching task queued", supplier)
-    except Exception as e:
-        logger.warning("%s: failed to queue tecdoc matching: %s", supplier, e)
+    if not is_task_active("match_parts_with_tecdoc"):
+        try:
+            from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
+            match_parts_with_tecdoc.delay()
+            logger.info("%s: tecdoc matching task queued", supplier)
+        except Exception as e:
+            logger.warning("%s: failed to queue tecdoc matching: %s", supplier, e)
+    else:
+        logger.info("%s: match_parts_with_tecdoc already active, skipped", supplier)

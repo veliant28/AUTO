@@ -66,6 +66,20 @@ def _get_docker_cpu() -> float:
     return 0.0
 
 
+def is_task_active(task_name: str) -> bool:
+    """Check if a task with the given name is currently active (running)."""
+    try:
+        inspect = celery_app.control.inspect()
+        active = inspect.active() or {}
+        for tasks in active.values():
+            for t in tasks:
+                if t.get("name") == task_name:
+                    return True
+    except Exception as e:
+        logger.warning(f"is_task_active check failed: {e}")
+    return False
+
+
 def _collect_tasks(
     active_raw: dict | None,
     reserved_raw: dict | None,
@@ -77,79 +91,85 @@ def _collect_tasks(
     tasks: list[TaskItem] = []
     stuck: list[TaskItem] = []
 
-    # Fixed slot assignment by task name (stable — slots don't shift when tasks finish)
-    SLOT_MAP = {
-        "process_price_import": 1,
-        "apply_margins": 2,
-        "download_product_images": 3,
-        "match_parts_with_tecdoc": 4,
-        "deactivate_orphaned_offers": 0,
-    }
+    # Fast service tasks that should not occupy a slot (shown gray)
+    SERVICE_TASKS = {"deactivate_orphaned_offers"}
 
     def _append(source: dict | None, status: str, assign_slot: bool = False) -> None:
         if not source:
             return
+        # Collect all tasks first to assign slots dynamically
+        all_in_source: list[tuple] = []
         for worker_name, task_list in source.items():
             if not task_list:
                 continue
             for task in task_list:
-                tid = task.get("id", "")
-                tname = task.get("name", "")
-                tstart = task.get("time_start")
-                runtime = round(now - tstart, 0) if tstart else 0.0
-                si = SLOT_MAP.get(tname, 0) if assign_slot else -1
-                import_progress = None
-                import_status = None
-                import_stage = None
-                stage_progress_start = None
-                stage_started_at = None
-                if db and tname == "process_price_import":
-                    try:
-                        args = task.get("args", [])
-                        if args:
-                            pi = db.query(PriceImport).filter(
-                                PriceImport.id == int(args[0])
-                            ).first()
-                            if pi:
-                                import_progress = pi.progress
-                                import_status = pi.status
-                                import_stage = pi.stage_name
-                                stage_progress_start = pi.stage_progress_start
-                                stage_started_at = pi.stage_started_at.timestamp() if pi.stage_started_at else None
-                    except Exception:
-                        pass
-                elif status == "active" and tname in ("download_product_images", "match_parts_with_tecdoc"):
-                    # Read progress from Celery result backend (self.update_state meta)
-                    try:
-                        from celery.result import AsyncResult
-                        ar = AsyncResult(tid, app=celery_app)
-                        if ar.state == "PROGRESS" and ar.info:
-                            meta = ar.info
-                            current = meta.get("current", 0)
-                            total = meta.get("total", 0)
-                            if total > 0:
-                                import_progress = int(current / total * 100)
-                                import_stage = f"{current}/{total}"
-                                import_status = "processing"
-                    except Exception:
-                        pass
-                item = TaskItem(
-                    id=tid,
-                    name=tname,
-                    worker=worker_name,
-                    status=status,
-                    runtime_seconds=runtime,
-                    time_start=tstart,
-                    slot_index=si,
-                    import_progress=import_progress,
-                    import_status=import_status,
-                    import_stage=import_stage,
-                    stage_progress_start=stage_progress_start,
-                    stage_started_at=stage_started_at,
-                )
-                tasks.append(item)
-                if status == "active" and tstart and now - tstart > stuck_threshold:
-                    stuck.append(item)
+                all_in_source.append((worker_name, task))
+
+        # Assign slots 1..4 to first 4 active tasks (non-service)
+        slot_counter = 1
+        for worker_name, task in all_in_source:
+            tid = task.get("id", "")
+            tname = task.get("name", "")
+            tstart = task.get("time_start")
+            runtime = round(now - tstart, 0) if tstart else 0.0
+
+            if assign_slot and tname not in SERVICE_TASKS and slot_counter <= 4:
+                si = slot_counter
+                slot_counter += 1
+            else:
+                si = 0  # gray for service tasks or beyond slot 4
+
+            import_progress = None
+            import_status = None
+            import_stage = None
+            stage_progress_start = None
+            stage_started_at = None
+            if db and tname == "process_price_import":
+                try:
+                    args = task.get("args", [])
+                    if args:
+                        pi = db.query(PriceImport).filter(
+                            PriceImport.id == int(args[0])
+                        ).first()
+                        if pi:
+                            import_progress = pi.progress
+                            import_status = pi.status
+                            import_stage = pi.stage_name
+                            stage_progress_start = pi.stage_progress_start
+                            stage_started_at = pi.stage_started_at.timestamp() if pi.stage_started_at else None
+                except Exception:
+                    pass
+            elif status == "active" and tname in ("download_product_images", "match_parts_with_tecdoc"):
+                try:
+                    from celery.result import AsyncResult
+                    ar = AsyncResult(tid, app=celery_app)
+                    if ar.state == "PROGRESS" and ar.info:
+                        meta = ar.info
+                        current = meta.get("current", 0)
+                        total = meta.get("total", 0)
+                        if total > 0:
+                            import_progress = int(current / total * 100)
+                            import_stage = f"{current}/{total}"
+                            import_status = "processing"
+                except Exception:
+                    pass
+            item = TaskItem(
+                id=tid,
+                name=tname,
+                worker=worker_name,
+                status=status,
+                runtime_seconds=runtime,
+                time_start=tstart,
+                slot_index=si,
+                import_progress=import_progress,
+                import_status=import_status,
+                import_stage=import_stage,
+                stage_progress_start=stage_progress_start,
+                stage_started_at=stage_started_at,
+            )
+            tasks.append(item)
+            if status == "active" and tstart and now - tstart > stuck_threshold:
+                stuck.append(item)
 
     _append(active_raw, "active", assign_slot=True)
     _append(reserved_raw, "reserved")
