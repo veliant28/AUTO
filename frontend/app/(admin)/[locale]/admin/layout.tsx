@@ -34,6 +34,7 @@ import {
   SlidersHorizontal,
   Truck,
   Gift,
+  ScanBarcode,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -104,7 +105,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
     '/admin/returns': { icon: RotateCcw, titleKey: 'returns_title' },
     '/admin/loyalty': { icon: Gift, titleKey: 'loyalty_title' },
-    '/admin/waybills': { icon: FileText, titleKey: 'waybills_title' },
+    '/admin/waybills': { icon: ScanBarcode, titleKey: 'waybills_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/categories': { icon: FolderTree, titleKey: 'categories_title' },
@@ -754,7 +755,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     },
     {
       href: '/admin/waybills',
-      icon: FileText,
+      icon: ScanBarcode,
       label: t('waybills_title'),
       roles: ['admin'],
     },
