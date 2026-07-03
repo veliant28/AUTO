@@ -24,6 +24,7 @@ import { useOrderSync } from '@/lib/orderSync'
 import { getOrderReceiptLink } from '@/lib/api/checkbox'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
+import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
@@ -471,6 +472,34 @@ function PaymentActions({
             try {
               const { data } = await api.post(
                 `/orders/${orderId}/pay?method=novapay`,
+              )
+              if (data?.payment_url) {
+                window.open(data.payment_url, '_blank', 'noopener,noreferrer')
+              } else {
+                toast.info(t('receipt_pending'))
+              }
+            } catch (err: any) {
+              const msg = err?.response?.data?.detail || err?.message || ''
+              toast.error(msg || t('receipt_error'))
+            } finally {
+              setPayLoading(false)
+            }
+          }}
+          loading={payLoading}
+        />
+      </div>
+    )
+  }
+
+  if (paymentMethod === 'liqpay') {
+    return (
+      <div className="space-y-1">
+        <LiqPayStandaloneButton
+          onClick={async () => {
+            setPayLoading(true)
+            try {
+              const { data } = await api.post(
+                `/orders/${orderId}/pay?method=liqpay`,
               )
               if (data?.payment_url) {
                 window.open(data.payment_url, '_blank', 'noopener,noreferrer')

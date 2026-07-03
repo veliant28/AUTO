@@ -9,6 +9,7 @@ import { toast } from '@/lib/toast'
 import { getTransaction, initPayment } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
+import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
 import PaymentStatusBadge from './PaymentStatusBadge'
 
 export default function PaymentBlock({
@@ -126,7 +127,39 @@ export default function PaymentBlock({
     )
   }
 
-  // Other banks (LiqPay)
+  // LiqPay → branded button
+  if (paymentMethod === 'liqpay') {
+    return (
+      <div className="space-y-3">
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        ) : tx?.status === 'paid' ? (
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">
+                {t('payment_status')}:
+              </span>
+              <PaymentStatusBadge status={tx.status} t={t} />
+            </div>
+            {tx.receipt_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => window.open(tx.receipt_url!, '_blank')}
+              >
+                {t('payment_receipt')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <LiqPayStandaloneButton onClick={() => handleInitPayment('liqpay')} />
+        )}
+      </div>
+    )
+  }
+
+  // Other banks (fallback)
   return (
     <div className="space-y-3">
       {isLoading ? (
