@@ -53,9 +53,21 @@ def complete_import(pi: PriceImport, db: Session):
 def queue_post_import_tasks(supplier: str):
     """
     Queue post-import parallel tasks based on supplier type.
-    GPL → margins + photos + tecdoc matching
-    UTR → margins + tecdoc matching
+
+    Order:
+      1. deactivate_orphaned_offers  — cleanup products gone from price list
+      2. apply_margins_task          — apply pricing rules (also triggers 30h fallback)
+      3. download_product_images     — GPL only
+      4. match_parts_with_tecdoc     — TecDoc cross-reference
     """
+    from app.workers.tasks.deactivation_tasks import deactivate_orphaned_offers
+
+    try:
+        deactivate_orphaned_offers.delay(supplier)
+        logger.info("%s: orphaned offers deactivation queued", supplier)
+    except Exception as e:
+        logger.warning("%s: failed to queue orphan deactivation: %s", supplier, e)
+
     from app.workers.tasks.pricing_tasks import apply_margins_task
 
     try:
