@@ -375,9 +375,7 @@ export default function BatchTab({ t }: { t: (k: string) => string }) {
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-3 border-t">
               <span className="text-sm text-muted-foreground">
-                {(page - 1) * pageSize + 1}–
-                {Math.min(page * pageSize, data?.total || 0)} {t('tecdoc_of')}{' '}
-                {data?.total || 0}
+                {t('page_of', { page, total: totalPages })}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -388,28 +386,6 @@ export default function BatchTab({ t }: { t: (k: string) => string }) {
                 >
                   {t('prev_page')}
                 </Button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let p: number
-                  if (totalPages <= 7) {
-                    p = i + 1
-                  } else if (page <= 4) {
-                    p = i + 1
-                  } else if (page >= totalPages - 3) {
-                    p = totalPages - 6 + i
-                  } else {
-                    p = page - 3 + i
-                  }
-                  return (
-                    <Button
-                      key={p}
-                      variant={p === page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setPage(p)}
-                    >
-                      {p}
-                    </Button>
-                  )
-                })}
                 <Button
                   variant="outline"
                   size="sm"
