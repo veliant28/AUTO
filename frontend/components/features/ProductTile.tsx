@@ -65,7 +65,7 @@ export default function ProductTile({
       data-article={product.article}
     >
       <Link
-        href={`/catalog/${product.article.replace(/\./g, '%2E')}`}
+        href={`/catalog/${product.article.replace(/\./g, '%2E').replace(/#/g, '%23')}`}
         onClick={handleClick}
         className="block"
       >
@@ -88,7 +88,7 @@ export default function ProductTile({
 
       <div className="p-3 space-y-2">
         <Link
-          href={`/catalog/${product.article.replace(/\./g, '%2E')}`}
+          href={`/catalog/${product.article.replace(/\./g, '%2E').replace(/#/g, '%23')}`}
           onClick={handleClick}
           className="block"
         >

@@ -100,7 +100,7 @@ export default function SearchPage() {
                   )}
                   <Button variant="outline" size="lg" asChild>
                     <Link
-                      href={`/catalog/${part.article.replace(/\./g, '%2E')}`}
+                      href={`/catalog/${part.article.replace(/\./g, '%2E').replace(/#/g, '%23')}`}
                     >
                       {t('details')} <ChevronRight className="w-4 h-4" />
                     </Link>
