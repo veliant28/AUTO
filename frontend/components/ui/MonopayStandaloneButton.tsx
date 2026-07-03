@@ -7,6 +7,7 @@ interface MonopayStandaloneButtonProps {
   dark?: boolean
   loading?: boolean
   disabled?: boolean
+  corners?: 'rounded' | 'semi-rounded' | 'straight'
 }
 
 /**
@@ -18,13 +19,15 @@ export default function MonopayStandaloneButton({
   dark = false,
   loading = false,
   disabled = false,
+  corners = 'semi-rounded',
 }: MonopayStandaloneButtonProps) {
   const themeClass = dark ? 'monopay-btn--dark' : 'monopay-btn--light'
+  const cornersClass = `monopay-btn--corners-${corners}`
 
   return (
     <div className="monopay-btn-container">
       <button
-        className={`monopay-btn ${themeClass} monopay-btn--corners-rounded monopay-btn--pay monopay-btn--with-text`}
+        className={`monopay-btn ${themeClass} ${cornersClass} monopay-btn--pay monopay-btn--with-text`}
         onClick={onClick}
         disabled={disabled || loading}
         type="button"
@@ -134,6 +137,12 @@ export default function MonopayStandaloneButton({
         }
         .monopay-btn--corners-rounded {
           border-radius: 100px;
+        }
+        .monopay-btn--corners-semi-rounded {
+          border-radius: 24px;
+        }
+        .monopay-btn--corners-straight {
+          border-radius: 8px;
         }
         .monopay-btn:disabled {
           opacity: 0.5;
