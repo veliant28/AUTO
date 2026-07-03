@@ -29,6 +29,7 @@ export type ProductTileItem = {
   currency: string
   image_url: string | null
   isFavorite: boolean
+  sku: string | null
 }
 
 type ProductTileProps = {
@@ -63,9 +64,10 @@ export default function ProductTile({
     <Card
       className="group overflow-hidden transition-shadow hover:shadow-md"
       data-article={product.article}
+      data-sku={product.sku}
     >
       <Link
-        href={`/catalog/${product.article.replace(/\./g, '%2E').replace(/#/g, '%23')}`}
+        href={`/catalog/${product.sku || product.article}`}
         onClick={handleClick}
         className="block"
       >
@@ -88,7 +90,7 @@ export default function ProductTile({
 
       <div className="p-3 space-y-2">
         <Link
-          href={`/catalog/${product.article.replace(/\./g, '%2E').replace(/#/g, '%23')}`}
+          href={`/catalog/${product.sku || product.article}`}
           onClick={handleClick}
           className="block"
         >

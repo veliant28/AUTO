@@ -171,8 +171,11 @@ async def get_part_details(
     db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
-    """Получить детальную информацию о запчасти по артикулу."""
-    parts = db.query(Part).filter(Part.article == article, Part.is_active == True).all()
+    """Получить детальную информацию о запчасти по артикулу или SKU."""
+    parts = db.query(Part).filter(
+        Part.is_active == True,
+        or_(Part.article == article, Part.sku == article)
+    ).all()
     part_data = None
     price_data = None
     if parts:
