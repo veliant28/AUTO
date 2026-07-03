@@ -16,7 +16,7 @@ import {
   XCircle,
   AlertTriangle,
   CheckCircle2,
-  Activity,
+  Loader,
   Cpu,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -246,7 +246,7 @@ function statusBadge(
           ? 'bg-yellow-500 text-white'
           : 'bg-gray-500 text-white'
   const Icon =
-    isStuck || isError ? AlertTriangle : status === 'active' ? Activity : Clock
+    isStuck || isError ? AlertTriangle : status === 'active' ? Loader : Clock
   return (
     <Badge className={`${color} border-0 gap-1 text-sm h-6`}>
       <Icon className="w-3.5 h-3.5" />
@@ -678,7 +678,7 @@ export default function WorkersTab() {
                 {workerOnline ? t('workers_online') : t('workers_offline')}
               </Badge>
               <Badge className="bg-blue-500 text-white border-0 gap-1 text-sm">
-                <Activity className="w-3.5 h-3.5" />
+                <Loader className="w-3.5 h-3.5" />
                 {t('workers_active')}: {activeCount}
               </Badge>
               <Badge className="bg-yellow-500 text-white border-0 gap-1 text-sm">

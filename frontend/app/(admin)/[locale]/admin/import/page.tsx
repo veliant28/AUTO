@@ -12,6 +12,7 @@ import {
   Clock,
   Download,
   XCircle,
+  Loader,
   Loader2,
   RefreshCw,
 } from 'lucide-react'
@@ -54,7 +55,7 @@ const statusIcons: Record<string, any> = {
   complete: CheckCircle2,
   promoted: CheckCircle2,
   failed: XCircle,
-  processing: Loader2,
+  processing: Loader,
   in_queue: Clock,
 }
 
