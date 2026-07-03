@@ -536,7 +536,9 @@ export default function WorkersTab() {
                 ? 'Матчинг'
                 : taskName === 'process_price_import'
                   ? 'Импорт'
-                  : taskName
+                  : taskName === 'deactivate_orphaned_offers'
+                    ? 'Деактивация'
+                    : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`

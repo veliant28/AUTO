@@ -83,6 +83,7 @@ def _collect_tasks(
         "apply_margins": 2,
         "download_product_images": 3,
         "match_parts_with_tecdoc": 4,
+        "deactivate_orphaned_offers": 5,
     }
 
     def _append(source: dict | None, status: str, assign_slot: bool = False) -> None:
