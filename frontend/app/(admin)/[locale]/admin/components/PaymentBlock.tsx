@@ -10,6 +10,7 @@ import { getTransaction, initPayment } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
 import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
+import DefaultPaymentButton from '@/components/ui/DefaultPaymentButton'
 import PaymentStatusBadge from './PaymentStatusBadge'
 
 export default function PaymentBlock({
@@ -181,20 +182,12 @@ export default function PaymentBlock({
             {(tx.status === 'pending' ||
               tx.status === 'failed' ||
               tx.status === 'expired') && (
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-1.5"
+              <DefaultPaymentButton
                 onClick={() => handleInitPayment(paymentMethod)}
+                loading={initLoading === paymentMethod}
                 disabled={initLoading === paymentMethod}
-              >
-                {initLoading === paymentMethod ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CreditCard className="w-4 h-4" />
-                )}
-                {t('payment_pay_via', { bank: label })}
-              </Button>
+                label={t('payment_pay_via', { bank: label })}
+              />
             )}
             {tx.invoice_url && (
               <Button
