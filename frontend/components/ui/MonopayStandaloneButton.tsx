@@ -48,10 +48,12 @@ export default function MonopayStandaloneButton({
             <div
               className="monopay-btn--text-wrapper"
               style={{
+                position: showText ? 'static' : 'absolute',
                 opacity: showText ? 1 : 0,
                 transform: showText ? 'translateX(0)' : 'translateX(-12px)',
                 transition:
                   'opacity 0.35s ease 0.05s, transform 0.4s ease 0.05s',
+                pointerEvents: showText ? 'auto' : 'none',
               }}
             >
               <svg
@@ -70,7 +72,6 @@ export default function MonopayStandaloneButton({
             <div
               className="monopay-btn--logo-wrapper"
               style={{
-                transform: animated ? 'translateX(0)' : 'translateX(0)',
                 transition: 'transform 0.4s ease',
               }}
             >
