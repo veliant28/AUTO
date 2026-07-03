@@ -1,59 +1,108 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+
+const innerStyles = `
+  .monopay-btn--inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .monopay-btn--text-wrapper {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .monopay-btn--text-inner {
+    display: flex;
+    align-items: center;
+    width: 98px;
+  }
+  .monopay-btn--logo-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .monopay-btn--logo-wrapper svg path {
+    fill: currentColor;
+  }
+  .monopay-btn--spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: monopay-spin 0.6s linear infinite;
+  }
+  @keyframes monopay-spin {
+    to { transform: rotate(360deg); }
+  }
+`
 
 interface MonopayStandaloneButtonProps {
   onClick?: () => void
-  dark?: boolean
   loading?: boolean
   disabled?: boolean
-  corners?: 'rounded' | 'semi-rounded' | 'straight'
 }
 
-/**
- * Official Monopay button — exact copy from monobank.ua/api-docs.
- * Features:
- *  - Load animation: logo centered → shifts right, text fades in
- *  - Hover: background darkens (overlay)
- *  - Works without loading the external JS widget.
- */
 export default function MonopayStandaloneButton({
   onClick,
-  dark = false,
   loading = false,
   disabled = false,
-  corners = 'straight',
 }: MonopayStandaloneButtonProps) {
-  const [showText, setShowText] = useState(false)
-  const themeClass = dark ? 'monopay-btn--dark' : 'monopay-btn--light'
-  const cornersClass = `monopay-btn--corners-${corners}`
+  const [stage, setStage] = useState<'initial' | 'logoMove' | 'showText'>(
+    'initial',
+  )
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowText(true), 550)
-    return () => clearTimeout(timer)
+    const t1 = setTimeout(() => setStage('logoMove'), 100)
+    const t2 = setTimeout(() => setStage('showText'), 100 + 500)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
   }, [])
 
+  useEffect(() => {
+    const styleEl = document.createElement('style')
+    styleEl.textContent = innerStyles
+    document.head.appendChild(styleEl)
+    return () => styleEl.remove()
+  }, [])
+
+  const textVisible = stage === 'showText'
+
   return (
-    <div className="monopay-btn-container">
-      <button
-        className={`monopay-btn ${themeClass} ${cornersClass} monopay-btn--with-text`}
-        onClick={onClick}
-        disabled={disabled || loading}
-        type="button"
-      >
-        {loading ? (
-          <span className="monopay-btn--spinner" />
-        ) : (
-          <div className="monopay-btn--inner">
+    <Button
+      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible"
+      onClick={onClick}
+      disabled={disabled || loading}
+      type="button"
+    >
+      {loading ? (
+        <span className="monopay-btn--spinner" />
+      ) : (
+        <div className="monopay-btn--inner">
+          {/* Текст "Оплатити Mono" */}
+          <div
+            className="monopay-btn--text-wrapper"
+            style={{
+              width: textVisible ? '98px' : '0px',
+              overflow: 'hidden',
+              transition: 'width 0.35s ease',
+            }}
+          >
             <div
-              className="monopay-btn--text-wrapper"
+              className="monopay-btn--text-inner"
               style={{
-                position: showText ? 'static' : 'absolute',
-                opacity: showText ? 1 : 0,
-                transform: showText ? 'translateX(0)' : 'translateX(-12px)',
-                transition:
-                  'opacity 0.35s ease 0.05s, transform 0.4s ease 0.05s',
-                pointerEvents: showText ? 'auto' : 'none',
+                opacity: textVisible ? 1 : 0,
+                transition: 'opacity 0.3s ease 0.35s',
+                width: '98px',
               }}
             >
               <svg
@@ -69,147 +118,55 @@ export default function MonopayStandaloneButton({
                 />
               </svg>
             </div>
-            <div
-              className="monopay-btn--logo-wrapper"
-              style={{
-                transition: 'transform 0.4s ease',
-              }}
-            >
-              <svg
-                width="103"
-                height="26"
-                viewBox="0 0 103 26"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M96.9997 0C100.313 0 103 2.68629 103 6V20C103 23.3137 100.313 26 96.9997 26H60.9997C57.686 26 54.9997 23.3137 54.9997 20V6C54.9997 2.68629 57.686 0 60.9997 0H96.9997ZM89.1472 20.1406L88.7868 20.96C88.5468 21.48 88.107 21.6602 87.447 21.6602C87.207 21.6601 86.8671 21.6 86.6472 21.5L86.2673 23.7803C86.5872 23.8603 87.227 23.9199 87.527 23.9199C89.187 23.8799 90.4672 23.4001 91.1872 21.5801L95.7272 10.3408H92.987L90.4675 17.0605L87.947 10.3408H85.2272L89.1472 20.1406ZM79.8688 10.1006C78.3488 10.1006 76.8281 10.5801 75.6481 11.6201L76.6091 13.3203C77.429 12.5605 78.3885 12.1797 79.4284 12.1797C80.7083 12.1797 81.5484 12.82 81.5485 13.7998V15.1006C80.9086 14.3407 79.7688 13.92 78.489 13.9199C76.949 13.9199 75.1286 14.7801 75.1286 17.04C75.1286 19.2 76.949 20.2402 78.489 20.2402C79.7488 20.2401 80.8886 19.7799 81.5485 19V20H84.0886V13.7598C84.0884 10.9801 82.0687 10.1006 79.8688 10.1006ZM63.7184 6.66016V20H66.5583V15.2598H69.9587C72.8385 15.2597 74.4382 13.2799 74.4382 10.96C74.4381 8.62011 72.8584 6.66026 69.9587 6.66016H63.7184ZM79.5085 15.6396C80.3285 15.6396 81.1285 15.9205 81.5485 16.4805V17.6797C81.1285 18.2397 80.3285 18.5205 79.5085 18.5205C78.5087 18.5205 77.6885 18.0003 77.6882 17.1006C77.6882 16.1606 78.5085 15.6397 79.5085 15.6396ZM69.5788 9.16016C70.6986 9.1603 71.5387 9.84019 71.5388 10.96C71.5388 12.0598 70.6986 12.7596 69.5788 12.7598H66.5583V9.16016H69.5788Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M14.3359 19.761H11.8118V13.7467C11.8118 12.7344 11.3386 12.2283 10.392 12.2283C9.98451 12.2283 9.60327 12.34 9.24832 12.5635C8.90652 12.787 8.63045 13.0433 8.42012 13.3326V19.761H5.89605V13.7467C5.89605 12.7344 5.42279 12.2283 4.47627 12.2283C4.08188 12.2283 3.70722 12.34 3.35227 12.5635C2.99732 12.787 2.71468 13.0499 2.50434 13.3523V19.761H0V10.2366H2.50434V11.4789C2.74097 11.1371 3.15508 10.8085 3.74666 10.493C4.33823 10.1643 4.96268 10 5.61998 10C7.00033 10 7.88112 10.5784 8.26236 11.7353C8.56472 11.262 9.01169 10.8545 9.60327 10.5127C10.208 10.1709 10.8522 10 11.5358 10C12.4297 10 13.1199 10.2432 13.6063 10.7296C14.0927 11.2029 14.3359 11.9193 14.3359 12.879V19.761Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M24.8771 18.5582C23.9568 19.5178 22.7342 19.9977 21.2093 19.9977C19.6843 19.9977 18.4617 19.5178 17.5415 18.5582C16.6344 17.5853 16.1809 16.3956 16.1809 14.989C16.1809 13.5823 16.6344 12.3992 17.5415 11.4395C18.4617 10.4798 19.6843 10 21.2093 10C22.7342 10 23.9568 10.4798 24.8771 11.4395C25.7973 12.3992 26.2574 13.5823 26.2574 14.989C26.2574 16.3956 25.7973 17.5853 24.8771 18.5582ZM19.4345 16.9806C19.8684 17.5065 20.4599 17.7694 21.2093 17.7694C21.9586 17.7694 22.5502 17.5065 22.984 16.9806C23.431 16.4416 23.6545 15.7777 23.6545 14.989C23.6545 14.2133 23.431 13.5626 22.984 13.0368C22.5502 12.4978 21.9586 12.2283 21.2093 12.2283C20.4599 12.2283 19.8684 12.4978 19.4345 13.0368C19.0007 13.5626 18.7838 14.2133 18.7838 14.989C18.7838 15.7777 19.0007 16.4416 19.4345 16.9806Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M37.0481 19.761H34.5438V14.003C34.5438 12.8198 33.9588 12.2283 32.7888 12.2283C31.8817 12.2283 31.1587 12.6029 30.6197 13.3523V19.761H28.1153V10.2366H30.6197V11.4789C31.4479 10.493 32.5587 10 33.9522 10C34.9776 10 35.7467 10.2695 36.2594 10.8085C36.7852 11.3475 37.0481 12.0902 37.0481 13.0368V19.761Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M47.6197 18.5582C46.6994 19.5178 45.4768 19.9977 43.9519 19.9977C42.4269 19.9977 41.2043 19.5178 40.2841 18.5582C39.377 17.5853 38.9235 16.3956 38.9235 14.989C38.9235 13.5823 39.377 12.3992 40.2841 11.4395C41.2043 10.4798 42.4269 10 43.9519 10C45.4768 10 46.6994 10.4798 47.6197 11.4395C48.5399 12.3992 49 13.5823 49 14.989C49 16.3956 48.5399 17.5853 47.6197 18.5582ZM42.1771 16.9806C42.611 17.5065 43.2025 17.7694 43.9519 17.7694C44.7012 17.7694 45.2928 17.5065 45.7266 16.9806C46.1736 16.4416 46.3971 15.7777 46.3971 14.989C46.3971 14.2133 46.1736 13.5626 45.7266 13.0368C45.2928 12.4978 44.7012 12.2283 43.9519 12.2283C43.2025 12.2283 42.611 12.4978 42.1771 13.0368C41.7433 13.5626 41.5264 14.2133 41.5264 14.989C41.5264 15.7777 41.7433 16.4416 42.1771 16.9806Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
           </div>
-        )}
-      </button>
 
-      <style>{`
-        .monopay-btn-container {
-          min-width: 320px;
-          width: 100%;
-          max-width: 320px;
-        }
-        .monopay-btn {
-          --monopay-bg-dark: #000000;
-          --monopay-text-dark: #ffffff;
-          --monopay-bg-light: #ffffff;
-          --monopay-text-light: #000000;
-          --monopay-border-light: #e0e0e0;
-          --monopay-radius: 8px;
-          --monopay-height: 58px;
-          --monopay-min-width: 320px;
-          --monopay-transition: all .3s ease;
-          border-radius: var(--monopay-radius);
-          height: var(--monopay-height);
-          min-height: var(--monopay-height);
-          min-width: var(--monopay-min-width);
-          max-width: 320px;
-          width: 100%;
-          border: none;
-          cursor: pointer;
-          padding: 16px;
-          transition: var(--monopay-transition);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-family: inherit;
-          font-size: 16px;
-          font-weight: 500;
-          line-height: 24px;
-          position: relative;
-          overflow: hidden;
-        }
-        .monopay-btn::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: rgba(0,0,0,0.04);
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          pointer-events: none;
-        }
-        .monopay-btn:hover::after {
-          opacity: 1;
-        }
-        .monopay-btn--light {
-          background-color: var(--monopay-bg-light);
-          color: var(--monopay-text-light);
-          border: 2px solid var(--monopay-border-light);
-        }
-        .monopay-btn--dark {
-          background-color: var(--monopay-bg-dark);
-          color: var(--monopay-text-dark);
-          border: 2px solid var(--monopay-border-light);
-        }
-        .monopay-btn--corners-semi-rounded {
-          --monopay-radius: 24px;
-        }
-        .monopay-btn--corners-straight {
-          --monopay-radius: 4px;
-        }
-        .monopay-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .monopay-btn--inner {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          width: 100%;
-        }
-        .monopay-btn--text-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .monopay-btn--logo-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .monopay-btn--logo-wrapper svg path {
-          fill: currentColor;
-        }
-        .monopay-btn--spinner {
-          width: 24px;
-          height: 24px;
-          border: 2px solid currentColor;
-          border-top-color: transparent;
-          border-radius: 50%;
-          animation: monopay-spin 0.6s linear infinite;
-        }
-        @keyframes monopay-spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+          {/* Логотип Monobank */}
+          <div
+            className="monopay-btn--logo-wrapper"
+            style={{
+              transform:
+                stage === 'initial'
+                  ? 'translateX(0px)'
+                  : stage === 'logoMove'
+                    ? 'translateX(54px)'
+                    : 'translateX(0px)',
+              transition:
+                stage === 'showText'
+                  ? 'transform 0.35s ease'
+                  : 'transform 0.5s ease',
+            }}
+          >
+            <svg
+              width="103"
+              height="26"
+              viewBox="0 0 103 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M96.9997 0C100.313 0 103 2.68629 103 6V20C103 23.3137 100.313 26 96.9997 26H60.9997C57.686 26 54.9997 23.3137 54.9997 20V6C54.9997 2.68629 57.686 0 60.9997 0H96.9997ZM89.1472 20.1406L88.7868 20.96C88.5468 21.48 88.107 21.6602 87.447 21.6602C87.207 21.6601 86.8671 21.6 86.6472 21.5L86.2673 23.7803C86.5872 23.8603 87.227 23.9199 87.527 23.9199C89.187 23.8799 90.4672 23.4001 91.1872 21.5801L95.7272 10.3408H92.987L90.4675 17.0605L87.947 10.3408H85.2272L89.1472 20.1406ZM79.8688 10.1006C78.3488 10.1006 76.8281 10.5801 75.6481 11.6201L76.6091 13.3203C77.429 12.5605 78.3885 12.1797 79.4284 12.1797C80.7083 12.1797 81.5484 12.82 81.5485 13.7998V15.1006C80.9086 14.3407 79.7688 13.92 78.489 13.9199C76.949 13.9199 75.1286 14.7801 75.1286 17.04C75.1286 19.2 76.949 20.2402 78.489 20.2402C79.7488 20.2401 80.8886 19.7799 81.5485 19V20H84.0886V13.7598C84.0884 10.9801 82.0687 10.1006 79.8688 10.1006ZM63.7184 6.66016V20H66.5583V15.2598H69.9587C72.8385 15.2597 74.4382 13.2799 74.4382 10.96C74.4381 8.62011 72.8584 6.66026 69.9587 6.66016H63.7184ZM79.5085 15.6396C80.3285 15.6396 81.1285 15.9205 81.5485 16.4805V17.6797C81.1285 18.2397 80.3285 18.5205 79.5085 18.5205C78.5087 18.5205 77.6885 18.0003 77.6882 17.1006C77.6882 16.1606 78.5085 15.6397 79.5085 15.6396ZM69.5788 9.16016C70.6986 9.1603 71.5387 9.84019 71.5388 10.96C71.5388 12.0598 70.6986 12.7596 69.5788 12.7598H66.5583V9.16016H69.5788Z"
+                fill="currentColor"
+              />
+              <path
+                d="M14.3359 19.761H11.8118V13.7467C11.8118 12.7344 11.3386 12.2283 10.392 12.2283C9.98451 12.2283 9.60327 12.34 9.24832 12.5635C8.90652 12.787 8.63045 13.0433 8.42012 13.3326V19.761H5.89605V13.7467C5.89605 12.7344 5.42279 12.2283 4.47627 12.2283C4.08188 12.2283 3.70722 12.34 3.35227 12.5635C2.99732 12.787 2.71468 13.0499 2.50434 13.3523V19.761H0V10.2366H2.50434V11.4789C2.74097 11.1371 3.15508 10.8085 3.74666 10.493C4.33823 10.1643 4.96268 10 5.61998 10C7.00033 10 7.88112 10.5784 8.26236 11.7353C8.56472 11.262 9.01169 10.8545 9.60327 10.5127C10.208 10.1709 10.8522 10 11.5358 10C12.4297 10 13.1199 10.2432 13.6063 10.7296C14.0927 11.2029 14.3359 11.9193 14.3359 12.879V19.761Z"
+                fill="currentColor"
+              />
+              <path
+                d="M24.8771 18.5582C23.9568 19.5178 22.7342 19.9977 21.2093 19.9977C19.6843 19.9977 18.4617 19.5178 17.5415 18.5582C16.6344 17.5853 16.1809 16.3956 16.1809 14.989C16.1809 13.5823 16.6344 12.3992 17.5415 11.4395C18.4617 10.4798 19.6843 10 21.2093 10C22.7342 10 23.9568 10.4798 24.8771 11.4395C25.7973 12.3992 26.2574 13.5823 26.2574 14.989C26.2574 16.3956 25.7973 17.5853 24.8771 18.5582ZM19.4345 16.9806C19.8684 17.5065 20.4599 17.7694 21.2093 17.7694C21.9586 17.7694 22.5502 17.5065 22.984 16.9806C23.431 16.4416 23.6545 15.7777 23.6545 14.989C23.6545 14.2133 23.431 13.5626 22.984 13.0368C22.5502 12.4978 21.9586 12.2283 21.2093 12.2283C20.4599 12.2283 19.8684 12.4978 19.4345 13.0368C19.0007 13.5626 18.7838 14.2133 18.7838 14.989C18.7838 15.7777 19.0007 16.4416 19.4345 16.9806Z"
+                fill="currentColor"
+              />
+              <path
+                d="M37.0481 19.761H34.5438V14.003C34.5438 12.8198 33.9588 12.2283 32.7888 12.2283C31.8817 12.2283 31.1587 12.6029 30.6197 13.3523V19.761H28.1153V10.2366H30.6197V11.4789C31.4479 10.493 32.5587 10 33.9522 10C34.9776 10 35.7467 10.2695 36.2594 10.8085C36.7852 11.3475 37.0481 12.0902 37.0481 13.0368V19.761Z"
+                fill="currentColor"
+              />
+              <path
+                d="M47.6197 18.5582C46.6994 19.5178 45.4768 19.9977 43.9519 19.9977C42.4269 19.9977 41.2043 19.5178 40.2841 18.5582C39.377 17.5853 38.9235 16.3956 38.9235 14.989C38.9235 13.5823 39.377 12.3992 40.2841 11.4395C41.2043 10.4798 42.4269 10 43.9519 10C45.4768 10 46.6994 10.4798 47.6197 11.4395C48.5399 12.3992 49 13.5823 49 14.989C49 16.3956 48.5399 17.5853 47.6197 18.5582ZM42.1771 16.9806C42.611 17.5065 43.2025 17.7694 43.9519 17.7694C44.7012 17.7694 45.2928 17.5065 45.7266 16.9806C46.1736 16.4416 46.3971 15.7777 46.3971 14.989C46.3971 14.2133 46.1736 13.5626 45.7266 13.0368C45.2928 12.4978 44.7012 12.2283 43.9519 12.2283C43.2025 12.2283 42.611 12.4978 42.1771 13.0368C41.7433 13.5626 41.5264 14.2133 41.5264 14.989C41.5264 15.7777 41.7433 16.4416 42.1771 16.9806Z"
+                fill="currentColor"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+    </Button>
   )
 }
