@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, text as sa_text
 from typing import List, Optional
 from app.core.db import get_db, get_tecdoc_db
-from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, Supplier
+from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, Supplier, SupplierOffer
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
 from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse
 from app.services.sync_service import sync_service
