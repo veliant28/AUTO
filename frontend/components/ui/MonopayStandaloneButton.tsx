@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface MonopayStandaloneButtonProps {
   onClick?: () => void
@@ -12,22 +12,31 @@ interface MonopayStandaloneButtonProps {
 
 /**
  * Official Monopay button — exact copy from monobank.ua/api-docs.
- * Works without loading the external JS widget.
+ * Features:
+ *  - Load animation: logo centered → shifts right, text fades in
+ *  - Hover: background darkens (overlay)
+ *  - Works without loading the external JS widget.
  */
 export default function MonopayStandaloneButton({
   onClick,
   dark = false,
   loading = false,
   disabled = false,
-  corners = 'semi-rounded',
+  corners = 'straight',
 }: MonopayStandaloneButtonProps) {
+  const [animated, setAnimated] = useState(false)
   const themeClass = dark ? 'monopay-btn--dark' : 'monopay-btn--light'
   const cornersClass = `monopay-btn--corners-${corners}`
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimated(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <div className="monopay-btn-container">
       <button
-        className={`monopay-btn ${themeClass} ${cornersClass} monopay-btn--pay monopay-btn--with-text`}
+        className={`monopay-btn ${themeClass} ${cornersClass} monopay-btn--with-text`}
         onClick={onClick}
         disabled={disabled || loading}
         type="button"
@@ -35,8 +44,15 @@ export default function MonopayStandaloneButton({
         {loading ? (
           <span className="monopay-btn--spinner" />
         ) : (
-          <>
-            <div className="monopay-btn--text-wrapper">
+          <div className="monopay-btn--inner">
+            <div
+              className="monopay-btn--text-wrapper"
+              style={{
+                opacity: animated ? 1 : 0,
+                transform: animated ? 'translateX(0)' : 'translateX(-12px)',
+                transition: 'opacity 0.35s ease, transform 0.4s ease',
+              }}
+            >
               <svg
                 width="98"
                 height="18"
@@ -50,7 +66,13 @@ export default function MonopayStandaloneButton({
                 />
               </svg>
             </div>
-            <div className="monopay-btn--logo-wrapper">
+            <div
+              className="monopay-btn--logo-wrapper"
+              style={{
+                transform: animated ? 'translateX(0)' : 'translateX(0)',
+                transition: 'transform 0.4s ease',
+              }}
+            >
               <svg
                 width="103"
                 height="26"
@@ -80,7 +102,7 @@ export default function MonopayStandaloneButton({
                 />
               </svg>
             </div>
-          </>
+          </div>
         )}
       </button>
 
@@ -91,73 +113,85 @@ export default function MonopayStandaloneButton({
           max-width: 320px;
         }
         .monopay-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          width: 100%;
-          min-width: 320px;
+          --monopay-bg-dark: #000000;
+          --monopay-text-dark: #ffffff;
+          --monopay-bg-light: #ffffff;
+          --monopay-text-light: #000000;
+          --monopay-border-light: #e0e0e0;
+          --monopay-radius: 8px;
+          --monopay-height: 58px;
+          --monopay-min-width: 320px;
+          --monopay-transition: all .3s ease;
+          border-radius: var(--monopay-radius);
+          height: var(--monopay-height);
+          min-height: var(--monopay-height);
+          min-width: var(--monopay-min-width);
           max-width: 320px;
-          height: 58px;
-          padding: 18px 24px;
+          width: 100%;
           border: none;
-          border-radius: 100px;
           cursor: pointer;
+          padding: 16px;
+          transition: var(--monopay-transition);
+          display: flex;
+          justify-content: center;
+          align-items: center;
           font-family: inherit;
           font-size: 16px;
           font-weight: 500;
           line-height: 24px;
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
           position: relative;
           overflow: hidden;
         }
+        .monopay-btn::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.04);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+        }
+        .monopay-btn:hover::after {
+          opacity: 1;
+        }
         .monopay-btn--light {
-          background: #fff;
-          color: #000;
-          box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
-        }
-        .monopay-btn--light:hover {
-          transform: scale(1.02);
-          box-shadow: 0 0 0 1px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .monopay-btn--light:active {
-          transform: scale(0.98);
+          background-color: var(--monopay-bg-light);
+          color: var(--monopay-text-light);
+          border: 2px solid var(--monopay-border-light);
         }
         .monopay-btn--dark {
-          background: #000;
-          color: #fff;
-          box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .monopay-btn--dark:hover {
-          transform: scale(1.02);
-          box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.4);
-        }
-        .monopay-btn--dark:active {
-          transform: scale(0.98);
-        }
-        .monopay-btn--corners-rounded {
-          border-radius: 100px;
+          background-color: var(--monopay-bg-dark);
+          color: var(--monopay-text-dark);
+          border: 2px solid var(--monopay-border-light);
         }
         .monopay-btn--corners-semi-rounded {
-          border-radius: 24px;
+          --monopay-radius: 24px;
         }
         .monopay-btn--corners-straight {
-          border-radius: 8px;
+          --monopay-radius: 4px;
         }
         .monopay-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          transform: none !important;
+        }
+        .monopay-btn--inner {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
         }
         .monopay-btn--text-wrapper {
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
         }
         .monopay-btn--logo-wrapper {
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
         }
         .monopay-btn--logo-wrapper svg path {
           fill: currentColor;

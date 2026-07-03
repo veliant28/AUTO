@@ -2895,3 +2895,40 @@ LINE 1: SELECT id, name FROM autodb_suppliers WHERE id = ANY($1)
 2026-07-03 09:52:15 - root - INFO - Health check called
 2026-07-03 09:52:45 - root - INFO - Health check called
 2026-07-03 09:53:15 - root - INFO - Health check called
+2026-07-03 09:53:46 - root - INFO - Health check called
+2026-07-03 09:54:10 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-03 09:54:16 - root - INFO - Health check called
+2026-07-03 09:54:46 - root - INFO - Health check called
+2026-07-03 09:55:12 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:55:12 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:55:12 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:55:16 - root - INFO - Health check called
+2026-07-03 09:55:36 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-03 09:55:46 - root - INFO - Health check called
+2026-07-03 09:56:16 - root - INFO - Health check called
+2026-07-03 09:56:47 - root - INFO - Health check called
+2026-07-03 09:57:17 - root - INFO - Health check called
+2026-07-03 09:57:47 - root - INFO - Health check called
+2026-07-03 09:58:17 - root - INFO - Health check called
+2026-07-03 09:58:47 - root - INFO - Health check called
+2026-07-03 09:59:17 - root - INFO - Health check called
+2026-07-03 09:59:47 - root - INFO - Health check called
+2026-07-03 10:00:18 - root - INFO - Health check called
+2026-07-03 10:00:48 - root - INFO - Health check called
+2026-07-03 10:01:18 - root - INFO - Health check called
+2026-07-03 10:01:27 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-03 10:01:48 - root - INFO - Health check called
+2026-07-03 10:02:15 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-03 10:02:18 - root - INFO - Health check called
+2026-07-03 10:02:35 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 10:02:35 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 10:02:35 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 10:02:48 - root - INFO - Health check called
+2026-07-03 10:03:18 - root - INFO - Health check called
+2026-07-03 10:03:49 - root - INFO - Health check called
+2026-07-03 10:04:19 - root - INFO - Health check called
+2026-07-03 10:04:49 - root - INFO - Health check called
+2026-07-03 10:05:19 - root - INFO - Health check called
+2026-07-03 10:05:49 - root - INFO - Health check called
+2026-07-03 10:06:19 - root - INFO - Health check called
+2026-07-03 10:06:50 - root - INFO - Health check called
