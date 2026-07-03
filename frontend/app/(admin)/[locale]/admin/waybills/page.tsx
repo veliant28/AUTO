@@ -154,7 +154,7 @@ export default function WaybillsPage() {
     () => [
       // ── Badge ТТН ──────────────────────────────────────────────
       columnHelper.accessor('np_number', {
-        header: t('novaposhta_ttn'),
+        header: t('novaposhta_waybill_number_label'),
         size: 200,
         cell: (info) => {
           const row = info.row.original
