@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
-const innerStyles = `
+const monopayStyles = `
   .monopay-btn--inner {
     display: flex;
     align-items: center;
@@ -70,7 +70,7 @@ export default function MonopayStandaloneButton({
 
   useEffect(() => {
     const styleEl = document.createElement('style')
-    styleEl.textContent = innerStyles
+    styleEl.textContent = monopayStyles
     document.head.appendChild(styleEl)
     return () => styleEl.remove()
   }, [])
