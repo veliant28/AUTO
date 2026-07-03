@@ -8,7 +8,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { Loader2, Clock, AlertTriangle, Trash2 } from 'lucide-react'
+import { Loader2, AlertTriangle, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,14 @@ import type {
   NovaPoshtaLookupStreet,
   NovaPoshtaCounterpartyAddress,
 } from '@/lib/types/nova-poshta'
-import type { WaybillTrackingEvent } from '@/lib/types/nova-poshta'
+
+// ── Import extracted helpers and components ─────────────────────
+import {
+  showNpError,
+  formatNpNumber,
+  buildPackItemsFromSeat,
+} from './waybillHelpers'
+import WaybillTrackingTimeline from './WaybillTrackingTimeline'
 
 // ── Section components ──────────────────────────────────────────────────────
 import OrderWaybillSenderSection from './OrderWaybillSenderSection'
@@ -41,112 +48,6 @@ import OrderWaybillRecipientSection from './OrderWaybillRecipientSection'
 import OrderWaybillPaymentSection from './OrderWaybillPaymentSection'
 import OrderWaybillServiceEditorSection from './OrderWaybillServiceEditorSection'
 import OrderWaybillFooter from './OrderWaybillFooter'
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Helpers
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/** Show NP API error with severity-based toast color */
-function showNpError(err: any, fallback: string) {
-  const detail = err?.response?.data?.detail || fallback
-  const severity = err?.response?.data?.severity || 'info'
-  if (severity === 'error') toast.error(detail)
-  else if (severity === 'warning') toast.warning(detail)
-  else toast.info(detail)
-}
-function formatNpNumber(num: string): string {
-  const digits = num.replace(/\D/g, '')
-  if (digits.length !== 14) return num
-  return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 10)} ${digits.slice(10, 14)}`
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Helpers for packaging restore
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Converts a waybill seat's packaging data (cm) → PackagingTableEntry (mm)
- * so the packaging button and table can display saved items on re-open.
- */
-function buildPackItemsFromSeat(seat: any): any[] {
-  if (!seat?.pack_ref) return []
-  return [
-    {
-      ref: seat.pack_ref,
-      label: seat.pack_label || seat.pack_ref,
-      description: '',
-      // Waybill stores dimensions in cm; packaging table expects mm
-      width_mm: seat.volumetric_width
-        ? String(parseFloat(seat.volumetric_width) * 10)
-        : '',
-      length_mm: seat.volumetric_length
-        ? String(parseFloat(seat.volumetric_length) * 10)
-        : '',
-      height_mm: seat.volumetric_height
-        ? String(parseFloat(seat.volumetric_height) * 10)
-        : '',
-      cost: seat.pack_cost || '0',
-    },
-  ]
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Tracking helpers
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function renderTrackingTimeline(
-  t: (key: string) => string,
-  events: WaybillTrackingEvent[],
-): React.ReactNode {
-  if (events.length === 0) {
-    return (
-      <div className="text-center py-10 text-muted-foreground">
-        <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        {t('novaposhta_tracking_empty')}
-      </div>
-    )
-  }
-
-  return (
-    <div className="relative pl-12 space-y-0">
-      {/* Vertical line */}
-      <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
-      {events.map((event, index) => {
-        const isFirst = index === 0
-        return (
-          <div key={index} className="relative pb-6">
-            {/* Dot */}
-            <div
-              className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${
-                isFirst ? 'bg-green-500' : 'bg-blue-500'
-              }`}
-            />
-
-            {/* Content */}
-            <div className="mb-1">
-              <div className="font-medium">
-                {t(`novaposhta_status_${event.status_code}`) ||
-                  event.status_text ||
-                  `Код ${event.status_code}`}
-              </div>
-              {event.event_at && (
-                <div className="text-sm text-muted-foreground">
-                  {new Date(event.event_at).toLocaleString()}
-                </div>
-              )}
-            </div>
-            {event.location && (
-              <p className="text-muted-foreground pl-1 text-sm">
-                {event.location}
-                {event.warehouse ? ` — ${event.warehouse}` : ''}
-              </p>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
@@ -1334,7 +1235,10 @@ export default function OrderWaybillModal({
           <div className="flex-1 overflow-y-auto p-6">
             <div className="space-y-4">
               {/* Timeline */}
-              {renderTrackingTimeline(t, waybill?.tracking_events || [])}
+              <WaybillTrackingTimeline
+                t={t}
+                events={waybill?.tracking_events || []}
+              />
 
               {/* Error state */}
               {waybill?.last_sync_error && (

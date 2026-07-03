@@ -70,16 +70,16 @@ export function useVehicleCars(
   })
 }
 
-export function useVehicleVolumes(year: string | null, carId: string | null) {
+export function useVehicleVolumes(year: string | null, modelId: string | null) {
   return useQuery({
-    queryKey: ['vehicle-volumes', year, carId],
+    queryKey: ['vehicle-volumes', year, modelId],
     queryFn: async () => {
       const { data } = await api.get('/catalog/vehicle/volumes', {
-        params: { year, car_id: carId },
+        params: { year, model_id: modelId },
       })
       return data as { volume: string }[]
     },
-    enabled: !!year && !!carId,
+    enabled: !!year && !!modelId,
   })
 }
 

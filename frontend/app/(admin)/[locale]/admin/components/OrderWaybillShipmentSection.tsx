@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
+import { sanitizeDecimalInput } from '@/lib/utils/format'
+import { useClickOutside } from '@/hooks/useClickOutside'
 import {
   Package,
   FileText,
@@ -222,18 +224,7 @@ export default function OrderWaybillShipmentSection({
   }, [highlightedIdx])
 
   // ── Close dropdown on click outside ────────────────────────────────────
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  useClickOutside(dropdownRef, () => setIsDropdownOpen(false))
 
   // ── Restore previously saved items when entering packaging mode ─────────
   useEffect(() => {
@@ -663,7 +654,10 @@ export default function OrderWaybillShipmentSection({
 
               {/* Dropdown */}
               {isDropdownOpen && (
-                <div ref={dropdownScrollRef} className="absolute top-full mt-1 left-0 right-0 z-50 bg-popover border rounded-md shadow-lg max-h-[240px] overflow-y-auto py-1">
+                <div
+                  ref={dropdownScrollRef}
+                  className="absolute top-full mt-1 left-0 right-0 z-50 bg-popover border rounded-md shadow-lg max-h-[240px] overflow-y-auto py-1"
+                >
                   {/* Loading state */}
                   {isLoadingPackaging && (
                     <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
@@ -918,16 +912,7 @@ export default function OrderWaybillShipmentSection({
                     inputMode="decimal"
                     value={weight}
                     onChange={(e) => {
-                      let val = e.target.value
-                        .replace(/[^\d,.]/g, '') // allow digits, comma, dot
-                        .replace(/,+/g, ',') // only one comma
-                        .replace(/\.+/g, '.') // only one dot
-                        .replace(/,/g, '.') // normalize comma → dot
-                      if (val.includes('.')) {
-                        const [int, dec] = val.split('.')
-                        val = int + '.' + (dec || '').slice(0, 1)
-                      }
-                      onChange('weight', val)
+                      onChange('weight', sanitizeDecimalInput(e.target.value))
                     }}
                     onBlur={() => !weight && onChange('weight', '0.1')}
                     disabled={disabled}
@@ -987,16 +972,10 @@ export default function OrderWaybillShipmentSection({
                     inputMode="decimal"
                     value={volumetricLength ?? '0'}
                     onChange={(e) => {
-                      let val = e.target.value
-                        .replace(/[^\d,.]/g, '')
-                        .replace(/,+/g, ',')
-                        .replace(/\.+/g, '.')
-                        .replace(/,/g, '.')
-                      if (val.includes('.')) {
-                        const [int, dec] = val.split('.')
-                        val = int + '.' + (dec || '').slice(0, 1)
-                      }
-                      onChange('volumetric_length', val)
+                      onChange(
+                        'volumetric_length',
+                        sanitizeDecimalInput(e.target.value),
+                      )
                     }}
                     onBlur={() =>
                       !volumetricLength && onChange('volumetric_length', '0')
@@ -1016,16 +995,10 @@ export default function OrderWaybillShipmentSection({
                     inputMode="decimal"
                     value={volumetricWidth ?? '0'}
                     onChange={(e) => {
-                      let val = e.target.value
-                        .replace(/[^\d,.]/g, '')
-                        .replace(/,+/g, ',')
-                        .replace(/\.+/g, '.')
-                        .replace(/,/g, '.')
-                      if (val.includes('.')) {
-                        const [int, dec] = val.split('.')
-                        val = int + '.' + (dec || '').slice(0, 1)
-                      }
-                      onChange('volumetric_width', val)
+                      onChange(
+                        'volumetric_width',
+                        sanitizeDecimalInput(e.target.value),
+                      )
                     }}
                     onBlur={() =>
                       !volumetricWidth && onChange('volumetric_width', '0')
@@ -1044,16 +1017,10 @@ export default function OrderWaybillShipmentSection({
                     inputMode="decimal"
                     value={volumetricHeight ?? '0'}
                     onChange={(e) => {
-                      let val = e.target.value
-                        .replace(/[^\d,.]/g, '')
-                        .replace(/,+/g, ',')
-                        .replace(/\.+/g, '.')
-                        .replace(/,/g, '.')
-                      if (val.includes('.')) {
-                        const [int, dec] = val.split('.')
-                        val = int + '.' + (dec || '').slice(0, 1)
-                      }
-                      onChange('volumetric_height', val)
+                      onChange(
+                        'volumetric_height',
+                        sanitizeDecimalInput(e.target.value),
+                      )
                     }}
                     onBlur={() =>
                       !volumetricHeight && onChange('volumetric_height', '0')

@@ -90,11 +90,18 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
             brand = db.query(VehicleBrand).filter(VehicleBrand.id == model.brand_id).first() if model else None
             volume = None
             engine = None
+            power = None
             if entry.tecdoc_car_id:
-                vol_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'Capacity' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
-                if vol_row: volume = vol_row[0]
-                eng_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'EngineCode' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
-                if eng_row: engine = eng_row[0]
+                row = tecdb.execute(sa_text("""
+                    SELECT
+                      (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'Capacity') as volume,
+                      (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'EngineCode') as engine,
+                      (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'Power') as power
+                """), {"cid": entry.tecdoc_car_id}).first()
+                if row:
+                    volume = row[0]
+                    engine = row[1]
+                    power = row[2]
             result.append({
                 "id": entry.id,
                 "mod_id": mod.id,
@@ -104,6 +111,7 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                 "tecdoc_car_id": entry.tecdoc_car_id,
                 "volume": volume,
                 "engine": engine,
+                "power": power,
                 "vehicle_type": brand.group if brand else None,
             })
         elif entry.tecdoc_car_id:
@@ -138,11 +146,18 @@ async def get_garage(user_id: int = Depends(get_current_user), db: Session = Dep
                 # Get volume and engine if passenger
                 volume = None
                 engine = None
+                power_val = None
                 if type_idx == 0:
-                    vol_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'Capacity' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
-                    if vol_row: volume = vol_row[0]
-                    eng_row = tecdb.execute(sa_text("SELECT displayvalue FROM passanger_car_attributes WHERE passangercarid = :cid AND attributetype = 'EngineCode' LIMIT 1"), {"cid": entry.tecdoc_car_id}).first()
-                    if eng_row: engine = eng_row[0]
+                    row_data = tecdb.execute(sa_text("""
+                        SELECT
+                          (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'Capacity') as volume,
+                          (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'EngineCode') as engine,
+                          (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = :cid AND attr.attributetype = 'Power') as power
+                    """), {"cid": entry.tecdoc_car_id}).first()
+                    if row_data:
+                        volume = row_data[0]
+                        engine = row_data[1]
+                        power_val = row_data[2]
                 result.append({
                     "id": entry.id,
                     "mod_id": 0,

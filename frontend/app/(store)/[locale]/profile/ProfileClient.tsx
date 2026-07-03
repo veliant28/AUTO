@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { useNovaPoshtaAddressSearch } from '@/hooks/useNovaPoshtaAddressSearch'
 import {
   User,
   Mail,
@@ -103,35 +104,23 @@ export default function ProfilePage() {
   const [npApartment, setNpApartment] = useState('')
 
   // ── NP search queries ──
-  const [cityQuery, setCityQuery] = useState('')
-  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
-    queryKey: ['profile-np-cities', cityQuery],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchSettlements(cityQuery)
-        .then((r) => r.data as NovaPoshtaLookupSettlement[]),
-    enabled: cityQuery.length >= 2,
-    staleTime: 30000,
-  })
-  const [warehouseQuery, setWarehouseQuery] = useState('')
-  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
-    queryKey: ['profile-np-warehouses', npCityRef, warehouseQuery],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchWarehouses(npCityRef!, warehouseQuery)
-        .then((r) => r.data as NovaPoshtaLookupWarehouse[]),
-    enabled: !!npCityRef && warehouseQuery.length >= 1,
-    staleTime: 30000,
-  })
-  const [streetQuery, setStreetQuery] = useState('')
-  const { data: streets = [], isFetching: streetsLoading } = useQuery({
-    queryKey: ['profile-np-streets', npSettlementRef, streetQuery],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchStreets(npSettlementRef!, streetQuery)
-        .then((r) => r.data as NovaPoshtaLookupStreet[]),
-    enabled: !!npSettlementRef && streetQuery.length >= 2,
-    staleTime: 30000,
+  const {
+    cityQuery,
+    setCityQuery,
+    warehouseQuery,
+    setWarehouseQuery,
+    streetQuery,
+    setStreetQuery,
+    settlements,
+    citiesLoading,
+    warehouses,
+    warehousesLoading,
+    streets,
+    streetsLoading,
+  } = useNovaPoshtaAddressSearch({
+    prefix: 'profile',
+    cityRef: npCityRef,
+    settlementRef: npSettlementRef,
   })
 
   const [showCurrent, setShowCurrent] = useState(false)

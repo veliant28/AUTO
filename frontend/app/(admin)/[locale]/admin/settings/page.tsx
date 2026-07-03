@@ -12,6 +12,9 @@ import {
   Send,
   LogIn,
   HelpCircle,
+  Receipt,
+  Building2,
+  Wallet,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -35,6 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox as CheckboxUI } from '@/components/ui/checkbox'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -74,6 +78,39 @@ export default function SettingsPage() {
   const [showGoogleSecret, setShowGoogleSecret] = React.useState(false)
   const [hasGoogleSecret, setHasGoogleSecret] = React.useState(false)
 
+  // Checkbox fields
+  const [checkboxApiKey, setCheckboxApiKey] = React.useState('')
+  const [showCheckboxKey, setShowCheckboxKey] = React.useState(false)
+  const [checkboxOrgId, setCheckboxOrgId] = React.useState('')
+  const [checkboxIsTest, setCheckboxIsTest] = React.useState(true)
+  const [hasCheckboxKey, setHasCheckboxKey] = React.useState(false)
+
+  // Payment method toggles
+  const [paymentCodEnabled, setPaymentCodEnabled] = React.useState(true)
+  const [paymentMonobankEnabled, setPaymentMonobankEnabled] =
+    React.useState(true)
+  const [paymentNovapayEnabled, setPaymentNovapayEnabled] = React.useState(true)
+  const [paymentLiqpayEnabled, setPaymentLiqpayEnabled] = React.useState(true)
+
+  // Monobank fields
+  const [monobankToken, setMonobankToken] = React.useState('')
+  const [showMonobankToken, setShowMonobankToken] = React.useState(false)
+  const [hasMonobankToken, setHasMonobankToken] = React.useState(false)
+
+  // LiqPay fields
+  const [liqpayPublicKey, setLiqpayPublicKey] = React.useState('')
+  const [showLiqpayPublic, setShowLiqpayPublic] = React.useState(false)
+  const [hasLiqpayPublic, setHasLiqpayPublic] = React.useState(false)
+  const [liqpayPrivateKey, setLiqpayPrivateKey] = React.useState('')
+  const [showLiqpayPrivate, setShowLiqpayPrivate] = React.useState(false)
+  const [hasLiqpayPrivate, setHasLiqpayPrivate] = React.useState(false)
+
+  // NovaPay fields
+  const [novapayMerchantId, setNovapayMerchantId] = React.useState('')
+  const [novapayPrivateKey, setNovapayPrivateKey] = React.useState('')
+  const [showNovapayKey, setShowNovapayKey] = React.useState(false)
+  const [hasNovapayPrivateKey, setHasNovapayPrivateKey] = React.useState(false)
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => {
@@ -88,6 +125,23 @@ export default function SettingsPage() {
         google_client_id: string | null
         has_google_secret: boolean
         google_client_secret_masked: string | null
+        has_checkbox_api_key: boolean
+        checkbox_api_key_masked: string | null
+        checkbox_organization_id: string | null
+        checkbox_is_test: boolean
+        payment_cod_enabled: boolean
+        payment_monobank_enabled: boolean
+        payment_novapay_enabled: boolean
+        payment_liqpay_enabled: boolean
+        has_monobank_token: boolean
+        monobank_token_masked: string | null
+        has_liqpay_public_key: boolean
+        liqpay_public_key_masked: string | null
+        has_liqpay_private_key: boolean
+        liqpay_private_key_masked: string | null
+        has_novapay_private_key: boolean
+        novapay_private_key_masked: string | null
+        novapay_merchant_id: string | null
       }
     },
     enabled: !!user,
@@ -98,6 +152,24 @@ export default function SettingsPage() {
   const [savedSecretMask, setSavedSecretMask] = React.useState<string | null>(
     null,
   )
+  const [savedCheckboxKeyMask, setSavedCheckboxKeyMask] = React.useState<
+    string | null
+  >(null)
+  const [savedMonobankTokenMask, setSavedMonobankTokenMask] = React.useState<
+    string | null
+  >(null)
+  const [savedLiqpayPublicMask, setSavedLiqpayPublicMask] = React.useState<
+    string | null
+  >(null)
+  const [savedLiqpayPrivateMask, setSavedLiqpayPrivateMask] = React.useState<
+    string | null
+  >(null)
+  const [savedNovapayKeyMask, setSavedNovapayKeyMask] = React.useState<
+    string | null
+  >(null)
+  const [savedNovapayMerchantId, setSavedNovapayMerchantId] = React.useState<
+    string | null
+  >(null)
 
   React.useEffect(() => {
     if (data?.brand_name) setBrandName(data.brand_name)
@@ -120,10 +192,82 @@ export default function SettingsPage() {
       setSavedSecretMask(null)
       setHasGoogleSecret(false)
     }
+    if (data?.checkbox_api_key_masked) {
+      setCheckboxApiKey(data.checkbox_api_key_masked)
+      setSavedCheckboxKeyMask(data.checkbox_api_key_masked)
+      setHasCheckboxKey(true)
+    } else {
+      setCheckboxApiKey('')
+      setSavedCheckboxKeyMask(null)
+      setHasCheckboxKey(false)
+    }
+    if (data?.checkbox_organization_id) {
+      setCheckboxOrgId(data.checkbox_organization_id)
+    } else {
+      setCheckboxOrgId('')
+    }
+    if (data?.checkbox_is_test !== undefined) {
+      setCheckboxIsTest(data.checkbox_is_test)
+    }
+    // Payment method toggles
+    if (data?.payment_cod_enabled !== undefined)
+      setPaymentCodEnabled(data.payment_cod_enabled)
+    if (data?.payment_monobank_enabled !== undefined)
+      setPaymentMonobankEnabled(data.payment_monobank_enabled)
+    if (data?.payment_novapay_enabled !== undefined)
+      setPaymentNovapayEnabled(data.payment_novapay_enabled)
+    if (data?.payment_liqpay_enabled !== undefined)
+      setPaymentLiqpayEnabled(data.payment_liqpay_enabled)
+    // Monobank
+    if (data?.monobank_token_masked) {
+      setMonobankToken(data.monobank_token_masked)
+      setSavedMonobankTokenMask(data.monobank_token_masked)
+      setHasMonobankToken(true)
+    } else {
+      setMonobankToken('')
+      setSavedMonobankTokenMask(null)
+      setHasMonobankToken(false)
+    }
+    // LiqPay
+    if (data?.liqpay_public_key_masked) {
+      setLiqpayPublicKey(data.liqpay_public_key_masked)
+      setSavedLiqpayPublicMask(data.liqpay_public_key_masked)
+      setHasLiqpayPublic(true)
+    } else {
+      setLiqpayPublicKey('')
+      setSavedLiqpayPublicMask(null)
+      setHasLiqpayPublic(false)
+    }
+    if (data?.liqpay_private_key_masked) {
+      setLiqpayPrivateKey(data.liqpay_private_key_masked)
+      setSavedLiqpayPrivateMask(data.liqpay_private_key_masked)
+      setHasLiqpayPrivate(true)
+    } else {
+      setLiqpayPrivateKey('')
+      setSavedLiqpayPrivateMask(null)
+      setHasLiqpayPrivate(false)
+    }
+    // NovaPay
+    if (data?.novapay_merchant_id)
+      setNovapayMerchantId(data.novapay_merchant_id)
+    if (data?.novapay_private_key_masked) {
+      setNovapayPrivateKey(data.novapay_private_key_masked)
+      setSavedNovapayKeyMask(data.novapay_private_key_masked)
+      setHasNovapayPrivateKey(true)
+    } else {
+      setNovapayPrivateKey('')
+      setSavedNovapayKeyMask(null)
+      setHasNovapayPrivateKey(false)
+    }
   }, [data])
 
   const isKeyUnchanged = resendApiKey === savedKeyMask
   const isSecretUnchanged = googleClientSecret === savedSecretMask
+  const isCheckboxKeyUnchanged = checkboxApiKey === savedCheckboxKeyMask
+  const isMonobankTokenUnchanged = monobankToken === savedMonobankTokenMask
+  const isLiqpayPublicUnchanged = liqpayPublicKey === savedLiqpayPublicMask
+  const isLiqpayPrivateUnchanged = liqpayPrivateKey === savedLiqpayPrivateMask
+  const isNovapayKeyUnchanged = novapayPrivateKey === savedNovapayKeyMask
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -133,6 +277,24 @@ export default function SettingsPage() {
       if (emailFromName) payload.email_from_name = emailFromName
       if (googleClientId) payload.google_client_id = googleClientId
       if (!isSecretUnchanged) payload.google_client_secret = googleClientSecret
+      if (!isCheckboxKeyUnchanged) payload.checkbox_api_key = checkboxApiKey
+      if (checkboxOrgId) payload.checkbox_organization_id = checkboxOrgId
+      payload.checkbox_is_test = checkboxIsTest
+      // Payment toggles
+      payload.payment_cod_enabled = paymentCodEnabled
+      payload.payment_monobank_enabled = paymentMonobankEnabled
+      payload.payment_novapay_enabled = paymentNovapayEnabled
+      payload.payment_liqpay_enabled = paymentLiqpayEnabled
+      // Monobank
+      if (!isMonobankTokenUnchanged) payload.monobank_token = monobankToken
+      // LiqPay
+      if (!isLiqpayPublicUnchanged) payload.liqpay_public_key = liqpayPublicKey
+      if (!isLiqpayPrivateUnchanged)
+        payload.liqpay_private_key = liqpayPrivateKey
+      // NovaPay
+      if (novapayMerchantId) payload.novapay_merchant_id = novapayMerchantId
+      if (!isNovapayKeyUnchanged)
+        payload.novapay_private_key = novapayPrivateKey
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
@@ -387,6 +549,356 @@ export default function SettingsPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                       {showGoogleSecret ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Checkbox (Фіскалізація) Settings Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-primary" />
+              Checkbox
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings_checkbox_desc')}</TooltipContent>
+              </Tooltip>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_checkbox_api_key')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showCheckboxKey ? 'text' : 'password'}
+                      value={checkboxApiKey}
+                      onChange={(e) => setCheckboxApiKey(e.target.value)}
+                      placeholder={t('settings_checkbox_api_key_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCheckboxKey(!showCheckboxKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showCheckboxKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_checkbox_organization_id')}
+                  </label>
+                  <Input
+                    value={checkboxOrgId}
+                    onChange={(e) => setCheckboxOrgId(e.target.value)}
+                    placeholder={t(
+                      'settings_checkbox_organization_id_placeholder',
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <CheckboxUI
+                    id="checkbox-test-mode"
+                    checked={checkboxIsTest}
+                    onCheckedChange={(checked) => setCheckboxIsTest(!!checked)}
+                  />
+                  <label
+                    htmlFor="checkbox-test-mode"
+                    className="text-sm text-muted-foreground cursor-pointer"
+                  >
+                    {t('settings_checkbox_test_mode')}
+                  </label>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        {/* Способы оплаты (Payment Methods) Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" />
+              {t('settings_payment_methods_title')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ) : (
+              <>
+                <div
+                  className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+                  onClick={() => setPaymentCodEnabled(!paymentCodEnabled)}
+                >
+                  <label
+                    className="text-sm font-medium cursor-pointer"
+                    htmlFor="cod-toggle"
+                  >
+                    {t('payment_method_cod')}
+                  </label>
+                  <CheckboxUI
+                    id="cod-toggle"
+                    checked={paymentCodEnabled}
+                    onCheckedChange={(checked) =>
+                      setPaymentCodEnabled(!!checked)
+                    }
+                    className="cursor-pointer"
+                  />
+                </div>
+                <div
+                  className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+                  onClick={() =>
+                    setPaymentMonobankEnabled(!paymentMonobankEnabled)
+                  }
+                >
+                  <label
+                    className="text-sm font-medium cursor-pointer"
+                    htmlFor="monobank-toggle"
+                  >
+                    Monobank
+                  </label>
+                  <CheckboxUI
+                    id="monobank-toggle"
+                    checked={paymentMonobankEnabled}
+                    onCheckedChange={(checked) =>
+                      setPaymentMonobankEnabled(!!checked)
+                    }
+                    className="cursor-pointer"
+                  />
+                </div>
+                <div
+                  className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+                  onClick={() =>
+                    setPaymentNovapayEnabled(!paymentNovapayEnabled)
+                  }
+                >
+                  <label
+                    className="text-sm font-medium cursor-pointer"
+                    htmlFor="novapay-toggle"
+                  >
+                    NovaPay
+                  </label>
+                  <CheckboxUI
+                    id="novapay-toggle"
+                    checked={paymentNovapayEnabled}
+                    onCheckedChange={(checked) =>
+                      setPaymentNovapayEnabled(!!checked)
+                    }
+                    className="cursor-pointer"
+                  />
+                </div>
+                <div
+                  className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+                  onClick={() => setPaymentLiqpayEnabled(!paymentLiqpayEnabled)}
+                >
+                  <label
+                    className="text-sm font-medium cursor-pointer"
+                    htmlFor="liqpay-toggle"
+                  >
+                    LiqPay
+                  </label>
+                  <CheckboxUI
+                    id="liqpay-toggle"
+                    checked={paymentLiqpayEnabled}
+                    onCheckedChange={(checked) =>
+                      setPaymentLiqpayEnabled(!!checked)
+                    }
+                    className="cursor-pointer"
+                  />
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Monobank Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              Monobank
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">
+                  {t('settings_monobank_token')}
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showMonobankToken ? 'text' : 'password'}
+                    value={monobankToken}
+                    onChange={(e) => setMonobankToken(e.target.value)}
+                    placeholder={t('settings_monobank_token_placeholder')}
+                    className="pr-10 font-mono text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMonobankToken(!showMonobankToken)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showMonobankToken ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* LiqPay Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              LiqPay
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_liqpay_public_key')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showLiqpayPublic ? 'text' : 'password'}
+                      value={liqpayPublicKey}
+                      onChange={(e) => setLiqpayPublicKey(e.target.value)}
+                      placeholder={t('settings_liqpay_key_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLiqpayPublic(!showLiqpayPublic)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showLiqpayPublic ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_liqpay_private_key')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showLiqpayPrivate ? 'text' : 'password'}
+                      value={liqpayPrivateKey}
+                      onChange={(e) => setLiqpayPrivateKey(e.target.value)}
+                      placeholder={t('settings_liqpay_key_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLiqpayPrivate(!showLiqpayPrivate)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showLiqpayPrivate ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* NovaPay Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              NovaPay
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_novapay_merchant_id')}
+                  </label>
+                  <Input
+                    value={novapayMerchantId}
+                    onChange={(e) => setNovapayMerchantId(e.target.value)}
+                    placeholder="..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_novapay_private_key')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showNovapayKey ? 'text' : 'password'}
+                      value={novapayPrivateKey}
+                      onChange={(e) => setNovapayPrivateKey(e.target.value)}
+                      placeholder={t('settings_novapay_key_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNovapayKey(!showNovapayKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showNovapayKey ? (
                         <EyeOff className="w-4 h-4" />
                       ) : (
                         <Eye className="w-4 h-4" />

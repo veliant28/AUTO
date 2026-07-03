@@ -4,11 +4,12 @@ import React from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useMessages, useLocale } from 'next-intl'
-import { ArrowLeft, Package, FileText } from 'lucide-react'
+import { ArrowLeft, Package, FileText, Loader2, CreditCard } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { toast } from '@/lib/toast'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -20,6 +21,8 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { useOrderSync } from '@/lib/orderSync'
+import { getOrderReceiptLink } from '@/lib/api/checkbox'
+import MonopayButton from '@/components/ui/MonopayButton'
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
@@ -56,7 +59,29 @@ const LOCALE_MAP: Record<string, string> = {
 export default function OrderDetailPage() {
   useOrderSync()
   const [mounted, setMounted] = React.useState(false)
+  const [receiptLoading, setReceiptLoading] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
+
+  const handleReceiptClick = async () => {
+    setReceiptLoading(true)
+    try {
+      const link = await getOrderReceiptLink(Number(orderId))
+      if (link?.url) {
+        window.open(link.url, '_blank', 'noopener,noreferrer')
+      } else {
+        toast.info(t('receipt_no_link'))
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || ''
+      if (msg?.includes('not available') || msg?.includes('недоступн')) {
+        toast.info(t('receipt_pending'))
+      } else {
+        toast.error(msg || t('receipt_error'))
+      }
+    } finally {
+      setReceiptLoading(false)
+    }
+  }
 
   const messages = useMessages()
   const msgs = messages as Record<string, any>
@@ -170,8 +195,15 @@ export default function OrderDetailPage() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{date}</p>
                 </div>
-                <Button variant="outline" size="lg" className="gap-2" disabled>
-                  <FileText className="w-5 h-5" /> {t('receipt')}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="gap-2"
+                  disabled={receiptLoading}
+                  onClick={handleReceiptClick}
+                >
+                  <FileText className="w-5 h-5" />{' '}
+                  {receiptLoading ? t('loading') : t('receipt')}
                 </Button>
               </div>
 
@@ -223,8 +255,21 @@ export default function OrderDetailPage() {
               <Separator />
 
               <div className="space-y-2">
-                <h3 className="font-semibold text-base">{t('payment')}</h3>
-                <p className="font-medium text-sm">{paymentLabel}</p>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-base">{t('payment')}</h3>
+                  <PaymentBadge
+                    orderId={order.id}
+                    paymentMethod={order.payment_method}
+                    paymentLabel={paymentLabel}
+                    t={t}
+                  />
+                </div>
+                <PaymentActions
+                  orderId={order.id}
+                  paymentMethod={order.payment_method}
+                  paymentLabel={paymentLabel}
+                  t={t}
+                />
               </div>
             </div>
 
@@ -312,5 +357,123 @@ export default function OrderDetailPage() {
         </div>
       </div>
     </TooltipProvider>
+  )
+}
+
+// ── Payment Display component ─────────────────────────────────────
+// ── Payment Badge (shown inline next to "Оплата") ───────────────
+function PaymentBadge({
+  orderId,
+  paymentMethod,
+  paymentLabel,
+  t,
+}: {
+  orderId: number
+  paymentMethod: string
+  paymentLabel: string
+  t: (key: string) => string
+}) {
+  const { data: payment } = useQuery({
+    queryKey: ['order-payment-status', orderId],
+    queryFn: async () => {
+      const { data } = await api.get(`/orders/${orderId}/payment`)
+      return data
+    },
+    refetchInterval: 15000,
+  })
+
+  if (paymentMethod === 'cod') {
+    return (
+      <Badge className="bg-green-600 text-white border-0 text-sm">
+        {t('payment_cod')}
+      </Badge>
+    )
+  }
+
+  if (payment?.status === 'paid') {
+    return (
+      <Badge className="bg-green-600 text-white border-0 text-sm">
+        {t('payment_paid')}
+      </Badge>
+    )
+  }
+
+  // Bank method, not paid yet
+  return (
+    <Badge className="bg-gray-500 text-white border-0 text-sm">
+      {t('payment_not_paid')}
+    </Badge>
+  )
+}
+
+// ── Payment Actions (pay button shown below) ─────────────────────
+function PaymentActions({
+  orderId,
+  paymentMethod,
+  paymentLabel,
+  t,
+}: {
+  orderId: number
+  paymentMethod: string
+  paymentLabel: string
+  t: (key: string) => string
+}) {
+  const { data: payment } = useQuery({
+    queryKey: ['order-payment-status', orderId],
+    queryFn: async () => {
+      const { data } = await api.get(`/orders/${orderId}/payment`)
+      return data
+    },
+    refetchInterval: 15000,
+  })
+
+  const [payLoading, setPayLoading] = React.useState(false)
+
+  if (paymentMethod === 'cod' || payment?.status === 'paid') {
+    return null
+  }
+
+  if (paymentMethod === 'monobank') {
+    return (
+      <div className="space-y-1">
+        <MonopayButton orderId={orderId} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-1">
+      <Button
+        variant="default"
+        size="sm"
+        className="gap-1.5"
+        onClick={async () => {
+          setPayLoading(true)
+          try {
+            const { data } = await api.post(
+              `/orders/${orderId}/pay?method=${paymentMethod}`,
+            )
+            if (data?.payment_url) {
+              window.open(data.payment_url, '_blank', 'noopener,noreferrer')
+            } else {
+              toast.info(t('receipt_pending'))
+            }
+          } catch (err: any) {
+            const msg = err?.response?.data?.detail || err?.message || ''
+            toast.error(msg || t('receipt_error'))
+          } finally {
+            setPayLoading(false)
+          }
+        }}
+        disabled={payLoading}
+      >
+        {payLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <CreditCard className="w-4 h-4" />
+        )}
+        {t('payment_pay_with', { bank: paymentLabel })}
+      </Button>
+    </div>
   )
 }

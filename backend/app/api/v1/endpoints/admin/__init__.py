@@ -16,6 +16,8 @@ from app.api.v1.endpoints.admin.workers import router as workers_router
 from app.api.v1.endpoints.admin.nova_poshta import router as nova_poshta_router
 from app.api.v1.endpoints.admin.returns import router as returns_router
 from app.api.v1.endpoints.admin.loyalty import router as loyalty_router
+from app.api.v1.endpoints.admin.checkbox import router as checkbox_router
+from app.api.v1.endpoints.admin.payments import router as payments_router
 
 admin_router = APIRouter()
 
@@ -36,5 +38,7 @@ admin_router.include_router(workers_router, tags=["Admin Workers"])
 admin_router.include_router(nova_poshta_router, prefix="/nova-poshta", tags=["Nova Poshta"])
 admin_router.include_router(returns_router, tags=["Admin Returns"])
 admin_router.include_router(loyalty_router, tags=["Admin Loyalty"])
+admin_router.include_router(checkbox_router, prefix="/checkbox", tags=["Checkbox"])
+admin_router.include_router(payments_router, prefix="/payments", tags=["Payments"])
 
 __all__ = ["admin_router"]

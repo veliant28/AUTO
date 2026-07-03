@@ -1,50 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from sqlalchemy import or_, text as sa_text
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from app.core.db import get_db, get_tecdoc_db
-from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, SupplierOffer, Supplier
+from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, Supplier
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
 from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse
 from app.services.sync_service import sync_service
+from app.services.catalog_utils import best_offer, part_to_result
 
 router = APIRouter()
-
-
-def _best_offer(offers: List[SupplierOffer]) -> Optional[Dict[str, Any]]:
-    in_stock = [o for o in offers if o.quantity > 0]
-    candidates = in_stock or offers
-    if not candidates:
-        return None
-    best = max(candidates, key=lambda o: (o.updated_at or o.id, o.id))
-    effective_price = float(best.final_price) if best.final_price is not None else float(best.price)
-    return {
-        "price": effective_price,
-        "original_price": float(best.price),
-        "quantity": best.quantity or 0,
-        "supplier_name": best.supplier.name if best.supplier else None,
-        "currency": best.currency or "UAH",
-    }
-
-
-def _part_to_result(part, db) -> dict:
-    offers = db.query(SupplierOffer).options(
-        joinedload(SupplierOffer.supplier)
-    ).filter(SupplierOffer.part_id == part.id).all()
-    best = _best_offer(offers)
-    return {
-        "id": part.id,
-        "article": part.article,
-        "name": part.name,
-        "brand_id": part.brand_id,
-        "tecdoc_id": part.tecdoc_id,
-        "category_id": part.category_id,
-        "brand": part.brand,
-        "price": best["price"] if best else None,
-        "quantity": best["quantity"] if best else None,
-        "supplier_name": best["supplier_name"] if best else None,
-        "currency": best["currency"] if best else "UAH",
-        "image_url": part.image_url,    }
 
 
 @router.get("/makes", response_model=List[BrandSchema])
@@ -215,7 +180,7 @@ async def get_part_details(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = _best_offer(offers)
+        best = best_offer(offers)
         part_data = {
             "id": part.id,
             "article": part.article,
@@ -367,7 +332,7 @@ async def get_parts(
         if parts:
             total = base_query.count()
 
-    result = [_part_to_result(p, db) for p in parts]
+    result = [part_to_result(p, db) for p in parts]
 
     return {
         "items": result,
@@ -397,7 +362,7 @@ async def search_parts(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = _best_offer(offers)
+        best = best_offer(offers)
 
         enriched.append({
             "id": part.id,

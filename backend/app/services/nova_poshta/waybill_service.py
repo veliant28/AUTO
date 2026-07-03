@@ -33,6 +33,7 @@ from app.schemas.nova_poshta_schemas import (
 from app.models import Order
 from app.services.nova_poshta.client import NovaPoshtaApiClient
 from app.services.nova_poshta.constants import MODEL_INTERNET_DOCUMENT_GENERAL
+from app.workers.tasks.checkbox_tasks import create_checkbox_receipt_task
 from app.services.nova_poshta.lookup_service import NovaPoshtaLookupService
 from app.services.nova_poshta.sender_service import NovaPoshtaSenderService
 from app.services.nova_poshta.waybill_payloads import NovaPoshtaWaybillPayloadBuilder
@@ -362,6 +363,13 @@ class NovaPoshtaWaybillService:
         )
 
         logger.info("Created NP waybill id=%d order=%d ttn=%s", wb.id, order_id, np_number)
+
+        # Automatically create Checkbox fiscal receipt asynchronously
+        try:
+            create_checkbox_receipt_task.delay(order_id)
+        except Exception as e:
+            logger.warning("Failed to enqueue Checkbox receipt task for order %d: %s", order_id, e)
+
         return wb
 
     # ─── Update ───────────────────────────────────────────────────────────────

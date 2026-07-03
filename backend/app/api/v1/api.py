@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, footer, settings, categories, returns, nova_poshta, loyalty
+from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, footer, settings, categories, returns, nova_poshta, loyalty, payments
 from app.api.v1.endpoints.admin import admin_router
 
 api_router = APIRouter()
@@ -19,3 +19,4 @@ api_router.include_router(admin_router, prefix="/admin")
 api_router.include_router(categories.router, prefix="", tags=["Categories"])
 api_router.include_router(nova_poshta.router, prefix="/nova-poshta", tags=["Nova Poshta"])
 api_router.include_router(loyalty.router, prefix="/loyalty", tags=["Loyalty"])
+api_router.include_router(payments.router, prefix="", tags=["Payments"])

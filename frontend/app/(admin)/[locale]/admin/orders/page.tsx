@@ -45,6 +45,7 @@ import {
   Warehouse,
   Gift,
   Check,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -79,6 +80,17 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
+import {
+  getReceipt as getCheckboxReceipt,
+  getReceiptLink as getCheckboxReceiptLink,
+} from '@/lib/api/checkbox'
+import PaymentBlock from '../components/PaymentBlock'
+import PaymentBadge from '../components/PaymentBadge'
+import PaymentStatusBadge from '../components/PaymentStatusBadge'
+import {
+  paymentBadgeClass,
+  paymentMethodLabel,
+} from '../components/PaymentHelpers'
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
@@ -1732,14 +1744,24 @@ export default function AdminOrdersPage() {
                             )}
                           </div>
                           <Separator className="my-3" />
-                          <div className="flex flex-col">
-                            <h4 className="font-semibold text-lg flex items-center gap-2">
-                              <CreditCard className="w-5 h-5" />{' '}
-                              {t('payment_method')}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {t('payment_placeholder')}
-                            </p>
+                          <div className="flex flex-col space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold text-lg flex items-center gap-2">
+                                <CreditCard className="w-5 h-5" />{' '}
+                                {t('payment_method')}
+                              </h4>
+                              <PaymentBadge
+                                orderId={orderDetail!.id}
+                                paymentMethod={orderDetail!.payment_method}
+                                t={t}
+                              />
+                            </div>
+                            {orderDetail!.payment_method !== 'cod' && (
+                              <PaymentBlock
+                                orderId={orderDetail!.id}
+                                paymentMethod={orderDetail!.payment_method}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1817,21 +1839,81 @@ export default function AdminOrdersPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => setShowHistory(true)}
-                      >
-                        <History className="w-4 h-4" /> {t('order_history')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={enterEditMode}
-                      >
-                        <Pencil className="w-4 h-4" /> {t('edit_order')}
-                      </Button>
+                    <div className="flex justify-between items-center w-full">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={() => setShowHistory(true)}
+                        >
+                          <History className="w-4 h-4" /> {t('order_history')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={enterEditMode}
+                        >
+                          <Pencil className="w-4 h-4" /> {t('edit_order')}
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {orderDetail!.payment_method !== 'cod' &&
+                          orderDetail!.payment_method && (
+                            <Badge
+                              className={paymentBadgeClass(
+                                orderDetail!.payment_method,
+                              )}
+                            >
+                              {paymentMethodLabel(orderDetail!.payment_method)}
+                            </Badge>
+                          )}
+                        <Button
+                          variant="outline"
+                          className="gap-1.5"
+                          onClick={async () => {
+                            try {
+                              const receipt = await getCheckboxReceipt(
+                                orderDetail!.id,
+                              )
+                              if (receipt?.receipt_url) {
+                                window.open(
+                                  receipt.receipt_url,
+                                  '_blank',
+                                  'noopener,noreferrer',
+                                )
+                              } else if (receipt?.status === 'created') {
+                                const link = await getCheckboxReceiptLink(
+                                  orderDetail!.id,
+                                )
+                                if (link?.url) {
+                                  window.open(
+                                    link.url,
+                                    '_blank',
+                                    'noopener,noreferrer',
+                                  )
+                                } else {
+                                  toast.info(t('receipt_no_link'))
+                                }
+                              } else if (receipt?.status === 'error') {
+                                toast.error(
+                                  receipt.error_message || t('receipt_error'),
+                                )
+                              } else {
+                                toast.info(t('receipt_pending'))
+                              }
+                            } catch (err: any) {
+                              const msg =
+                                err?.response?.data?.detail ||
+                                err?.message ||
+                                ''
+                              toast.error(msg || t('receipt_error'))
+                            }
+                          }}
+                        >
+                          <FileText className="w-4 h-4" />{' '}
+                          {t('checkbox_receipt')}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

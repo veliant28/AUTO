@@ -33,7 +33,13 @@ import api from '@/lib/api'
 import { useCartStore } from '@/store/cartStore'
 import { toast } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
+import { useNovaPoshtaAddressSearch } from '@/hooks/useNovaPoshtaAddressSearch'
+import {
+  SettlementItem,
+  WarehouseListItem,
+} from '@/components/ui/nova-poshta-items'
 import { useProfile } from '@/hooks/useProfile'
+import { fetchPaymentMethods } from '@/lib/api/payments'
 import { checkoutSchema, CheckoutFormData } from '@/lib/validations/authSchemas'
 import { novaPoshtaPublicApi } from '@/lib/api/nova-poshta-public'
 import type {
@@ -86,6 +92,16 @@ export default function CheckoutPage() {
   }, [queryClient])
 
   const promocode = useCartStore((s) => s.promocode)
+
+  // ── Payment methods (fetched with polling for real-time updates) ──
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: () => fetchPaymentMethods().then((r) => r.methods),
+    refetchInterval: 30000,
+    staleTime: 10000,
+  })
+
+  const enabledMethods = paymentMethods?.filter((m) => m.enabled) ?? []
 
   // ── NP delivery refs (tracked outside form because setValue without register doesn't submit) ──
   const [npRefs, setNpRefs] = useState({
@@ -224,38 +240,24 @@ export default function CheckoutPage() {
   const deliveryType = watch('delivery_type')
   const cityRef = npRefs.delivery_city_ref
 
-  const [cityQuery, setCityQuery] = useState('')
-  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
-    queryKey: ['checkout-np-cities', cityQuery, locale],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchSettlements(cityQuery, locale)
-        .then((r) => r.data as NovaPoshtaLookupSettlement[]),
-    enabled: cityQuery.length >= 2,
-    staleTime: 30000,
-  })
-
-  const [warehouseQuery, setWarehouseQuery] = useState('')
-  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
-    queryKey: ['checkout-np-warehouses', cityRef, warehouseQuery, locale],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchWarehouses(cityRef!, warehouseQuery, undefined, locale)
-        .then((r) => r.data as NovaPoshtaLookupWarehouse[]),
-    enabled: !!cityRef && warehouseQuery.length >= 1,
-    staleTime: 30000,
-  })
-
-  const settlementRef = npRefs.delivery_settlement_ref
-  const [streetQuery, setStreetQuery] = useState('')
-  const { data: streets = [], isFetching: streetsLoading } = useQuery({
-    queryKey: ['checkout-np-streets', settlementRef, streetQuery, locale],
-    queryFn: () =>
-      novaPoshtaPublicApi
-        .searchStreets(settlementRef!, streetQuery, locale)
-        .then((r) => r.data as NovaPoshtaLookupStreet[]),
-    enabled: !!settlementRef && streetQuery.length >= 2,
-    staleTime: 30000,
+  const {
+    cityQuery,
+    setCityQuery,
+    warehouseQuery,
+    setWarehouseQuery,
+    streetQuery,
+    setStreetQuery,
+    settlements,
+    citiesLoading,
+    warehouses,
+    warehousesLoading,
+    streets,
+    streetsLoading,
+  } = useNovaPoshtaAddressSearch({
+    prefix: 'checkout',
+    cityRef,
+    settlementRef: npRefs.delivery_settlement_ref,
+    locale,
   })
 
   const isWarehouseType = deliveryType === 'warehouse'
@@ -490,25 +492,7 @@ export default function CheckoutPage() {
                       typeToSearchMessage={
                         tc('delivery_city') || 'Поиск города...'
                       }
-                      renderItem={(item) => (
-                        <>
-                          <div className="font-medium leading-tight">
-                            {item.label}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {[item.area, item.region]
-                              .filter(Boolean)
-                              .join(' — ')}
-                            {item.warehouses_count &&
-                            item.warehouses_count !== '0' ? (
-                              <span className="ml-2 inline-flex items-center gap-1">
-                                <Warehouse className="w-3 h-3" />×
-                                {item.warehouses_count}
-                              </span>
-                            ) : null}
-                          </div>
-                        </>
-                      )}
+                      renderItem={(item) => <SettlementItem item={item} />}
                     />
                   </div>
                 )}
@@ -688,53 +672,35 @@ export default function CheckoutPage() {
                   render={({ field }) => (
                     <RadioGroup
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(val) => {
+                        // If selected method was disabled, clear the selection
+                        if (!enabledMethods.find((m) => m.code === val)) return
+                        field.onChange(val)
+                      }}
                       className="grid grid-cols-4 gap-3"
                     >
-                      <Label
-                        htmlFor="cod"
-                        className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer"
-                      >
-                        <RadioGroupItem
-                          value="cod"
-                          id="cod"
-                          className="cursor-pointer"
-                        />
-                        {tc('payment_cod')}
-                      </Label>
-                      <Label
-                        htmlFor="monobank"
-                        className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer"
-                      >
-                        <RadioGroupItem
-                          value="monobank"
-                          id="monobank"
-                          className="cursor-pointer"
-                        />
-                        {tc('payment_monobank')}
-                      </Label>
-                      <Label
-                        htmlFor="novapay"
-                        className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer"
-                      >
-                        <RadioGroupItem
-                          value="novapay"
-                          id="novapay"
-                          className="cursor-pointer"
-                        />
-                        {tc('payment_novapay')}
-                      </Label>
-                      <Label
-                        htmlFor="liqpay"
-                        className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer"
-                      >
-                        <RadioGroupItem
-                          value="liqpay"
-                          id="liqpay"
-                          className="cursor-pointer"
-                        />
-                        {tc('payment_liqpay')}
-                      </Label>
+                      {enabledMethods.map((method) => {
+                        const labelKey = `payment_${method.code}`
+                        return (
+                          <Label
+                            key={method.code}
+                            htmlFor={method.code}
+                            className="flex items-center gap-3 rounded-lg border p-4 has-data-[state=checked]:border-primary cursor-pointer"
+                          >
+                            <RadioGroupItem
+                              value={method.code}
+                              id={method.code}
+                              className="cursor-pointer"
+                            />
+                            {tc(labelKey)}
+                          </Label>
+                        )
+                      })}
+                      {enabledMethods.length === 0 && (
+                        <p className="text-sm text-muted-foreground col-span-4 text-center py-4">
+                          {t('no_payment_methods')}
+                        </p>
+                      )}
                     </RadioGroup>
                   )}
                 />

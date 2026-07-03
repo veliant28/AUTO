@@ -36,7 +36,6 @@ import {
   useVehicleModels,
   useVehicleCars,
   useVehicleVolumes,
-  useVehicleEngines,
 } from '@/hooks/useVehicleCascade'
 
 const TYPE_BUTTONS: {
@@ -82,13 +81,9 @@ export default function VehicleSelectorDialog({ children }: Props) {
     store.type,
     store.year,
     store.modelId,
-  )
-  const { data: volumes } = useVehicleVolumes(store.year, store.modId)
-  const { data: engines, isLoading: loadingEngines } = useVehicleEngines(
-    store.year,
-    store.modId,
     store.volume,
   )
+  const { data: volumes } = useVehicleVolumes(store.year, store.modelId)
 
   const isPassenger = store.type === 'passenger'
   const hasSelection = !!store.modId
@@ -114,8 +109,9 @@ export default function VehicleSelectorDialog({ children }: Props) {
 
   const carOptions = React.useMemo(() => {
     if (!cars) return []
-    return cars
-  }, [cars])
+    if (!store.volume) return cars
+    return cars.filter((c) => c.capacity === store.volume)
+  }, [cars, store.volume])
 
   // Prevent Radix UI SSR hydration mismatch: render just children until mounted
   if (!mounted) return <>{children}</>
@@ -306,52 +302,8 @@ export default function VehicleSelectorDialog({ children }: Props) {
               </Select>
             </div>
 
-            {/* Car / Modification */}
-            <div className="space-y-1.5">
-              <p className="text-sm font-medium">{t('vehicle_modification')}</p>
-              <Select
-                disabled={!store.modelId || loadingCars || !cars}
-                value={
-                  carOptions?.some((c) => String(c.id) === store.modId)
-                    ? (store.modId ?? undefined)
-                    : undefined
-                }
-                onValueChange={(val) => {
-                  const car = carOptions.find((c) => c.id === parseInt(val))
-                  if (car) {
-                    store.setMod(val, car.name || '')
-                    if (car.capacity) store.setVolume(car.capacity)
-                    if (car.engine) store.setEngine(car.engine)
-                    store.setCarDetails({
-                      power: car.power,
-                      yearFrom: car.year_from,
-                      yearTo: car.year_to,
-                    })
-                  }
-                }}
-              >
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder={t('vehicle_select_modification')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {carOptions.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                      {(c.capacity || c.engine) && (
-                        <span className="text-muted-foreground ml-2">
-                          {[c.capacity, c.engine].filter(Boolean).join(' / ')}
-                        </span>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Volume + Engine (only for passenger) */}
-          {isPassenger && (
-            <div className="grid grid-cols-2 gap-4">
+            {/* Volume (before modification) */}
+            {isPassenger && (
               <div className="space-y-1.5">
                 <p className="text-sm font-medium">{t('vehicle_volume')}</p>
                 <Select
@@ -371,27 +323,52 @@ export default function VehicleSelectorDialog({ children }: Props) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium">{t('vehicle_engine')}</p>
-                <Select
-                  disabled={!store.volume || loadingEngines || !engines}
-                  value={store.engine || undefined}
-                  onValueChange={(val) => store.setEngine(val)}
-                >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder={t('vehicle_select_engine')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {engines?.map((e) => (
-                      <SelectItem key={e.engine} value={e.engine}>
-                        {e.engine}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Modification (full width below) */}
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">{t('vehicle_modification')}</p>
+            <Select
+              disabled={!store.modelId || loadingCars || !cars}
+              value={
+                carOptions?.some((c) => String(c.id) === store.modId)
+                  ? (store.modId ?? undefined)
+                  : undefined
+              }
+              onValueChange={(val) => {
+                const car = carOptions.find((c) => c.id === parseInt(val))
+                if (car) {
+                  store.setMod(val, car.name || '')
+                  if (car.capacity) store.setVolume(car.capacity)
+                  if (car.engine) store.setEngine(car.engine)
+                  store.setCarDetails({
+                    power: car.power,
+                    yearFrom: car.year_from,
+                    yearTo: car.year_to,
+                  })
+                }
+              }}
+            >
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue placeholder={t('vehicle_select_modification')} />
+              </SelectTrigger>
+              <SelectContent>
+                {carOptions.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                    {(c.capacity || c.engine) && (
+                      <span className="text-muted-foreground ml-2">
+                        {[c.capacity, c.engine].filter(Boolean).join(' / ')}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Engine selector removed — engine codes shown in modification */}
 
           {/* Подобрать запчасти */}
           {hasSelection && (

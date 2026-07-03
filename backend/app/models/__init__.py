@@ -16,6 +16,8 @@ from .pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from .nova_poshta import NovaPoshtaSenderProfile, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillEvent
 from .returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from .loyalty import Promocode
+from .checkbox import OrderCheckboxReceipt
+from .payments import PaymentTransaction
 
 __all__ = [
     "Base", 
@@ -37,4 +39,6 @@ __all__ = [
     "NovaPoshtaSenderProfile", "OrderNovaPoshtaWaybill", "OrderNovaPoshtaWaybillEvent",
     "ReturnRequest", "ReturnItem", "ReturnChangeLog", "ReturnStatus",
     "Promocode",
+    "OrderCheckboxReceipt",
+    "PaymentTransaction",
 ]

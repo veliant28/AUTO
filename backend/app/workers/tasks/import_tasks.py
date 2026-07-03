@@ -12,6 +12,7 @@ from app.services.import_processor import (
 )
 from app.services.pricing_service import apply_margins_bulk
 from app.services.sku_generator import bulk_generate_skus, sync_skus_to_parts
+from app.services.import_utils import make_progress_cb, safe_fail_import, complete_import, queue_post_import_tasks
 from app.models.pricing import PriceRule, PricingApplySnapshot
 import json
 import os
@@ -151,16 +152,8 @@ def process_price_import(self, import_id: int):
 
             LOG("GPL: promoting to catalog (creating/updating Parts and SupplierOffers)...")
             set_stage(pi, db, "Обновление каталога")
-            def update_progress_gpl(pct: int):
-                try:
-                    pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-                    if pi2:
-                        pi2.progress = 35 + int(pct * 0.30)
-                        db.commit()
-                except Exception:
-                    db.rollback()
 
-            promoted = promote_all_to_catalog(db, "GPL", progress_cb=update_progress_gpl)
+            promoted = promote_all_to_catalog(db, "GPL", progress_cb=make_progress_cb(db, import_id, offset=35, scale=0.30))
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
             set_progress(pi, db, 65)
@@ -177,35 +170,10 @@ def process_price_import(self, import_id: int):
             cat_assigned = assign_gpl_categories(db, "GPL")
             LOG(f"GPL: categories assigned: {cat_assigned}")
 
-            # Import is complete — set status and launch 3 parallel tasks
-            pi.progress = 100
-            pi.status = "complete"
-            pi.stage_name = ""
-            pi.finished_at = datetime.utcnow()
-            db.commit()
+            # Import is complete — set status and launch parallel tasks
+            complete_import(pi, db)
             LOG("GPL: import complete — launching parallel tasks (margins, photos, matching)")
-
-            # 3 параллельных задачи (слоты 1, 2, 3)
-            try:
-                from app.workers.tasks.pricing_tasks import apply_margins_task
-                apply_margins_task.delay()
-                LOG("GPL: margins task queued [slot 1]")
-            except Exception as e:
-                LOG(f"GPL: failed to queue margins: {e}")
-
-            try:
-                from app.workers.tasks.image_tasks import download_product_images
-                download_product_images.delay()
-                LOG("GPL: image download task queued [slot 2]")
-            except Exception as e:
-                LOG(f"GPL: failed to queue image download: {e}")
-
-            try:
-                from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
-                match_parts_with_tecdoc.delay()
-                LOG("GPL: tecdoc matching task queued [slot 3]")
-            except Exception as e:
-                LOG(f"GPL: failed to queue tecdoc matching: {e}")
+            queue_post_import_tasks("GPL")
 
         elif pi.supplier.upper() == "UTR":
             LOG("UTR: requesting export...")
@@ -258,16 +226,8 @@ def process_price_import(self, import_id: int):
 
             LOG("UTR: promoting to catalog...")
             set_stage(pi, db, "Обновление каталога")
-            def update_progress_utr(pct: int):
-                try:
-                    pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-                    if pi2:
-                        pi2.progress = 35 + int(pct * 0.30)
-                        db.commit()
-                except Exception:
-                    db.rollback()
 
-            promoted = promote_all_to_catalog(db, "UTR", progress_cb=update_progress_utr)
+            promoted = promote_all_to_catalog(db, "UTR", progress_cb=make_progress_cb(db, import_id, offset=35, scale=0.30))
             pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
             pi.matched_items = promoted
             set_progress(pi, db, 65)
@@ -279,27 +239,9 @@ def process_price_import(self, import_id: int):
             sync_skus_to_parts(db, supplier="UTR")
             LOG("UTR: SKUs generated")
 
-            pi.progress = 100
-            pi.status = "complete"
-            pi.stage_name = ""
-            pi.finished_at = datetime.utcnow()
-            db.commit()
+            complete_import(pi, db)
             LOG("UTR: import complete — launching parallel tasks (margins, matching)")
-
-            # 2 параллельных задачи (фото только для GPL)
-            try:
-                from app.workers.tasks.pricing_tasks import apply_margins_task
-                apply_margins_task.delay()
-                LOG("UTR: margins task queued [slot 1]")
-            except Exception as e:
-                LOG(f"UTR: failed to queue margins: {e}")
-
-            try:
-                from app.workers.tasks.tecdoc_tasks import match_parts_with_tecdoc
-                match_parts_with_tecdoc.delay()
-                LOG("UTR: tecdoc matching task queued [slot 3]")
-            except Exception as e:
-                LOG(f"UTR: failed to queue tecdoc matching: {e}")
+            queue_post_import_tasks("UTR")
 
         LOG("process_price_import: success")
         return {"status": pi.status, "items": pi.total_items, "matched": pi.matched_items}
@@ -307,14 +249,7 @@ def process_price_import(self, import_id: int):
     except Exception as e:
         LOG(f"process_price_import: ERROR — {e}")
         db.rollback()
-        try:
-            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            if pi:
-                pi.status = "failed"
-                pi.error_message = str(e)[:500]
-                db.commit()
-        except Exception:
-            db.rollback()
+        safe_fail_import(db, import_id, str(e))
         return {"error": str(e)}
     finally:
         db.close()
@@ -333,18 +268,8 @@ def promote_import_task(self, import_id: int):
         pi.status = "processing"
         db.commit()
 
-        def update_progress(pct: int):
-            nonlocal db
-            try:
-                pi2 = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-                if pi2:
-                    pi2.progress = pct
-                    db.commit()
-            except Exception:
-                db.rollback()
-
         LOG(f"promote: promoting {pi.supplier} to catalog...")
-        promoted = promote_all_to_catalog(db, pi.supplier, progress_cb=update_progress)
+        promoted = promote_all_to_catalog(db, pi.supplier, progress_cb=make_progress_cb(db, import_id))
         pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
         pi.matched_items = promoted
         pi.progress = 90
@@ -372,14 +297,7 @@ def promote_import_task(self, import_id: int):
     except Exception as e:
         LOG(f"promote: ERROR — {e}")
         db.rollback()
-        try:
-            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
-            if pi:
-                pi.status = "failed"
-                pi.error_message = str(e)[:500]
-                db.commit()
-        except Exception:
-            db.rollback()
+        safe_fail_import(db, import_id, str(e))
         return {"error": str(e)}
     finally:
         db.close()

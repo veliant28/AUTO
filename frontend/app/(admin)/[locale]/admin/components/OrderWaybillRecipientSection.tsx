@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { Button } from '@/components/ui/button'
+import { useClickOutside } from '@/hooks/useClickOutside'
 import type {
   NovaPoshtaLookupSettlement,
   NovaPoshtaLookupWarehouse,
@@ -300,18 +301,7 @@ export default function OrderWaybillRecipientSection({
   const addressContainerRef = useRef<HTMLDivElement>(null)
   const addressListRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        addressContainerRef.current &&
-        !addressContainerRef.current.contains(e.target as Node)
-      ) {
-        setAddressOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  useClickOutside(addressContainerRef, () => setAddressOpen(false))
 
   useEffect(() => {
     setAddressHighlighted(-1)

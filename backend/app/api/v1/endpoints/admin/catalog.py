@@ -7,20 +7,18 @@ from app.core.db import get_tecdoc_db
 router = APIRouter()
 
 VEHICLE_TYPES = {
-    'passenger': {'table': 'autodb_passenger_cars', 'has_engine': True},
-    'commercial': {'table': 'commercial_vehicles', 'has_engine': False},
-    'motorbike': {'table': 'motorbikes', 'has_engine': False},
+    'passenger': {'table': 'passanger_cars', 'has_engine': True, 'id_col': 'id', 'model_fk': 'modelid', 'man_fk': 'manufacturerid'},
+    'commercial': {'table': 'commercial_vehicles', 'has_engine': False, 'id_col': 'id', 'model_fk': 'modelid', 'man_fk': 'manufacturerid'},
+    'motorbike': {'table': 'motorbikes', 'has_engine': False, 'id_col': 'id', 'model_fk': 'modelid', 'man_fk': 'manufacturerid'},
 }
 
-YEAR_FILTER_AUTO = ':year BETWEEN pc.start_year AND pc.end_year'
-YEAR_FILTER_BASIC = "CAST(SPLIT_PART(pc.constructioninterval, '-', 1) AS INTEGER) <= :year AND (CAST(SPLIT_PART(pc.constructioninterval, '-', 2) AS INTEGER) >= :year OR SPLIT_PART(pc.constructioninterval, '-', 2) = '' OR SPLIT_PART(pc.constructioninterval, '-', 2) IS NULL)"
+YEAR_FILTER = "pc.constructioninterval ~ '\\d{4}' AND (regexp_match(pc.constructioninterval, '(\\d{4})'))[1]::int >= 1900 AND (regexp_match(pc.constructioninterval, '(\\d{4})'))[1]::int <= :year AND (regexp_match(pc.constructioninterval, '(\\d{4})$'))[1]::int >= :year"
 
 
 def attr_subquery(attr_type: str, alias: str) -> str:
-    return f"""(SELECT attr.displayvalue FROM passanger_car_attributes attr
+    return f"""(SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr
                 WHERE attr.passangercarid = pc.id
-                AND attr.attributetype = '{attr_type}'
-                LIMIT 1) as {alias}"""
+                AND attr.attributetype = '{attr_type}') as {alias}"""
 
 
 def attr_exists(attr_type: str, param: str) -> str:
@@ -46,24 +44,15 @@ async def get_years(type: str = 'passenger', tecdoc_db: Session = Depends(get_te
     if type not in VEHICLE_TYPES:
         return []
     table = VEHICLE_TYPES[type]['table']
-    if table == 'autodb_passenger_cars':
-        rows = tecdoc_db.execute(sa_text(f"""
-            SELECT DISTINCT y FROM (
-                SELECT start_year as y FROM {table} WHERE start_year IS NOT NULL
-                UNION
-                SELECT end_year as y FROM {table} WHERE end_year IS NOT NULL
-            ) sub ORDER BY y
-        """)).fetchall()
-    else:
-        rows = tecdoc_db.execute(sa_text(f"""
-            SELECT DISTINCT y FROM (
-                SELECT (regexp_match(constructioninterval, '^(\\d+)'))[1]::int as y
-                FROM {table} WHERE constructioninterval ~ '^\\d+'
-                UNION
-                SELECT (regexp_match(constructioninterval, '-(\\d+)$'))[1]::int as y
-                FROM {table} WHERE constructioninterval ~ '\\d+$'
-            ) sub WHERE y IS NOT NULL ORDER BY y
-        """)).fetchall()
+    rows = tecdoc_db.execute(sa_text(f"""
+        SELECT DISTINCT y FROM (
+            SELECT (regexp_match(constructioninterval, '(\\d{{4}})'))[1]::int as y
+            FROM {table} WHERE constructioninterval ~ '\\d{{4}}'
+            UNION
+            SELECT (regexp_match(constructioninterval, '(\\d{{4}})$'))[1]::int as y
+            FROM {table} WHERE constructioninterval ~ '\\d{{4}}$'
+        ) sub WHERE y >= 1900 ORDER BY y
+    """)).fetchall()
     return [{'year': r[0]} for r in rows]
 
 
@@ -72,13 +61,12 @@ async def get_makes(type: str = 'passenger', year: int = Query(...), tecdoc_db: 
     """Получить производителей ТС по типу и году."""
     if type not in VEHICLE_TYPES:
         return []
-    table = VEHICLE_TYPES[type]['table']
-    yf = YEAR_FILTER_AUTO if table == 'autodb_passenger_cars' else YEAR_FILTER_BASIC
+    vt = VEHICLE_TYPES[type]
     sql = sa_text(f"""
-        SELECT DISTINCT man.id, man.description FROM {table} pc
-        JOIN {"autodb_models" if table == "autodb_passenger_cars" else "models"} m ON m.id = pc.{'model_id' if table == "autodb_passenger_cars" else 'modelid'}
-        JOIN {"autodb_manufacturers" if table == "autodb_passenger_cars" else "manufacturers"} man ON man.id = m.{'manufacturer_id' if table == "autodb_passenger_cars" else 'manufacturerid'}
-        WHERE {yf} ORDER BY man.description
+        SELECT DISTINCT man.id, man.description FROM {vt['table']} pc
+        JOIN models m ON m.id = pc.{vt['model_fk']}
+        JOIN manufacturers man ON man.id = m.{vt['man_fk']}
+        WHERE {YEAR_FILTER} ORDER BY man.description
     """)
     rows = tecdoc_db.execute(sql, {'year': year}).fetchall()
     return [{'id': r[0], 'name': r[1]} for r in rows]
@@ -89,88 +77,98 @@ async def get_models(type: str = 'passenger', year: int = Query(...), make_id: i
     """Получить модели ТС по производителю и году."""
     if type not in VEHICLE_TYPES:
         return []
-    table = VEHICLE_TYPES[type]['table']
-    yf = YEAR_FILTER_AUTO if table == 'autodb_passenger_cars' else YEAR_FILTER_BASIC
-    mod_table = 'autodb_models' if table == 'autodb_passenger_cars' else 'models'
-    man_table = 'autodb_manufacturers' if table == 'autodb_passenger_cars' else 'manufacturers'
-    model_fk = 'model_id' if table == 'autodb_passenger_cars' else 'modelid'
-    man_fk = 'manufacturer_id' if table == 'autodb_passenger_cars' else 'manufacturerid'
+    vt = VEHICLE_TYPES[type]
     sql = sa_text(f"""
-        SELECT DISTINCT m.id, m.description FROM {table} pc
-        JOIN {mod_table} m ON m.id = pc.{model_fk}
-        JOIN {man_table} man ON man.id = m.{man_fk}
-        WHERE man.id = :make_id AND {yf} ORDER BY m.description
+        SELECT DISTINCT m.id, m.description FROM {vt['table']} pc
+        JOIN models m ON m.id = pc.{vt['model_fk']}
+        JOIN manufacturers man ON man.id = m.{vt['man_fk']}
+        WHERE man.id = :make_id AND {YEAR_FILTER} ORDER BY m.description
     """)
     rows = tecdoc_db.execute(sql, {'make_id': make_id, 'year': year}).fetchall()
     return [{'id': r[0], 'name': r[1] or ''} for r in rows]
 
 
 @router.get('/catalog/cars')
-async def get_cars(type: str = 'passenger', year: int = Query(...), model_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
-    """Получить модификации ТС по модели и году."""
+async def get_cars(type: str = 'passenger', year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
+    """Получить модификации ТС по модели, году и опционально объёму."""
     if type not in VEHICLE_TYPES:
         return []
-    table = VEHICLE_TYPES[type]['table']
-    has_engine = VEHICLE_TYPES[type]['has_engine']
+    vt = VEHICLE_TYPES[type]
+    is_passenger = (type == 'passenger')
 
-    if has_engine:
+    vol_cond = "AND EXISTS (SELECT 1 FROM passanger_car_attributes attr WHERE attr.passangercarid = pc.id AND attr.attributetype = 'Capacity' AND attr.displayvalue = :volume)" if volume else ''
+
+    if is_passenger:
         sql = sa_text(f"""
-            SELECT pc.id, pc.description,
-                   pc.start_year, pc.end_year,
+            SELECT pc.id, pc.description, pc.fulldescription, pc.constructioninterval,
                    {attr_subquery('Capacity', 'capacity')},
-            (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = pc.id AND attr.attributetype = 'EngineCode') as engine_code,
-                   {attr_subquery('FuelType', 'fuel')},
-                   {attr_subquery('Power', 'power')}
-            FROM {table} pc
-            WHERE pc.model_id = :model_id AND {YEAR_FILTER_AUTO}
+                   {attr_subquery('EngineCode', 'engine_code')},
+                   {attr_subquery('Power', 'power')},
+                   {attr_subquery('FuelType', 'fuel')}
+            FROM {vt['table']} pc
+            WHERE {vt['model_fk']} = :model_id AND {YEAR_FILTER} {vol_cond}
             ORDER BY pc.description
         """)
-        rows = tecdoc_db.execute(sql, {'model_id': model_id, 'year': year}).fetchall()
-        return [{
-            'id': r[0], 'name': r[1] or '', 'year_from': r[2], 'year_to': r[3],
-            'capacity': r[4] or '', 'engine': r[5] or '', 'fuel': r[6] or '', 'power': r[7] or '',
-        } for r in rows]
+        params = {'model_id': model_id, 'year': year}
+        if volume:
+            params['volume'] = volume
     else:
         sql = sa_text(f"""
             SELECT id, description, fulldescription, constructioninterval
-            FROM {table}
-            WHERE modelid = :model_id AND {YEAR_FILTER_BASIC}
+            FROM {vt['table']} pc
+            WHERE {vt['model_fk']} = :model_id AND {YEAR_FILTER}
             ORDER BY description
         """)
-        rows = tecdoc_db.execute(sql, {'model_id': model_id, 'year': year}).fetchall()
+        params = {'model_id': model_id, 'year': year}
+
+    rows = tecdoc_db.execute(sql, params).fetchall()
+    if is_passenger:
         return [{
             'id': r[0], 'name': r[2] or r[1] or '', 'year_from': None, 'year_to': None,
-            'capacity': '', 'engine': '', 'fuel': '', 'power': '', 'constructioninterval': r[3] or '',
+            'capacity': r[4] or '', 'engine': r[5] or '', 'power': r[6] or '', 'fuel': r[7] or '',
+            'constructioninterval': r[3] or '',
         } for r in rows]
+    return [{
+        'id': r[0], 'name': r[2] or r[1] or '', 'year_from': None, 'year_to': None,
+        'capacity': '', 'engine': '', 'fuel': '', 'power': '', 'constructioninterval': r[3] or '',
+    } for r in rows]
 
 
 @router.get('/catalog/volumes')
-async def get_volumes(year: int = Query(...), model_id: int = Query(...), tecdoc_db: Session = Depends(get_tecdoc_db)):
+async def get_volumes(year: int = Query(...), model_id: int = Query(...), car_id: Optional[int] = Query(None), tecdoc_db: Session = Depends(get_tecdoc_db)):
     """Получить объёмы двигателей для модели."""
+    car_cond = 'AND pc.id = :car_id' if car_id else ''
+    params = {'model_id': model_id, 'year': year}
+    if car_id:
+        params['car_id'] = car_id
     rows = tecdoc_db.execute(sa_text(f"""
-        SELECT DISTINCT attr.displayvalue FROM autodb_passenger_cars pc
+        SELECT DISTINCT attr.displayvalue FROM passanger_cars pc
         JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
-        WHERE pc.model_id = :model_id AND {YEAR_FILTER_AUTO}
+        WHERE pc.modelid = :model_id {car_cond} AND {YEAR_FILTER}
         AND attr.attributetype = 'Capacity'
         AND attr.displayvalue IS NOT NULL AND attr.displayvalue != ''
         ORDER BY attr.displayvalue
-    """), {'model_id': model_id, 'year': year}).fetchall()
+    """), params).fetchall()
     return [{'volume': r[0]} for r in rows]
 
 
 @router.get('/catalog/engines')
-async def get_engines(year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), tecdoc_db: Session = Depends(get_tecdoc_db)):
+async def get_engines(year: int = Query(...), model_id: int = Query(...), volume: str = Query(''), car_id: Optional[int] = Query(None), tecdoc_db: Session = Depends(get_tecdoc_db)):
     """Получить коды двигателей для модели."""
+    car_cond = 'AND pc.id = :car_id' if car_id else ''
     vol_cond = f"AND {attr_exists('Capacity', 'volume')}" if volume else ''
+    params = {'model_id': model_id, 'year': year, 'volume': volume}
+    if car_id:
+        params['car_id'] = car_id
     rows = tecdoc_db.execute(sa_text(f"""
-        SELECT DISTINCT attr.displayvalue FROM autodb_passenger_cars pc
+        SELECT DISTINCT attr.displayvalue FROM passanger_cars pc
         JOIN passanger_car_attributes attr ON attr.passangercarid = pc.id
-        WHERE pc.model_id = :model_id AND {YEAR_FILTER_AUTO}
+        WHERE pc.modelid = :model_id {car_cond} AND {YEAR_FILTER}
         AND attr.attributetype = 'EngineCode'
         {vol_cond}
         AND attr.displayvalue IS NOT NULL AND attr.displayvalue != ''
         ORDER BY attr.displayvalue
-    """), {'model_id': model_id, 'year': year, 'volume': volume}).fetchall()
+    """), params).fetchall()
     return [{'engine': r[0]} for r in rows]
 
 
@@ -192,40 +190,31 @@ async def get_catalog_items(
     if type not in VEHICLE_TYPES:
         return {'items': [], 'total': 0, 'page': page, 'page_size': page_size}
 
-    table = VEHICLE_TYPES[type]['table']
-    has_engine = VEHICLE_TYPES[type]['has_engine']
+    vt = VEHICLE_TYPES[type]
+    is_passenger = (type == 'passenger')
 
-    joins = ''
-    if table == 'autodb_passenger_cars':
-        select_cols = f"""
-            pc.id, man.description as brand, m.description as model,
-            pc.description, pc.start_year, pc.end_year,
-            {attr_subquery('Capacity', 'capacity')},
-            {attr_subquery('EngineCode', 'engine_code')},
-            (SELECT string_agg(DISTINCT attr.displayvalue, ' / ' ORDER BY attr.displayvalue) FROM passanger_car_attributes attr WHERE attr.passangercarid = pc.id AND attr.attributetype = 'Power') as power,
-            {attr_subquery('FuelType', 'fuel')}
-        """
-        joins = """
-            JOIN autodb_models m ON m.id = pc.model_id
-            JOIN autodb_manufacturers man ON man.id = m.manufacturer_id
-        """
-        model_fk = 'pc.model_id'
+    if is_passenger:
+        select_cols = f"""pc.id, man.description as brand, m.description as model,
+                     pc.description, pc.constructioninterval as year_str,
+                     {attr_subquery('Capacity', 'capacity')},
+                     {attr_subquery('EngineCode', 'engine_code')},
+                     {attr_subquery('Power', 'power')},
+                     {attr_subquery('FuelType', 'fuel')}"""
     else:
         select_cols = """pc.id, man.description as brand, m.description as model,
-                         pc.description, pc.constructioninterval as year_str,
-                         ''::varchar as capacity, ''::varchar as engine_code,
-                         ''::varchar as power, ''::varchar as fuel"""
-        joins = """
-            JOIN models m ON m.id = pc.modelid
-            JOIN manufacturers man ON man.id = m.manufacturerid
-        """
-        model_fk = 'pc.modelid'
+                     pc.description, pc.constructioninterval as year_str,
+                     ''::varchar as capacity, ''::varchar as engine_code,
+                     ''::varchar as power, ''::varchar as fuel"""
+    joins = """
+        JOIN models m ON m.id = pc.modelid
+        JOIN manufacturers man ON man.id = m.manufacturerid
+    """
+    model_fk = 'pc.modelid'
 
     where, params = [], {}
-    yf = YEAR_FILTER_AUTO if table == 'autodb_passenger_cars' else YEAR_FILTER_BASIC
 
     if year is not None:
-        where.append(yf)
+        where.append(YEAR_FILTER)
         params['year'] = year
     if make_id is not None:
         where.append('man.id = :make_id')
@@ -236,10 +225,10 @@ async def get_catalog_items(
     if car_id is not None:
         where.append('pc.id = :car_id')
         params['car_id'] = car_id
-    if volume and has_engine:
+    elif volume:
         where.append(attr_exists('Capacity', 'volume'))
         params['volume'] = volume
-    if engine and has_engine:
+    elif engine:
         where.append(attr_exists('EngineCode', 'engine'))
         params['engine'] = engine
     if search:
@@ -248,7 +237,7 @@ async def get_catalog_items(
 
     where_clause = ' WHERE ' + ' AND '.join(where) if where else ''
 
-    count_sql = sa_text(f'SELECT COUNT(*) FROM {table} pc {joins} {where_clause}')
+    count_sql = sa_text(f'SELECT COUNT(DISTINCT pc.id) FROM {vt["table"]} pc {joins} {where_clause}')
     total = tecdoc_db.execute(count_sql, params).scalar() or 0
 
     offset = (page - 1) * page_size
@@ -256,7 +245,8 @@ async def get_catalog_items(
     params['offset'] = offset
 
     data_sql = sa_text(f"""
-        SELECT {select_cols} FROM {table} pc {joins} {where_clause}
+        SELECT DISTINCT {select_cols}
+        FROM {vt["table"]} pc {joins} {where_clause}
         ORDER BY man.description, m.description, pc.description
         LIMIT :limit OFFSET :offset
     """)
@@ -264,17 +254,10 @@ async def get_catalog_items(
 
     items = []
     for r in rows:
-        item = {
+        items.append({
             'id': r[0], 'brand': r[1], 'model': r[2], 'modification': r[3] or '',
-            'capacity': r[6] or '', 'engine': r[7] or '', 'power': r[8] or '', 'fuel': r[9] or '',
-        }
-        if engine:
-            item['engine'] = engine
-        if table == 'autodb_passenger_cars':
-            item['year_from'] = r[4]
-            item['year_to'] = r[5]
-        else:
-            item['constructioninterval'] = r[4] or ''
-        items.append(item)
+            'constructioninterval': r[4] or '',
+            'capacity': r[5] or '', 'engine': r[6] or '', 'power': r[7] or '', 'fuel': r[8] or '',
+        })
 
     return {'items': items, 'total': total, 'page': page, 'page_size': page_size}

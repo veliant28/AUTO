@@ -7,7 +7,7 @@ from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutS
 from app.models import Order, OrderItem, OrderStatus, Part
 from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
-from app.api.v1.endpoints.auth import get_optional_user
+from app.api.v1.endpoints.auth import get_optional_user, get_current_user
 
 router = APIRouter()
 
@@ -227,3 +227,153 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
     db.refresh(order)
     
     return {"message": "Order created", "order_id": order.id, "order_number": order.order_number}
+
+
+@router.get("/{order_id}/receipt-link")
+async def get_order_receipt_link(
+    order_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Public endpoint: get receipt link for own order."""
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    from app.services.checkbox.service import CheckboxService
+    from app.schemas.checkbox_schemas import CheckboxReceiptLinkResponse
+
+    service = CheckboxService(db)
+    url = await service.get_receipt_link(order_id)
+    if not url:
+        raise HTTPException(404, "Receipt link not available")
+
+    return CheckboxReceiptLinkResponse(url=url)
+
+
+@router.get("/{order_id}/payment")
+async def get_order_payment(
+    order_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Public endpoint: get payment status for own order."""
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    from app.services.payments.service import PaymentService
+    from app.schemas.payment_schemas import PaymentTransactionResponse
+
+    service = PaymentService(db)
+    tx = service.get_transaction(order_id)
+    if not tx:
+        return {"payment_method": order.payment_method, "status": None}
+
+    return PaymentTransactionResponse(
+        id=tx.id,
+        order_id=tx.order_id,
+        payment_method=tx.payment_method,
+        amount=tx.amount,
+        status=tx.status,
+        provider_tx_id=tx.provider_tx_id,
+        payment_url=tx.payment_url,
+        invoice_url=tx.invoice_url,
+        receipt_url=tx.receipt_url,
+        error_message=tx.error_message,
+        created_at=tx.created_at,
+        updated_at=tx.updated_at,
+    )
+
+
+@router.post("/{order_id}/pay")
+async def pay_order(
+    order_id: int,
+    method: str = "monobank",
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Public endpoint: initiate payment for own order."""
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    from app.services.payments.service import PaymentService
+    from app.schemas.payment_schemas import PaymentInitResponse
+
+    service = PaymentService(db)
+    try:
+        tx = await service.init_payment(
+            order_id=order_id,
+            method=method,
+            return_url="",
+            webhook_url="",
+        )
+        return PaymentInitResponse(
+            success=(tx.status != "error"),
+            transaction_id=tx.id,
+            payment_url=tx.payment_url,
+            message=None,
+        )
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
+
+@router.get("/{order_id}/monopay-config")
+async def get_monopay_config(
+    order_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Public endpoint: get Monopay widget config for own order."""
+    order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    import json, base64, uuid, hashlib
+    from app.models.settings import SiteSettings
+    from app.services.crypto_util import decrypt_password
+
+    settings = db.query(SiteSettings).first()
+    if not settings or not settings.monobank_monopay_key_id or not settings.monobank_ecdsa_private_key_encrypted:
+        raise HTTPException(400, "Monopay not configured")
+
+    amount_kopecks = int(round(float(order.total) * 100))
+    reference = f"order-{order_id}-{hash(order_id) % 10000:04d}"
+
+    payload = {
+        "amount": amount_kopecks,
+        "ccy": 980,
+        "merchantPaymInfo": {
+            "reference": reference,
+            "destination": f"Order #{order_id}",
+            "comment": f"Order #{order_id}",
+        },
+        "redirectUrl": "",
+        "webHookUrl": "",
+        "validity": 86400,
+    }
+
+    payload_json = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    payload_b64 = base64.b64encode(payload_json.encode()).decode()
+
+    request_id = str(uuid.uuid4())
+
+    # Sign payload with ECDSA P-256 private key
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, utils
+
+    ecdsa_pem = decrypt_password(settings.monobank_ecdsa_private_key_encrypted)
+    private_key = serialization.load_pem_private_key(ecdsa_pem.encode(), password=None)
+
+    # Sign the string: payloadBase64 + requestId
+    to_sign = f"{payload_b64}{request_id}".encode()
+    signature = private_key.sign(to_sign, ec.ECDSA(hashes.SHA256()))
+    signature_b64 = base64.b64encode(signature).decode()
+
+    return {
+        "keyId": settings.monobank_monopay_key_id,
+        "signature": signature_b64,
+        "requestId": request_id,
+        "payloadBase64": payload_b64,
+    }
