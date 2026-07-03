@@ -25,56 +25,9 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type { WaybillListItem } from '@/lib/types/nova-poshta'
 import OrderWaybillModal from '../components/OrderWaybillModal'
-
-const STATUS_KEYS = [
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  '101',
-  '102',
-  '103',
-  '104',
-  '105',
-  '106',
-  '107',
-  '108',
-  '109',
-  '110',
-  '111',
-  '112',
-  '113',
-  '114',
-  '115',
-  '116',
-  '117',
-  '118',
-  '119',
-  '120',
-  '121',
-  '122',
-  '123',
-  '124',
-  '125',
-  '200',
-  '201',
-]
 
 // ─── Статус → цвет (как бейдж ТТН) ──────────────────────────────────
 
@@ -131,16 +84,14 @@ function formatDate(dt: string | null): string {
 export default function WaybillsPage() {
   const t = useTranslations('admin')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
   const [viewWaybillId, setViewWaybillId] = useState<number | null>(null)
 
   // ── Fetch data ───────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-waybills', statusFilter, page, search],
+    queryKey: ['admin-waybills', page, search],
     queryFn: async () => {
       const params: any = { page: page + 1, per_page: 20 }
-      if (statusFilter) params.status_code = statusFilter
       if (search) params.q = search
       const { data } = await novaPoshtaApi.listWaybills(params)
       return data
@@ -320,26 +271,6 @@ export default function WaybillsPage() {
               }}
             />
           </div>
-
-          <Select
-            value={statusFilter || 'all'}
-            onValueChange={(v) => {
-              setStatusFilter(v === 'all' ? '' : v)
-              setPage(0)
-            }}
-          >
-            <SelectTrigger className="w-[160px] h-10">
-              <SelectValue placeholder={t('novaposhta_status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filter_all')}</SelectItem>
-              {STATUS_KEYS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {t('novaposhta_status_' + s)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* ── Table ────────────────────────────────────────────────── */}
@@ -398,8 +329,10 @@ export default function WaybillsPage() {
                 {data && data.total > 20 && (
                   <div className="flex items-center justify-between p-3 border-t">
                     <span className="text-sm text-muted-foreground">
-                      {page * 20 + 1}–{Math.min((page + 1) * 20, data.total)} of{' '}
-                      {data.total}
+                      {t('page_of', {
+                        page: page + 1,
+                        total: Math.ceil(data.total / 20),
+                      })}
                     </span>
                     <div className="flex gap-2">
                       <Button
@@ -408,7 +341,7 @@ export default function WaybillsPage() {
                         disabled={page === 0}
                         onClick={() => setPage(page - 1)}
                       >
-                        Prev
+                        {t('prev_page')}
                       </Button>
                       <Button
                         variant="outline"
@@ -416,7 +349,7 @@ export default function WaybillsPage() {
                         disabled={(page + 1) * 20 >= data.total}
                         onClick={() => setPage(page + 1)}
                       >
-                        Next
+                        {t('next_page')}
                       </Button>
                     </div>
                   </div>
