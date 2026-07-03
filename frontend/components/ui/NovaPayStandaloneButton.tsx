@@ -98,10 +98,10 @@ export default function NovaPayStandaloneButton({
   loading = false,
   disabled = false,
 }: NovaPayStandaloneButtonProps) {
-  const [stage, setStage] = useState<'initial' | 'logoMove'>('initial')
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setStage('logoMove'), 100)
+    const timer = setTimeout(() => setVisible(true), 100)
     return () => clearTimeout(timer)
   }, [])
 
@@ -114,7 +114,7 @@ export default function NovaPayStandaloneButton({
 
   return (
     <Button
-      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-700"
+      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-500 dark:text-white dark:hover:bg-purple-600"
       onClick={onClick}
       disabled={disabled || loading}
       type="button"
@@ -126,9 +126,8 @@ export default function NovaPayStandaloneButton({
           <div
             className="novapay-btn--logo-wrapper"
             style={{
-              transform:
-                stage === 'initial' ? 'translateX(0px)' : 'translateX(54px)',
-              transition: 'transform 0.5s ease',
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 0.5s ease',
             }}
           >
             <NovaPayLogoSvg />
