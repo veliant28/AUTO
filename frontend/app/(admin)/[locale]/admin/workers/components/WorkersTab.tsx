@@ -247,9 +247,11 @@ function statusBadge(
           : 'bg-gray-500 text-white'
   const Icon =
     isStuck || isError ? AlertTriangle : status === 'active' ? Loader : Clock
+  const iconSpin =
+    !isStuck && !isError && status === 'active' ? 'animate-spin' : ''
   return (
     <Badge className={`${color} border-0 gap-1 text-sm h-6`}>
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className={`w-3.5 h-3.5 ${iconSpin}`} />
       {isStuck || isError ? t('workers_stuck') : statusLabel(t, status)}
     </Badge>
   )
@@ -678,7 +680,7 @@ export default function WorkersTab() {
                 {workerOnline ? t('workers_online') : t('workers_offline')}
               </Badge>
               <Badge className="bg-blue-500 text-white border-0 gap-1 text-sm">
-                <Loader className="w-3.5 h-3.5" />
+                <Loader className="w-3.5 h-3.5 animate-spin" />
                 {t('workers_active')}: {activeCount}
               </Badge>
               <Badge className="bg-yellow-500 text-white border-0 gap-1 text-sm">
