@@ -24,12 +24,12 @@ export default function MonopayStandaloneButton({
   disabled = false,
   corners = 'straight',
 }: MonopayStandaloneButtonProps) {
-  const [animated, setAnimated] = useState(false)
+  const [showText, setShowText] = useState(false)
   const themeClass = dark ? 'monopay-btn--dark' : 'monopay-btn--light'
   const cornersClass = `monopay-btn--corners-${corners}`
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimated(true), 100)
+    const timer = setTimeout(() => setShowText(true), 550)
     return () => clearTimeout(timer)
   }, [])
 
@@ -48,9 +48,10 @@ export default function MonopayStandaloneButton({
             <div
               className="monopay-btn--text-wrapper"
               style={{
-                opacity: animated ? 1 : 0,
-                transform: animated ? 'translateX(0)' : 'translateX(-12px)',
-                transition: 'opacity 0.35s ease, transform 0.4s ease',
+                opacity: showText ? 1 : 0,
+                transform: showText ? 'translateX(0)' : 'translateX(-12px)',
+                transition:
+                  'opacity 0.35s ease 0.05s, transform 0.4s ease 0.05s',
               }}
             >
               <svg
