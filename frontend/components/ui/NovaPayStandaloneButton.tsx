@@ -114,7 +114,7 @@ export default function NovaPayStandaloneButton({
 
   return (
     <Button
-      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-500 dark:text-white dark:hover:bg-purple-600"
+      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-700"
       onClick={onClick}
       disabled={disabled || loading}
       type="button"
