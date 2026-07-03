@@ -25,12 +25,15 @@ interface Props {
   disabled?: boolean
   /** Whether tracking view is active */
   isTrackingView?: boolean
+  /** Read-only mode — hide Cancel/Save, show Close */
+  readOnly?: boolean
   /** Callbacks */
   onSave: () => void
   onDelete: () => void
   onPrintMarkings: () => void
   onPrintTtn: () => void
   onCancel: () => void
+  onClose?: () => void
   onTracking?: () => void
 }
 
@@ -45,9 +48,11 @@ export default function OrderWaybillFooter({
   onPrintMarkings,
   onPrintTtn,
   onCancel,
+  onClose,
   onTracking,
   isTrackingView = false,
   disabled = false,
+  readOnly = false,
 }: Props) {
   const t = useTranslations('admin')
   const isBusy = isPending || isDeleting || isPrinting || disabled
@@ -152,13 +157,21 @@ export default function OrderWaybillFooter({
       {/* Right group */}
       {!isTrackingView && (
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={isBusy}>
-            {t('cancel')}
-          </Button>
-          <Button className="gap-1.5" onClick={onSave} disabled={isBusy}>
-            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isEdit ? t('novaposhta_save') : t('novaposhta_waybill_create')}
-          </Button>
+          {readOnly ? (
+            <Button variant="outline" onClick={onClose || onCancel}>
+              {t('close')}
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onCancel} disabled={isBusy}>
+                {t('cancel')}
+              </Button>
+              <Button className="gap-1.5" onClick={onSave} disabled={isBusy}>
+                {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isEdit ? t('novaposhta_save') : t('novaposhta_waybill_create')}
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>

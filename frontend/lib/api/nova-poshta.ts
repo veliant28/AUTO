@@ -35,6 +35,7 @@ import type {
   NovaPoshtaServiceLookupQuery,
   NovaPoshtaPriceRequest,
   NovaPoshtaPriceResponse,
+  PaginatedWaybillList,
 } from '@/lib/types/nova-poshta'
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -193,5 +194,23 @@ export const novaPoshtaApi = {
     apiClient.post<NovaPoshtaPriceResponse>(
       '/admin/nova-poshta/calculate-price',
       data,
+    ),
+
+  // ── Waybill list (TTN table) ──────────────────────────────────────────
+  listWaybills: (params?: {
+    page?: number
+    per_page?: number
+    q?: string
+    status_code?: string
+    sort_by?: string
+    sort_order?: string
+  }) =>
+    apiClient.get<PaginatedWaybillList>('/admin/nova-poshta/waybills', {
+      params,
+    }),
+
+  getWaybillById: (waybillId: number) =>
+    apiClient.get<OrderNovaPoshtaWaybillResponse>(
+      `/admin/nova-poshta/waybills/${waybillId}`,
     ),
 }

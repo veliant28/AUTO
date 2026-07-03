@@ -104,6 +104,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/orders': { icon: ShoppingCart, titleKey: 'orders_title' },
     '/admin/returns': { icon: RotateCcw, titleKey: 'returns_title' },
     '/admin/loyalty': { icon: Gift, titleKey: 'loyalty_title' },
+    '/admin/waybills': { icon: FileText, titleKey: 'waybills_title' },
     '/admin/products': { icon: Package, titleKey: 'products_title' },
     '/admin/brands': { icon: Tag, titleKey: 'brands_title' },
     '/admin/categories': { icon: FolderTree, titleKey: 'categories_title' },
@@ -189,7 +190,6 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const ordersNavTabs = [
     { key: 'orders', label: ta('orders_title') },
     { key: 'returns', label: ta('returns_title') },
-    { key: 'loyalty', label: ta('loyalty_title') },
   ]
 
   return (
@@ -440,18 +440,21 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
         )}
         {pathname.includes('/admin/loyalty') && (
-            <div className="border-r pr-2 self-stretch flex items-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="icon" onClick={() => (window as any).__openCreateLoyalty?.()}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{ta('loyalty_create')}</TooltipContent>
-              </Tooltip>
-            </div>
-          )}
-          {pathname.includes('/admin/novaposhta') && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateLoyalty?.()}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('loyalty_create')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {pathname.includes('/admin/novaposhta') && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -743,10 +746,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('orders_title'),
       roles: ['admin', 'manager', 'operator'],
     },
-	    {
-	      href: '/admin/loyalty',
+    {
+      href: '/admin/loyalty',
       icon: Gift,
       label: t('loyalty_title'),
+      roles: ['admin'],
+    },
+    {
+      href: '/admin/waybills',
+      icon: FileText,
+      label: t('waybills_title'),
       roles: ['admin'],
     },
     {

@@ -584,3 +584,37 @@ export interface PrintResult {
   url: string
   content_type: string
 }
+
+// ─── Waybill list (TTN table) ─────────────────────────────────────────
+
+export interface WaybillListItem {
+  id: number
+  order_id: number
+  np_number: string
+  status_code: string
+  status_text: string
+
+  recipient_name: string
+  recipient_phone: string
+  recipient_city_label: string
+
+  description_snapshot: string
+  weight: string
+  cost: string
+  afterpayment_amount: string | null
+
+  is_deleted: boolean
+  can_edit: boolean
+  last_sync_error: string
+
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface PaginatedWaybillList {
+  items: WaybillListItem[]
+  total: number
+  page: number
+  per_page: number
+}

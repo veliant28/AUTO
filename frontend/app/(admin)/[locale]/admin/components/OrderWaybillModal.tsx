@@ -58,6 +58,9 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   promocodeCode?: string | null
+  readOnly?: boolean
+  /** Когда открываем конкретную ТТН по ID (а не активную по order_id) */
+  waybillId?: number
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -69,6 +72,8 @@ export default function OrderWaybillModal({
   open,
   onOpenChange,
   promocodeCode,
+  readOnly = false,
+  waybillId,
 }: Props) {
   const t = useTranslations('admin')
   const queryClient = useQueryClient()
@@ -92,11 +97,33 @@ export default function OrderWaybillModal({
   const effectivePromocodeCode =
     promocodeCode ?? orderDetail?.promocode_code ?? null
 
-  // ── Fetch waybill if exists ──────────────────────────────────────────────
+  // ── Fetch waybill ───────────────────────────────────────────────────────
+  // When waybillId is provided (readOnly from waybills page), fetch by ID
+  // Otherwise fetch the active waybill for the order (existing behavior)
   const { data: detail, isLoading: loadingWaybill } = useQuery({
-    queryKey: ['np-waybill', orderId],
-    queryFn: () =>
-      novaPoshtaApi.getOrderWaybillDetail(orderId).then((r) => r.data),
+    queryKey: waybillId
+      ? ['np-waybill-detail', waybillId]
+      : ['np-waybill', orderId],
+    queryFn: async () => {
+      if (waybillId) {
+        const wb = await novaPoshtaApi
+          .getWaybillById(waybillId)
+          .then((r) => r.data)
+        return {
+          waybill: wb,
+          summary: {
+            exists: true,
+            is_deleted: wb.is_deleted,
+            np_number: wb.np_number,
+            status_code: wb.status_code,
+            status_text: wb.status_text,
+            has_sync_error: !!wb.last_sync_error,
+          },
+          recipient_from_order: null,
+        }
+      }
+      return novaPoshtaApi.getOrderWaybillDetail(orderId).then((r) => r.data)
+    },
     enabled: open,
   })
 
@@ -1207,11 +1234,13 @@ export default function OrderWaybillModal({
         <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <DialogTitle className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              {isTrackingMode
-                ? t('novaposhta_tracking_title')
-                : isEdit
-                  ? t('novaposhta_waybill_edit')
-                  : t('novaposhta_waybill_create')}
+              {readOnly
+                ? t('novaposhta_waybill_view')
+                : isTrackingMode
+                  ? t('novaposhta_tracking_title')
+                  : isEdit
+                    ? t('novaposhta_waybill_edit')
+                    : t('novaposhta_waybill_create')}
             </DialogTitle>
 
             {/* TTN badge — always visible */}
@@ -1266,6 +1295,7 @@ export default function OrderWaybillModal({
                   form.sender_address_ref || selectedSender?.address_ref || ''
                 }
                 disabled={
+                  readOnly ||
                   isPending ||
                   isPackagingMode ||
                   isServicesMode ||
@@ -1323,7 +1353,9 @@ export default function OrderWaybillModal({
                     onCancel={handleCancel}
                     onSave={handleSave}
                     onFieldBlur={handleFieldBlur}
-                    disabled={isPending || isServicesMode || isPrinted}
+                    disabled={
+                      readOnly || isPending || isServicesMode || isPrinted
+                    }
                     isEdit={isEdit}
                     waybill={waybill}
                     form={form}
@@ -1361,7 +1393,7 @@ export default function OrderWaybillModal({
                   counterparties={counterparties}
                   counterpartiesLoading={counterpartiesLoading}
                   selectedCounterparty={selectedCounterparty}
-                  disabled={isPending || isPrinted}
+                  disabled={readOnly || isPending || isPrinted}
                   onFieldChange={handleFormChange}
                   onCityQueryChange={setCityQuery}
                   onCitySelect={handleCitySelect}
@@ -1383,6 +1415,7 @@ export default function OrderWaybillModal({
                   cost={form.cost}
                   syncError={waybill?.last_sync_error || ''}
                   disabled={
+                    readOnly ||
                     isPending ||
                     isPackagingMode ||
                     !!editingServiceRef ||
@@ -1424,6 +1457,7 @@ export default function OrderWaybillModal({
               printMarkingsMutation.isPending || printTtnMutation.isPending
             }
             isTrackingView={isTrackingMode}
+            readOnly={readOnly}
             onSave={handleSave}
             onDelete={() => setShowDeleteConfirm(true)}
             onPrintMarkings={() => {
@@ -1433,6 +1467,7 @@ export default function OrderWaybillModal({
               if (waybill) printTtnMutation.mutate(waybill.id)
             }}
             onCancel={() => onOpenChange(false)}
+            onClose={() => onOpenChange(false)}
             onTracking={() => {
               if (isTrackingMode) {
                 setIsTrackingMode(false)

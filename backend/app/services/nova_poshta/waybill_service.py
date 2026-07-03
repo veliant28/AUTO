@@ -29,6 +29,8 @@ from app.schemas.nova_poshta_schemas import (
     WaybillSeatOption,
     StaffActor,
     PrintResult,
+    WaybillListItemResponse,
+    PaginatedWaybillListResponse,
 )
 from app.models import Order
 from app.services.nova_poshta.client import NovaPoshtaApiClient
@@ -58,6 +60,84 @@ class NovaPoshtaWaybillService:
         self.payload_builder = NovaPoshtaWaybillPayloadBuilder()
 
     # ─── Queries ──────────────────────────────────────────────────────────────
+
+    def list_waybills(
+        self,
+        page: int = 1,
+        per_page: int = 20,
+        q: str = "",
+        status_code: str = "",
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
+    ) -> PaginatedWaybillListResponse:
+        """Paginated list of waybills with optional search/filter.
+
+        Search (q) matches against: np_number, recipient_phone,
+        recipient_name, recipient_city_label.
+        """
+        stmt = select(OrderNovaPoshtaWaybill)
+
+        # ── Search ─────────────────────────────────────────────────
+        if q:
+            like = f"%{q}%"
+            stmt = stmt.where(
+                OrderNovaPoshtaWaybill.np_number.ilike(like)
+                | OrderNovaPoshtaWaybill.recipient_phone.ilike(like)
+                | OrderNovaPoshtaWaybill.recipient_name.ilike(like)
+                | OrderNovaPoshtaWaybill.recipient_city_label.ilike(like)
+            )
+
+        # ── Status filter ──────────────────────────────────────────
+        if status_code:
+            stmt = stmt.where(
+                OrderNovaPoshtaWaybill.status_code == status_code
+            )
+
+        # ── Count total before pagination ──────────────────────────
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = self.db.execute(count_stmt).scalar() or 0
+
+        # ── Sorting ────────────────────────────────────────────────
+        sort_col = getattr(OrderNovaPoshtaWaybill, sort_by, OrderNovaPoshtaWaybill.created_at)
+        order_fn = sort_col.desc if sort_order == "desc" else sort_col.asc
+        stmt = stmt.order_by(order_fn())
+
+        # ── Pagination ─────────────────────────────────────────────
+        offset = (page - 1) * per_page
+        stmt = stmt.offset(offset).limit(per_page)
+
+        rows = list(self.db.execute(stmt).scalars().all())
+
+        items = [
+            WaybillListItemResponse(
+                id=wb.id,
+                order_id=wb.order_id,
+                np_number=wb.np_number or "",
+                status_code=wb.status_code or "",
+                status_text=wb.status_text or "",
+                recipient_name=wb.recipient_name or "",
+                recipient_phone=wb.recipient_phone or "",
+                recipient_city_label=wb.recipient_city_label or "",
+                description_snapshot=wb.description_snapshot or "",
+                weight=str(wb.weight).rstrip("0").rstrip(".") if wb.weight else "0",
+                cost=str(wb.cost) if wb.cost else "0",
+                afterpayment_amount=str(wb.afterpayment_amount) if wb.afterpayment_amount else None,
+                is_deleted=wb.is_deleted,
+                can_edit=wb.can_edit and not wb.is_deleted,
+                last_sync_error=wb.last_sync_error or "",
+                created_at=wb.created_at,
+                updated_at=wb.updated_at,
+                deleted_at=wb.deleted_at,
+            )
+            for wb in rows
+        ]
+
+        return PaginatedWaybillListResponse(
+            items=items,
+            total=total,
+            page=page,
+            per_page=per_page,
+        )
 
     def get_waybill(self, waybill_id: int) -> OrderNovaPoshtaWaybill:
         """Get waybill by ID or raise."""
@@ -169,6 +249,11 @@ class NovaPoshtaWaybillService:
             summary=self.get_order_summary(order_id),
             recipient_from_order=recipient_from_order,
         )
+
+    def get_waybill_detail(self, waybill_id: int) -> OrderNovaPoshtaWaybillResponse:
+        """Get full waybill response by waybill ID (includes tracking, seats)."""
+        wb = self.get_waybill(waybill_id)
+        return self._waybill_to_response(wb)
 
     def list_events(self, waybill_id: int) -> List[OrderNovaPoshtaWaybillEvent]:
         """Get all events for a waybill, newest first."""

@@ -613,3 +613,41 @@ class WaybillEventResponse(BaseModel):
 class PrintResult(BaseModel):
     url: str = ""
     content_type: str = ""
+
+
+# ─── Waybill list (TTN table) ───────────────────────────────────────
+
+
+class WaybillListItemResponse(BaseModel):
+    """Lightweight waybill row for the TTN table page."""
+    id: int
+    order_id: int
+    np_number: str = ""
+    status_code: str = ""
+    status_text: str = ""
+
+    recipient_name: str = ""
+    recipient_phone: str = ""
+    recipient_city_label: str = ""
+
+    description_snapshot: str = ""
+    weight: str = "0"
+    cost: str = "0"
+    afterpayment_amount: Optional[str] = None
+
+    is_deleted: bool = False
+    can_edit: bool = False
+    last_sync_error: str = ""
+
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class PaginatedWaybillListResponse(BaseModel):
+    items: List[WaybillListItemResponse] = []
+    total: int = 0
+    page: int = 1
+    per_page: int = 20

@@ -53,6 +53,8 @@ from app.schemas.nova_poshta_schemas import (
     NovaPoshtaWaybillSummary,
     WaybillEventResponse,
     PrintResult,
+    WaybillListItemResponse,
+    PaginatedWaybillListResponse,
 )
 from app.services.nova_poshta import (
     NovaPoshtaApiClient,
@@ -699,6 +701,48 @@ async def get_order_waybill_summary(
     """Get lightweight waybill summary for an order (used by orders list)."""
     service = NovaPoshtaWaybillService(db)
     return service.get_order_summary(order_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Waybill list & detail (TTN table)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/waybills", response_model=PaginatedWaybillListResponse)
+async def list_waybills(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    q: str = Query("", description="Search by TTN number, phone, name, city"),
+    status_code: str = Query("", description="Filter by NP status code"),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("novaposhta.view")),
+):
+    """Paginated list of all waybills (TTNs) with search/filter."""
+    service = NovaPoshtaWaybillService(db)
+    return service.list_waybills(
+        page=page,
+        per_page=per_page,
+        q=q,
+        status_code=status_code,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+
+@router.get("/waybills/{waybill_id}", response_model=OrderNovaPoshtaWaybillResponse)
+async def get_waybill(
+    waybill_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("novaposhta.view")),
+):
+    """Get full waybill detail by waybill ID (read-only view)."""
+    service = NovaPoshtaWaybillService(db)
+    try:
+        return service.get_waybill_detail(waybill_id)
+    except NovaPoshtaWaybillNotFoundError as e:
+        raise HTTPException(404, str(e))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
