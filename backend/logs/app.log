@@ -2865,3 +2865,10 @@ LINE 1: SELECT id, name FROM autodb_suppliers WHERE id = ANY($1)
 2026-07-03 09:41:53 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
 2026-07-03 09:41:53 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
 2026-07-03 09:42:12 - root - INFO - Health check called
+2026-07-03 09:42:42 - root - INFO - Health check called
+2026-07-03 09:43:12 - root - INFO - Health check called
+2026-07-03 09:43:42 - root - INFO - Health check called
+2026-07-03 09:44:12 - root - INFO - Health check called
+2026-07-03 09:44:43 - root - INFO - Health check called
+2026-07-03 09:45:13 - root - INFO - Health check called
+2026-07-03 09:45:43 - root - INFO - Health check called
