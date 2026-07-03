@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getTransaction, initPayment } from '@/lib/api/payments'
-import MonopayButton from '@/components/ui/MonopayButton'
+import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import PaymentStatusBadge from './PaymentStatusBadge'
 
 export default function PaymentBlock({
@@ -83,7 +83,9 @@ export default function PaymentBlock({
             )}
           </div>
         ) : (
-          <MonopayButton orderId={orderId} />
+          <MonopayStandaloneButton
+            onClick={() => handleInitPayment('monobank')}
+          />
         )}
       </div>
     )

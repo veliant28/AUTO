@@ -22,7 +22,7 @@ import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { useOrderSync } from '@/lib/orderSync'
 import { getOrderReceiptLink } from '@/lib/api/checkbox'
-import MonopayButton from '@/components/ui/MonopayButton'
+import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '—'
@@ -436,7 +436,27 @@ function PaymentActions({
   if (paymentMethod === 'monobank') {
     return (
       <div className="space-y-1">
-        <MonopayButton orderId={orderId} />
+        <MonopayStandaloneButton
+          onClick={async () => {
+            setPayLoading(true)
+            try {
+              const { data } = await api.post(
+                `/orders/${orderId}/pay?method=monobank`,
+              )
+              if (data?.payment_url) {
+                window.open(data.payment_url, '_blank', 'noopener,noreferrer')
+              } else {
+                toast.info(t('receipt_pending'))
+              }
+            } catch (err: any) {
+              const msg = err?.response?.data?.detail || err?.message || ''
+              toast.error(msg || t('receipt_error'))
+            } finally {
+              setPayLoading(false)
+            }
+          }}
+          loading={payLoading}
+        />
       </div>
     )
   }

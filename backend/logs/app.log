@@ -2872,3 +2872,16 @@ LINE 1: SELECT id, name FROM autodb_suppliers WHERE id = ANY($1)
 2026-07-03 09:44:43 - root - INFO - Health check called
 2026-07-03 09:45:13 - root - INFO - Health check called
 2026-07-03 09:45:43 - root - INFO - Health check called
+2026-07-03 09:46:13 - root - INFO - Health check called
+2026-07-03 09:46:43 - root - INFO - Health check called
+2026-07-03 09:46:46 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-03 09:47:13 - root - INFO - Health check called
+2026-07-03 09:47:43 - root - INFO - Health check called
+2026-07-03 09:48:00 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:48:00 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:48:00 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:48:14 - root - INFO - Health check called
+2026-07-03 09:48:44 - root - INFO - Health check called
+2026-07-03 09:48:59 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:48:59 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-03 09:48:59 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
