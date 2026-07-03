@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean, DateTime, Index
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean, DateTime, Index, text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .vehicles import Base
@@ -36,7 +36,7 @@ class Part(Base):
     matched_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
-        Index("idx_part_article_brand", "article", "brand"),
+        Index("ix_parts_article_brand", "article", text("COALESCE(brand, '')"), unique=True),
     )
 
     category = relationship("PartCategory")
