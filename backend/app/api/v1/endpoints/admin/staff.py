@@ -16,10 +16,11 @@ class StaffMemberStats(BaseModel):
     id: int
     name: str
     group: str
-    actions_count: int
-    orders_count: int
-    status_changes: int
-    edits: int
+    phone: Optional[str] = None
+    actions_count: int = 0
+    orders_count: int = 0
+    status_changes: int = 0
+    edits: int = 0
 
 
 class StaffActionByDate(BaseModel):
@@ -91,16 +92,18 @@ async def get_staff_stats(
     # Staff list aggregated
     staff_rows = db.execute(text(f"""
         SELECT
-            COALESCE(user_id, 0) as user_id,
-            COALESCE(user_name, 'System') as user_name,
-            COALESCE(user_group, 'system') as user_group,
+            COALESCE(ocl.user_id, 0) as user_id,
+            COALESCE(ocl.user_name, 'System') as user_name,
+            COALESCE(ocl.user_group, 'system') as user_group,
+            u.phone,
             COUNT(*) as actions_count,
-            COUNT(DISTINCT order_id) as orders_count,
-            COUNT(CASE WHEN action = 'status_change' THEN 1 END) as status_changes,
-            COUNT(CASE WHEN action = 'edit' THEN 1 END) as edits
-        FROM order_change_logs
+            COUNT(DISTINCT ocl.order_id) as orders_count,
+            COUNT(CASE WHEN ocl.action = 'status_change' THEN 1 END) as status_changes,
+            COUNT(CASE WHEN ocl.action = 'edit' THEN 1 END) as edits
+        FROM order_change_logs ocl
+        LEFT JOIN users u ON u.id = ocl.user_id
         {base_filter}
-        GROUP BY user_id, user_name, user_group
+        GROUP BY ocl.user_id, ocl.user_name, ocl.user_group, u.phone
         ORDER BY actions_count DESC
     """), params).fetchall()
 
@@ -109,10 +112,11 @@ async def get_staff_stats(
             id=row[0],
             name=row[1],
             group=row[2],
-            actions_count=row[3],
-            orders_count=row[4],
-            status_changes=row[5],
-            edits=row[6],
+            phone=row[3],
+            actions_count=row[4],
+            orders_count=row[5],
+            status_changes=row[6],
+            edits=row[7],
         )
         for row in staff_rows
     ]

@@ -26,6 +26,7 @@ import {
   startOfDay,
   subDays,
   startOfMonth,
+  endOfMonth,
   startOfYear,
   endOfDay,
 } from 'date-fns'
@@ -35,6 +36,14 @@ import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
 
 const fmt = (n: number) => new Intl.NumberFormat('uk-UA').format(n)
+
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  const d = phone.replace(/\D/g, '')
+  if (d.length < 10) return phone
+  const digits = d.slice(-10)
+  return `+38 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
+}
 
 const ROLE_BADGE: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -106,11 +115,6 @@ export default function StaffPage() {
     enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
     refetchInterval: 30000,
   })
-
-  const maxActions = Math.max(
-    ...(stats?.staff_list?.map((s: any) => s.actions_count) || [1]),
-    1,
-  )
 
   const barData = useMemo(() => {
     const list = stats?.staff_list || []
@@ -186,11 +190,10 @@ export default function StaffPage() {
         </Card>
       </div>
 
-      {/* Charts + Staff — 4 колонки как KPI */}
+      {/* Charts + Staff — grid-cols-4 как KPI */}
       <div className="grid grid-cols-4 gap-4">
-        {/* Колонки 1-3 */}
+        {/* Колонки 1-3: период + графики */}
         <div className="col-span-3 flex flex-col gap-4">
-          {/* Period */}
           <div className="flex items-center gap-2 flex-wrap">
             {PERIODS.map((p) => (
               <Button
@@ -219,10 +222,8 @@ export default function StaffPage() {
                   navLayout="around"
                   selected={customRange}
                   onSelect={(r: any) => {
-                    if (r?.from && r?.to) {
+                    if (r?.from && r?.to)
                       setCustomRange({ from: r.from, to: r.to })
-                      setPeriod('month')
-                    }
                   }}
                   locale={ru}
                 />
@@ -230,12 +231,11 @@ export default function StaffPage() {
             </Popover>
             {selectedStaffId && (
               <Button variant="ghost" onClick={() => setSelectedStaffId(null)}>
-                × Сбросить
+                × Все сотрудники
               </Button>
             )}
           </div>
 
-          {/* Charts */}
           <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardHeader className="p-4 pb-0">
@@ -309,22 +309,26 @@ export default function StaffPage() {
                 Ошибка загрузки данных
               </p>
             ) : !stats?.staff_list?.length ? (
-              <p className="text-sm text-muted-foreground pt-2">Нет данных</p>
+              <p className="text-sm text-muted-foreground pt-2">
+                Нет данных за период
+              </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {stats.staff_list.map((m: any) => {
                   const sel = selectedStaffId === m.id
-                  const pct = Math.round((m.actions_count / maxActions) * 100)
                   const rc = ROLE_BADGE[m.group] || 'bg-gray-500 text-white'
                   return (
                     <button
                       key={m.id}
                       onClick={() => setSelectedStaffId(sel ? null : m.id)}
-                      className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors hover:bg-muted/30 cursor-pointer ${sel ? 'border-primary bg-muted/50' : ''}`}
+                      className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors cursor-pointer
+                        ${sel ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' : 'hover:bg-muted/30'}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-sm font-medium truncate">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-sm font-medium truncate ${sel ? 'text-primary-foreground' : ''}`}
+                          >
                             {m.name}
                           </span>
                           <Badge
@@ -333,21 +337,13 @@ export default function StaffPage() {
                             {m.group}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 rounded-full transition-all"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-mono text-muted-foreground shrink-0">
-                            {m.actions_count}
-                          </span>
-                        </div>
-                        <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground">
-                          <span>заказов: {m.orders_count}</span>
-                          <span>статусов: {m.status_changes}</span>
-                        </div>
+                        {m.phone && (
+                          <p
+                            className={`text-xs font-mono mt-0.5 ${sel ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}
+                          >
+                            {formatPhone(m.phone)}
+                          </p>
+                        )}
                       </div>
                     </button>
                   )
