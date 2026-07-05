@@ -82,6 +82,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useAuthStore()
   const { activeLocale, setActiveLocale } = useAdminLocale()
   const ta = useTranslations('admin')
+  const queryClient = useQueryClient()
   const isTecDoc = pathname.includes('/admin/tecdoc')
   const isFooter = pathname.includes('/admin/footer')
   const isSettings = pathname.includes('/admin/settings')
@@ -334,9 +335,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   <Button
                     size="icon"
                     onClick={() => {
-                      const qc = queryClient
-                      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-                      qc.invalidateQueries({
+                      queryClient.invalidateQueries({
+                        queryKey: ['admin-dashboard'],
+                      })
+                      queryClient.invalidateQueries({
                         queryKey: ['admin-dashboard-orders'],
                       })
                       toast.info(ta('dashboard_refreshed'))
