@@ -27,34 +27,8 @@ import KipTimer from '@/components/ui/KipTimer'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-500',
-  confirmed: 'bg-gray-800',
-  processing: 'bg-blue-500',
-  shipped: 'bg-orange-500',
-  delivered: 'bg-green-500',
-  cancelled: 'bg-red-500',
-}
-
-const STATUS_LABEL_MAP: Record<string, string> = {
-  pending: 'Ожидает',
-  confirmed: 'Подтверждён',
-  processing: 'В обработке',
-  shipped: 'Отправлен',
-  delivered: 'Доставлен',
-  cancelled: 'Отменён',
-}
 
 const PAYMENT_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6']
-const WEEKDAY_COLORS = [
-  '#ef4444',
-  '#f59e0b',
-  '#3b82f6',
-  '#22c55e',
-  '#8b5cf6',
-  '#ec4899',
-  '#14b8a6',
-]
 const STATUS_COLORS_CHART = [
   '#f59e0b',
   '#374151',
@@ -96,7 +70,6 @@ export default function DashboardTab() {
   const counts = dashboard?.orders_by_date?.map((d: any) => d.count) || []
   const margins = dashboard?.orders_by_date?.map((d: any) => d.margin) || []
 
-  // Данные для Radar
   const radarIndicators = [
     { name: 'Заказы/день', max: Math.max(...counts, 5) * 1.5 },
     { name: 'Наценка/день', max: Math.max(...margins, 500) * 1.5 },
@@ -106,10 +79,7 @@ export default function DashboardTab() {
       name: 'Новых/день',
       max: Math.max(dashboard?.new_users_today || 1, 3) * 2,
     },
-    {
-      name: 'Товары в наличии',
-      max: Math.max(dashboard?.total_parts || 100, 500) * 1.2,
-    },
+    { name: 'Товары', max: Math.max(dashboard?.total_parts || 100, 500) * 1.2 },
   ]
   const radarValues = [
     counts.length > 0
@@ -135,197 +105,170 @@ export default function DashboardTab() {
   ]
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* ── KPI Row ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {/* KIP Таймер */}
+    <div className="flex flex-col gap-4">
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg shrink-0">
-                <Clock className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="min-w-0">
-                <KipTimer
-                  oldestPendingSeconds={dashboard?.oldest_pending_seconds || 0}
-                  pendingCount={dashboard?.pending_orders_count || 0}
-                />
-                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                  {dashboard?.pending_orders_count
-                    ? `${dashboard.pending_orders_count} необр.`
-                    : 'Всё ок'}
-                </p>
-              </div>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg shrink-0">
+              <Clock className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <KipTimer
+                oldestPendingSeconds={dashboard?.oldest_pending_seconds || 0}
+                pendingCount={dashboard?.pending_orders_count || 0}
+              />
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {dashboard?.pending_orders_count
+                  ? `${dashboard.pending_orders_count} необр.`
+                  : 'Всё ок'}
+              </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Наценка (прибыль) */}
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg shrink-0">
-              <TrendingUp className="w-4 h-4 text-green-600" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg shrink-0">
+              <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold truncate">
+              <p className="text-2xl font-bold truncate">
                 {dashboard?.total_margin
                   ? `${fmt(dashboard.total_margin)} ₴`
                   : '0 ₴'}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Наценка
-              </p>
+              <p className="text-xs text-muted-foreground truncate">Наценка</p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Заказы сегодня */}
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg shrink-0">
-              <ShoppingCart className="w-4 h-4 text-blue-600" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg shrink-0">
+              <ShoppingCart className="w-5 h-5 text-blue-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold">
+              <p className="text-2xl font-bold">
                 {dashboard?.orders_today ?? 0}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 Заказов сегодня
               </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Новые пользователи */}
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg shrink-0">
-              <Users className="w-4 h-4 text-purple-600" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg shrink-0">
+              <Users className="w-5 h-5 text-purple-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold">
+              <p className="text-2xl font-bold">
                 {dashboard?.new_users_today ?? 0}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Новых
-              </p>
+              <p className="text-xs text-muted-foreground truncate">Новых</p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Средний чек */}
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg shrink-0">
-              <DollarSign className="w-4 h-4 text-orange-600" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg shrink-0">
+              <DollarSign className="w-5 h-5 text-orange-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold truncate">
+              <p className="text-2xl font-bold truncate">
                 {dashboard?.average_check
                   ? `${fmt(dashboard.average_check)} ₴`
                   : '0 ₴'}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Ср. чек
-              </p>
+              <p className="text-xs text-muted-foreground truncate">Ср. чек</p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Товары */}
         <Card>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="bg-teal-100 dark:bg-teal-900/30 p-2 rounded-lg shrink-0">
-              <Package className="w-4 h-4 text-teal-600" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-lg shrink-0">
+              <Package className="w-5 h-5 text-teal-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold">
+              <p className="text-2xl font-bold">
                 {fmt(dashboard?.total_parts ?? 0)}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Товаров
-              </p>
+              <p className="text-xs text-muted-foreground truncate">Товаров</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── Charts + Orders ────────────────────────────────────── */}
-      <div className="flex gap-3">
-        {/* Левая колонка: 3 ряда × 2 графика */}
-        <div className="flex-1 grid grid-cols-2 gap-3">
-          {/* Row 1: Bar + LineArea */}
+      {/* Charts + Orders */}
+      <div className="flex gap-4">
+        <div className="flex-1 grid grid-cols-2 gap-4">
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 Заказы по дням
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <BarChart
                 xData={dates}
                 yData={counts}
                 color="#3b82f6"
-                height={150}
+                height={180}
               />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 Наценка по дням
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <LineAreaChart
                 xData={dates}
                 yData={margins}
                 color="#22c55e"
-                height={150}
+                height={180}
               />
             </CardContent>
           </Card>
-
-          {/* Row 2: Doughnut + Radar */}
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 Статусы заказов
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <DoughnutChart
                 labels={Object.keys(dashboard?.orders_by_status || {})}
                 values={Object.values(dashboard?.orders_by_status || {})}
                 colors={STATUS_COLORS_CHART}
-                height={150}
+                height={180}
               />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 Эффективность
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <RadarChart
                 indicators={radarIndicators}
                 values={radarValues}
                 color="#8b5cf6"
-                height={170}
+                height={200}
               />
             </CardContent>
           </Card>
-
-          {/* Row 3: PolarArea + Pie */}
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 По дням недели
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <PolarAreaChart
                 labels={
                   dashboard?.orders_by_weekday?.map((d: any) => d.weekday) || []
@@ -333,17 +276,17 @@ export default function DashboardTab() {
                 values={
                   dashboard?.orders_by_weekday?.map((d: any) => d.count) || []
                 }
-                height={150}
+                height={180}
               />
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="p-2 pb-0">
-              <CardTitle className="text-[11px] font-medium">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
                 Способы оплаты
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
+            <CardContent className="p-4 pt-2">
               <PieChart
                 labels={
                   dashboard?.payment_methods?.map((d: any) => d.method) || []
@@ -352,52 +295,48 @@ export default function DashboardTab() {
                   dashboard?.payment_methods?.map((d: any) => d.count) || []
                 }
                 colors={PAYMENT_COLORS}
-                height={150}
+                height={180}
               />
             </CardContent>
           </Card>
         </div>
 
-        {/* Правая колонка: последние заказы */}
-        <Card className="w-[280px] shrink-0">
-          <CardHeader className="p-3 pb-1">
-            <CardTitle className="text-sm font-medium">
+        {/* Recent orders sidebar */}
+        <Card className="w-[300px] shrink-0">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base font-medium">
               Последние заказы
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0">
+          <CardContent className="p-4 pt-0">
             {orders.length === 0 ? (
-              <p className="text-xs text-muted-foreground pt-2">Нет заказов</p>
+              <p className="text-sm text-muted-foreground pt-2">Нет заказов</p>
             ) : (
               <div className="divide-y">
                 {orders.map((order: any) => {
-                  const colorClass =
-                    STATUS_COLORS[order.status] || 'bg-gray-500'
-                  const label = STATUS_LABEL_MAP[order.status] || order.status
+                  const statusInfo = ORDER_STATUS_LABELS[order.status]
+                  const className =
+                    statusInfo?.className || 'bg-gray-500 text-white'
                   return (
                     <Link
                       key={order.id}
                       href={`/admin/orders/${order.id}`}
-                      className="flex items-center justify-between py-2 gap-2 hover:bg-muted/30 rounded px-1 -mx-1 transition-colors"
+                      className="flex items-center justify-between py-3 gap-3 hover:bg-muted/30 rounded px-1.5 -mx-1.5 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-mono font-medium truncate">
+                        <p className="text-sm font-mono font-semibold truncate">
                           {order.order_number || `#${order.id}`}
                         </p>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground truncate">
-                            {order.full_name}
-                          </span>
-                        </div>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {order.full_name}
+                        </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-xs font-semibold">
+                        <p className="text-sm font-bold">
                           {fmt(order.total || 0)} ₴
                         </p>
-                        <Badge
-                          className={`${colorClass} text-white border-0 text-[9px] px-1.5 py-0 h-4`}
-                        >
-                          {label}
+                        <Badge className={`${className} border-0 text-xs`}>
+                          {t('order_' + order.status)}
                         </Badge>
                       </div>
                     </Link>
