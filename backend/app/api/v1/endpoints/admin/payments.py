@@ -7,7 +7,7 @@ Admin payment endpoints.
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session as DBSession
 
 from app.core.db import get_db
@@ -33,16 +33,18 @@ async def init_payment(
     order_id: int,
     method: str = "monobank",
     current_user: User = Depends(require_role("admin", "manager")),
+    request: Request = None,
     db: DBSession = Depends(get_db),
 ):
     """Initialize payment for an order through the specified provider."""
     service = PaymentService(db)
     try:
+        webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{method}"
         tx = await service.init_payment(
             order_id=order_id,
             method=method,
             return_url="",
-            webhook_url="",  # TODO: configure webhook URL
+            webhook_url=webhook_url,
         )
         return PaymentInitResponse(
             success=(tx.status != "error"),

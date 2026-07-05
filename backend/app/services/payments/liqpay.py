@@ -39,9 +39,10 @@ class LiqpayPaymentProvider(BasePaymentProvider):
         return base64.b64encode(json.dumps(data).encode()).decode()
 
     def _sign(self, data_b64: str) -> str:
-        """SHA-1 signature: private_key + data_base64 + private_key."""
+        """SHA3-256 signature: base64(sha3-256(private_key + data + private_key))."""
         sign_str = self.private_key + data_b64 + self.private_key
-        return hashlib.sha1(sign_str.encode("utf-8")).hexdigest()
+        raw_hash = hashlib.sha3_256(sign_str.encode("utf-8")).digest()
+        return base64.b64encode(raw_hash).decode()
 
     def _verify_signature(self, data_b64: str, signature: str) -> bool:
         """Verify incoming webhook signature."""
@@ -59,21 +60,22 @@ class LiqpayPaymentProvider(BasePaymentProvider):
         """
         Create LiqPay payment → returns payment URL.
         LiqPay uses a form-based approach, but we provide a redirect URL.
+        API v7: https://www.liqpay.ua/documentation/api/aquiring/checkout
         """
-        # Amount in kopecks (LiqPay uses integer cents)
-        amount_kop = int(round(amount * 100))
+        amount = round(float(amount), 2)
         order_id_str = f"order-{order_id}-{hash(order_id) % 10000:04d}"
 
         data = {
-            "version": 3,
+            "version": 7,
             "public_key": self.public_key,
             "action": "pay",
-            "amount": amount_kop,
+            "amount": amount,
             "currency": "UAH",
             "description": description or f"Order #{order_id}",
             "order_id": order_id_str,
             "result_url": return_url,
             "server_url": kwargs.get("webhook_url", ""),
+            "language": "uk",
         }
 
         data_b64 = self._encode_data(data)
@@ -111,9 +113,8 @@ class LiqpayPaymentProvider(BasePaymentProvider):
             "failure": "failed",
             "error": "failed",
             "reversed": "refunded",
-            "subscribed": "paid",
-            "wait_secure": "pending",
             "processing": "pending",
+            "wait_secure": "pending",
             "sandbox": "paid",
         }
         liqpay_status = decoded.get("status", "")
@@ -121,7 +122,7 @@ class LiqpayPaymentProvider(BasePaymentProvider):
 
         return PaymentStatusResult(
             status=mapped_status,
-            provider_tx_id=str(decoded.get("transaction_id", "")),
+            provider_tx_id=str(decoded.get("payment_id", "")),
             invoice_url=decoded.get("invoice_url", ""),
             receipt_url=decoded.get("receipt_url", ""),
             raw=decoded,
@@ -130,7 +131,7 @@ class LiqpayPaymentProvider(BasePaymentProvider):
     async def check_status(self, provider_tx_id: str) -> PaymentStatusResult:
         """Check payment status with LiqPay API."""
         data = {
-            "version": 3,
+            "version": 7,
             "public_key": self.public_key,
             "action": "status",
             "order_id": provider_tx_id,

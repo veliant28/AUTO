@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
@@ -291,6 +291,7 @@ async def pay_order(
     order_id: int,
     method: str = "monobank",
     user_id: int = Depends(get_current_user),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Public endpoint: initiate payment for own order."""
@@ -303,11 +304,12 @@ async def pay_order(
 
     service = PaymentService(db)
     try:
+        webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{method}"
         tx = await service.init_payment(
             order_id=order_id,
             method=method,
             return_url="",
-            webhook_url="",
+            webhook_url=webhook_url,
         )
         return PaymentInitResponse(
             success=(tx.status != "error"),
