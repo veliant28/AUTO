@@ -92,9 +92,9 @@ async def get_staff_stats(
     # Staff list aggregated
     staff_rows = db.execute(text(f"""
         SELECT
-            ocl.user_id,
-            COALESCE(ocl.user_name, 'System') as user_name,
-            COALESCE(ocl.user_group, 'system') as user_group,
+            COALESCE(ocl.user_id, 0) as user_id,
+            MAX(ocl.user_name) as user_name,
+            MAX(ocl.user_group) as user_group,
             MAX(u.phone) as phone,
             COUNT(*) as actions_count,
             COUNT(DISTINCT ocl.order_id) as orders_count,
@@ -103,7 +103,7 @@ async def get_staff_stats(
         FROM order_change_logs ocl
         LEFT JOIN users u ON u.id = ocl.user_id
         {base_filter}
-        GROUP BY COALESCE(ocl.user_id, 0), ocl.user_group
+        GROUP BY COALESCE(ocl.user_id, 0)
         ORDER BY actions_count DESC
     """), params).fetchall()
 
