@@ -240,7 +240,7 @@ export default function DashboardTab() {
                 xData={dates}
                 yData={counts}
                 color="#3b82f6"
-                height={250}
+                height={280}
               />
             </CardContent>
           </Card>
@@ -255,7 +255,7 @@ export default function DashboardTab() {
                 xData={dates}
                 yData={margins}
                 color="#22c55e"
-                height={250}
+                height={280}
               />
             </CardContent>
           </Card>
@@ -276,7 +276,7 @@ export default function DashboardTab() {
                 )}
                 values={Object.values(dashboard?.orders_by_status || {})}
                 colors={STATUS_COLORS_CHART}
-                height={250}
+                height={280}
               />
             </CardContent>
           </Card>
@@ -291,7 +291,7 @@ export default function DashboardTab() {
                 indicators={radarIndicators}
                 values={radarValues}
                 color="#8b5cf6"
-                height={250}
+                height={280}
               />
             </CardContent>
           </Card>
