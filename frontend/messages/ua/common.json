@@ -1180,7 +1180,8 @@
     "dash_radar_delivered": "% доставлених",
     "dash_radar_avg_check": "Сер. чек",
     "dash_radar_new_users": "Нових/день",
-    "dash_radar_products": "Товари"
+    "dash_radar_products": "Товари",
+    "dash_pending_warning": "Є {count} необроблених замовлень! Потрібна увага."
   },
   "catalog": {
     "title": "Каталог",

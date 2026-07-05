@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Package,
@@ -22,6 +22,7 @@ import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
 import RadarChart from '@/components/charts/RadarChart'
 import KipTimer from '@/components/ui/KipTimer'
+import { toast } from '@/lib/toast'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -74,6 +75,20 @@ export default function DashboardTab() {
     refetchInterval: 30000,
   })
   const orders = ordersData?.items || []
+  const warnedRef = useRef(false)
+
+  useEffect(() => {
+    if (
+      dashboard?.pending_orders_count &&
+      dashboard.pending_orders_count > 0 &&
+      !warnedRef.current
+    ) {
+      warnedRef.current = true
+      toast.warning(
+        t('dash_pending_warning', { count: dashboard.pending_orders_count }),
+      )
+    }
+  }, [dashboard?.pending_orders_count, t])
 
   const dates =
     dashboard?.orders_by_date?.map((d: any) => d.date.slice(5)) || []
