@@ -335,7 +335,7 @@ export default function DashboardTab() {
                     <button
                       key={order.id}
                       onClick={() => setSelectedOrderId(order.id)}
-                      className="flex items-center justify-between py-3 px-3 gap-2 hover:bg-muted/30 rounded-lg border transition-colors w-full text-left"
+                      className="flex items-center justify-between py-3 px-3 gap-2 hover:bg-muted/30 rounded-lg border transition-colors w-full text-left cursor-pointer"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-mono font-semibold truncate">
