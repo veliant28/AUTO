@@ -212,6 +212,7 @@ export default function StaffPage() {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="range"
+                  navLayout="around"
                   selected={customRange}
                   onSelect={(r: any) => {
                     if (r?.from && r?.to) {
