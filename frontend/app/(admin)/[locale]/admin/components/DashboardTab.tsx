@@ -202,7 +202,7 @@ export default function DashboardTab() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Заказы по дням
               </CardTitle>
             </CardHeader>
@@ -217,7 +217,7 @@ export default function DashboardTab() {
           </Card>
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Наценка по дням
               </CardTitle>
             </CardHeader>
@@ -236,7 +236,7 @@ export default function DashboardTab() {
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Статусы заказов
               </CardTitle>
             </CardHeader>
@@ -251,7 +251,7 @@ export default function DashboardTab() {
           </Card>
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Эффективность
               </CardTitle>
             </CardHeader>
