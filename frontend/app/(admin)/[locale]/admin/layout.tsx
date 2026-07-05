@@ -54,7 +54,7 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import api from '@/lib/api'
 import { toast } from '@/lib/toast'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getAvatarUrl, getInitials } from '@/lib/avatar'
 import { Card, CardContent } from '@/components/ui/card'
@@ -333,17 +333,19 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
-                    onClick={() =>
-                      api
-                        .post('/catalog/sync/vehicles')
-                        .then(() => toast.info(ta('sync_started')))
-                        .catch(() => toast.error(ta('sync_error')))
-                    }
+                    onClick={() => {
+                      const qc = queryClient
+                      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
+                      qc.invalidateQueries({
+                        queryKey: ['admin-dashboard-orders'],
+                      })
+                      toast.info(ta('dashboard_refreshed'))
+                    }}
                   >
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <RefreshCw className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{ta('sync_catalog')}</TooltipContent>
+                <TooltipContent>{ta('dashboard_refresh')}</TooltipContent>
               </Tooltip>
             </div>
           )}

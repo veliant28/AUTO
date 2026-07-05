@@ -1182,7 +1182,9 @@
     "dash_radar_new_users": "Нових/день",
     "dash_radar_products": "Товари",
     "dash_pending_warning": "Є {count} необроблених замовлень! Потрібна увага.",
-    "sync_error": "Помилка синхронізації каталогу"
+    "sync_error": "Помилка синхронізації каталогу",
+    "dashboard_refresh": "Оновити дашборд",
+    "dashboard_refreshed": "Дашборд оновлено"
   },
   "catalog": {
     "title": "Каталог",
