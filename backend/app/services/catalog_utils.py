@@ -37,6 +37,7 @@ def part_to_result(part: Part, db) -> dict:
         "tecdoc_id": part.tecdoc_id,
         "category_id": part.category_id,
         "brand": part.brand,
+        "sku": part.sku,
         "price": best["price"] if best else None,
         "quantity": best["quantity"] if best else None,
         "supplier_name": best["supplier_name"] if best else None,
