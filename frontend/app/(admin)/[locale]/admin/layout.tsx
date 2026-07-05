@@ -837,6 +837,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('footer_title'),
       roles: ['admin'],
     },
+    {
+      href: '/admin/staff',
+      icon: Users,
+      label: t('staff_title'),
+      roles: ['admin', 'manager'],
+    },
   ]
 
   return (

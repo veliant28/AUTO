@@ -1184,7 +1184,13 @@
     "dash_pending_warning": "There are {count} unprocessed orders! Attention required.",
     "sync_error": "Catalog sync error",
     "dashboard_refresh": "Refresh dashboard",
-    "dashboard_refreshed": "Dashboard refreshed"
+    "dashboard_refreshed": "Dashboard refreshed",
+    "staff_title": "Staff",
+    "staff_period_day": "Day",
+    "staff_period_week": "Week",
+    "staff_period_month": "Month",
+    "staff_period_year": "Year",
+    "staff_select_dates": "Select dates"
   },
   "catalog": {
     "title": "Catalog",

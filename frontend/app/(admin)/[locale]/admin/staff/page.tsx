@@ -1,0 +1,390 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
+import { useQuery } from '@tanstack/react-query'
+import {
+  Users,
+  Activity,
+  ShoppingCart,
+  UserCheck,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import api from '@/lib/api'
+import { useAuthStore } from '@/store/authStore'
+import {
+  format,
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+} from 'date-fns'
+import { ru, uk, enUS } from 'date-fns/locale'
+import BarChart from '@/components/charts/BarChart'
+import LineAreaChart from '@/components/charts/LineAreaChart'
+import DoughnutChart from '@/components/charts/DoughnutChart'
+
+const fmt = (n: number) => new Intl.NumberFormat('uk-UA').format(n)
+
+const ROLE_BADGE: Record<string, string> = {
+  admin: 'bg-red-500 text-white',
+  manager: 'bg-blue-500 text-white',
+  operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
+  system: 'bg-gray-500 text-white',
+}
+
+const PERIODS = ['day', 'week', 'month', 'year'] as const
+
+const LOCALE_MAP: Record<string, any> = {
+  ru,
+  ua: uk,
+  en: enUS,
+}
+
+function getDateRange(period: string): { from: Date; to: Date } {
+  const now = new Date()
+  switch (period) {
+    case 'day':
+      return { from: startOfDay(now), to: endOfDay(now) }
+    case 'week':
+      return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) }
+    case 'month':
+      return { from: startOfMonth(now), to: endOfDay(now) }
+    case 'year':
+      return { from: startOfYear(now), to: endOfDay(now) }
+    default:
+      return { from: startOfDay(subDays(now, 30)), to: endOfDay(now) }
+  }
+}
+
+export default function StaffPage() {
+  const t = useTranslations('admin')
+  const { user, isAuthenticated } = useAuthStore()
+
+  const [period, setPeriod] = useState<string>('month')
+  const [customRange, setCustomRange] = useState<
+    { from: Date; to: Date } | undefined
+  >()
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
+
+  const dateLocale = LOCALE_MAP['ru'] || ru
+
+  const range = customRange || getDateRange(period)
+
+  const { data: stats, isLoading } = useQuery({
+    queryKey: [
+      'admin-staff-stats',
+      period,
+      customRange?.from?.toISOString(),
+      customRange?.to?.toISOString(),
+      selectedStaffId,
+    ],
+    queryFn: async () => {
+      const params: any = {
+        period,
+        from_date: range.from.toISOString(),
+        to_date: range.to.toISOString(),
+      }
+      if (selectedStaffId) params.staff_id = selectedStaffId
+      const { data } = await api.get('/admin/staff/stats', { params })
+      return data
+    },
+    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    refetchInterval: 30000,
+  })
+
+  const handlePeriodClick = (p: string) => {
+    setPeriod(p)
+    setCustomRange(undefined)
+    setSelectedStaffId(null)
+  }
+
+  const handleStaffClick = (id: number) => {
+    setSelectedStaffId(selectedStaffId === id ? null : id)
+  }
+
+  const handleCalendarSelect = (range: any) => {
+    if (range?.from && range?.to) {
+      setCustomRange({ from: range.from, to: range.to })
+      setPeriod('month')
+    }
+  }
+
+  const maxActions = Math.max(
+    ...(stats?.staff_list?.map((s: any) => s.actions_count) || [1]),
+    1,
+  )
+
+  const actionTypeLabels: Record<string, string> = {
+    status_change: 'Смена статуса',
+    edit: 'Редактирование',
+    item_added: 'Товар добавлен',
+    item_removed: 'Товар удалён',
+  }
+
+  const actionTypeColors = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444']
+
+  const barData = useMemo(() => {
+    const list = stats?.staff_list || []
+    return {
+      labels: list
+        .slice(0, 10)
+        .map((s: any) => s.name)
+        .reverse(),
+      values: list
+        .slice(0, 10)
+        .map((s: any) => s.actions_count)
+        .reverse(),
+    }
+  }, [stats?.staff_list])
+
+  const lineData = useMemo(() => {
+    const dates = stats?.actions_by_date?.map((d: any) => d.date.slice(5)) || []
+    const counts = stats?.actions_by_date?.map((d: any) => d.count) || []
+    return { dates, counts }
+  }, [stats?.actions_by_date])
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg shrink-0">
+              <Activity className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">
+                {fmt(stats?.total_actions ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                Всего действий
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg shrink-0">
+              <ShoppingCart className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">
+                {fmt(stats?.total_orders_touched ?? 0)}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                Заказов изменено
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg shrink-0">
+              <Users className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats?.staff_members ?? 0}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                Сотрудников
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-lg shrink-0">
+              <UserCheck className="w-5 h-5 text-teal-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats?.active_staff ?? 0}</p>
+              <p className="text-xs text-muted-foreground truncate">Активных</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Period selector */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {PERIODS.map((p) => (
+          <Button
+            key={p}
+            variant={period === p && !customRange ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handlePeriodClick(p)}
+          >
+            {t('staff_period_' + p)}
+          </Button>
+        ))}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <CalendarDays className="w-4 h-4" />
+              {customRange
+                ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
+                : t('staff_select_dates')}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              selected={customRange}
+              onSelect={handleCalendarSelect}
+              numberOfMonths={2}
+              locale={dateLocale}
+            />
+          </PopoverContent>
+        </Popover>
+        {selectedStaffId && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedStaffId(null)}
+          >
+            × Сбросить фильтр
+          </Button>
+        )}
+      </div>
+
+      {/* Charts + Staff sidebar */}
+      <div className="flex gap-4">
+        <div className="flex-1 grid grid-cols-2 gap-4">
+          {/* Row 1: Bar — Действия по сотрудникам */}
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Действия по сотрудникам
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <BarChart
+                xData={barData.labels}
+                yData={barData.values}
+                color="#3b82f6"
+                height={250}
+              />
+            </CardContent>
+          </Card>
+          {/* Row 1: LineArea — Динамика */}
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Динамика действий
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <LineAreaChart
+                xData={lineData.dates}
+                yData={lineData.counts}
+                color="#22c55e"
+                height={250}
+              />
+            </CardContent>
+          </Card>
+          {/* Row 2: Doughnut — Типы действий */}
+          <Card className="col-span-2">
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Типы действий
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <DoughnutChart
+                labels={(stats?.actions_by_type || []).map(
+                  (t: any) => actionTypeLabels[t.action] || t.action,
+                )}
+                values={(stats?.actions_by_type || []).map((t: any) => t.count)}
+                colors={actionTypeColors}
+                height={220}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column: Staff list */}
+        <Card className="w-[300px] shrink-0 h-full flex flex-col">
+          <CardHeader className="p-4 pb-2 shrink-0">
+            <CardTitle className="text-base font-medium">Сотрудники</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0 flex-1 overflow-auto">
+            {isLoading ? (
+              <div className="space-y-2 mt-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-16 bg-muted animate-pulse rounded"
+                  />
+                ))}
+              </div>
+            ) : !stats?.staff_list?.length ? (
+              <p className="text-sm text-muted-foreground pt-2">Нет данных</p>
+            ) : (
+              <div className="space-y-2">
+                {stats.staff_list.map((member: any) => {
+                  const isSelected = selectedStaffId === member.id
+                  const pct = Math.round(
+                    (member.actions_count / maxActions) * 100,
+                  )
+                  const roleClass =
+                    ROLE_BADGE[member.group] || 'bg-gray-500 text-white'
+                  return (
+                    <button
+                      key={member.id}
+                      onClick={() => handleStaffClick(member.id)}
+                      className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors hover:bg-muted/30 cursor-pointer ${isSelected ? 'border-primary bg-muted/50' : ''}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm font-medium truncate">
+                            {member.name}
+                          </span>
+                          <Badge
+                            className={`${roleClass} border-0 text-[10px] px-1.5`}
+                          >
+                            {member.group}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-blue-500 rounded-full transition-all"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-mono text-muted-foreground shrink-0">
+                            {member.actions_count}
+                          </span>
+                        </div>
+                        <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground">
+                          <span>заказов: {member.orders_count}</span>
+                          <span>статусов: {member.status_changes}</span>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
