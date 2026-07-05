@@ -6,19 +6,36 @@ class OrdersByDateItem(BaseModel):
     date: str
     count: int
     revenue: float
+    margin: float = 0
 
 class PartsByCategoryItem(BaseModel):
     category: str
+    count: int
+
+class WeekdayDistribution(BaseModel):
+    weekday: str  # "Пн", "Вт", etc
+    count: int
+
+class PaymentMethodDistribution(BaseModel):
+    method: str
     count: int
 
 class DashboardResponse(BaseModel):
     total_users: int
     total_orders: int
     total_revenue: float
+    total_margin: float = 0
     total_parts: int
     orders_by_date: List[OrdersByDateItem]
     orders_by_status: dict
     parts_by_category: List[PartsByCategoryItem]
+    orders_today: int = 0
+    new_users_today: int = 0
+    average_check: float = 0
+    oldest_pending_seconds: int = 0
+    pending_orders_count: int = 0
+    orders_by_weekday: List[WeekdayDistribution] = []
+    payment_methods: List[PaymentMethodDistribution] = []
 
 class AdminOrderItem(BaseModel):
     id: int

@@ -1,198 +1,413 @@
-'use client';
+'use client'
 
-import React from 'react';
-import Link from 'next/link';
-import { Package, ShoppingCart, Users, TrendingUp, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useAuthStore } from '@/store/authStore';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
-import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
-import { ORDER_STATUS_LABELS } from '@/lib/constants';
+import React from 'react'
+import Link from 'next/link'
+import {
+  Package,
+  ShoppingCart,
+  Users,
+  TrendingUp,
+  DollarSign,
+  Clock,
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useAuthStore } from '@/store/authStore'
+import { useQuery } from '@tanstack/react-query'
+import api from '@/lib/api'
+import { useTranslations } from 'next-intl'
+import { ORDER_STATUS_LABELS } from '@/lib/constants'
+import BarChart from '@/components/charts/BarChart'
+import LineAreaChart from '@/components/charts/LineAreaChart'
+import DoughnutChart from '@/components/charts/DoughnutChart'
+import RadarChart from '@/components/charts/RadarChart'
+import PolarAreaChart from '@/components/charts/PolarAreaChart'
+import PieChart from '@/components/charts/PieChart'
+import KipTimer from '@/components/ui/KipTimer'
 
-const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
+const fmt = (n: number) =>
+  new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-yellow-500',
+  confirmed: 'bg-gray-800',
+  processing: 'bg-blue-500',
+  shipped: 'bg-orange-500',
+  delivered: 'bg-green-500',
+  cancelled: 'bg-red-500',
+}
 
-const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+const STATUS_LABEL_MAP: Record<string, string> = {
+  pending: 'Ожидает',
+  confirmed: 'Подтверждён',
+  processing: 'В обработке',
+  shipped: 'Отправлен',
+  delivered: 'Доставлен',
+  cancelled: 'Отменён',
+}
+
+const PAYMENT_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6']
+const WEEKDAY_COLORS = [
+  '#ef4444',
+  '#f59e0b',
+  '#3b82f6',
+  '#22c55e',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+]
+const STATUS_COLORS_CHART = [
+  '#f59e0b',
+  '#374151',
+  '#3b82f6',
+  '#f97316',
+  '#22c55e',
+  '#ef4444',
+]
 
 export default function DashboardTab() {
-  const { user, isAuthenticated } = useAuthStore();
-  const t = useTranslations('admin');
+  const { user, isAuthenticated } = useAuthStore()
+  const t = useTranslations('admin')
 
   const { data: dashboard } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {
-      const { data } = await api.get('/admin/dashboard');
-      return data;
+      const { data } = await api.get('/admin/dashboard')
+      return data
     },
-    enabled: isAuthenticated && ['admin', 'manager', 'operator'].includes(user?.role ?? ''),
+    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
     refetchInterval: 30000,
-  });
+  })
 
   const { data: ordersData } = useQuery({
     queryKey: ['admin-dashboard-orders'],
     queryFn: async () => {
-      const { data } = await api.get('/admin/orders', { params: { page: 1, page_size: 10 } });
-      return data;
+      const { data } = await api.get('/admin/orders', {
+        params: { page: 1, page_size: 5 },
+      })
+      return data
     },
-    enabled: isAuthenticated && ['admin', 'manager', 'operator'].includes(user?.role ?? ''),
-  });
-  const orders = ordersData?.items;
+    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    refetchInterval: 30000,
+  })
+  const orders = ordersData?.items || []
 
-  const stats = [
-    { icon: ShoppingCart, label: t('orders_count'), value: dashboard?.total_orders ?? 0, color: 'text-blue-600' },
-    { icon: Users, label: t('users_count'), value: dashboard?.total_users ?? 0, color: 'text-green-600' },
-    { icon: Package, label: t('parts_count'), value: fmt(dashboard?.total_parts ?? 0), color: 'text-purple-600' },
-    { icon: TrendingUp, label: t('total_revenue'), value: dashboard?.total_revenue ? `${fmt(dashboard.total_revenue)} ₴` : '0', color: 'text-orange-600' },
-  ];
+  const dates =
+    dashboard?.orders_by_date?.map((d: any) => d.date.slice(5)) || []
+  const counts = dashboard?.orders_by_date?.map((d: any) => d.count) || []
+  const margins = dashboard?.orders_by_date?.map((d: any) => d.margin) || []
 
-  const barChartOption = {
-    tooltip: { trigger: 'axis' },
-    grid: { left: 50, right: 20, top: 30, bottom: 30 },
-    xAxis: {
-      type: 'category',
-      data: dashboard?.orders_by_date?.map((d: any) => d.date.slice(5)) || [],
-      axisLabel: { fontSize: 11 },
+  // Данные для Radar
+  const radarIndicators = [
+    { name: 'Заказы/день', max: Math.max(...counts, 5) * 1.5 },
+    { name: 'Наценка/день', max: Math.max(...margins, 500) * 1.5 },
+    { name: '% доставленных', max: 100 },
+    { name: 'Ср. чек', max: (dashboard?.average_check || 5000) * 1.5 },
+    {
+      name: 'Новых/день',
+      max: Math.max(dashboard?.new_users_today || 1, 3) * 2,
     },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [{
-      type: 'bar',
-      data: dashboard?.orders_by_date?.map((d: any) => d.count) || [],
-      itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] },
-    }],
-  };
-
-  const donutOption = {
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    series: [{
-      type: 'pie',
-      radius: ['40%', '70%'],
-      avoidLabelOverlap: true,
-      label: { show: true, position: 'outside', fontSize: 11 },
-      emphasis: { label: { show: true, fontSize: 14 } },
-      data: Object.entries(dashboard?.orders_by_status || {}).map(([key, val]) => ({
-        name: key,
-        value: val,
-      })),
-    }],
-  };
-
-  const lineChartOption = {
-    tooltip: { trigger: 'axis', valueFormatter: (v: any) => `${fmt(v)} ₴` },
-    grid: { left: 60, right: 20, top: 30, bottom: 30 },
-    xAxis: {
-      type: 'category',
-      data: dashboard?.orders_by_date?.map((d: any) => d.date.slice(5)) || [],
-      axisLabel: { fontSize: 11 },
+    {
+      name: 'Товары в наличии',
+      max: Math.max(dashboard?.total_parts || 100, 500) * 1.2,
     },
-    yAxis: { type: 'value', axisLabel: { formatter: (v: number) => `${(v / 1000).toFixed(0)}k` } },
-    series: [{
-      type: 'line',
-      data: dashboard?.orders_by_date?.map((d: any) => d.revenue) || [],
-      smooth: true,
-      lineStyle: { color: '#22c55e', width: 2 },
-      itemStyle: { color: '#22c55e' },
-      areaStyle: { color: 'rgba(34,197,94,0.1)' },
-    }],
-  };
-
-  const categoryBarOption = {
-    tooltip: { trigger: 'axis' },
-    grid: { left: 120, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'value', minInterval: 1 },
-    yAxis: {
-      type: 'category',
-      data: dashboard?.parts_by_category?.map((d: any) => d.category).reverse() || [],
-      axisLabel: { fontSize: 11 },
-    },
-    series: [{
-      type: 'bar',
-      data: dashboard?.parts_by_category?.map((d: any) => d.count).reverse() || [],
-      itemStyle: { color: '#a855f7', borderRadius: [0, 4, 4, 0] },
-    }],
-  };
+  ]
+  const radarValues = [
+    counts.length > 0
+      ? Math.round(
+          counts.reduce((a: number, b: number) => a + b, 0) / counts.length,
+        )
+      : 0,
+    margins.length > 0
+      ? Math.round(
+          margins.reduce((a: number, b: number) => a + b, 0) / margins.length,
+        )
+      : 0,
+    dashboard?.orders_by_status
+      ? Math.round(
+          ((dashboard.orders_by_status.delivered || 0) /
+            (dashboard.total_orders || 1)) *
+            100,
+        )
+      : 0,
+    dashboard?.average_check || 0,
+    dashboard?.new_users_today || 0,
+    dashboard?.total_parts || 0,
+  ]
 
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className={`${stat.color} bg-muted p-3 rounded-lg`}>
-                <stat.icon className="w-5 h-5" />
+    <div className="flex flex-col gap-3">
+      {/* ── KPI Row ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* KIP Таймер */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg shrink-0">
+                <Clock className="w-4 h-4 text-blue-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <div className="min-w-0">
+                <KipTimer
+                  oldestPendingSeconds={dashboard?.oldest_pending_seconds || 0}
+                  pendingCount={dashboard?.pending_orders_count || 0}
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                  {dashboard?.pending_orders_count
+                    ? `${dashboard.pending_orders_count} необр.`
+                    : 'Всё ок'}
+                </p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Наценка (прибыль) */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg shrink-0">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold truncate">
+                {dashboard?.total_margin
+                  ? `${fmt(dashboard.total_margin)} ₴`
+                  : '0 ₴'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Наценка
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Заказы сегодня */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg shrink-0">
+              <ShoppingCart className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold">
+                {dashboard?.orders_today ?? 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Заказов сегодня
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Новые пользователи */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg shrink-0">
+              <Users className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold">
+                {dashboard?.new_users_today ?? 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Новых
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Средний чек */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg shrink-0">
+              <DollarSign className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold truncate">
+                {dashboard?.average_check
+                  ? `${fmt(dashboard.average_check)} ₴`
+                  : '0 ₴'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Ср. чек
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Товары */}
+        <Card>
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="bg-teal-100 dark:bg-teal-900/30 p-2 rounded-lg shrink-0">
+              <Package className="w-4 h-4 text-teal-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold">
+                {fmt(dashboard?.total_parts ?? 0)}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Товаров
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Charts + Orders ────────────────────────────────────── */}
+      <div className="flex gap-3">
+        {/* Левая колонка: 3 ряда × 2 графика */}
+        <div className="flex-1 grid grid-cols-2 gap-3">
+          {/* Row 1: Bar + LineArea */}
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                Заказы по дням
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <BarChart
+                xData={dates}
+                yData={counts}
+                color="#3b82f6"
+                height={150}
+              />
             </CardContent>
           </Card>
-        ))}
-      </div>
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                Наценка по дням
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <LineAreaChart
+                xData={dates}
+                yData={margins}
+                color="#22c55e"
+                height={150}
+              />
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('orders_by_day')}</CardTitle></CardHeader>
-          <CardContent>
-            <ReactECharts option={barChartOption} style={{ height: 260 }} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('orders_by_status')}</CardTitle></CardHeader>
-          <CardContent>
-            <ReactECharts option={donutOption} style={{ height: 260 }} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('revenue_by_day')}</CardTitle></CardHeader>
-          <CardContent>
-            <ReactECharts option={lineChartOption} style={{ height: 260 }} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">{t('parts_by_category')}</CardTitle></CardHeader>
-          <CardContent>
-            <ReactECharts option={categoryBarOption} style={{ height: 260 }} />
+          {/* Row 2: Doughnut + Radar */}
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                Статусы заказов
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <DoughnutChart
+                labels={Object.keys(dashboard?.orders_by_status || {})}
+                values={Object.values(dashboard?.orders_by_status || {})}
+                colors={STATUS_COLORS_CHART}
+                height={150}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                Эффективность
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <RadarChart
+                indicators={radarIndicators}
+                values={radarValues}
+                color="#8b5cf6"
+                height={170}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Row 3: PolarArea + Pie */}
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                По дням недели
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <PolarAreaChart
+                labels={
+                  dashboard?.orders_by_weekday?.map((d: any) => d.weekday) || []
+                }
+                values={
+                  dashboard?.orders_by_weekday?.map((d: any) => d.count) || []
+                }
+                height={150}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-[11px] font-medium">
+                Способы оплаты
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2">
+              <PieChart
+                labels={
+                  dashboard?.payment_methods?.map((d: any) => d.method) || []
+                }
+                values={
+                  dashboard?.payment_methods?.map((d: any) => d.count) || []
+                }
+                colors={PAYMENT_COLORS}
+                height={150}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Правая колонка: последние заказы */}
+        <Card className="w-[280px] shrink-0">
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-sm font-medium">
+              Последние заказы
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            {orders.length === 0 ? (
+              <p className="text-xs text-muted-foreground pt-2">Нет заказов</p>
+            ) : (
+              <div className="divide-y">
+                {orders.map((order: any) => {
+                  const colorClass =
+                    STATUS_COLORS[order.status] || 'bg-gray-500'
+                  const label = STATUS_LABEL_MAP[order.status] || order.status
+                  return (
+                    <Link
+                      key={order.id}
+                      href={`/admin/orders/${order.id}`}
+                      className="flex items-center justify-between py-2 gap-2 hover:bg-muted/30 rounded px-1 -mx-1 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-mono font-medium truncate">
+                          {order.order_number || `#${order.id}`}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {order.full_name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-semibold">
+                          {fmt(order.total || 0)} ₴
+                        </p>
+                        <Badge
+                          className={`${colorClass} text-white border-0 text-[9px] px-1.5 py-0 h-4`}
+                        >
+                          {label}
+                        </Badge>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t('recent_orders')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {orders?.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('no_orders')}</p>
-          ) : (
-            <div className="divide-y text-sm">
-              {orders?.map((order: any) => {
-                const statusInfo = ORDER_STATUS_LABELS[order.status];
-                const className = statusInfo?.className || 'bg-gray-500 text-white';
-                return (
-                  <div key={order.id} className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-medium">#{order.id}</span>
-                      <span className="text-muted-foreground">{order.full_name}</span>
-                      <Badge className={`${className} border-0 text-sm`}>{t('order_' + order.status)}</Badge>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{fmt(order.total)} ₴</span>
-                      <Link href={`/orders/${order.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
-  );
+    </div>
+  )
 }
