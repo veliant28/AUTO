@@ -196,69 +196,78 @@ export default function DashboardTab() {
         </Card>
       </div>
 
-      {/* Charts + Orders */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">
-              Заказы по дням
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <BarChart
-              xData={dates}
-              yData={counts}
-              color="#3b82f6"
-              height={180}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">
-              Наценка по дням
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <LineAreaChart
-              xData={dates}
-              yData={margins}
-              color="#22c55e"
-              height={180}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">
-              Статусы заказов
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <DoughnutChart
-              labels={Object.keys(dashboard?.orders_by_status || {})}
-              values={Object.values(dashboard?.orders_by_status || {})}
-              colors={STATUS_COLORS_CHART}
-              height={180}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="text-sm font-medium">Эффективность</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <RadarChart
-              indicators={radarIndicators}
-              values={radarValues}
-              color="#8b5cf6"
-              height={200}
-            />
-          </CardContent>
-        </Card>
+      {/* Charts + Orders — 3 колонки, каждая под 2 KPI карточки */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Колонка 1: под KIP + Наценка */}
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Заказы по дням
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <BarChart
+                xData={dates}
+                yData={counts}
+                color="#3b82f6"
+                height={180}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Наценка по дням
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <LineAreaChart
+                xData={dates}
+                yData={margins}
+                color="#22c55e"
+                height={180}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Recent orders — spans 2 columns */}
-        <Card className="col-span-2">
+        {/* Колонка 2: под Заказы сегодня + Новые */}
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Статусы заказов
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <DoughnutChart
+                labels={Object.keys(dashboard?.orders_by_status || {})}
+                values={Object.values(dashboard?.orders_by_status || {})}
+                colors={STATUS_COLORS_CHART}
+                height={180}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm font-medium">
+                Эффективность
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              <RadarChart
+                indicators={radarIndicators}
+                values={radarValues}
+                color="#8b5cf6"
+                height={200}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Колонка 3: под Ср. чек + Товары — список заказов */}
+        <Card>
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base font-medium">
               Последние заказы
@@ -268,7 +277,7 @@ export default function DashboardTab() {
             {orders.length === 0 ? (
               <p className="text-sm text-muted-foreground pt-2">Нет заказов</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
                 {orders.map((order: any) => {
                   const statusInfo = ORDER_STATUS_LABELS[order.status]
                   const className =
@@ -277,7 +286,7 @@ export default function DashboardTab() {
                     <Link
                       key={order.id}
                       href={`/admin/orders/${order.id}`}
-                      className="flex items-center justify-between py-3 px-4 gap-3 hover:bg-muted/30 rounded-lg border transition-colors"
+                      className="flex items-center justify-between py-3 px-3 gap-2 hover:bg-muted/30 rounded-lg border transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-mono font-semibold truncate">
