@@ -213,33 +213,33 @@ export default function DashboardTab() {
       <div className="grid grid-cols-3 gap-4">
         {/* Колонка 1: под KIP + Наценка */}
         <div className="flex flex-col gap-4">
-          <Card>
+          <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
                 Заказы по дням
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-2">
+            <CardContent className="p-4 pt-2 h-full">
               <BarChart
                 xData={dates}
                 yData={counts}
                 color="#3b82f6"
-                height={180}
+                height={250}
               />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
                 Наценка по дням
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-2">
+            <CardContent className="p-4 pt-2 h-full">
               <LineAreaChart
                 xData={dates}
                 yData={margins}
                 color="#22c55e"
-                height={180}
+                height={250}
               />
             </CardContent>
           </Card>
@@ -247,46 +247,46 @@ export default function DashboardTab() {
 
         {/* Колонка 2: под Заказы сегодня + Новые */}
         <div className="flex flex-col gap-4">
-          <Card>
+          <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
                 Статусы заказов
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-2">
+            <CardContent className="p-4 pt-2 h-full">
               <DoughnutChart
                 labels={Object.keys(dashboard?.orders_by_status || {})}
                 values={Object.values(dashboard?.orders_by_status || {})}
                 colors={STATUS_COLORS_CHART}
-                height={180}
+                height={250}
               />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
                 Эффективность
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-2">
+            <CardContent className="p-4 pt-2 h-full">
               <RadarChart
                 indicators={radarIndicators}
                 values={radarValues}
                 color="#8b5cf6"
-                height={200}
+                height={250}
               />
             </CardContent>
           </Card>
         </div>
 
         {/* Колонка 3: под Ср. чек + Товары — список заказов */}
-        <Card>
-          <CardHeader className="p-4 pb-2">
+        <Card className="h-full flex flex-col">
+          <CardHeader className="p-4 pb-2 shrink-0">
             <CardTitle className="text-lg font-medium">
               Последние заказы
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
+          <CardContent className="p-4 pt-0 flex-1 overflow-auto">
             {orders.length === 0 ? (
               <p className="text-sm text-muted-foreground pt-2">Нет заказов</p>
             ) : (
