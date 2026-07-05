@@ -872,7 +872,7 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
 
-                <OrderDetailModal
+        <OrderDetailModal
           orderId={viewOrderId}
           open={!!viewOrderId}
           onOpenChange={(open) => {
@@ -883,6 +883,24 @@ export default function AdminOrdersPage() {
             }
           }}
         />
+
+        {selectedNpOrderId !== null && waybillModalOpen && (
+          <OrderWaybillModal
+            key={selectedNpOrderId}
+            orderId={selectedNpOrderId}
+            open={waybillModalOpen}
+            onOpenChange={handleWaybillClose}
+            promocodeCode={orderDetail?.promocode_code || null}
+          />
+        )}
+        {selectedNpOrderId !== null && trackingModalOpen && (
+          <OrderWaybillTrackingModal
+            key={selectedNpOrderId}
+            orderId={selectedNpOrderId}
+            open={trackingModalOpen}
+            onOpenChange={handleTrackingClose}
+          />
+        )}
 
         <Dialog
           open={!!deleteTarget}
