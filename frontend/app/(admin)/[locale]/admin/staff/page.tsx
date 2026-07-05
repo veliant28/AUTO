@@ -325,13 +325,15 @@ export default function StaffPage() {
                         ${sel ? 'bg-primary text-primary-foreground border-primary hover:bg-primary/90' : 'hover:bg-muted/30'}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center justify-between w-full">
                           <span
                             className={`text-sm font-medium truncate ${sel ? 'text-primary-foreground' : ''}`}
                           >
                             {m.name}
                           </span>
-                          <Badge className={`${rc} border-0 text-sm`}>
+                          <Badge
+                            className={`${rc} border-0 text-sm shrink-0 ml-2`}
+                          >
                             {t(m.group)}
                           </Badge>
                         </div>
