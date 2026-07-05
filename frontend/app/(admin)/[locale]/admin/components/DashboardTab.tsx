@@ -66,7 +66,7 @@ export default function DashboardTab() {
     queryKey: ['admin-dashboard-orders'],
     queryFn: async () => {
       const { data } = await api.get('/admin/orders', {
-        params: { page: 1, page_size: 5 },
+        params: { page: 1, page_size: 8 },
       })
       return data
     },
