@@ -38,7 +38,7 @@ export default function DoughnutChart({
           center: ['50%', '50%'],
           avoidLabelOverlap: true,
           itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-          label: { show: true, fontSize: 10, formatter: '{b}' },
+          label: { show: true, fontSize: 12, formatter: '{b}' },
           emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' } },
           data: labels.map((label, i) => ({
             name: label,

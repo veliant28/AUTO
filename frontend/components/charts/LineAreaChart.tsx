@@ -34,7 +34,7 @@ export default function LineAreaChart({
         type: 'category' as const,
         data: xData,
         axisLabel: {
-          fontSize: 10,
+          fontSize: 12,
           interval: 0,
           rotate: xData.length > 7 ? 45 : 0,
         },
@@ -42,7 +42,7 @@ export default function LineAreaChart({
       yAxis: {
         type: 'value' as const,
         splitLine: { lineStyle: { type: 'dashed' } },
-        axisLabel: { fontSize: 9 },
+        axisLabel: { fontSize: 11 },
       },
       series: [
         {

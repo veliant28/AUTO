@@ -31,7 +31,7 @@ export default function RadarChart({
         indicator: indicators,
         radius: '65%',
         splitNumber: 3,
-        axisName: { fontSize: 9, color: '#666' },
+        axisName: { fontSize: 11, color: '#666' },
         splitArea: {
           areaStyle: {
             color: [

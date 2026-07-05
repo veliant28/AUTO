@@ -37,7 +37,7 @@ export default function PieChart({
           radius: ['0%', '70%'],
           center: ['50%', '50%'],
           itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-          label: { show: true, fontSize: 10, formatter: '{b}\n{d}%' },
+          label: { show: true, fontSize: 12, formatter: '{b}\n{d}%' },
           labelLine: { length: 8, length2: 6 },
           data: labels.map((label, i) => ({
             name: label,

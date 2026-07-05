@@ -28,7 +28,7 @@ export default function BarChart({
         type: 'category' as const,
         data: xData,
         axisLabel: {
-          fontSize: 10,
+          fontSize: 12,
           interval: 0,
           rotate: xData.length > 7 ? 45 : 0,
         },

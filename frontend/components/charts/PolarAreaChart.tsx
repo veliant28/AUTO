@@ -22,9 +22,9 @@ export default function PolarAreaChart({
       angleAxis: {
         type: 'category' as const,
         data: labels,
-        axisLabel: { fontSize: 9 },
+        axisLabel: { fontSize: 11 },
       },
-      radiusAxis: { min: 0, axisLabel: { fontSize: 9 } },
+      radiusAxis: { min: 0, axisLabel: { fontSize: 11 } },
       polar: {},
       series: [
         {
