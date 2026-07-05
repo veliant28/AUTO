@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
-import Link from 'next/link'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Package,
   ShoppingCart,
@@ -22,6 +21,7 @@ import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
 import RadarChart from '@/components/charts/RadarChart'
 import KipTimer from '@/components/ui/KipTimer'
+import OrderDetailModal from './OrderDetailModal'
 import { toast } from '@/lib/toast'
 
 const fmt = (n: number) =>
@@ -76,6 +76,7 @@ export default function DashboardTab() {
   })
   const orders = ordersData?.items || []
   const warnedRef = useRef(false)
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
 
   useEffect(() => {
     if (
@@ -331,10 +332,10 @@ export default function DashboardTab() {
                   const className =
                     statusInfo?.className || 'bg-gray-500 text-white'
                   return (
-                    <Link
+                    <button
                       key={order.id}
-                      href={`/admin/orders/${order.id}`}
-                      className="flex items-center justify-between py-3 px-3 gap-2 hover:bg-muted/30 rounded-lg border transition-colors"
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className="flex items-center justify-between py-3 px-3 gap-2 hover:bg-muted/30 rounded-lg border transition-colors w-full text-left"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-mono font-semibold truncate">
@@ -357,7 +358,7 @@ export default function DashboardTab() {
                           {t('order_' + order.status)}
                         </Badge>
                       </div>
-                    </Link>
+                    </button>
                   )
                 })}
               </div>
@@ -365,6 +366,14 @@ export default function DashboardTab() {
           </CardContent>
         </Card>
       </div>
+
+      <OrderDetailModal
+        orderId={selectedOrderId}
+        open={!!selectedOrderId}
+        onOpenChange={(o) => {
+          if (!o) setSelectedOrderId(null)
+        }}
+      />
     </div>
   )
 }
