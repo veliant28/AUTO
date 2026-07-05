@@ -271,7 +271,9 @@ export default function DashboardTab() {
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
               <DoughnutChart
-                labels={Object.keys(dashboard?.orders_by_status || {})}
+                labels={Object.keys(dashboard?.orders_by_status || {}).map(
+                  (s: string) => t('order_' + s),
+                )}
                 values={Object.values(dashboard?.orders_by_status || {})}
                 colors={STATUS_COLORS_CHART}
                 height={250}
