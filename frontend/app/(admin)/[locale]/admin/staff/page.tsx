@@ -190,7 +190,6 @@ export default function StaffPage() {
           <Button
             key={p}
             variant={period === p && !customRange ? 'default' : 'outline'}
-            size="sm"
             onClick={() => {
               setPeriod(p)
               setCustomRange(undefined)
@@ -201,7 +200,7 @@ export default function StaffPage() {
         ))}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" className="gap-1.5">
               <CalendarDays className="w-4 h-4" />
               {customRange
                 ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
@@ -223,11 +222,7 @@ export default function StaffPage() {
           </PopoverContent>
         </Popover>
         {selectedStaffId && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedStaffId(null)}
-          >
+          <Button variant="ghost" onClick={() => setSelectedStaffId(null)}>
             × Сбросить
           </Button>
         )}
@@ -238,7 +233,7 @@ export default function StaffPage() {
         <div className="flex-1 grid grid-cols-2 gap-4">
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Действия по сотрудникам
               </CardTitle>
             </CardHeader>
@@ -253,7 +248,7 @@ export default function StaffPage() {
           </Card>
           <Card>
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Динамика действий
               </CardTitle>
             </CardHeader>
@@ -268,7 +263,7 @@ export default function StaffPage() {
           </Card>
           <Card className="col-span-2">
             <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 Типы действий
               </CardTitle>
             </CardHeader>
@@ -286,7 +281,7 @@ export default function StaffPage() {
         </div>
 
         {/* Staff sidebar */}
-        <Card className="w-[280px] shrink-0 self-start">
+        <Card className="w-[25%] min-w-[220px] max-w-[320px] shrink-0 self-start">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-sm font-medium">Сотрудники</CardTitle>
           </CardHeader>
