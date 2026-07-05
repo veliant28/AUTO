@@ -81,15 +81,21 @@ export default function DashboardTab() {
   const margins = dashboard?.orders_by_date?.map((d: any) => d.margin) || []
 
   const radarIndicators = [
-    { name: 'Заказы/день', max: Math.max(...counts, 5) * 1.5 },
-    { name: 'Наценка/день', max: Math.max(...margins, 500) * 1.5 },
-    { name: '% доставленных', max: 100 },
-    { name: 'Ср. чек', max: (dashboard?.average_check || 5000) * 1.5 },
+    { name: t('dash_radar_orders_day'), max: Math.max(...counts, 5) * 1.5 },
+    { name: t('dash_radar_income'), max: Math.max(...margins, 500) * 1.5 },
+    { name: t('dash_radar_delivered'), max: 100 },
     {
-      name: 'Новых/день',
+      name: t('dash_radar_avg_check'),
+      max: (dashboard?.average_check || 5000) * 1.5,
+    },
+    {
+      name: t('dash_radar_new_users'),
       max: Math.max(dashboard?.new_users_today || 1, 3) * 2,
     },
-    { name: 'Товары', max: Math.max(dashboard?.total_parts || 100, 500) * 1.2 },
+    {
+      name: t('dash_radar_products'),
+      max: Math.max(dashboard?.total_parts || 100, 500) * 1.2,
+    },
   ]
   const radarValues = [
     counts.length > 0
@@ -130,8 +136,10 @@ export default function DashboardTab() {
               />
               <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 {dashboard?.pending_orders_count
-                  ? `${dashboard.pending_orders_count} необр.`
-                  : 'Всё ок'}
+                  ? t('dash_many_unprocessed', {
+                      count: dashboard.pending_orders_count,
+                    })
+                  : t('dash_all_ok')}
               </p>
             </div>
           </CardContent>
@@ -147,7 +155,9 @@ export default function DashboardTab() {
                   ? `${fmt(dashboard.total_margin)} ₴`
                   : '0 ₴'}
               </p>
-              <p className="text-xs text-muted-foreground truncate">Наценка</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {t('dash_income')}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -161,7 +171,7 @@ export default function DashboardTab() {
                 {dashboard?.orders_today ?? 0}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                Заказов сегодня
+                {t('dash_orders_today')}
               </p>
             </div>
           </CardContent>
@@ -175,7 +185,9 @@ export default function DashboardTab() {
               <p className="text-2xl font-bold">
                 {dashboard?.new_users_today ?? 0}
               </p>
-              <p className="text-xs text-muted-foreground truncate">Новых</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {t('dash_new_users')}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -190,7 +202,9 @@ export default function DashboardTab() {
                   ? `${fmt(dashboard.average_check)} ₴`
                   : '0 ₴'}
               </p>
-              <p className="text-xs text-muted-foreground truncate">Ср. чек</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {t('dash_avg_check')}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -203,7 +217,9 @@ export default function DashboardTab() {
               <p className="text-2xl font-bold">
                 {fmt(dashboard?.total_parts ?? 0)}
               </p>
-              <p className="text-xs text-muted-foreground truncate">Товаров</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {t('dash_products')}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -216,7 +232,7 @@ export default function DashboardTab() {
           <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
-                Заказы по дням
+                {t('dash_orders_by_day')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
@@ -231,7 +247,7 @@ export default function DashboardTab() {
           <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
-                Наценка по дням
+                {t('dash_income_by_day')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
@@ -250,7 +266,7 @@ export default function DashboardTab() {
           <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
-                Статусы заказов
+                {t('dash_order_statuses')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
@@ -265,7 +281,7 @@ export default function DashboardTab() {
           <Card className="flex-1">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-lg font-medium">
-                Эффективность
+                {t('dash_efficiency')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
@@ -283,12 +299,14 @@ export default function DashboardTab() {
         <Card className="h-full flex flex-col">
           <CardHeader className="p-4 pb-2 shrink-0">
             <CardTitle className="text-lg font-medium">
-              Последние заказы
+              {t('dash_recent_orders')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0 flex-1 overflow-auto">
             {orders.length === 0 ? (
-              <p className="text-sm text-muted-foreground pt-2">Нет заказов</p>
+              <p className="text-sm text-muted-foreground pt-2">
+                {t('dash_no_orders')}
+              </p>
             ) : (
               <div className="space-y-2">
                 {orders.map((order: any) => {
