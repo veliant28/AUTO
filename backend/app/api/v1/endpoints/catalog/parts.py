@@ -204,75 +204,90 @@ async def get_part_details(
             }
 
     info_data = None
+    images = []
+    crosses = []
+    oems = []
+    app_count = 0
 
-    tecdoc_search = article
+    # Use the part's article for TecDoc search (supports both article and SKU in URL)
+    tecdoc_search = part.article if parts else article
 
     if tecdoc_search:
-        info_row = tecdoc_db.execute(
-            sa_text("""SELECT "InformationText", "InformationType"
-                       FROM article_inf
-                       WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 1"""),
-            {"art": tecdoc_search},
-        ).fetchone()
+        try:
+            info_row = tecdoc_db.execute(
+                sa_text("""SELECT "InformationText", "InformationType"
+                           FROM article_inf
+                           WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 1"""),
+                {"art": tecdoc_search},
+            ).fetchone()
 
-        attr_rows = tecdoc_db.execute(
-            sa_text("""SELECT "displaytitle", "displayvalue"
-                       FROM article_attributes
-                       WHERE LOWER("datasupplierarticlenumber") = LOWER(:art) LIMIT 30"""),
-            {"art": tecdoc_search},
-        ).fetchall()
-        attributes = [{"name": r[0] or "", "value": r[1] or ""} for r in attr_rows]
+            attr_rows = tecdoc_db.execute(
+                sa_text("""SELECT "displaytitle", "displayvalue"
+                           FROM article_attributes
+                           WHERE LOWER("datasupplierarticlenumber") = LOWER(:art) LIMIT 30"""),
+                {"art": tecdoc_search},
+            ).fetchall()
+            attributes = [{"name": r[0] or "", "value": r[1] or ""} for r in attr_rows]
 
-        if info_row:
-            info_data = {
-                "description": info_row[0] or "",
-                "type": info_row[1] or "",
-                "attributes": attributes,
-            }
-        elif attributes:
-            info_data = {
-                "description": "",
-                "type": "",
-                "attributes": attributes,
-            }
+            if info_row:
+                info_data = {
+                    "description": info_row[0] or "",
+                    "type": info_row[1] or "",
+                    "attributes": attributes,
+                }
+            elif attributes:
+                info_data = {
+                    "description": "",
+                    "type": "",
+                    "attributes": attributes,
+                }
 
-        images = tecdoc_db.execute(
-            sa_text("""SELECT "PictureName", "Description"
-                       FROM article_images
-                       WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 10"""),
-            {"art": tecdoc_search},
-        ).fetchall()
+            images = [
+                {"name": r[0], "description": r[1] or ""} for r in tecdoc_db.execute(
+                    sa_text("""SELECT "PictureName", "Description"
+                               FROM article_images
+                               WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art) LIMIT 10"""),
+                    {"art": tecdoc_search},
+                ).fetchall()
+            ]
 
-        crosses = tecdoc_db.execute(
-            sa_text("""SELECT DISTINCT ac."PartsDataSupplierArticleNumber", man."description"
-                       FROM article_cross ac
-                       LEFT JOIN manufacturers man ON man.id = ac."manufacturerId"
-                       WHERE LOWER(ac."PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
-            {"art": tecdoc_search},
-        ).fetchall()
+            crosses = [
+                {"article": r[0], "brand_name": r[1]} for r in tecdoc_db.execute(
+                    sa_text("""SELECT DISTINCT ac."PartsDataSupplierArticleNumber", man."description"
+                               FROM article_cross ac
+                               LEFT JOIN manufacturers man ON man.id = ac."manufacturerId"
+                               WHERE LOWER(ac."PartsDataSupplierArticleNumber") = LOWER(:art) LIMIT 20"""),
+                    {"art": tecdoc_search},
+                ).fetchall()
+            ]
 
-        oems = tecdoc_db.execute(
-            sa_text("""SELECT DISTINCT ae."OENbr", man."description"
-                       FROM article_oe ae
-                       LEFT JOIN manufacturers man ON man.id = ae."manufacturerId"
-                       WHERE LOWER(ae."datasupplierarticlenumber") = LOWER(:art)
-                       AND ae."OENbr" IS NOT NULL AND ae."OENbr" != ''
-                       LIMIT 20"""),
-            {"art": tecdoc_search},
-        ).fetchall()
+            oems = [
+                {"number": r[0], "brand_name": r[1]} for r in tecdoc_db.execute(
+                    sa_text("""SELECT DISTINCT ae."OENbr", man."description"
+                               FROM article_oe ae
+                               LEFT JOIN manufacturers man ON man.id = ae."manufacturerId"
+                               WHERE LOWER(ae."datasupplierarticlenumber") = LOWER(:art)
+                               AND ae."OENbr" IS NOT NULL AND ae."OENbr" != ''
+                               LIMIT 20"""),
+                    {"art": tecdoc_search},
+                ).fetchall()
+            ]
 
-        app_count = tecdoc_db.execute(
-            sa_text("""SELECT COUNT(*) FROM article_li WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art)"""),
-            {"art": tecdoc_search},
-        ).scalar() or 0
+            app_count = tecdoc_db.execute(
+                sa_text("""SELECT COUNT(*) FROM article_li WHERE LOWER("DataSupplierArticleNumber") = LOWER(:art)"""),
+                {"art": tecdoc_search},
+            ).scalar() or 0
+        except Exception:
+            # TecDoc table not available — return part data without enrichment
+            pass
 
     return {
         "part": part_data,
         "price": price_data,
         "info": info_data,
-        "images": [{"name": r[0], "description": r[1] or ""} for r in images],
-        "crosses": [{"article": r[0], "brand_name": r[1]} for r in crosses],
-        "oem": [{"number": r[0], "brand_name": r[1]} for r in oems],
+        "images": images,
+        "crosses": crosses,
+        "oem": oems,
         "applicability_count": app_count,
     }
 
