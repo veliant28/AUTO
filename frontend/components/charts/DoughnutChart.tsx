@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { useTheme } from '@wrksz/themes/client'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -28,6 +29,10 @@ export default function DoughnutChart({
   colors = DEFAULT_COLORS,
   height = 160,
 }: DoughnutChartProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  const textColor = isDark ? '#e5e7eb' : undefined
+
   const option = useMemo(
     () => ({
       tooltip: { trigger: 'item' as const },
@@ -37,9 +42,25 @@ export default function DoughnutChart({
           radius: ['40%', '80%'],
           center: ['50%', '50%'],
           avoidLabelOverlap: true,
-          itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-          label: { show: true, fontSize: 12, formatter: '{b}' },
-          emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' } },
+          itemStyle: {
+            borderRadius: 4,
+            borderColor: isDark ? '#1f2937' : '#fff',
+            borderWidth: 2,
+          },
+          label: {
+            show: true,
+            fontSize: 12,
+            formatter: '{b}',
+            color: textColor,
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 12,
+              fontWeight: 'bold',
+              color: textColor,
+            },
+          },
           data: labels.map((label, i) => ({
             name: label,
             value: values[i],
@@ -48,7 +69,7 @@ export default function DoughnutChart({
         },
       ],
     }),
-    [labels, values, colors],
+    [labels, values, colors, isDark, textColor],
   )
 
   if (values.every((v) => v === 0)) {

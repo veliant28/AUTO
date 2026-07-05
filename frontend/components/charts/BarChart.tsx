@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { useTheme } from '@wrksz/themes/client'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -20,6 +21,10 @@ export default function BarChart({
   name = '',
   height = 160,
 }: BarChartProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
+  const textColor = isDark ? '#e5e7eb' : '#666'
+
   const option = useMemo(
     () => ({
       tooltip: { trigger: 'axis' as const },
@@ -31,12 +36,16 @@ export default function BarChart({
           fontSize: 12,
           interval: 0,
           rotate: xData.length > 7 ? 45 : 0,
+          color: textColor,
         },
       },
       yAxis: {
         type: 'value' as const,
         minInterval: 1,
-        splitLine: { lineStyle: { type: 'dashed' } },
+        splitLine: {
+          lineStyle: { type: 'dashed', color: isDark ? '#374151' : '#e5e7eb' },
+        },
+        axisLabel: { fontSize: 11, color: textColor },
       },
       series: [
         {
@@ -48,7 +57,7 @@ export default function BarChart({
         },
       ],
     }),
-    [xData, yData, color, name],
+    [xData, yData, color, name, isDark, textColor],
   )
 
   return <ReactECharts option={option} style={{ height }} />
