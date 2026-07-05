@@ -35,6 +35,7 @@ export default function BarChart({
       },
       yAxis: {
         type: 'value' as const,
+        minInterval: 1,
         splitLine: { lineStyle: { type: 'dashed' } },
       },
       series: [
