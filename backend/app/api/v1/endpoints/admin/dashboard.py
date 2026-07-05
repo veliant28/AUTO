@@ -43,9 +43,9 @@ async def get_dashboard(
         Order.status != OrderStatus.CANCELLED,
     ).scalar() or 0
 
-    # ── Новые пользователи сегодня ──────────────────────────────────
+	    # ── Новые пользователи сегодня ──────────────────────────────────
     new_users_today = db.query(func.count(User.id)).filter(
-        User.created_at >= today_start,
+        User.created_at >= today_start.strftime('%Y-%m-%d %H:%M:%S'),
         User.is_active == True,
     ).scalar() or 0
 
