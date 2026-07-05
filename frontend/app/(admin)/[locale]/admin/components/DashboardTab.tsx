@@ -26,6 +26,19 @@ import KipTimer from '@/components/ui/KipTimer'
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
 
+function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  const digits = phone.replace(/\D/g, '')
+  let rest = digits
+  if (rest.startsWith('380')) rest = rest.slice(3)
+  else if (rest.startsWith('38')) rest = rest.slice(2)
+  if (rest.length < 8) return phone
+  if (rest.startsWith('0')) {
+    return `+38 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8)}`
+  }
+  return `+38 (0${rest.slice(0, 2)}) ${rest.slice(2, 5)}-${rest.slice(5, 7)}-${rest.slice(7)}`
+}
+
 const STATUS_COLORS_CHART = [
   '#f59e0b',
   '#374151',
@@ -295,6 +308,11 @@ export default function DashboardTab() {
                         <p className="text-xs text-muted-foreground truncate">
                           {order.full_name}
                         </p>
+                        {order.phone && (
+                          <p className="text-[10px] text-muted-foreground/60 font-mono">
+                            {formatPhone(order.phone)}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold">
