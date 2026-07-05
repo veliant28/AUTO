@@ -331,10 +331,8 @@ export default function StaffPage() {
                           >
                             {m.name}
                           </span>
-                          <Badge
-                            className={`${rc} border-0 text-[10px] px-1.5`}
-                          >
-                            {m.group}
+                          <Badge className={`${rc} border-0 text-sm`}>
+                            {t(m.group)}
                           </Badge>
                         </div>
                         {m.phone && (
