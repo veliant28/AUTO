@@ -81,7 +81,11 @@ export default function StaffPage() {
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
   const range = customRange || getDateRange(period)
 
-  const { data: stats, isLoading } = useQuery({
+  const {
+    data: stats,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: [
       'admin-staff-stats',
       period,
@@ -300,6 +304,10 @@ export default function StaffPage() {
                   />
                 ))}
               </div>
+            ) : isError ? (
+              <p className="text-sm text-red-500 pt-2">
+                Ошибка загрузки данных
+              </p>
             ) : !stats?.staff_list?.length ? (
               <p className="text-sm text-muted-foreground pt-2">Нет данных</p>
             ) : (
