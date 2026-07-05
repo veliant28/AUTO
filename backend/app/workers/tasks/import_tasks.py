@@ -173,7 +173,10 @@ def process_price_import(self, import_id: int):
             # Import is complete — set status and launch parallel tasks
             complete_import(pi, db)
             LOG("GPL: import complete — launching parallel tasks (margins, photos, matching)")
-            queue_post_import_tasks("GPL")
+            try:
+                queue_post_import_tasks("GPL")
+            except Exception as e:
+                LOG(f"GPL: post-import tasks failed (non-critical): {e}")
 
         elif pi.supplier.upper() == "UTR":
             LOG("UTR: requesting export...")
@@ -241,7 +244,10 @@ def process_price_import(self, import_id: int):
 
             complete_import(pi, db)
             LOG("UTR: import complete — launching parallel tasks (margins, matching)")
-            queue_post_import_tasks("UTR")
+            try:
+                queue_post_import_tasks("UTR")
+            except Exception as e:
+                LOG(f"UTR: post-import tasks failed (non-critical): {e}")
 
         LOG("process_price_import: success")
         return {"status": pi.status, "items": pi.total_items, "matched": pi.matched_items}
