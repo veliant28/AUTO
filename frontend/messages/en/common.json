@@ -348,7 +348,7 @@
     "access_denied_desc": "Admin access only",
     "go_home": "Go Home",
     "sync_catalog": "Sync Catalog",
-    "sync_started": "Sync started",
+    "sync_started": "Catalog sync started",
     "orders_count": "Orders",
     "users_count": "Users",
     "parts_count": "Parts",
@@ -1181,7 +1181,8 @@
     "dash_radar_avg_check": "Avg. check",
     "dash_radar_new_users": "New/day",
     "dash_radar_products": "Products",
-    "dash_pending_warning": "There are {count} unprocessed orders! Attention required."
+    "dash_pending_warning": "There are {count} unprocessed orders! Attention required.",
+    "sync_error": "Catalog sync error"
   },
   "catalog": {
     "title": "Catalog",
