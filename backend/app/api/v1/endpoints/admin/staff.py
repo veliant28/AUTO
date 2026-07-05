@@ -71,22 +71,22 @@ async def get_staff_stats(
     from_dt, to_dt = get_period_range(period, from_date, to_date)
 
     # Base filter
-    base_filter = "WHERE created_at >= :from_dt AND created_at <= :to_dt"
+    base_filter = "WHERE ocl.created_at >= :from_dt AND ocl.created_at <= :to_dt"
     params = {"from_dt": from_dt, "to_dt": to_dt}
     staff_filter = ""
     staff_params = {}
     if staff_id:
-        staff_filter = " AND user_id = :staff_id"
+        staff_filter = " AND ocl.user_id = :staff_id"
         staff_params = {"staff_id": staff_id}
 
     # Total actions
     total_actions = db.execute(text(f"""
-        SELECT COUNT(*) FROM order_change_logs {base_filter}{staff_filter}
+        SELECT COUNT(*) FROM order_change_logs ocl {base_filter}{staff_filter}
     """), {**params, **staff_params}).scalar() or 0
 
     # Total orders touched
     total_orders = db.execute(text(f"""
-        SELECT COUNT(DISTINCT order_id) FROM order_change_logs {base_filter}{staff_filter}
+        SELECT COUNT(DISTINCT ocl.order_id) FROM order_change_logs ocl {base_filter}{staff_filter}
     """), {**params, **staff_params}).scalar() or 0
 
     # Staff list aggregated
@@ -123,10 +123,10 @@ async def get_staff_stats(
 
     # Actions by date
     date_rows = db.execute(text(f"""
-        SELECT DATE(created_at) as date, COUNT(*) as count
-        FROM order_change_logs
+        SELECT DATE(ocl.created_at) as date, COUNT(*) as count
+        FROM order_change_logs ocl
         {base_filter}{staff_filter}
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(ocl.created_at)
         ORDER BY date ASC
     """), {**params, **staff_params}).fetchall()
 
@@ -134,10 +134,10 @@ async def get_staff_stats(
 
     # Actions by type
     type_rows = db.execute(text(f"""
-        SELECT action, COUNT(*) as count
-        FROM order_change_logs
+        SELECT ocl.action, COUNT(*) as count
+        FROM order_change_logs ocl
         {base_filter}{staff_filter}
-        GROUP BY action
+        GROUP BY ocl.action
         ORDER BY count DESC
     """), {**params, **staff_params}).fetchall()
 
