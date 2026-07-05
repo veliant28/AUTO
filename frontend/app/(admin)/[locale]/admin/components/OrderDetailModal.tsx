@@ -1,51 +1,185 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  X,
-  Clock,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
+import {
+  Eye,
+  Search,
+  Pencil,
   History,
+  X,
+  Plus,
+  Minus,
+  ArrowLeft,
+  Loader2,
   Package,
+  CreditCard,
+  Clock,
+  Trash2,
+  Save,
+  Building2,
+  Container,
   Truck,
-  AlertCircle,
-  CheckCircle2,
+  MapPin,
+  User,
+  ScrollText,
+  FilePlus,
+  Printer,
+  RefreshCw,
+  AlertTriangle,
+  ScanBarcode,
+  Warehouse,
+  Gift,
+  Check,
+  FileText,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip'
+import { Separator } from '@/components/ui/separator'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { toast } from '@/lib/toast'
+import api from '@/lib/api'
+import { novaPoshtaApi } from '@/lib/api/nova-poshta'
+import {
+  getReceipt as getCheckboxReceipt,
+  getReceiptLink as getCheckboxReceiptLink,
+} from '@/lib/api/checkbox'
+import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
+import { broadcastStatusChange } from '@/lib/orderSync'
+import { getBrandColor, getBrandInitial } from '@/lib/brand'
+import { PhoneInput } from '@/components/ui/PhoneInput'
+import { SearchableSelect } from '@/components/ui/SearchableSelect'
+import PaymentBlock from './PaymentBlock'
+import PaymentBadge from './PaymentBadge'
+import { paymentBadgeClass, paymentMethodLabel } from './PaymentHelpers'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
 
+interface AdminOrderItemDetail {
+  id: number
+  part_id: number
+  article: string
+  part_name: string
+  brand: string | null
+  quantity: number
+  price: number
+  sku: string | null
+  image_url: string | null
+}
+
+interface AdminOrderDetail {
+  id: number
+  order_number: string
+  user_id: number
+  status: string
+  total: number
+  full_name: string
+  phone: string | null
+  address: string | null
+  last_name: string | null
+  first_name: string | null
+  middle_name: string | null
+  delivery_type: string | null
+  delivery_city: string | null
+  delivery_warehouse: string | null
+  delivery_city_ref: string | null
+  delivery_settlement_ref: string | null
+  delivery_city_label: string | null
+  delivery_warehouse_ref: string | null
+  delivery_warehouse_label: string | null
+  delivery_street_ref: string | null
+  delivery_street_label: string | null
+  delivery_house: string | null
+  delivery_apartment: string | null
+  promocode_code: string | null
+  discount_amount: number
+  original_total: number | null
+  payment_method: string | null
+  created_at: string
+  updated_by_name: string | null
+  updated_by_group: string | null
+  updated_at: string | null
+  items: AdminOrderItemDetail[]
+}
+
+interface UnifiedEvent {
+  id: number
+  type: 'order' | 'waybill'
+  event_type: string
+  user_name: string | null
+  user_group: string | null
+  details: string | null
+  np_number: string | null
+  created_at: string
+}
+
+const statusKeys = Object.keys(ORDER_STATUS_LABELS)
+const LOCALE_MAP: Record<string, string> = {
+  ru: 'ru-RU',
+  ua: 'uk-UA',
+  en: 'en-US',
+}
+
 function formatPhone(phone: string | null | undefined): string {
-  if (!phone) return ''
+  if (!phone) return '—'
   const digits = phone.replace(/\D/g, '')
-  let rest = digits
-  if (rest.startsWith('380')) rest = rest.slice(3)
-  else if (rest.startsWith('38')) rest = rest.slice(2)
-  if (rest.length < 8) return phone
-  if (rest.startsWith('0')) {
-    return `+38 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6, 8)}-${rest.slice(8)}`
-  }
-  return `+38 (0${rest.slice(0, 2)}) ${rest.slice(2, 5)}-${rest.slice(5, 7)}-${rest.slice(7)}`
+  if (digits.length < 10) return phone
+  const d = digits.slice(-10)
+  return `+38 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
+}
+
+function formatPhonesInText(text: string): string {
+  return text.replace(/(\+\d{10,13})/g, (m) => formatPhone(m))
+}
+
+const ROLE_BADGE_COLORS: Record<string, string> = {
+  admin: 'bg-red-500 text-white',
+  manager: 'bg-blue-500 text-white',
+  operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
+}
+
+interface OrderDetailModalProps {
+  orderId: number | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 function formatDate(dateStr: string): string {
   try {
     const d = new Date(dateStr + 'Z')
-    return d.toLocaleString('uk-UA', {
+    return d.toLocaleString(LOCALE_MAP.ru, {
       day: 'numeric',
-      month: 'short',
+      month: 'long',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -55,348 +189,799 @@ function formatDate(dateStr: string): string {
   }
 }
 
-const ROLE_BADGE: Record<string, string> = {
-  admin: 'bg-red-500 text-white',
-  manager: 'bg-blue-500 text-white',
-  operator: 'bg-orange-500 text-white',
-  b2b: 'bg-green-500 text-white',
-  retail: 'bg-gray-500 text-white',
-}
-
-const EVENT_ICONS: Record<string, any> = {
-  status_change: Clock,
-  item_added: Package,
-  item_removed: X,
-  create: CheckCircle2,
-  update: Clock,
-  delete: X,
-  print: Package,
-  sync: Truck,
-  error: AlertCircle,
-}
-
-const DELIVERY_LABELS: Record<string, string> = {
-  warehouse: 'Отделение НП',
-  courier: 'Курьер',
-  pickup: 'Самовывоз',
-}
-
-interface OrderDetailModalProps {
-  orderId: number | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-export default function OrderDetailModal({
-  orderId,
-  open,
-  onOpenChange,
-}: OrderDetailModalProps) {
+export default function OrderDetailModal({ orderId, open, onOpenChange }: OrderDetailModalProps) {
   const t = useTranslations('admin')
-  const [showHistory, setShowHistory] = useState(false)
+  const queryClient = useQueryClient()
 
-  const { data: order, isLoading } = useQuery({
+  const [editMode, setEditMode] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [editQuantities, setEditQuantities] = useState<Record<number, number>>({})
+  const [editRecipient, setEditRecipient] = useState<Record<string, string>>({})
+
+  const deliveryCityRef = editRecipient.delivery_city_ref || ''
+  const deliveryType = editRecipient.delivery_type || ''
+  const settlementRef = editRecipient.delivery_settlement_ref || ''
+
+  const [cityQuery, setCityQuery] = useState('')
+  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
+    queryKey: ['admin-order-np-cities', cityQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchSettlements({ query: cityQuery })
+        .then((r) => r.data as any[]),
+    enabled: cityQuery.length >= 2,
+    staleTime: 30000,
+  })
+
+  const [warehouseQuery, setWarehouseQuery] = useState('')
+  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
+    queryKey: ['admin-order-np-warehouses', deliveryCityRef, warehouseQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchWarehouses({ city_ref: deliveryCityRef, query: warehouseQuery })
+        .then((r) => r.data as any[]),
+    enabled: !!deliveryCityRef && warehouseQuery.length >= 1,
+    staleTime: 30000,
+  })
+
+  const [streetQuery, setStreetQuery] = useState('')
+  const { data: streets = [], isFetching: streetsLoading } = useQuery({
+    queryKey: ['admin-order-np-streets', settlementRef, streetQuery],
+    queryFn: () =>
+      novaPoshtaApi
+        .searchStreets({ settlement_ref: settlementRef, query: streetQuery })
+        .then((r) => r.data as any[]),
+    enabled: !!settlementRef && streetQuery.length >= 2,
+    staleTime: 30000,
+  })
+
+  const [promoInput, setPromoInput] = useState('')
+
+  const { data: orderDetail, isLoading: detailLoading, refetch: refetchOrderDetail } = useQuery({
     queryKey: ['admin-order-detail', orderId],
     queryFn: async () => {
       const { data } = await api.get(`/admin/orders/${orderId}`)
-      return data
+      return data as AdminOrderDetail
     },
     enabled: !!orderId && open,
     refetchInterval: 10000,
   })
 
-  const { data: events } = useQuery({
+  const { data: allEvents } = useQuery({
     queryKey: ['admin-order-all-events', orderId],
     queryFn: async () => {
       const { data } = await api.get(`/admin/orders/${orderId}/all-events`)
-      return data as any[]
+      return data as UnifiedEvent[]
     },
     enabled: !!orderId && open && showHistory,
+    refetchInterval: 10000,
   })
+
+  const editTotal = useMemo(() => {
+    if (!orderDetail) return 0
+    return orderDetail.items.reduce((sum, item) => {
+      const qty = editQuantities[item.id] ?? item.quantity
+      return sum + qty * item.price
+    }, 0)
+  }, [orderDetail, editQuantities])
+
+  useEffect(() => {
+    if (orderDetail) {
+      setEditRecipient({
+        phone: orderDetail.phone || '',
+        last_name: orderDetail.last_name || '',
+        first_name: orderDetail.first_name || '',
+        middle_name: orderDetail.middle_name || '',
+        delivery_type: orderDetail.delivery_type || '',
+        delivery_city: orderDetail.delivery_city || '',
+        delivery_warehouse: orderDetail.delivery_warehouse || '',
+        delivery_city_ref: orderDetail.delivery_city_ref || '',
+        delivery_settlement_ref: orderDetail.delivery_settlement_ref || '',
+        delivery_city_label: orderDetail.delivery_city_label || '',
+        delivery_warehouse_ref: orderDetail.delivery_warehouse_ref || '',
+        delivery_warehouse_label: orderDetail.delivery_warehouse_label || '',
+        delivery_street_ref: orderDetail.delivery_street_ref || '',
+        delivery_street_label: orderDetail.delivery_street_label || '',
+        delivery_house: orderDetail.delivery_house || '',
+        delivery_apartment: orderDetail.delivery_apartment || '',
+      })
+      if (orderDetail.delivery_city) setCityQuery(orderDetail.delivery_city)
+      if (orderDetail.delivery_warehouse) setWarehouseQuery(orderDetail.delivery_warehouse)
+      if (orderDetail.delivery_street_label) setStreetQuery(orderDetail.delivery_street_label)
+    }
+  }, [orderDetail])
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ orderId: oid, status }: { orderId: number; status: string }) => {
+      await api.put(`/admin/orders/${oid}/status`, { status })
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-order-all-events', orderId] })
+      broadcastStatusChange(variables.orderId, variables.status)
+      refetchOrderDetail()
+      toast.success(t('status_updated'))
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await api.put(`/admin/orders/${orderId}`, data)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-order-all-events', orderId] })
+      setEditMode(false)
+      refetchOrderDetail()
+      toast.success(t('order_updated'))
+    },
+  })
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      const { data } = await api.delete(`/admin/orders/${orderId}/items/${itemId}`)
+      return data as AdminOrderDetail
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['admin-order-detail', orderId], data)
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-order-all-events', orderId] })
+      toast.success(t('order_updated'))
+    },
+    onError: () => toast.error(t('error')),
+  })
+
+  const removePromocodeMutation = useMutation({
+    mutationFn: async () => {
+      const newTotal = orderDetail?.original_total || orderDetail?.total || 0
+      await api.put(`/admin/orders/${orderId}`, {
+        promocode_code: null,
+        discount_amount: 0,
+        original_total: null,
+        total: newTotal,
+      })
+    },
+    onSuccess: () => {
+      toast.success(t('order_updated'))
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] })
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+    },
+    onError: () => toast.error(t('error')),
+  })
+
+  const applyPromo = useMutation({
+    mutationFn: async (code: string) => {
+      const { data } = await api.post('/loyalty/validate', {
+        code,
+        order_total: editMode ? editTotal : orderDetail?.total || 0,
+        items: orderDetail?.items.map((i) => ({ part_id: i.part_id, quantity: editQuantities[i.id] ?? i.quantity, price: i.price })),
+      })
+      return data
+    },
+    onSuccess: (resp) => {
+      if (!resp.success) {
+        toast.error(t('promo_' + (resp.message || 'error')))
+        return
+      }
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] })
+      updateMutation.mutate({
+        promocode_code: resp.code,
+        discount_amount: resp.discount_amount,
+        original_total: resp.original_total,
+        total: resp.total,
+      })
+    },
+    onError: () => toast.error(t('promo_error')),
+  })
+
+  const enterEditMode = () => {
+    if (!orderDetail) return
+    setEditMode(true)
+    const q: Record<number, number> = {}
+    orderDetail.items.forEach((item) => { q[item.id] = item.quantity })
+    setEditQuantities(q)
+    toast.info(t('edit_enabled'))
+  }
+
+  const handleSave = () => {
+    const changes: any = {}
+    const itemsChanged = orderDetail?.items.some(
+      (item) => editQuantities[item.id] !== item.quantity,
+    )
+    if (itemsChanged) {
+      changes.items = Object.entries(editQuantities).map(([id, qty]) => ({
+        id: Number(id),
+        quantity: qty,
+      }))
+    }
+    const recipientChanged =
+      orderDetail &&
+      (editRecipient.phone !== (orderDetail.phone || '') ||
+        editRecipient.last_name !== (orderDetail.last_name || '') ||
+        editRecipient.first_name !== (orderDetail.first_name || '') ||
+        editRecipient.middle_name !== (orderDetail.middle_name || '') ||
+        editRecipient.delivery_type !== (orderDetail.delivery_type || '') ||
+        editRecipient.delivery_city !== (orderDetail.delivery_city || '') ||
+        editRecipient.delivery_warehouse !== (orderDetail.delivery_warehouse || '') ||
+        editRecipient.delivery_city_ref !== (orderDetail.delivery_city_ref || '') ||
+        editRecipient.delivery_settlement_ref !== (orderDetail.delivery_settlement_ref || '') ||
+        editRecipient.delivery_city_label !== (orderDetail.delivery_city_label || '') ||
+        editRecipient.delivery_warehouse_ref !== (orderDetail.delivery_warehouse_ref || '') ||
+        editRecipient.delivery_warehouse_label !== (orderDetail.delivery_warehouse_label || '') ||
+        editRecipient.delivery_street_ref !== (orderDetail.delivery_street_ref || '') ||
+        editRecipient.delivery_street_label !== (orderDetail.delivery_street_label || '') ||
+        editRecipient.delivery_house !== (orderDetail.delivery_house || '') ||
+        editRecipient.delivery_apartment !== (orderDetail.delivery_apartment || ''))
+    if (recipientChanged) {
+      Object.assign(changes, editRecipient)
+    }
+    if (Object.keys(changes).length === 0) {
+      setEditMode(false)
+      return
+    }
+    updateMutation.mutate(changes)
+  }
+
+  const localeKey = LOCALE_MAP.ru
 
   if (!orderId) return null
 
-  const statusInfo = ORDER_STATUS_LABELS[order?.status || '']
-  const statusClass = statusInfo?.className || 'bg-gray-500 text-white'
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        onOpenChange(o)
-        if (!o) setShowHistory(false)
-      }}
-    >
-      <DialogContent className="w-[95vw] max-w-[1400px] h-[85vh] flex flex-col !gap-0 !p-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{order?.order_number || 'Заказ'}</DialogTitle>
-        </DialogHeader>
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b shrink-0">
-          <div className="flex items-center gap-3">
-            {isLoading ? (
-              <div className="h-6 w-40 bg-muted animate-pulse rounded" />
-            ) : (
-              <>
-                <h2 className="text-lg font-bold font-mono">
-                  {order?.order_number}
-                </h2>
-                <Badge className={`${statusClass} border-0 text-sm`}>
-                  {t('order_' + order?.status)}
-                </Badge>
-                {order?.created_at && (
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(order.created_at)}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              <History className="w-4 h-4 mr-1.5" />
-              {showHistory ? t('back') : t('order_history')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-auto p-4">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-muted animate-pulse rounded" />
-              ))}
+    <TooltipProvider>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            onOpenChange(false)
+            setEditMode(false)
+            setShowHistory(false)
+          }
+        }}
+      >
+        <DialogContent
+          className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0"
+          aria-describedby={undefined}
+        >
+          {detailLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : showHistory ? (
-            /* ── History timeline ── */
-            <div className="space-y-3">
-              {!events || events.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Нет событий</p>
-              ) : (
-                events.map((ev: any) => {
-                  const Icon = EVENT_ICONS[ev.event_type] || Clock
-                  return (
-                    <div
-                      key={`${ev.type}-${ev.id}`}
-                      className="flex gap-3 items-start"
-                    >
-                      <div className="mt-0.5">
-                        <Icon className="w-4 h-4 text-muted-foreground" />
+          ) : !orderDetail ? null : (
+            <>
+              <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
+                {showHistory ? (
+                  <div className="flex items-center gap-3">
+                    <DialogTitle className="text-2xl font-bold tracking-tight">
+                      {orderDetail.order_number}
+                    </DialogTitle>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <DialogTitle className="text-2xl font-bold tracking-tight">
+                          {orderDetail.order_number}
+                        </DialogTitle>
+                        <Badge className={`${ORDER_STATUS_LABELS[orderDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}>
+                          {t('order_' + orderDetail.status)}
+                        </Badge>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {ev.user_name && (
-                            <Badge
-                              className={`${ROLE_BADGE[ev.user_group] || 'bg-gray-500 text-white'} border-0 text-[10px]`}
-                            >
-                              {ev.user_name}
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(orderDetail.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={orderDetail.status}
+                        onValueChange={(val) =>
+                          statusMutation.mutate({ orderId: orderDetail.id, status: val })
+                        }
+                      >
+                        <SelectTrigger className="w-[140px] h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusKeys.map((s) => (
+                            <SelectItem key={s} value={s}>{t('order_' + s)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {orderDetail.updated_by_name && (
+                        <div className="flex flex-col items-end gap-0.5">
+                          {orderDetail.updated_by_group && (
+                            <Badge className={`${ROLE_BADGE_COLORS[orderDetail.updated_by_group] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}>
+                              {t(orderDetail.updated_by_group)}
                             </Badge>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(ev.created_at)}
-                          </span>
+                          <span className="text-sm font-medium">{orderDetail.updated_by_name}</span>
                         </div>
-                        <p className="text-sm mt-0.5">
-                          {ev.details || ev.event_type}
-                        </p>
-                        {ev.np_number && (
-                          <p className="text-xs text-muted-foreground font-mono">
-                            ТТН: {ev.np_number}
-                          </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </DialogHeader>
+
+              <Separator className="flex-shrink-0" />
+
+              <div className={`flex-1 ${showHistory ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} p-6`}>
+                {showHistory ? (
+                  <div className="relative pl-12 space-y-0">
+                    <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
+                    {!allEvents || allEvents.length === 0 ? (
+                      <p className="text-muted-foreground py-8 text-center">—</p>
+                    ) : (
+                      allEvents.map((ev, idx) => {
+                        const isWaybill = ev.type === 'waybill'
+                        let dotColor = 'bg-blue-500'
+                        if (isWaybill) {
+                          if (ev.event_type === 'create') dotColor = 'bg-green-500'
+                          else if (ev.event_type === 'delete') dotColor = 'bg-red-500'
+                          else if (ev.event_type === 'print') dotColor = 'bg-orange-500'
+                          else if (ev.event_type === 'error') dotColor = 'bg-yellow-500'
+                          else if (ev.event_type === 'sync') dotColor = 'bg-purple-500'
+                          else dotColor = 'bg-blue-500'
+                        } else {
+                          dotColor = idx === 0 ? 'bg-green-500' : 'bg-blue-500'
+                        }
+                        let IconComponent = Clock
+                        if (isWaybill) {
+                          if (ev.event_type === 'create') IconComponent = FilePlus
+                          else if (ev.event_type === 'delete') IconComponent = Trash2
+                          else if (ev.event_type === 'print') IconComponent = Printer
+                          else if (ev.event_type === 'error') IconComponent = AlertTriangle
+                          else if (ev.event_type === 'sync') IconComponent = RefreshCw
+                          else if (ev.event_type === 'update') IconComponent = Pencil
+                        }
+                        return (
+                          <div key={`${ev.type}-${ev.id}`} className="relative pb-6">
+                            <div className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`} />
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {ev.user_group && (
+                                <Badge className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}>
+                                  {t(ev.user_group)}
+                                </Badge>
+                              )}
+                              <span className="font-medium">{ev.user_name || t('system_actor')}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(ev.created_at + 'Z').toLocaleString(localeKey, {
+                                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground pl-1">
+                              {!isWaybill && ev.event_type === 'status_change' ? (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4 inline" />
+                                  {(() => {
+                                    const m = ev.details?.match(/статус:\s*(\w+)\s*→\s*(\w+)/)
+                                    if (m) return <span>{t('status_changed')}: {t('order_' + m[1])} → {t('order_' + m[2])}</span>
+                                    return ev.details
+                                  })()}
+                                </span>
+                              ) : isWaybill ? (
+                                <span className="flex items-center gap-2">
+                                  <IconComponent className="w-4 h-4 inline shrink-0" />
+                                  <span>{t('waybill_' + ev.event_type)}</span>
+                                  {ev.np_number && (
+                                    <Badge className={`border-0 text-sm font-mono gap-1.5 ${ev.event_type === 'delete' ? 'bg-red-500 text-white line-through' : ev.event_type === 'create' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}>
+                                      <ScanBarcode className="w-3.5 h-3.5" />
+                                      {ev.np_number}
+                                    </Badge>
+                                  )}
+                                </span>
+                              ) : (
+                                formatPhonesInText(ev.details || ev.event_type).replace(
+                                  /\b(warehouse|parcel_locker|courier)\b/g, (m: string) => t(m),
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-[2fr_1fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
+                    <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                      <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                        <Package className="w-5 h-5" /> {t('order_items')}
+                      </h4>
+                      <div className="space-y-3 flex-1 overflow-y-auto pr-1 mt-3">
+                        {orderDetail.items.map((item) => {
+                          const qty = editQuantities[item.id] ?? item.quantity
+                          const itemTotal = qty * item.price
+                          return (
+                            <div key={item.id} className="flex gap-3 p-3 rounded-lg border bg-card transition-colors">
+                              <div className={`w-[80px] h-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center ${item.image_url ? '' : `bg-gradient-to-br ${getBrandColor(item.brand)}`}`}>
+                                {item.image_url ? (
+                                  <img src={item.image_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-3xl font-bold text-white/40 select-none">{getBrandInitial(item.brand)}</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                      {item.brand && <Badge variant="secondary" className="text-sm px-1.5">{item.brand}</Badge>}
+                                      <span className="text-sm font-mono text-muted-foreground">{item.article}</span>
+                                    </div>
+                                    <p className="text-sm font-medium line-clamp-2">{item.part_name}</p>
+                                  </div>
+                                  <div className="flex items-center shrink-0 gap-2">
+                                    {item.sku && <Badge className="bg-blue-500 text-white border-0 text-sm">{item.sku}</Badge>}
+                                    {editMode && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button variant="destructive" size="icon" className="shrink-0"
+                                            onClick={() => deleteItemMutation.mutate(item.id)}
+                                            disabled={deleteItemMutation.isPending}>
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">{t('delete')}</TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-1">
+                                  {editMode ? (
+                                    <div className="flex items-center gap-1">
+                                      <Button variant="outline" size="icon" className="h-7 w-7 rounded-full"
+                                        onClick={() => setEditQuantities((prev) => ({ ...prev, [item.id]: Math.max(1, (prev[item.id] || item.quantity) - 1) }))}
+                                        disabled={(editQuantities[item.id] ?? item.quantity) <= 1}>
+                                        <Minus className="w-4 h-4" />
+                                      </Button>
+                                      <span className="w-8 text-center font-medium tabular-nums">{qty}</span>
+                                      <Button variant="outline" size="icon" className="h-7 w-7 rounded-full"
+                                        onClick={() => setEditQuantities((prev) => ({ ...prev, [item.id]: (prev[item.id] || item.quantity) + 1 }))}>
+                                        <Plus className="w-4 h-4" />
+                                      </Button>
+                                      <span className="text-sm text-muted-foreground ml-1">× {fmt(item.price)} ₴</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">{item.quantity} &times; {fmt(item.price)} ₴</span>
+                                  )}
+                                  <span className="font-semibold text-base">{fmt(itemTotal)} ₴</span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4 flex flex-col h-full">
+                      <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                        <User className="w-5 h-5" /> {t('recipient_data')}
+                      </h4>
+                      <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
+                        <div className="grid gap-1">
+                          <span className="text-muted-foreground text-sm">{t('phone_label')}</span>
+                          {editMode ? (
+                            <PhoneInput value={editRecipient.phone} onChange={(v) => setEditRecipient((p) => ({ ...p, phone: v }))}
+                              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                          ) : (
+                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                              <span className={orderDetail.phone ? 'truncate' : 'truncate text-muted-foreground'}>{formatPhone(orderDetail.phone) || '—'}</span>
+                            </div>
+                          )}
+                        </div>
+                        {['last_name', 'first_name', 'middle_name'].map((field) => (
+                          <div key={field} className="grid gap-1">
+                            <span className="text-muted-foreground text-sm">{t(field)}</span>
+                            {editMode ? (
+                              <Input className="h-10 w-full text-sm" value={editRecipient[field] || ''} maxLength={100}
+                                onChange={(e) => setEditRecipient((p) => ({ ...p, [field]: e.target.value }))} />
+                            ) : (
+                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                <span className={(orderDetail as any)[field] ? 'truncate' : 'truncate text-muted-foreground'}>{(orderDetail as any)[field] || '—'}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <Separator />
+                        <h5 className="font-semibold text-sm flex items-center gap-2"><MapPin className="w-4 h-4" /> {t('delivery_info')}</h5>
+                        <RadioGroup value={editRecipient.delivery_type || ''}
+                          onValueChange={(v) => setEditRecipient((p) => ({
+                            ...p, delivery_type: v,
+                            delivery_warehouse: '', delivery_warehouse_ref: '', delivery_warehouse_label: '',
+                            delivery_street_ref: '', delivery_street_label: '', delivery_house: '', delivery_apartment: '',
+                          }))}
+                          disabled={!editMode} className="grid grid-cols-3 gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer opacity-50">
+                                <RadioGroupItem value="pickup" id="dpickup" className="cursor-pointer" disabled />
+                                <Label htmlFor="dpickup" className="cursor-pointer"><Package className="w-5 h-5" /></Label>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('pickup')}</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
+                                <RadioGroupItem value="warehouse" id="dw" className="cursor-pointer" />
+                                <Label htmlFor="dw" className="cursor-pointer"><Building2 className="w-5 h-5" /></Label>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('warehouse')}</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
+                                <RadioGroupItem value="courier" id="dc" className="cursor-pointer" />
+                                <Label htmlFor="dc" className="cursor-pointer"><Truck className="w-5 h-5" /></Label>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('courier')}</TooltipContent>
+                          </Tooltip>
+                        </RadioGroup>
+                        <div className="grid gap-1">
+                          <span className="text-muted-foreground text-sm">{t('city')}</span>
+                          {editMode ? (
+                            <SearchableSelect<any>
+                              items={settlements} isLoading={citiesLoading}
+                              value={editRecipient.delivery_city || ''}
+                              onChange={(item) => setEditRecipient((p) => ({
+                                ...p, delivery_city: item.label, delivery_city_ref: item.delivery_city_ref || item.ref,
+                                delivery_settlement_ref: item.settlement_ref || '', delivery_city_label: item.label,
+                                delivery_warehouse: '', delivery_warehouse_ref: '', delivery_warehouse_label: '',
+                                delivery_street_ref: '', delivery_street_label: '', delivery_house: '', delivery_apartment: '',
+                              }))}
+                              searchQuery={cityQuery} onSearchChange={setCityQuery}
+                              getKey={(item: any) => item.ref} getLabel={(item: any) => item.label}
+                              renderItem={(item: any) => (
+                                <><div className="font-medium leading-tight">{item.label}</div>
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {[item.area, item.region].filter(Boolean).join(' — ')}
+                                    {item.warehouses_count && item.warehouses_count !== '0' ? <span className="ml-2 inline-flex items-center gap-1"><Warehouse className="w-3 h-3" />×{item.warehouses_count}</span> : null}
+                                  </div></>
+                              )}
+                              placeholder={t('city')} minSearchLength={2}
+                              noResultsMessage={t('novaposhta_no_results')} typeToSearchMessage={t('novaposhta_type_to_search')} hideSearchIcon />
+                          ) : (
+                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                              <span className={orderDetail.delivery_city ? 'truncate' : 'truncate text-muted-foreground'}>{orderDetail.delivery_city || '—'}</span>
+                            </div>
+                          )}
+                        </div>
+                        {deliveryType === 'warehouse' && (
+                          <div className="grid gap-1">
+                            <span className="text-muted-foreground text-sm">{t('warehouse')}</span>
+                            {editMode ? (
+                              <SearchableSelect<any>
+                                items={warehouses} isLoading={warehousesLoading}
+                                value={editRecipient.delivery_warehouse || ''}
+                                onChange={(item) => setEditRecipient((p) => ({ ...p, delivery_warehouse: item.label, delivery_warehouse_ref: item.ref, delivery_warehouse_label: item.label }))}
+                                searchQuery={warehouseQuery} onSearchChange={setWarehouseQuery}
+                                getKey={(item: any) => item.ref} getLabel={(item: any) => item.label}
+                                renderItem={(item: any) => {
+                                  const isPostomat = item.type === 'Postomat'
+                                  return (
+                                    <div className="font-medium leading-tight flex items-center gap-2">
+                                      {isPostomat ? (
+                                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">{t('novaposhta_postomat')}</span>
+                                      ) : (
+                                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">№{item.number}</span>
+                                      )}
+                                      <span className="truncate">{item.label.includes(':') ? item.label.slice(0, item.label.indexOf(':')) : item.label}</span>
+                                    </div>
+                                  )
+                                }}
+                                placeholder={t('warehouse')} minSearchLength={1}
+                                noResultsMessage={t('novaposhta_no_results')} typeToSearchMessage={t('novaposhta_type_to_search')} hideSearchIcon />
+                            ) : (
+                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                <span className={orderDetail.delivery_warehouse ? 'truncate' : 'truncate text-muted-foreground'}>{orderDetail.delivery_warehouse || '—'}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {deliveryType === 'courier' && (
+                          <>
+                            <div className="grid gap-1">
+                              <span className="text-muted-foreground text-sm">{t('street')}</span>
+                              {editMode ? (
+                                <SearchableSelect<any>
+                                  items={streets} isLoading={streetsLoading}
+                                  value={editRecipient.delivery_street_label || ''}
+                                  onChange={(item) => setEditRecipient((p) => ({ ...p, delivery_street_ref: item.street_ref, delivery_street_label: item.label }))}
+                                  searchQuery={streetQuery} onSearchChange={setStreetQuery}
+                                  getKey={(item: any) => item.street_ref} getLabel={(item: any) => item.label}
+                                  renderItem={(item: any) => (
+                                    <div className="font-medium leading-tight">
+                                      {item.street_type && item.label && !item.label.startsWith(item.street_type) ? `${item.street_type}. ${item.label}` : item.label}
+                                    </div>
+                                  )}
+                                  placeholder={t('street')} minSearchLength={2}
+                                  noResultsMessage={t('novaposhta_no_results')} typeToSearchMessage={t('novaposhta_type_to_search')} hideSearchIcon />
+                              ) : (
+                                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                  <span className={orderDetail.delivery_street_label ? 'truncate' : 'truncate text-muted-foreground'}>{orderDetail.delivery_street_label || '—'}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="grid gap-1">
+                                <span className="text-muted-foreground text-sm">{t('house')}</span>
+                                {editMode ? (
+                                  <Input className="h-10 w-full text-sm" value={editRecipient.delivery_house || ''} maxLength={20}
+                                    onChange={(e) => setEditRecipient((p) => ({ ...p, delivery_house: e.target.value }))} />
+                                ) : (
+                                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">{orderDetail.delivery_house || '—'}</div>
+                                )}
+                              </div>
+                              <div className="grid gap-1">
+                                <span className="text-muted-foreground text-sm">{t('apartment')}</span>
+                                {editMode ? (
+                                  <Input className="h-10 w-full text-sm" value={editRecipient.delivery_apartment || ''} maxLength={20}
+                                    onChange={(e) => setEditRecipient((p) => ({ ...p, delivery_apartment: e.target.value }))} />
+                                ) : (
+                                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">{orderDetail.delivery_apartment || '—'}</div>
+                                )}
+                              </div>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
-                  )
-                })
-              )}
-            </div>
-          ) : (
-            /* ── View mode: 2 columns ── */
-            <div className="grid grid-cols-[2fr_1fr] gap-6 h-full">
-              {/* Left: Items */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3">
-                  {t('order_items')}
-                </h3>
-                {order?.items?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Нет товаров</p>
-                ) : (
-                  <div className="space-y-2">
-                    {order?.items?.map((item: any) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg border text-sm"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            {item.brand && (
-                              <Badge
-                                variant="secondary"
-                                className="text-[10px] px-1"
-                              >
-                                {item.brand}
-                              </Badge>
-                            )}
-                            <span className="font-mono text-xs text-muted-foreground">
-                              {item.article}
-                            </span>
-                            {item.sku && (
-                              <Badge className="bg-blue-500 text-white border-0 text-[10px]">
-                                {item.sku}
-                              </Badge>
-                            )}
+
+                    <div className="border rounded-lg p-4 flex flex-col h-full">
+                      <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0"><ScrollText className="w-5 h-5" /> {t('order_summary')}</h4>
+                      <div className="mt-3">
+                        <div className="grid gap-1 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t('total_items')}</span>
+                            <span>{orderDetail.items.length} шт.</span>
                           </div>
-                          <p className="text-xs truncate mt-0.5">
-                            {item.part_name}
-                          </p>
+                          {orderDetail.discount_amount > 0 && (
+                            <div className="flex justify-between text-green-600 text-sm">
+                              <span>{t('discount_label')}</span>
+                              <span className="font-semibold">-{fmt(orderDetail.discount_amount)} ₴</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">{t('order_total')}:</span>
+                            <span className="font-bold text-lg">{fmt(editMode ? editTotal : orderDetail.total)} ₴</span>
+                          </div>
                         </div>
-                        <div className="text-right shrink-0 ml-3">
-                          <p className="font-medium">
-                            {item.quantity} × {fmt(item.price)} ₴
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            = {fmt(item.quantity * item.price)} ₴
-                          </p>
+                        <Separator className="my-3" />
+                        <div className="flex flex-col gap-2">
+                          <h4 className="font-semibold text-lg flex items-center gap-2"><Gift className="w-5 h-5" /> {t('promocode')}</h4>
+                          {editMode && !orderDetail.promocode_code ? (
+                            <div className="flex gap-2">
+                              <Input placeholder={t('promocode_placeholder')} value={promoInput} maxLength={10}
+                                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                                className="h-10 text-sm uppercase flex-1" />
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="icon" className="h-10 w-10 shrink-0"
+                                    disabled={promoInput.length < 10}
+                                    onClick={() => applyPromo.mutate(promoInput)}>
+                                    <Gift className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('apply')}</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm gap-2">
+                                <Check className="w-4 h-4 text-green-600 shrink-0" />
+                                <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">{orderDetail.promocode_code || '—'}</span>
+                                {orderDetail.discount_amount > 0 && (
+                                  <span className="text-xs text-green-600 ml-auto">-{fmt(orderDetail.discount_amount)} ₴</span>
+                                )}
+                              </div>
+                              {editMode && orderDetail.promocode_code ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0"
+                                      onClick={() => removePromocodeMutation.mutate()}
+                                      disabled={removePromocodeMutation.isPending}>
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{t('remove')}</TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <div className="w-10 h-10 shrink-0" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <Separator className="my-3" />
+                        <div className="flex flex-col space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-lg flex items-center gap-2"><CreditCard className="w-5 h-5" /> {t('payment_method')}</h4>
+                            <PaymentBadge orderId={orderDetail!.id} paymentMethod={orderDetail!.payment_method} t={t} />
+                          </div>
+                          {orderDetail!.payment_method !== 'cod' && orderDetail!.payment_method && (
+                            <PaymentBlock orderId={orderDetail!.id} paymentMethod={orderDetail!.payment_method} />
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Right: Customer + Summary */}
-              <div className="space-y-4">
-                {/* Customer info */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">
-                    {t('recipient_data')}
-                  </h3>
-                  <div className="text-sm space-y-1.5">
-                    <p>
-                      <span className="text-muted-foreground">
-                        {t('order_customer')}:
-                      </span>{' '}
-                      {order?.full_name}
-                    </p>
-                    {order?.phone && (
-                      <p>
-                        <span className="text-muted-foreground">
-                          {t('order_phone')}:
-                        </span>{' '}
-                        {formatPhone(order.phone)}
-                      </p>
-                    )}
-                    <p>
-                      <span className="text-muted-foreground">
-                        {t('order_date')}:
-                      </span>{' '}
-                      {order?.created_at ? formatDate(order.created_at) : ''}
-                    </p>
-                    {order?.payment_method && (
-                      <p>
-                        <span className="text-muted-foreground">
-                          {t('payment_method')}:
-                        </span>{' '}
-                        {order.payment_method}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Delivery */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">
-                    {t('delivery_info')}
-                  </h3>
-                  <div className="text-sm space-y-1.5">
-                    <p>
-                      {DELIVERY_LABELS[order?.delivery_type] ||
-                        order?.delivery_type ||
-                        '—'}
-                    </p>
-                    {order?.delivery_city && (
-                      <p className="text-muted-foreground">
-                        {order.delivery_city}
-                      </p>
-                    )}
-                    {order?.delivery_warehouse && (
-                      <p className="text-muted-foreground">
-                        {order.delivery_warehouse}
-                      </p>
-                    )}
-                    {(order?.delivery_street_label ||
-                      order?.delivery_house) && (
-                      <p className="text-muted-foreground">
-                        {[
-                          order.delivery_street_label,
-                          order.delivery_house,
-                          order.delivery_apartment,
-                        ]
-                          .filter(Boolean)
-                          .join(', ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Summary */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">
-                    {t('order_summary')}
-                  </h3>
-                  <div className="text-sm space-y-1.5">
-                    {order?.original_total && order.original_total > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('total_items')}
-                        </span>
-                        <span>{fmt(order.original_total)} ₴</span>
-                      </div>
-                    )}
-                    {order?.discount_amount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>{t('discount_label')}</span>
-                        <span>-{fmt(order.discount_amount)} ₴</span>
-                      </div>
-                    )}
-                    <Separator />
-                    <div className="flex justify-between font-bold text-base">
-                      <span>{t('order_total')}</span>
-                      <span>{fmt(order?.total || 0)} ₴</span>
                     </div>
                   </div>
-                </div>
-
-                {order?.updated_by_name && (
-                  <>
-                    <Separator />
-                    <p className="text-xs text-muted-foreground">
-                      {order.updated_by_name} · {order.updated_by_group}
-                    </p>
-                  </>
                 )}
               </div>
-            </div>
+
+              <Separator className="flex-shrink-0" />
+              <div className="flex-shrink-0 p-4 pt-3">
+                {showHistory ? (
+                  <Button variant="outline" onClick={() => setShowHistory(false)}>
+                    <ArrowLeft className="w-4 h-4 mr-1" /> {t('back')}
+                  </Button>
+                ) : editMode ? (
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => {
+                      setEditMode(false)
+                      if (orderDetail) {
+                        setEditRecipient({
+                          phone: orderDetail.phone || '', last_name: orderDetail.last_name || '', first_name: orderDetail.first_name || '', middle_name: orderDetail.middle_name || '',
+                          delivery_type: orderDetail.delivery_type || '', delivery_city: orderDetail.delivery_city || '', delivery_warehouse: orderDetail.delivery_warehouse || '',
+                          delivery_city_ref: orderDetail.delivery_city_ref || '', delivery_settlement_ref: orderDetail.delivery_settlement_ref || '',
+                          delivery_city_label: orderDetail.delivery_city_label || '', delivery_warehouse_ref: orderDetail.delivery_warehouse_ref || '',
+                          delivery_warehouse_label: orderDetail.delivery_warehouse_label || '', delivery_street_ref: orderDetail.delivery_street_ref || '',
+                          delivery_street_label: orderDetail.delivery_street_label || '', delivery_house: orderDetail.delivery_house || '',
+                          delivery_apartment: orderDetail.delivery_apartment || '',
+                        })
+                        if (orderDetail.delivery_city) setCityQuery(orderDetail.delivery_city)
+                        if (orderDetail.delivery_warehouse) setWarehouseQuery(orderDetail.delivery_warehouse)
+                        if (orderDetail.delivery_street_label) setStreetQuery(orderDetail.delivery_street_label)
+                      }
+                    }}>
+                      {t('cancel')}
+                    </Button>
+                    <Button className="gap-2" onClick={handleSave} disabled={updateMutation.isPending}>
+                      {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {t('save')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="gap-1.5" onClick={() => setShowHistory(true)}>
+                        <History className="w-4 h-4" /> {t('order_history')}
+                      </Button>
+                      <Button variant="outline" className="gap-1.5" onClick={enterEditMode}>
+                        <Pencil className="w-4 h-4" /> {t('edit_order')}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {orderDetail!.payment_method !== 'cod' && orderDetail!.payment_method && (
+                        <Badge className={paymentBadgeClass(orderDetail!.payment_method)}>
+                          {paymentMethodLabel(orderDetail!.payment_method)}
+                        </Badge>
+                      )}
+                      <Button variant="outline" className="gap-1.5" onClick={async () => {
+                        try {
+                          const receipt = await getCheckboxReceipt(orderDetail!.id)
+                          if (receipt?.receipt_url) { window.open(receipt.receipt_url, '_blank', 'noopener,noreferrer') }
+                          else if (receipt?.status === 'created') {
+                            const link = await getCheckboxReceiptLink(orderDetail!.id)
+                            if (link?.url) { window.open(link.url, '_blank', 'noopener,noreferrer') }
+                            else { toast.info(t('receipt_no_link')) }
+                          } else if (receipt?.status === 'error') { toast.error(receipt.error_message || t('receipt_error')) }
+                          else { toast.info(t('receipt_pending')) }
+                        } catch (err: any) {
+                          const msg = err?.response?.data?.detail || err?.message || ''
+                          toast.error(msg || t('receipt_error'))
+                        }
+                      }}>
+                        <FileText className="w-4 h-4" /> {t('checkbox_receipt')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </TooltipProvider>
   )
 }
