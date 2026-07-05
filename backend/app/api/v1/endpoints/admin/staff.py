@@ -43,10 +43,10 @@ class StaffStatsResponse(BaseModel):
 
 
 def get_period_range(period: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
-    """Return (from_dt, to_dt) based on period or custom range."""
+    """Return (from_dt, to_dt) based on period or custom range. Both are timezone-naive UTC."""
     now = datetime.utcnow()
     if from_date and to_date:
-        return datetime.fromisoformat(from_date), datetime.fromisoformat(to_date)
+        return datetime.fromisoformat(from_date).replace(tzinfo=None), datetime.fromisoformat(to_date).replace(tzinfo=None)
     if period == "day":
         return now.replace(hour=0, minute=0, second=0, microsecond=0), now
     elif period == "week":
