@@ -302,7 +302,7 @@ export default function DashboardTab() {
         </div>
 
         {/* Recent orders sidebar */}
-        <Card className="w-[300px] shrink-0">
+        <Card className="w-[380px] shrink-0">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base font-medium">
               Последние заказы
@@ -335,7 +335,7 @@ export default function DashboardTab() {
                         <p className="text-sm font-bold">
                           {fmt(order.total || 0)} ₴
                         </p>
-                        <Badge className={`${className} border-0 text-xs`}>
+                        <Badge className={`${className} border-0 text-sm`}>
                           {t('order_' + order.status)}
                         </Badge>
                       </div>
