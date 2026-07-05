@@ -336,7 +336,8 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     onClick={() =>
                       api
                         .post('/catalog/sync/vehicles')
-                        .then(() => alert(ta('sync_started')))
+                        .then(() => toast.info(ta('sync_started')))
+                        .catch(() => toast.error(ta('sync_error')))
                     }
                   >
                     <RefreshCw className="w-4 h-4 animate-spin" />

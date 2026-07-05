@@ -424,5 +424,8 @@ async def autocomplete(
 @router.post("/sync/vehicles")
 async def trigger_vehicle_sync(db: Session = Depends(get_db)):
     """Запустить синхронизацию автомобилей из TecDoc."""
-    result = await sync_service.full_vehicle_sync(db)
-    return {"message": "Sync completed", "details": result}
+    try:
+        result = await sync_service.full_vehicle_sync(db)
+        return {"message": "Sync completed", "details": result}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"TecDoc sync failed: {e}")
