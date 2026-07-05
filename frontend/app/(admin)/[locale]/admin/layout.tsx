@@ -120,6 +120,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/import': { icon: FileDown, titleKey: 'import_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
     '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
+    '/admin/staff': { icon: Users, titleKey: 'staff_title' },
   }
 
   const pageMetaEntries = Object.entries(pageMeta).sort(

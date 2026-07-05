@@ -9,13 +9,10 @@ import {
   ShoppingCart,
   UserCheck,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import {
   Popover,
   PopoverContent,
@@ -34,7 +31,7 @@ import {
   startOfYear,
   endOfYear,
 } from 'date-fns'
-import { ru, uk, enUS } from 'date-fns/locale'
+import { ru } from 'date-fns/locale'
 import BarChart from '@/components/charts/BarChart'
 import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
@@ -52,12 +49,6 @@ const ROLE_BADGE: Record<string, string> = {
 
 const PERIODS = ['day', 'week', 'month', 'year'] as const
 
-const LOCALE_MAP: Record<string, any> = {
-  ru,
-  ua: uk,
-  en: enUS,
-}
-
 function getDateRange(period: string): { from: Date; to: Date } {
   const now = new Date()
   switch (period) {
@@ -74,6 +65,14 @@ function getDateRange(period: string): { from: Date; to: Date } {
   }
 }
 
+const actionTypeLabels: Record<string, string> = {
+  status_change: 'Смена статуса',
+  edit: 'Редактирование',
+  item_added: 'Товар добавлен',
+  item_removed: 'Товар удалён',
+}
+const actionTypeColors = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444']
+
 export default function StaffPage() {
   const t = useTranslations('admin')
   const { user, isAuthenticated } = useAuthStore()
@@ -83,8 +82,6 @@ export default function StaffPage() {
     { from: Date; to: Date } | undefined
   >()
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
-
-  const dateLocale = LOCALE_MAP['ru'] || ru
 
   const range = customRange || getDateRange(period)
 
@@ -97,11 +94,9 @@ export default function StaffPage() {
       selectedStaffId,
     ],
     queryFn: async () => {
-      const params: any = {
-        period,
-        from_date: range.from.toISOString(),
-        to_date: range.to.toISOString(),
-      }
+      const params: any = { period }
+      params.from_date = range.from.toISOString()
+      params.to_date = range.to.toISOString()
       if (selectedStaffId) params.staff_id = selectedStaffId
       const { data } = await api.get('/admin/staff/stats', { params })
       return data
@@ -110,36 +105,10 @@ export default function StaffPage() {
     refetchInterval: 30000,
   })
 
-  const handlePeriodClick = (p: string) => {
-    setPeriod(p)
-    setCustomRange(undefined)
-    setSelectedStaffId(null)
-  }
-
-  const handleStaffClick = (id: number) => {
-    setSelectedStaffId(selectedStaffId === id ? null : id)
-  }
-
-  const handleCalendarSelect = (range: any) => {
-    if (range?.from && range?.to) {
-      setCustomRange({ from: range.from, to: range.to })
-      setPeriod('month')
-    }
-  }
-
   const maxActions = Math.max(
     ...(stats?.staff_list?.map((s: any) => s.actions_count) || [1]),
     1,
   )
-
-  const actionTypeLabels: Record<string, string> = {
-    status_change: 'Смена статуса',
-    edit: 'Редактирование',
-    item_added: 'Товар добавлен',
-    item_removed: 'Товар удалён',
-  }
-
-  const actionTypeColors = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444']
 
   const barData = useMemo(() => {
     const list = stats?.staff_list || []
@@ -162,7 +131,7 @@ export default function StaffPage() {
   }, [stats?.actions_by_date])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="p-6 flex flex-col gap-4">
       {/* KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
@@ -170,13 +139,11 @@ export default function StaffPage() {
             <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg shrink-0">
               <Activity className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="min-w-0">
+            <div>
               <p className="text-2xl font-bold">
                 {fmt(stats?.total_actions ?? 0)}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
-                Всего действий
-              </p>
+              <p className="text-xs text-muted-foreground">Всего действий</p>
             </div>
           </CardContent>
         </Card>
@@ -185,13 +152,11 @@ export default function StaffPage() {
             <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg shrink-0">
               <ShoppingCart className="w-5 h-5 text-green-600" />
             </div>
-            <div className="min-w-0">
+            <div>
               <p className="text-2xl font-bold">
                 {fmt(stats?.total_orders_touched ?? 0)}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
-                Заказов изменено
-              </p>
+              <p className="text-xs text-muted-foreground">Заказов изменено</p>
             </div>
           </CardContent>
         </Card>
@@ -200,11 +165,9 @@ export default function StaffPage() {
             <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg shrink-0">
               <Users className="w-5 h-5 text-purple-600" />
             </div>
-            <div className="min-w-0">
+            <div>
               <p className="text-2xl font-bold">{stats?.staff_members ?? 0}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                Сотрудников
-              </p>
+              <p className="text-xs text-muted-foreground">Сотрудников</p>
             </div>
           </CardContent>
         </Card>
@@ -213,9 +176,9 @@ export default function StaffPage() {
             <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-lg shrink-0">
               <UserCheck className="w-5 h-5 text-teal-600" />
             </div>
-            <div className="min-w-0">
+            <div>
               <p className="text-2xl font-bold">{stats?.active_staff ?? 0}</p>
-              <p className="text-xs text-muted-foreground truncate">Активных</p>
+              <p className="text-xs text-muted-foreground">Активных</p>
             </div>
           </CardContent>
         </Card>
@@ -228,7 +191,10 @@ export default function StaffPage() {
             key={p}
             variant={period === p && !customRange ? 'default' : 'outline'}
             size="sm"
-            onClick={() => handlePeriodClick(p)}
+            onClick={() => {
+              setPeriod(p)
+              setCustomRange(undefined)
+            }}
           >
             {t('staff_period_' + p)}
           </Button>
@@ -246,9 +212,13 @@ export default function StaffPage() {
             <Calendar
               mode="range"
               selected={customRange}
-              onSelect={handleCalendarSelect}
-              numberOfMonths={2}
-              locale={dateLocale}
+              onSelect={(r: any) => {
+                if (r?.from && r?.to) {
+                  setCustomRange({ from: r.from, to: r.to })
+                  setPeriod('month')
+                }
+              }}
+              locale={ru}
             />
           </PopoverContent>
         </Popover>
@@ -258,7 +228,7 @@ export default function StaffPage() {
             size="sm"
             onClick={() => setSelectedStaffId(null)}
           >
-            × Сбросить фильтр
+            × Сбросить
           </Button>
         )}
       </div>
@@ -266,7 +236,6 @@ export default function StaffPage() {
       {/* Charts + Staff sidebar */}
       <div className="flex gap-4">
         <div className="flex-1 grid grid-cols-2 gap-4">
-          {/* Row 1: Bar — Действия по сотрудникам */}
           <Card>
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-sm font-medium">
@@ -282,7 +251,6 @@ export default function StaffPage() {
               />
             </CardContent>
           </Card>
-          {/* Row 1: LineArea — Динамика */}
           <Card>
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-sm font-medium">
@@ -298,7 +266,6 @@ export default function StaffPage() {
               />
             </CardContent>
           </Card>
-          {/* Row 2: Doughnut — Типы действий */}
           <Card className="col-span-2">
             <CardHeader className="p-4 pb-0">
               <CardTitle className="text-sm font-medium">
@@ -318,12 +285,12 @@ export default function StaffPage() {
           </Card>
         </div>
 
-        {/* Right column: Staff list */}
-        <Card className="w-[300px] shrink-0 h-full flex flex-col">
-          <CardHeader className="p-4 pb-2 shrink-0">
-            <CardTitle className="text-base font-medium">Сотрудники</CardTitle>
+        {/* Staff sidebar */}
+        <Card className="w-[280px] shrink-0 self-start">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium">Сотрудники</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0 flex-1 overflow-auto">
+          <CardContent className="p-4 pt-0">
             {isLoading ? (
               <div className="space-y-2 mt-2">
                 {[1, 2, 3].map((i) => (
@@ -347,7 +314,11 @@ export default function StaffPage() {
                   return (
                     <button
                       key={member.id}
-                      onClick={() => handleStaffClick(member.id)}
+                      onClick={() =>
+                        setSelectedStaffId(
+                          selectedStaffId === member.id ? null : member.id,
+                        )
+                      }
                       className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors hover:bg-muted/30 cursor-pointer ${isSelected ? 'border-primary bg-muted/50' : ''}`}
                     >
                       <div className="min-w-0 flex-1">
