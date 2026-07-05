@@ -269,7 +269,7 @@ export default function DashboardTab() {
         {/* Колонка 3: под Ср. чек + Товары — список заказов */}
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base font-medium">
+            <CardTitle className="text-lg font-medium">
               Последние заказы
             </CardTitle>
           </CardHeader>
