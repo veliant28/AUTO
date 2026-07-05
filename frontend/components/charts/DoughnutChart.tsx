@@ -34,7 +34,7 @@ export default function DoughnutChart({
       series: [
         {
           type: 'pie',
-          radius: ['40%', '70%'],
+          radius: ['40%', '80%'],
           center: ['50%', '50%'],
           avoidLabelOverlap: true,
           itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },

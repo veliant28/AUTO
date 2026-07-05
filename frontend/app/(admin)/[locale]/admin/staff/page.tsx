@@ -230,8 +230,11 @@ export default function StaffPage() {
               </PopoverContent>
             </Popover>
             {selectedStaffId && (
-              <Button variant="ghost" onClick={() => setSelectedStaffId(null)}>
-                × Все сотрудники
+              <Button
+                variant="destructive"
+                onClick={() => setSelectedStaffId(null)}
+              >
+                {t('staff_reset')}
               </Button>
             )}
           </div>
@@ -255,21 +258,6 @@ export default function StaffPage() {
             <Card>
               <CardHeader className="p-4 pb-0">
                 <CardTitle className="text-lg font-medium">
-                  Динамика действий
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <LineAreaChart
-                  xData={lineData.dates}
-                  yData={lineData.counts}
-                  color="#22c55e"
-                  height={250}
-                />
-              </CardContent>
-            </Card>
-            <Card className="col-span-2">
-              <CardHeader className="p-4 pb-0">
-                <CardTitle className="text-lg font-medium">
                   Типы действий
                 </CardTitle>
               </CardHeader>
@@ -282,7 +270,23 @@ export default function StaffPage() {
                     (t: any) => t.count,
                   )}
                   colors={actionTypeColors}
-                  height={220}
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card className="col-span-2">
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-lg font-medium">
+                  Динамика действий
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <LineAreaChart
+                  xData={lineData.dates}
+                  yData={lineData.counts}
+                  color="#22c55e"
+                  height={250}
+                  formatY={(v) => v.toLocaleString()}
                 />
               </CardContent>
             </Card>

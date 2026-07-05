@@ -1190,7 +1190,8 @@
     "staff_period_week": "Week",
     "staff_period_month": "Month",
     "staff_period_year": "Year",
-    "staff_select_dates": "Select dates"
+    "staff_select_dates": "Select dates",
+    "staff_reset": "Reset"
   },
   "catalog": {
     "title": "Catalog",

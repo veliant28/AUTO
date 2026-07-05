@@ -29,7 +29,7 @@ export default function LineAreaChart({
         valueFormatter: (v: number) =>
           formatY ? formatY(v) : `${v.toLocaleString()} ₴`,
       },
-      grid: { left: 8, right: 8, top: 16, bottom: 20 },
+      grid: { left: 4, right: 4, top: 8, bottom: 16 },
       xAxis: {
         type: 'category' as const,
         data: xData,
@@ -51,7 +51,7 @@ export default function LineAreaChart({
           name,
           data: yData,
           itemStyle: { color },
-          lineStyle: { width: 2 },
+          lineStyle: { width: 3 },
           areaStyle: {
             color: {
               type: 'linear',
@@ -66,7 +66,7 @@ export default function LineAreaChart({
             },
           },
           symbol: 'circle',
-          symbolSize: 4,
+          symbolSize: 6,
         },
       ],
     }),

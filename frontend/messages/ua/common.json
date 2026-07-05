@@ -1190,7 +1190,8 @@
     "staff_period_week": "Тиждень",
     "staff_period_month": "Місяць",
     "staff_period_year": "Рік",
-    "staff_select_dates": "Вибрати дати"
+    "staff_select_dates": "Вибрати дати",
+    "staff_reset": "Скинути"
   },
   "catalog": {
     "title": "Каталог",

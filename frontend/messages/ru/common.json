@@ -1190,7 +1190,8 @@
     "staff_period_week": "Неделя",
     "staff_period_month": "Месяц",
     "staff_period_year": "Год",
-    "staff_select_dates": "Выбрать даты"
+    "staff_select_dates": "Выбрать даты",
+    "staff_reset": "Сбросить"
   },
   "catalog": {
     "title": "Каталог",

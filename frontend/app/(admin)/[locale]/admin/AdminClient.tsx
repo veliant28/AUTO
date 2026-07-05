@@ -1,24 +1,28 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/authStore';
-import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
-import DashboardTab from './components/DashboardTab';
-import WorkersTab from './workers/components/WorkersTab';
+import React from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Package } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/store/authStore'
+import { useTranslations } from 'next-intl'
+import dynamic from 'next/dynamic'
+import DashboardTab from './components/DashboardTab'
+import WorkersTab from './workers/components/WorkersTab'
+import StaffPage from './staff/page'
 
-const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
+const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
 export default function AdminPage() {
-  const { user, isAuthenticated } = useAuthStore();
-  const t = useTranslations('admin');
-  const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'dashboard';
+  const { user, isAuthenticated } = useAuthStore()
+  const t = useTranslations('admin')
+  const searchParams = useSearchParams()
+  const tab = searchParams.get('tab') || 'dashboard'
 
-  if (!isAuthenticated || !['admin', 'manager', 'operator'].includes(user?.role ?? '')) {
+  if (
+    !isAuthenticated ||
+    !['admin', 'manager', 'operator'].includes(user?.role ?? '')
+  ) {
     return (
       <div className="container mx-auto py-20 px-4 text-center space-y-4">
         <Package className="w-16 h-16 mx-auto text-muted-foreground" />
@@ -26,13 +30,14 @@ export default function AdminPage() {
         <p className="text-muted-foreground">{t('access_denied_desc')}</p>
         <Button>{t('go_home')}</Button>
       </div>
-    );
+    )
   }
 
   return (
     <div className="p-6">
       {tab === 'dashboard' && <DashboardTab />}
+      {tab === 'staff' && <StaffPage />}
       {tab === 'workers' && <WorkersTab />}
     </div>
-  );
+  )
 }

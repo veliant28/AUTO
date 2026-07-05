@@ -23,7 +23,7 @@ export default function BarChart({
   const option = useMemo(
     () => ({
       tooltip: { trigger: 'axis' as const },
-      grid: { left: 8, right: 8, top: 16, bottom: 20 },
+      grid: { left: 4, right: 4, top: 8, bottom: 16 },
       xAxis: {
         type: 'category' as const,
         data: xData,
@@ -44,7 +44,7 @@ export default function BarChart({
           name,
           data: yData,
           itemStyle: { color, borderRadius: [3, 3, 0, 0] },
-          barMaxWidth: 24,
+          barMaxWidth: 32,
         },
       ],
     }),

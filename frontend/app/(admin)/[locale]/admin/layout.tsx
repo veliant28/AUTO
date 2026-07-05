@@ -98,6 +98,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
+    { key: 'staff', label: ta('staff_title') },
     { key: 'workers', label: ta('workers_title') },
   ]
 
@@ -837,12 +838,6 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       icon: FileText,
       label: t('footer_title'),
       roles: ['admin'],
-    },
-    {
-      href: '/admin/staff',
-      icon: Users,
-      label: t('staff_title'),
-      roles: ['admin', 'manager'],
     },
   ]
 
