@@ -24,12 +24,10 @@ import { useAuthStore } from '@/store/authStore'
 import {
   format,
   startOfDay,
-  endOfDay,
   subDays,
   startOfMonth,
-  endOfMonth,
   startOfYear,
-  endOfYear,
+  endOfDay,
 } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import BarChart from '@/components/charts/BarChart'
@@ -76,13 +74,11 @@ const actionTypeColors = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444']
 export default function StaffPage() {
   const t = useTranslations('admin')
   const { user, isAuthenticated } = useAuthStore()
-
   const [period, setPeriod] = useState<string>('month')
   const [customRange, setCustomRange] = useState<
     { from: Date; to: Date } | undefined
   >()
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
-
   const range = customRange || getDateRange(period)
 
   const { data: stats, isLoading } = useQuery({
@@ -94,9 +90,11 @@ export default function StaffPage() {
       selectedStaffId,
     ],
     queryFn: async () => {
-      const params: any = { period }
-      params.from_date = range.from.toISOString()
-      params.to_date = range.to.toISOString()
+      const params: any = {
+        period,
+        from_date: range.from.toISOString(),
+        to_date: range.to.toISOString(),
+      }
       if (selectedStaffId) params.staff_id = selectedStaffId
       const { data } = await api.get('/admin/staff/stats', { params })
       return data
@@ -132,7 +130,7 @@ export default function StaffPage() {
 
   return (
     <div className="p-6 flex flex-col gap-4">
-      {/* KPI Row */}
+      {/* KPI */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
@@ -184,106 +182,112 @@ export default function StaffPage() {
         </Card>
       </div>
 
-      {/* Period selector */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {PERIODS.map((p) => (
-          <Button
-            key={p}
-            variant={period === p && !customRange ? 'default' : 'outline'}
-            onClick={() => {
-              setPeriod(p)
-              setCustomRange(undefined)
-            }}
-          >
-            {t('staff_period_' + p)}
-          </Button>
-        ))}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-1.5">
-              <CalendarDays className="w-4 h-4" />
-              {customRange
-                ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
-                : t('staff_select_dates')}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={customRange}
-              onSelect={(r: any) => {
-                if (r?.from && r?.to) {
-                  setCustomRange({ from: r.from, to: r.to })
-                  setPeriod('month')
-                }
-              }}
-              locale={ru}
-            />
-          </PopoverContent>
-        </Popover>
-        {selectedStaffId && (
-          <Button variant="ghost" onClick={() => setSelectedStaffId(null)}>
-            × Сбросить
-          </Button>
-        )}
-      </div>
+      {/* Charts + Staff — 4 колонки как KPI */}
+      <div className="grid grid-cols-4 gap-4">
+        {/* Колонки 1-3 */}
+        <div className="col-span-3 flex flex-col gap-4">
+          {/* Period */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {PERIODS.map((p) => (
+              <Button
+                key={p}
+                variant={period === p && !customRange ? 'default' : 'outline'}
+                onClick={() => {
+                  setPeriod(p)
+                  setCustomRange(undefined)
+                }}
+              >
+                {t('staff_period_' + p)}
+              </Button>
+            ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-1.5">
+                  <CalendarDays className="w-4 h-4" />
+                  {customRange
+                    ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
+                    : t('staff_select_dates')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={customRange}
+                  onSelect={(r: any) => {
+                    if (r?.from && r?.to) {
+                      setCustomRange({ from: r.from, to: r.to })
+                      setPeriod('month')
+                    }
+                  }}
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedStaffId && (
+              <Button variant="ghost" onClick={() => setSelectedStaffId(null)}>
+                × Сбросить
+              </Button>
+            )}
+          </div>
 
-      {/* Charts + Staff sidebar */}
-      <div className="flex gap-4">
-        <div className="flex-1 grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-lg font-medium">
-                Действия по сотрудникам
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <BarChart
-                xData={barData.labels}
-                yData={barData.values}
-                color="#3b82f6"
-                height={250}
-              />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-lg font-medium">
-                Динамика действий
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <LineAreaChart
-                xData={lineData.dates}
-                yData={lineData.counts}
-                color="#22c55e"
-                height={250}
-              />
-            </CardContent>
-          </Card>
-          <Card className="col-span-2">
-            <CardHeader className="p-4 pb-0">
-              <CardTitle className="text-lg font-medium">
-                Типы действий
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <DoughnutChart
-                labels={(stats?.actions_by_type || []).map(
-                  (t: any) => actionTypeLabels[t.action] || t.action,
-                )}
-                values={(stats?.actions_by_type || []).map((t: any) => t.count)}
-                colors={actionTypeColors}
-                height={220}
-              />
-            </CardContent>
-          </Card>
+          {/* Charts */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-lg font-medium">
+                  Действия по сотрудникам
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <BarChart
+                  xData={barData.labels}
+                  yData={barData.values}
+                  color="#3b82f6"
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-lg font-medium">
+                  Динамика действий
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <LineAreaChart
+                  xData={lineData.dates}
+                  yData={lineData.counts}
+                  color="#22c55e"
+                  height={250}
+                />
+              </CardContent>
+            </Card>
+            <Card className="col-span-2">
+              <CardHeader className="p-4 pb-0">
+                <CardTitle className="text-lg font-medium">
+                  Типы действий
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <DoughnutChart
+                  labels={(stats?.actions_by_type || []).map(
+                    (t: any) => actionTypeLabels[t.action] || t.action,
+                  )}
+                  values={(stats?.actions_by_type || []).map(
+                    (t: any) => t.count,
+                  )}
+                  colors={actionTypeColors}
+                  height={220}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Staff sidebar */}
-        <Card className="w-[25%] min-w-[220px] max-w-[320px] shrink-0 self-start">
+        {/* Колонка 4: Сотрудники */}
+        <Card className="self-start">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Сотрудники</CardTitle>
+            <CardTitle className="text-lg font-medium">Сотрудники</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {isLoading ? (
@@ -299,32 +303,25 @@ export default function StaffPage() {
               <p className="text-sm text-muted-foreground pt-2">Нет данных</p>
             ) : (
               <div className="space-y-2">
-                {stats.staff_list.map((member: any) => {
-                  const isSelected = selectedStaffId === member.id
-                  const pct = Math.round(
-                    (member.actions_count / maxActions) * 100,
-                  )
-                  const roleClass =
-                    ROLE_BADGE[member.group] || 'bg-gray-500 text-white'
+                {stats.staff_list.map((m: any) => {
+                  const sel = selectedStaffId === m.id
+                  const pct = Math.round((m.actions_count / maxActions) * 100)
+                  const rc = ROLE_BADGE[m.group] || 'bg-gray-500 text-white'
                   return (
                     <button
-                      key={member.id}
-                      onClick={() =>
-                        setSelectedStaffId(
-                          selectedStaffId === member.id ? null : member.id,
-                        )
-                      }
-                      className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors hover:bg-muted/30 cursor-pointer ${isSelected ? 'border-primary bg-muted/50' : ''}`}
+                      key={m.id}
+                      onClick={() => setSelectedStaffId(sel ? null : m.id)}
+                      className={`w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors hover:bg-muted/30 cursor-pointer ${sel ? 'border-primary bg-muted/50' : ''}`}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="text-sm font-medium truncate">
-                            {member.name}
+                            {m.name}
                           </span>
                           <Badge
-                            className={`${roleClass} border-0 text-[10px] px-1.5`}
+                            className={`${rc} border-0 text-[10px] px-1.5`}
                           >
-                            {member.group}
+                            {m.group}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
@@ -335,12 +332,12 @@ export default function StaffPage() {
                             />
                           </div>
                           <span className="text-xs font-mono text-muted-foreground shrink-0">
-                            {member.actions_count}
+                            {m.actions_count}
                           </span>
                         </div>
                         <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground">
-                          <span>заказов: {member.orders_count}</span>
-                          <span>статусов: {member.status_changes}</span>
+                          <span>заказов: {m.orders_count}</span>
+                          <span>статусов: {m.status_changes}</span>
                         </div>
                       </div>
                     </button>
