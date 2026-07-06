@@ -300,6 +300,7 @@ export default function SupportAdminPage() {
             activeChatId={chatStore.activeChatId}
             onSelectChat={(id) => chatStore.setActiveChat(id)}
             isLoading={chatsLoading}
+            title="Обращение"
           />
         </Card>
 
