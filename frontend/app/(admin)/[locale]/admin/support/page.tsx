@@ -188,22 +188,10 @@ export default function SupportAdminPage() {
   }, [chats])
 
   const handleSend = useCallback(
-    async (text: string) => {
+    (text: string) => {
       if (!chatStore.activeChatId) return
       if (chatStore.connected) {
         chatStore.sendMessage(chatStore.activeChatId, text)
-      } else {
-        try {
-          await api.post(
-            `/admin/support/chats/${chatStore.activeChatId}/messages`,
-            { message: text },
-          )
-          queryClient.invalidateQueries({
-            queryKey: ['admin-support-messages', chatStore.activeChatId],
-          })
-        } catch (e) {
-          console.error('Failed to send message', e)
-        }
       }
     },
     [chatStore.activeChatId, chatStore.connected],

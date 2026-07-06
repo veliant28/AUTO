@@ -13,7 +13,6 @@ from app.schemas.support_schemas import (
     ChatMessageOut,
     UpdateStatusRequest,
     AssignRequest,
-    SendMessageRequest,
 )
 from app.models import User
 from app.services.ws_manager import manager
@@ -195,34 +194,3 @@ def assign_chat(
     db.commit()
 
     return {"status": "ok", "chat_id": chat_id, "assigned_to": req.assigned_to}
-
-
-@router.post("/chats/{chat_id}/messages", status_code=201)
-def admin_send_message(
-    chat_id: int,
-    req: SendMessageRequest,
-    admin: User = Depends(require_role("admin", "manager")),
-    db: Session = Depends(get_db),
-):
-    """Send a message as admin via REST fallback."""
-    chat = db.query(ChatConversation).filter(ChatConversation.id == chat_id).first()
-    if not chat:
-        raise HTTPException(404, "Chat not found")
-
-    # Auto-assign and activate
-    if not chat.assigned_to:
-        chat.assigned_to = admin.id
-    if chat.status == ChatStatus.NEW:
-        chat.status = ChatStatus.ACTIVE
-
-    message = ChatMessage(
-        conversation_id=chat_id,
-        sender_id=admin.id,
-        sender_role=SenderRole.ADMIN,
-        message=req.message,
-    )
-    db.add(message)
-    chat.updated_at = datetime.utcnow()
-    db.commit()
-
-    return {"status": "ok", "message_id": message.id}

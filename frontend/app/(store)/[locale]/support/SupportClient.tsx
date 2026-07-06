@@ -151,22 +151,10 @@ export default function SupportClient() {
   }, [handleWsMessage])
 
   const handleSend = useCallback(
-    async (text: string) => {
+    (text: string) => {
       if (!chatStore.activeChatId) return
       if (chatStore.connected) {
         chatStore.sendMessage(chatStore.activeChatId, text)
-      } else {
-        // Fallback to REST API when WebSocket is offline
-        try {
-          await api.post(`/support/chats/${chatStore.activeChatId}/messages`, {
-            message: text,
-          })
-          queryClient.invalidateQueries({
-            queryKey: ['chat-messages', chatStore.activeChatId],
-          })
-        } catch (e) {
-          console.error('Failed to send message', e)
-        }
       }
     },
     [chatStore.activeChatId, chatStore.connected],

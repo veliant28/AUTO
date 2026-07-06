@@ -8,7 +8,6 @@ from app.api.v1.endpoints.auth import get_current_user, get_optional_user
 from app.models.support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from app.schemas.support_schemas import (
     CreateChatRequest,
-    SendMessageRequest,
     ChatConversationOut,
     ChatConversationDetail,
     ChatMessageOut,
@@ -123,29 +122,3 @@ def get_chat_messages(
             created_at=m.created_at,
         ))
     return result
-
-
-@router.post("/chats/{chat_id}/messages", status_code=201)
-def send_message(
-    chat_id: int,
-    req: SendMessageRequest,
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Send a message to an existing chat via REST (fallback for WebSocket)."""
-    chat = db.query(ChatConversation).filter(ChatConversation.id == chat_id).first()
-    if not chat:
-        raise HTTPException(404, "Chat not found")
-    if chat.user_id != user_id:
-        raise HTTPException(403, "Access denied")
-
-    message = ChatMessage(
-        conversation_id=chat_id,
-        sender_id=user_id,
-        sender_role=SenderRole.USER,
-        message=req.message,
-    )
-    db.add(message)
-    chat.updated_at = message.created_at
-    db.commit()
-    return {"status": "ok", "message_id": message.id}

@@ -41,10 +41,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const hostname = window.location.hostname
-    // Try to connect to backend WebSocket
-    // In Docker, backend is at hostname:8080; in production, use same host
-    const wsPort = hostname === 'localhost' ? ':8080' : ''
-    const url = `${protocol}//${hostname}${wsPort}/api/v1/ws/chat?token=${token}`
+    // Backend WebSocket is exposed on port 8080 (Docker maps 8080->8000)
+    const url = `${protocol}//${hostname}:8080/api/v1/ws/chat?token=${token}`
 
     const ws = new WebSocket(url)
 
