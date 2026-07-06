@@ -93,6 +93,7 @@ export default function SupportAdminPage() {
   >()
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [search, setSearch] = useState('')
+  const [resetKey, setResetKey] = useState(0)
 
   const range = useMemo(
     () => customRange || getDateRange(period),
@@ -191,6 +192,13 @@ export default function SupportAdminPage() {
       chatStore.setActiveChat(chats[0].id)
     }
   }, [chats])
+
+  // Reset active chat after filters have been cleared (React state flush)
+  useEffect(() => {
+    if (resetKey > 0) {
+      chatStore.setActiveChat(null)
+    }
+  }, [resetKey])
 
   const handleSend = useCallback(
     (text: string) => {
@@ -292,7 +300,7 @@ export default function SupportAdminPage() {
             setCustomRange(undefined)
             setStatusFilter('')
             setSearch('')
-            chatStore.setActiveChat(null)
+            setResetKey((n) => n + 1)
           }}
         >
           {t('staff_reset')}
