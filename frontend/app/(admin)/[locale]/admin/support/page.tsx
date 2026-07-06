@@ -293,18 +293,20 @@ export default function SupportAdminPage() {
           </PopoverContent>
         </Popover>
 
-        <Button
-          variant="destructive"
-          onClick={() => {
-            setPeriod('month')
-            setCustomRange(undefined)
-            setStatusFilter('')
-            setSearch('')
-            setResetKey((n) => n + 1)
-          }}
-        >
-          {t('staff_reset')}
-        </Button>
+        {(chatStore.activeChatId || customRange || statusFilter || search) && (
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setPeriod('month')
+              setCustomRange(undefined)
+              setStatusFilter('')
+              setSearch('')
+              setResetKey((n) => n + 1)
+            }}
+          >
+            {t('staff_reset')}
+          </Button>
+        )}
       </div>
 
       {/* Main content: chat list + chat window */}
