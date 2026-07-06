@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getAvatarUrl } from '@/lib/avatar'
+import { useTranslations } from 'next-intl'
 
 interface MessageProps {
   id: number
@@ -60,6 +61,7 @@ export default function ChatMessage({
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
   const badgeColor =
     roleBadgeColors[senderGroup || ''] || 'bg-gray-500 text-white'
+  const t = useTranslations('admin')
 
   return (
     <div
@@ -91,7 +93,7 @@ export default function ChatMessage({
           </span>
           {isMine && senderGroup && (
             <Badge className={`${badgeColor} border-0 text-sm`}>
-              {senderGroup}
+              {t(senderGroup)}
             </Badge>
           )}
         </div>
