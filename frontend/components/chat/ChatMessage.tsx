@@ -1,8 +1,9 @@
 'use client'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { getAvatarUrl } from '@/lib/avatar'
 
 interface MessageProps {
   id: number
@@ -51,18 +52,20 @@ export default function ChatMessage({
 }: MessageProps) {
   const isMine = senderRole === 'admin'
   const roleBadge = ROLE_BADGE[senderRole] || 'bg-gray-500 text-white'
+  const avatarUrl = getAvatarUrl(undefined, senderName)
 
   return (
     <div
       className={cn(
-        'flex gap-2 group',
+        'flex gap-3 group',
         isMine ? 'flex-row-reverse' : 'flex-row',
       )}
     >
-      <Avatar className="w-7 h-7 shrink-0 mt-0.5">
+      <Avatar className="w-10 h-10 shrink-0 mt-0.5">
+        <AvatarImage src={avatarUrl} />
         <AvatarFallback
           className={cn(
-            'text-[10px]',
+            'text-xs',
             isMine ? 'bg-primary text-primary-foreground' : 'bg-muted',
           )}
         >
@@ -71,12 +74,12 @@ export default function ChatMessage({
       </Avatar>
       <div
         className={cn(
-          'flex flex-col max-w-[80%]',
+          'flex flex-col max-w-[75%]',
           isMine ? 'items-end' : 'items-start',
         )}
       >
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
           {senderRole !== 'user' && (
@@ -87,7 +90,7 @@ export default function ChatMessage({
         </div>
         <div
           className={cn(
-            'rounded-lg px-3 py-2 text-sm break-words',
+            'rounded-lg px-3 py-2 text-base break-words',
             isMine
               ? 'bg-primary text-primary-foreground rounded-tr-sm'
               : 'bg-muted rounded-tl-sm',
@@ -95,7 +98,7 @@ export default function ChatMessage({
         >
           {message}
         </div>
-        <span className="text-[10px] text-muted-foreground/60 mt-0.5">
+        <span className="text-xs text-muted-foreground/60 mt-0.5">
           {formatTime(createdAt)}
         </span>
       </div>
