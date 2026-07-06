@@ -25,6 +25,7 @@ class ChatConversationOut(BaseModel):
     user_name: Optional[str] = None
     user_phone: Optional[str] = None
     user_email: Optional[str] = None
+    user_group: Optional[str] = None
     status: str
     assigned_to: Optional[int] = None
     assignee_name: Optional[str] = None

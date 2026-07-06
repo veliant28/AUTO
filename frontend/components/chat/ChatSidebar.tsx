@@ -12,6 +12,7 @@ interface Chat {
   user_name?: string
   user_phone?: string
   user_email?: string
+  user_group?: string
   last_message?: string
   last_message_at?: string
   status: string
@@ -32,6 +33,14 @@ const STATUS_BADGE: Record<string, string> = {
   new: 'bg-orange-500 text-white',
   active: 'bg-green-500 text-white',
   closed: 'bg-gray-500 text-white',
+}
+
+const ROLE_BADGE: Record<string, string> = {
+  admin: 'bg-red-500 text-white',
+  manager: 'bg-blue-500 text-white',
+  operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -163,6 +172,13 @@ export default function ChatSidebar({
                           >
                             {chat.user_email}
                           </p>
+                        )}
+                        {chat.user_group && chat.user_group !== 'retail' && (
+                          <Badge
+                            className={`${ROLE_BADGE[chat.user_group] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                          >
+                            {chat.user_group}
+                          </Badge>
                         )}
                         {chat.user_name && (
                           <p

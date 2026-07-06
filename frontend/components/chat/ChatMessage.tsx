@@ -88,15 +88,15 @@ export default function ChatMessage({
           isMine ? 'items-end' : 'items-start',
         )}
       >
+        {isMine && senderGroup && (
+          <Badge className={`${badgeColor} border-0 text-sm mb-0.5`}>
+            {t(senderGroup)}
+          </Badge>
+        )}
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
-          {isMine && senderGroup && (
-            <Badge className={`${badgeColor} border-0 text-sm`}>
-              {t(senderGroup)}
-            </Badge>
-          )}
         </div>
         <div
           className={cn(

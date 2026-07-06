@@ -34,6 +34,7 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
         user_name=user.full_name or f"{user.first_name or ''} {user.last_name or ''}".strip() or user.email,
         user_phone=user.phone,
         user_email=user.email,
+        user_group=user.role.name if user.role else None,
         status=chat.status.value,
         assigned_to=chat.assigned_to,
         assignee_name=assignee.full_name if assignee else None,
