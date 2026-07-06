@@ -57,6 +57,7 @@ interface Message {
   conversation_id: number
   sender_id: number
   sender_role: 'user' | 'admin'
+  sender_name?: string
   message: string
   created_at: string
 }
@@ -308,8 +309,8 @@ export default function SupportAdminPage() {
                   <CardTitle className="text-sm font-medium">
                     {activeChat.user_name || `User #${activeChat.user_id}`}
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    #{activeChat.ticket_number || activeChat.id}
+                  <p className="font-bold font-mono text-muted-foreground">
+                    {activeChat.ticket_number || `#${activeChat.id}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

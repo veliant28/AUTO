@@ -46,6 +46,7 @@ interface Message {
   conversation_id: number
   sender_id: number
   sender_role: 'user' | 'admin'
+  sender_name?: string
   message: string
   created_at: string
 }
