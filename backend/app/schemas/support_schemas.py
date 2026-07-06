@@ -31,7 +31,7 @@ class ChatConversationOut(BaseModel):
     last_message_at: Optional[datetime] = None
     unread_count: int = 0
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -44,7 +44,7 @@ class ChatConversationDetail(BaseModel):
     status: str
     assigned_to: Optional[int] = None
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     messages: List[ChatMessageOut] = []
 
     class Config:
