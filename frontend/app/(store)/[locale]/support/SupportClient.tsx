@@ -229,7 +229,7 @@ export default function SupportClient() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <LifeBuoy className="w-6 h-6 text-primary" />
+          <LifeBuoy className="w-7 h-7 text-primary" />
           <h1 className="text-3xl font-bold">Техническая поддержка</h1>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -273,6 +273,8 @@ export default function SupportClient() {
             activeChatId={chatStore.activeChatId}
             onSelectChat={(id) => chatStore.setActiveChat(id)}
             isLoading={chatsLoading}
+            title="Обращение"
+            compact
           />
         </Card>
 
@@ -281,8 +283,8 @@ export default function SupportClient() {
           {chatStore.activeChatId && activeChat ? (
             <>
               <CardHeader className="p-3 pb-0 shrink-0">
-                <CardTitle className="text-sm font-medium">
-                  #{activeChat.ticket_number || activeChat.id}
+                <CardTitle className="font-bold font-mono text-base">
+                  {activeChat.ticket_number || `#${activeChat.id}`}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 p-0 overflow-hidden relative">

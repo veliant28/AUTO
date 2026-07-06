@@ -24,10 +24,12 @@ interface ChatSidebarProps {
   activeChatId: number | null
   onSelectChat: (id: number) => void
   isLoading?: boolean
+  title?: string
+  compact?: boolean
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  new: 'bg-yellow-500 text-white',
+  new: 'bg-orange-500 text-white',
   active: 'bg-green-500 text-white',
   closed: 'bg-gray-500 text-white',
 }
@@ -62,7 +64,7 @@ function formatTime(dateStr?: string): string {
 }
 
 const Skeleton = () => (
-  <div className="space-y-2 p-4">
+  <div className="space-y-2 p-3">
     {[1, 2, 3].map((i) => (
       <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
         <div className="w-8 h-8 rounded-full bg-muted" />
@@ -80,6 +82,8 @@ export default function ChatSidebar({
   activeChatId,
   onSelectChat,
   isLoading,
+  title = 'Пользователи',
+  compact = false,
 }: ChatSidebarProps) {
   if (isLoading) return <Skeleton />
 
@@ -93,11 +97,11 @@ export default function ChatSidebar({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b">
-        <h3 className="text-sm font-medium">Пользователи</h3>
+      <div className="p-2.5 border-b">
+        <h3 className="text-sm font-medium">{title}</h3>
       </div>
       <ScrollArea className="flex-1">
-        <div className="space-y-0.5 p-2">
+        <div className="space-y-0.5 p-1.5">
           {chats.map((chat) => {
             const isActive = chat.id === activeChatId
             return (
@@ -105,73 +109,97 @@ export default function ChatSidebar({
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={cn(
-                  'w-full text-left flex items-center gap-3 py-2.5 px-3 rounded-lg border transition-colors cursor-pointer',
+                  'w-full text-left flex items-center gap-2.5 py-2 px-2.5 rounded-lg border transition-colors cursor-pointer',
                   isActive
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'hover:bg-muted/30 border-transparent',
                 )}
               >
-                <Avatar className="w-8 h-8 shrink-0">
-                  <AvatarFallback
-                    className={cn(
-                      'text-xs',
-                      isActive ? 'bg-primary-foreground/20' : 'bg-muted',
-                    )}
-                  >
-                    {getInitials(chat.user_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
+                {compact ? (
+                  // Compact view: just ticket number + badge
+                  <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
                     <span
                       className={cn(
-                        'text-sm font-medium truncate',
+                        'text-sm font-mono font-bold truncate',
                         isActive ? 'text-primary-foreground' : '',
                       )}
                     >
-                      {chat.user_name || `User #${chat.user_id}`}
+                      {chat.ticket_number || `#${chat.id}`}
                     </span>
-                    <span
-                      className={cn(
-                        'text-[10px] shrink-0',
-                        isActive
-                          ? 'text-primary-foreground/70'
-                          : 'text-muted-foreground/60',
-                      )}
-                    >
-                      {formatTime(chat.last_message_at)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mt-0.5">
-                    <p
-                      className={cn(
-                        'text-xs truncate',
-                        isActive
-                          ? 'text-primary-foreground/70'
-                          : 'text-muted-foreground',
-                      )}
-                    >
-                      {chat.last_message || `#${chat.ticket_number || chat.id}`}
-                    </p>
                     <Badge
-                      className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[10px] px-1.5 py-0 shrink-0`}
+                      className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[11px] px-1.5 py-0.5 shrink-0`}
                     >
                       {STATUS_LABEL[chat.status] || chat.status}
                     </Badge>
                   </div>
-                  {chat.user_email && (
-                    <p
-                      className={cn(
-                        'text-[10px] font-mono mt-0.5',
-                        isActive
-                          ? 'text-primary-foreground/50'
-                          : 'text-muted-foreground/50',
+                ) : (
+                  // Full view: avatar, user info, badge
+                  <>
+                    <Avatar className="w-8 h-8 shrink-0">
+                      <AvatarFallback
+                        className={cn(
+                          'text-xs',
+                          isActive ? 'bg-primary-foreground/20' : 'bg-muted',
+                        )}
+                      >
+                        {getInitials(chat.user_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={cn(
+                            'text-sm font-medium truncate',
+                            isActive ? 'text-primary-foreground' : '',
+                          )}
+                        >
+                          {chat.user_name || `User #${chat.user_id}`}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[10px] shrink-0',
+                            isActive
+                              ? 'text-primary-foreground/70'
+                              : 'text-muted-foreground/60',
+                          )}
+                        >
+                          {formatTime(chat.last_message_at)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p
+                          className={cn(
+                            'text-xs truncate',
+                            isActive
+                              ? 'text-primary-foreground/70'
+                              : 'text-muted-foreground',
+                          )}
+                        >
+                          {chat.last_message ||
+                            chat.ticket_number ||
+                            `#${chat.id}`}
+                        </p>
+                        <Badge
+                          className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[11px] px-1.5 py-0.5 shrink-0`}
+                        >
+                          {STATUS_LABEL[chat.status] || chat.status}
+                        </Badge>
+                      </div>
+                      {chat.user_email && (
+                        <p
+                          className={cn(
+                            'text-[10px] font-mono mt-0.5',
+                            isActive
+                              ? 'text-primary-foreground/50'
+                              : 'text-muted-foreground/50',
+                          )}
+                        >
+                          {chat.user_phone || chat.user_email}
+                        </p>
                       )}
-                    >
-                      {chat.user_phone || chat.user_email}
-                    </p>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </button>
             )
           })}
