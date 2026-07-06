@@ -57,7 +57,8 @@ export default function ChatMessage({
   createdAt,
   currentUserId,
 }: MessageProps) {
-  const isMine = senderRole === 'admin'
+  const isMine = senderId === currentUserId
+  const isAdmin = senderRole === 'admin'
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
   const badgeColor =
     roleBadgeColors[senderGroup || ''] || 'bg-gray-500 text-white'
@@ -91,7 +92,7 @@ export default function ChatMessage({
           <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
-          {isMine && senderGroup && (
+          {isAdmin && senderGroup && (
             <Badge className={`${badgeColor} border-0 text-sm`}>
               {t(senderGroup)}
             </Badge>
