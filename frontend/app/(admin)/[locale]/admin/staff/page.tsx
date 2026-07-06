@@ -223,7 +223,7 @@ export default function StaffPage() {
                   selected={customRange}
                   onSelect={(r: any) => {
                     if (r?.from && r?.to)
-                      setCustomRange({ from: r.from, to: r.to })
+                      setCustomRange({ from: r.from, to: endOfDay(r.to) })
                   }}
                   locale={ru}
                 />
