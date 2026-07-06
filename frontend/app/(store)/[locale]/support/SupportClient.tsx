@@ -192,6 +192,9 @@ export default function SupportClient() {
   }
 
   const activeChat = chats.find((c: Chat) => c.id === chatStore.activeChatId)
+  const hasOpenChat = (chats as Chat[]).some(
+    (c) => c.status === 'new' || c.status === 'active',
+  )
 
   // Check if any admin is typing in the active chat
   const isAdminTyping = chatStore.typingUsers.some(
@@ -241,7 +244,7 @@ export default function SupportClient() {
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={hasOpenChat}>
               <Plus className="w-4 h-4 mr-1" />
               Новое обращение
             </Button>
