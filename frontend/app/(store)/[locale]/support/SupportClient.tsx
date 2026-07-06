@@ -155,11 +155,13 @@ export default function SupportClient() {
   const handleSend = useCallback(
     (text: string) => {
       if (!chatStore.activeChatId) return
+      const chat = chats.find((c: Chat) => c.id === chatStore.activeChatId)
+      if (chat?.status === 'closed') return
       if (chatStore.connected) {
         chatStore.sendMessage(chatStore.activeChatId, text)
       }
     },
-    [chatStore.activeChatId, chatStore.connected],
+    [chatStore.activeChatId, chatStore.connected, chats],
   )
 
   const handleTyping = useCallback(
@@ -300,7 +302,12 @@ export default function SupportClient() {
                   onTyping={handleTyping}
                   showTyping={isAdminTyping}
                   typingName="Администратор"
-                  placeholder="Напишите сообщение... (Enter для отправки)"
+                  disabled={activeChat?.status === 'closed'}
+                  placeholder={
+                    activeChat?.status === 'closed'
+                      ? 'Чат закрыт'
+                      : 'Напишите сообщение... (Enter для отправки)'
+                  }
                   className="h-full"
                 />
               </CardContent>

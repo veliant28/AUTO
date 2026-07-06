@@ -195,11 +195,13 @@ export default function SupportAdminPage() {
   const handleSend = useCallback(
     (text: string) => {
       if (!chatStore.activeChatId) return
+      const chat = chats.find((c: Chat) => c.id === chatStore.activeChatId)
+      if (chat?.status === 'closed') return
       if (chatStore.connected) {
         chatStore.sendMessage(chatStore.activeChatId, text)
       }
     },
-    [chatStore.activeChatId, chatStore.connected],
+    [chatStore.activeChatId, chatStore.connected, chats],
   )
 
   const handleTyping = useCallback(
@@ -219,7 +221,7 @@ export default function SupportAdminPage() {
   )
 
   return (
-    <div className="p-6 flex flex-col gap-4 h-[calc(100vh-4rem)]">
+    <div className="p-6 flex flex-col h-[calc(100vh-4rem)]">
       {/* Top bar filters */}
       <div className="flex items-center gap-4 mb-4">
         <div className="relative flex-1 max-w-sm">
@@ -352,7 +354,12 @@ export default function SupportAdminPage() {
                   onTyping={handleTyping}
                   showTyping={isUserTyping}
                   typingName={activeChat.user_name || 'Пользователь'}
-                  placeholder="Напишите ответ... (Enter для отправки)"
+                  disabled={activeChat.status === 'closed'}
+                  placeholder={
+                    activeChat.status === 'closed'
+                      ? 'Чат закрыт'
+                      : 'Напишите ответ... (Enter для отправки)'
+                  }
                   className="h-full"
                 />
               </CardContent>
