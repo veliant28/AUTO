@@ -2,7 +2,14 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { Mail, MessageCircle, Phone, Plus, Loader2 } from 'lucide-react'
+import {
+  Mail,
+  MessageCircle,
+  Phone,
+  Plus,
+  Loader2,
+  LifeBuoy,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatPhone } from '@/components/ui/PhoneInput'
@@ -221,7 +228,10 @@ export default function SupportClient() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Техническая поддержка</h1>
+        <div className="flex items-center gap-3">
+          <LifeBuoy className="w-6 h-6 text-primary" />
+          <h1 className="text-3xl font-bold">Техническая поддержка</h1>
+        </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
