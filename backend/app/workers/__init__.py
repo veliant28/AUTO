@@ -14,6 +14,7 @@ import app.workers.tasks.nova_poshta_tasks  # noqa: F401
 import app.workers.tasks.deactivation_tasks  # noqa: F401
 import app.workers.tasks.image_tasks  # noqa: F401
 import app.workers.tasks.checkbox_tasks  # noqa: F401
+import app.workers.tasks.chat_cleanup_tasks  # noqa: F401
 
 celery_app.conf.beat_schedule = {
     'scheduler-tick': {
@@ -27,6 +28,10 @@ celery_app.conf.beat_schedule = {
     'check-product-deactivation': {
         'task': 'check_product_deactivation',
         'schedule': 3600.0,
+    },
+    'cleanup-old-chat-messages': {
+        'task': 'cleanup_old_chat_messages',
+        'schedule': 86400.0,
     },
 }
 
