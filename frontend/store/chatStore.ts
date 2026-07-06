@@ -105,7 +105,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   sendTyping: (chatId, isTyping) => {
     const { ws, connected } = get()
-    if (ws && connected) {
+    if (ws && connected && ws.readyState === WebSocket.OPEN) {
       ws.send(
         JSON.stringify({
           type: 'typing',
@@ -118,14 +118,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   sendMessage: (chatId, text) => {
     const { ws, connected } = get()
-    if (ws && connected) {
+    if (ws && connected && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'message', chat_id: chatId, text }))
     }
   },
 
   subscribe: (chatId) => {
     const { ws, connected } = get()
-    if (ws && connected) {
+    if (ws && connected && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'subscribe', chat_id: chatId }))
     }
   },
