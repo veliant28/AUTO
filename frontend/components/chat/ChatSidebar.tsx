@@ -1,9 +1,9 @@
 'use client'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { formatPhone } from '@/components/ui/PhoneInput'
 
 interface Chat {
   id: number
@@ -109,7 +109,7 @@ export default function ChatSidebar({
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={cn(
-                  'w-full text-left flex items-center gap-2.5 py-2.5 px-3 rounded-lg border transition-colors cursor-pointer',
+                  'w-full text-left flex items-start gap-2.5 py-2.5 px-3 rounded-lg border transition-colors cursor-pointer',
                   isActive
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'hover:bg-muted/30 border-transparent',
@@ -133,72 +133,62 @@ export default function ChatSidebar({
                     </Badge>
                   </div>
                 ) : (
-                  // Full view: avatar, user info, badge
-                  <>
-                    <Avatar className="w-8 h-8 shrink-0">
-                      <AvatarFallback
+                  // Full view: ticket number + badge + user info
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <span
                         className={cn(
-                          'text-xs',
-                          isActive ? 'bg-primary-foreground/20' : 'bg-muted',
+                          'text-sm font-mono font-bold truncate',
+                          isActive ? 'text-primary-foreground' : '',
                         )}
                       >
-                        {getInitials(chat.user_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={cn(
-                            'text-sm font-medium truncate',
-                            isActive ? 'text-primary-foreground' : '',
-                          )}
-                        >
-                          {chat.user_name || `User #${chat.user_id}`}
-                        </span>
-                        <span
-                          className={cn(
-                            'text-[10px] shrink-0',
-                            isActive
-                              ? 'text-primary-foreground/70'
-                              : 'text-muted-foreground/60',
-                          )}
-                        >
-                          {formatTime(chat.last_message_at)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <p
-                          className={cn(
-                            'text-xs truncate',
-                            isActive
-                              ? 'text-primary-foreground/70'
-                              : 'text-muted-foreground',
-                          )}
-                        >
-                          {chat.last_message ||
-                            chat.ticket_number ||
-                            `#${chat.id}`}
-                        </p>
+                        {chat.ticket_number || `#${chat.id}`}
+                      </span>
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
                         <Badge
                           className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
                         >
                           {STATUS_LABEL[chat.status] || chat.status}
                         </Badge>
-                      </div>
-                      {chat.user_email && (
-                        <p
+                        <span
                           className={cn(
-                            'text-[10px] font-mono mt-0.5',
+                            'text-[10px]',
                             isActive
-                              ? 'text-primary-foreground/50'
+                              ? 'text-primary-foreground/60'
                               : 'text-muted-foreground/50',
                           )}
                         >
-                          {chat.user_phone || chat.user_email}
-                        </p>
-                      )}
+                          {formatTime(chat.last_message_at || chat.created_at)}
+                        </span>
+                      </div>
                     </div>
-                  </>
+                    {(chat.user_name || chat.user_phone) && (
+                      <div className="mt-1 space-y-0.5">
+                        <p
+                          className={cn(
+                            'text-sm leading-tight truncate',
+                            isActive
+                              ? 'text-primary-foreground/90'
+                              : 'text-foreground',
+                          )}
+                        >
+                          {chat.user_name || ''}
+                        </p>
+                        {chat.user_phone && (
+                          <p
+                            className={cn(
+                              'text-sm font-mono leading-tight',
+                              isActive
+                                ? 'text-primary-foreground/70'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            {formatPhone(chat.user_phone)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </button>
             )
