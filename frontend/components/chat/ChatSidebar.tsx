@@ -150,8 +150,20 @@ export default function ChatSidebar({
                         {STATUS_LABEL[chat.status] || chat.status}
                       </Badge>
                     </div>
-                    {(chat.user_name || chat.user_phone) && (
+                    {(chat.user_name || chat.user_phone || chat.user_email) && (
                       <div className="mt-1 space-y-0.5">
+                        {chat.user_email && (
+                          <p
+                            className={cn(
+                              'text-xs leading-tight truncate font-mono',
+                              isActive
+                                ? 'text-primary-foreground/60'
+                                : 'text-muted-foreground/60',
+                            )}
+                          >
+                            {chat.user_email}
+                          </p>
+                        )}
                         {chat.user_name && (
                           <p
                             className={cn(
