@@ -159,8 +159,8 @@ export default function SupportAdminPage() {
   }, [chatStore.activeChatId, chatStore.connected])
 
   // Handle incoming WS messages
-  chatStore.setOnMessage(
-    useCallback((data: any) => {
+  const handleWsMessage = useCallback(
+    (data: any) => {
       if (data.type === 'new_message') {
         queryClient.invalidateQueries({
           queryKey: ['admin-support-messages', data.chat_id],
@@ -170,8 +170,14 @@ export default function SupportAdminPage() {
       if (data.type === 'status_changed') {
         queryClient.invalidateQueries({ queryKey: ['admin-support-chats'] })
       }
-    }, []),
+    },
+    [queryClient],
   )
+
+  useEffect(() => {
+    chatStore.setOnMessage(handleWsMessage)
+    return () => chatStore.setOnMessage(null)
+  }, [handleWsMessage])
 
   // Set active chat on first load
   useEffect(() => {

@@ -122,8 +122,8 @@ export default function SupportClient() {
   }, [chatStore.activeChatId, chatStore.connected])
 
   // Handle incoming WebSocket messages
-  chatStore.setOnMessage(
-    useCallback((data: any) => {
+  const handleWsMessage = useCallback(
+    (data: any) => {
       if (data.type === 'new_message') {
         // Invalidate both the messages list and the chat list
         queryClient.invalidateQueries({
@@ -134,8 +134,14 @@ export default function SupportClient() {
       if (data.type === 'status_changed') {
         queryClient.invalidateQueries({ queryKey: ['my-chats'] })
       }
-    }, []),
+    },
+    [queryClient],
   )
+
+  useEffect(() => {
+    chatStore.setOnMessage(handleWsMessage)
+    return () => chatStore.setOnMessage(null)
+  }, [handleWsMessage])
 
   const handleSend = useCallback(
     async (text: string) => {
