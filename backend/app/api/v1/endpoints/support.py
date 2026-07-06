@@ -117,6 +117,7 @@ def get_chat_messages(
             sender_id=m.sender_id,
             sender_role=m.sender_role.value,
             sender_name=m.sender.full_name or f"{m.sender.first_name or ''} {m.sender.last_name or ''}".strip() or m.sender.email,
+            sender_avatar_index=m.sender.avatar_index,
             message=m.message,
             created_at=m.created_at,
         ))

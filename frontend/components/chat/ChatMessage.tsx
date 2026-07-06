@@ -11,6 +11,7 @@ interface MessageProps {
   senderId: number
   senderRole: 'user' | 'admin'
   senderName?: string
+  senderAvatarIndex?: number | null
   createdAt: string
   currentUserId: number
 }
@@ -47,12 +48,13 @@ export default function ChatMessage({
   message,
   senderRole,
   senderName,
+  senderAvatarIndex,
   createdAt,
   currentUserId,
 }: MessageProps) {
   const isMine = senderRole === 'admin'
   const roleBadge = ROLE_BADGE[senderRole] || 'bg-gray-500 text-white'
-  const avatarUrl = getAvatarUrl(undefined, senderName)
+  const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
 
   return (
     <div
@@ -61,7 +63,7 @@ export default function ChatMessage({
         isMine ? 'flex-row-reverse' : 'flex-row',
       )}
     >
-      <Avatar className="w-10 h-10 shrink-0 mt-0.5">
+      <Avatar className="w-12 h-12 shrink-0 mt-0.5">
         <AvatarImage src={avatarUrl} />
         <AvatarFallback
           className={cn(

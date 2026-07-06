@@ -53,6 +53,7 @@ def _msg_to_out(m: ChatMessage) -> ChatMessageOut:
         sender_id=m.sender_id,
         sender_role=m.sender_role.value,
         sender_name=sender_name,
+        sender_avatar_index=sender.avatar_index,
         message=m.message,
         created_at=m.created_at,
     )
