@@ -284,7 +284,8 @@
     "my_account": "Account",
     "admin_panel": "Admin Panel",
     "maintenance_parts": "Maintenance Parts",
-    "loyalty": "Loyalty"
+    "loyalty": "Loyalty",
+    "tech_support": "Tech Support"
   },
   "footer": {
     "description": "The largest online auto parts store with TecDoc integration. Instant search and precise applicability.",
