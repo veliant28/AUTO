@@ -227,7 +227,7 @@ export default function SupportAdminPage() {
             placeholder="Поиск по имени, телефону, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 w-64 h-9 text-sm"
+            className="pl-8"
           />
         </div>
 
@@ -235,7 +235,7 @@ export default function SupportAdminPage() {
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
         >
-          <SelectTrigger className="w-32 h-9 text-sm">
+          <SelectTrigger className="w-32">
             <SelectValue placeholder="Все статусы" />
           </SelectTrigger>
           <SelectContent>
@@ -250,7 +250,6 @@ export default function SupportAdminPage() {
           <Button
             key={p}
             variant={period === p && !customRange ? 'default' : 'outline'}
-            size="sm"
             onClick={() => {
               setPeriod(p)
               setCustomRange(undefined)
@@ -262,7 +261,7 @@ export default function SupportAdminPage() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button variant="outline" className="gap-1.5">
               <CalendarDays className="w-4 h-4" />
               {customRange
                 ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
@@ -285,7 +284,6 @@ export default function SupportAdminPage() {
         {chatStore.activeChatId && (
           <Button
             variant="destructive"
-            size="sm"
             onClick={() => chatStore.setActiveChat(null)}
           >
             {t('staff_reset')}
