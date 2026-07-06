@@ -39,12 +39,6 @@ function formatTime(dateStr: string): string {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
-const ROLE_BADGE: Record<string, string> = {
-  admin: 'bg-red-500 text-white',
-  manager: 'bg-blue-500 text-white',
-  operator: 'bg-orange-500 text-white',
-}
-
 export default function ChatMessage({
   message,
   senderRole,
@@ -54,7 +48,6 @@ export default function ChatMessage({
   currentUserId,
 }: MessageProps) {
   const isMine = senderRole === 'admin'
-  const roleBadge = ROLE_BADGE[senderRole] || 'bg-gray-500 text-white'
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
 
   return (
@@ -86,7 +79,7 @@ export default function ChatMessage({
             {senderName || 'Пользователь'}
           </span>
           {senderRole !== 'user' && (
-            <Badge className={`${roleBadge} border-0 text-[10px] px-1 py-0`}>
+            <Badge className="bg-red-500 text-white border-0 text-sm">
               {senderRole}
             </Badge>
           )}
