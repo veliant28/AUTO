@@ -188,12 +188,29 @@ export default function SupportAdminPage() {
   }, [chats])
 
   const handleSend = useCallback(
-    (text: string) => {
-      if (chatStore.activeChatId) {
+    async (text: string) => {
+      if (!chatStore.activeChatId) return
+      if (chatStore.connected) {
         chatStore.sendMessage(chatStore.activeChatId, text)
+      } else {
+        try {
+          const { data } = await api.get(
+            `/admin/support/chats/${chatStore.activeChatId}`,
+          )
+          // Fallback: use api patch approach
+          await api.patch(
+            `/admin/support/chats/${chatStore.activeChatId}/status`,
+            { status: 'active' },
+          )
+          queryClient.invalidateQueries({
+            queryKey: ['admin-support-messages', chatStore.activeChatId],
+          })
+        } catch (e) {
+          console.error('Failed to send message', e)
+        }
       }
     },
-    [chatStore.activeChatId],
+    [chatStore.activeChatId, chatStore.connected],
   )
 
   const handleTyping = useCallback(
