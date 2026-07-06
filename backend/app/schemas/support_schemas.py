@@ -9,6 +9,7 @@ class ChatMessageOut(BaseModel):
     sender_id: int
     sender_role: str
     sender_name: Optional[str] = None
+    sender_group: Optional[str] = None
     sender_avatar_index: Optional[int] = None
     message: str
     created_at: datetime

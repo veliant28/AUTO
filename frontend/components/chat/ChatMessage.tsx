@@ -1,6 +1,7 @@
 'use client'
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getAvatarUrl } from '@/lib/avatar'
 
@@ -10,9 +11,18 @@ interface MessageProps {
   senderId: number
   senderRole: 'user' | 'admin'
   senderName?: string
+  senderGroup?: string
   senderAvatarIndex?: number | null
   createdAt: string
   currentUserId: number
+}
+
+const roleBadgeColors: Record<string, string> = {
+  admin: 'bg-red-500 text-white',
+  manager: 'bg-blue-500 text-white',
+  operator: 'bg-orange-500 text-white',
+  b2b: 'bg-green-500 text-white',
+  retail: 'bg-gray-500 text-white',
 }
 
 function getInitials(name?: string): string {
@@ -26,7 +36,6 @@ function getInitials(name?: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  // Backend returns naive UTC datetime — parse as UTC explicitly
   const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
   const now = new Date()
   const diff = now.getTime() - d.getTime()
@@ -42,12 +51,15 @@ export default function ChatMessage({
   message,
   senderRole,
   senderName,
+  senderGroup,
   senderAvatarIndex,
   createdAt,
   currentUserId,
 }: MessageProps) {
   const isMine = senderRole === 'admin'
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
+  const badgeColor =
+    roleBadgeColors[senderGroup || ''] || 'bg-gray-500 text-white'
 
   return (
     <div
@@ -77,6 +89,11 @@ export default function ChatMessage({
           <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
+          {isMine && senderGroup && (
+            <Badge className={`${badgeColor} border-0 text-sm`}>
+              {senderGroup}
+            </Badge>
+          )}
         </div>
         <div
           className={cn(

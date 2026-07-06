@@ -59,6 +59,7 @@ interface Message {
   sender_id: number
   sender_role: 'user' | 'admin'
   sender_name?: string
+  sender_group?: string
   message: string
   created_at: string
 }
@@ -310,11 +311,11 @@ export default function SupportAdminPage() {
             <>
               <CardHeader className="p-3 pb-0 shrink-0 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-medium">
-                    {activeChat.user_name || `User #${activeChat.user_id}`}
-                  </CardTitle>
-                  <p className="font-bold font-mono text-muted-foreground">
+                  <CardTitle className="font-bold font-mono text-muted-foreground">
                     {activeChat.ticket_number || `#${activeChat.id}`}
+                  </CardTitle>
+                  <p className="text-sm font-medium">
+                    {activeChat.user_name || `User #${activeChat.user_id}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -332,7 +333,7 @@ export default function SupportAdminPage() {
                         })
                     }}
                   >
-                    <SelectTrigger className="w-28 h-8 text-xs">
+                    <SelectTrigger className="w-[140px] h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

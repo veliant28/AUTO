@@ -134,6 +134,7 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(...)):
                         "sender_id": message.sender_id,
                         "sender_role": message.sender_role.value,
                         "sender_name": sender_name,
+                        "sender_group": message.sender.role.name if message.sender.role else None,
                         "sender_avatar_index": message.sender.avatar_index,
                         "message": message.message,
                         "created_at": message.created_at.isoformat(),

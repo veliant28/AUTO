@@ -48,6 +48,7 @@ interface Message {
   sender_id: number
   sender_role: 'user' | 'admin'
   sender_name?: string
+  sender_group?: string
   message: string
   created_at: string
 }
