@@ -310,7 +310,6 @@ export default function SupportClient() {
                   onTyping={handleTyping}
                   showTyping={isAdminTyping}
                   typingName="Администратор"
-                  disabled={!chatStore.connected}
                   placeholder="Напишите сообщение... (Enter для отправки)"
                   className="h-full"
                 />

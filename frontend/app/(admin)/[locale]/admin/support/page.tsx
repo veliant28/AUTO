@@ -194,13 +194,9 @@ export default function SupportAdminPage() {
         chatStore.sendMessage(chatStore.activeChatId, text)
       } else {
         try {
-          const { data } = await api.get(
-            `/admin/support/chats/${chatStore.activeChatId}`,
-          )
-          // Fallback: use api patch approach
-          await api.patch(
-            `/admin/support/chats/${chatStore.activeChatId}/status`,
-            { status: 'active' },
+          await api.post(
+            `/admin/support/chats/${chatStore.activeChatId}/messages`,
+            { message: text },
           )
           queryClient.invalidateQueries({
             queryKey: ['admin-support-messages', chatStore.activeChatId],
@@ -364,7 +360,6 @@ export default function SupportAdminPage() {
                   onTyping={handleTyping}
                   showTyping={isUserTyping}
                   typingName={activeChat.user_name || 'Пользователь'}
-                  disabled={!chatStore.connected}
                   placeholder="Напишите ответ... (Enter для отправки)"
                   className="h-full"
                 />
