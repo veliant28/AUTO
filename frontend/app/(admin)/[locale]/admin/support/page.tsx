@@ -93,7 +93,10 @@ export default function SupportAdminPage() {
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [search, setSearch] = useState('')
 
-  const range = customRange || getDateRange(period)
+  const range = useMemo(
+    () => customRange || getDateRange(period),
+    [period, customRange?.from?.getTime(), customRange?.to?.getTime()],
+  )
 
   // Auth token for WebSocket
   const authToken = useAuthStore((s) => {
