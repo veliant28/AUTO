@@ -375,6 +375,7 @@ export default function SupportAdminPage() {
                       ? 'Чат закрыт'
                       : 'Напишите ответ... (Enter для отправки)'
                   }
+                  alignRight
                   className="h-full"
                 />
               </CardContent>
