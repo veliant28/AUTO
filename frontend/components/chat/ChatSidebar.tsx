@@ -155,7 +155,7 @@ export default function ChatSidebar({
                         {chat.user_email && (
                           <p
                             className={cn(
-                              'text-xs leading-tight truncate font-mono',
+                              'text-sm leading-tight truncate font-mono',
                               isActive
                                 ? 'text-primary-foreground/60'
                                 : 'text-muted-foreground/60',
