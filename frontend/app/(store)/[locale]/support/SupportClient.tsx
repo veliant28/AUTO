@@ -219,8 +219,8 @@ export default function SupportClient() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
-      <div className="flex items-center justify-between mb-4">
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Техническая поддержка</h1>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
