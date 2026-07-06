@@ -1,7 +1,6 @@
 'use client'
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getAvatarUrl } from '@/lib/avatar'
 
@@ -78,11 +77,6 @@ export default function ChatMessage({
           <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
-          {senderRole !== 'user' && (
-            <Badge className="bg-red-500 text-white border-0 text-sm">
-              {senderRole}
-            </Badge>
-          )}
         </div>
         <div
           className={cn(
