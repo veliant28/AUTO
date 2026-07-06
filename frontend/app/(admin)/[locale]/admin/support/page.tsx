@@ -277,7 +277,8 @@ export default function SupportAdminPage() {
               navLayout="around"
               selected={customRange}
               onSelect={(r: any) => {
-                if (r?.from && r?.to) setCustomRange({ from: r.from, to: r.to })
+                if (r?.from && r?.to)
+                  setCustomRange({ from: r.from, to: endOfDay(r.to) })
               }}
               locale={ru}
             />
