@@ -193,7 +193,7 @@ export default function ChatSidebar({
                           )}
                           <span
                             className={cn(
-                              'text-xs shrink-0',
+                              'text-sm shrink-0',
                               isActive
                                 ? 'text-primary-foreground/60'
                                 : 'text-muted-foreground/50',
