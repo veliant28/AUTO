@@ -95,14 +95,26 @@ export default function ChatWindow({
             // Add date divider if date changes
             const showDateDivider =
               idx === 0 ||
-              new Date(msg.created_at).toDateString() !==
-                new Date(messages[idx - 1].created_at).toDateString()
+              new Date(
+                msg.created_at.endsWith('Z')
+                  ? msg.created_at
+                  : msg.created_at + 'Z',
+              ).toDateString() !==
+                new Date(
+                  messages[idx - 1].created_at.endsWith('Z')
+                    ? messages[idx - 1].created_at
+                    : messages[idx - 1].created_at + 'Z',
+                ).toDateString()
             return (
               <div key={msg.id}>
                 {showDateDivider && (
                   <div className="flex items-center justify-center my-3">
                     <span className="text-[10px] text-muted-foreground/40 bg-background px-2">
-                      {new Date(msg.created_at).toLocaleDateString('ru-RU', {
+                      {new Date(
+                        msg.created_at.endsWith('Z')
+                          ? msg.created_at
+                          : msg.created_at + 'Z',
+                      ).toLocaleDateString('ru-RU', {
                         day: 'numeric',
                         month: 'long',
                       })}

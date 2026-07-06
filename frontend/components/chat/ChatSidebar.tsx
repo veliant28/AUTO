@@ -52,7 +52,7 @@ function getInitials(name?: string): string {
 
 function formatTime(dateStr?: string): string {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
+  const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
   const now = new Date()
   const diff = now.getTime() - d.getTime()
   const mins = Math.floor(diff / 60000)
@@ -98,10 +98,10 @@ export default function ChatSidebar({
   return (
     <div className="flex flex-col h-full">
       <div className="p-2.5 border-b">
-        <h3 className="text-sm font-medium">{title}</h3>
+        <h3 className="text-base font-medium">{title}</h3>
       </div>
       <ScrollArea className="flex-1">
-        <div className="space-y-0.5 p-1.5">
+        <div className="space-y-1 p-3">
           {chats.map((chat) => {
             const isActive = chat.id === activeChatId
             return (
@@ -109,7 +109,7 @@ export default function ChatSidebar({
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={cn(
-                  'w-full text-left flex items-center gap-2.5 py-2 px-2.5 rounded-lg border transition-colors cursor-pointer',
+                  'w-full text-left flex items-center gap-2.5 py-2.5 px-3 rounded-lg border transition-colors cursor-pointer',
                   isActive
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'hover:bg-muted/30 border-transparent',
@@ -127,7 +127,7 @@ export default function ChatSidebar({
                       {chat.ticket_number || `#${chat.id}`}
                     </span>
                     <Badge
-                      className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[11px] px-1.5 py-0.5 shrink-0`}
+                      className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
                     >
                       {STATUS_LABEL[chat.status] || chat.status}
                     </Badge>
@@ -180,7 +180,7 @@ export default function ChatSidebar({
                             `#${chat.id}`}
                         </p>
                         <Badge
-                          className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[11px] px-1.5 py-0.5 shrink-0`}
+                          className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
                         >
                           {STATUS_LABEL[chat.status] || chat.status}
                         </Badge>

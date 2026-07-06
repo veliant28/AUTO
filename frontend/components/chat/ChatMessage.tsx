@@ -27,7 +27,8 @@ function getInitials(name?: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  const d = new Date(dateStr)
+  // Backend returns naive UTC datetime — parse as UTC explicitly
+  const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
   const now = new Date()
   const diff = now.getTime() - d.getTime()
   const mins = Math.floor(diff / 60000)
