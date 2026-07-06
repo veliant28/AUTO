@@ -18,13 +18,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { useChatStore } from '@/store/chatStore'
 import ChatWindow from '@/components/chat/ChatWindow'
 import ChatSidebar from '@/components/chat/ChatSidebar'
 
 interface Chat {
   id: number
+  ticket_number?: string
   user_id: number
   user_name?: string
   status: string
@@ -51,7 +51,6 @@ export default function SupportClient() {
   const queryClient = useQueryClient()
   const chatStore = useChatStore()
   const [createOpen, setCreateOpen] = useState(false)
-  const [subject, setSubject] = useState('')
   const [initialMessage, setInitialMessage] = useState('')
   const [creating, setCreating] = useState(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -161,17 +160,15 @@ export default function SupportClient() {
   )
 
   const handleCreateChat = async () => {
-    if (!subject.trim() || !initialMessage.trim() || creating) return
+    if (!initialMessage.trim() || creating) return
     setCreating(true)
     try {
       const { data } = await api.post('/support/chats', {
-        subject: subject.trim(),
         message: initialMessage.trim(),
       })
       queryClient.invalidateQueries({ queryKey: ['my-chats'] })
       chatStore.setActiveChat(data.id)
       setCreateOpen(false)
-      setSubject('')
       setInitialMessage('')
     } catch (e) {
       console.error('Failed to create chat', e)
@@ -237,11 +234,6 @@ export default function SupportClient() {
               <DialogTitle>Новое обращение</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 pt-2">
-              <Input
-                placeholder="Тема"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
               <textarea
                 placeholder="Опишите вашу проблему..."
                 value={initialMessage}
@@ -250,7 +242,7 @@ export default function SupportClient() {
               />
               <Button
                 onClick={handleCreateChat}
-                disabled={creating || !subject.trim() || !initialMessage.trim()}
+                disabled={creating || !initialMessage.trim()}
                 className="w-full"
               >
                 {creating ? (
@@ -280,7 +272,7 @@ export default function SupportClient() {
             <>
               <CardHeader className="p-3 pb-0 shrink-0">
                 <CardTitle className="text-sm font-medium">
-                  {activeChat.subject || 'Чат поддержки'}
+                  #{activeChat.ticket_number || activeChat.id}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 p-0 overflow-hidden relative">

@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface Chat {
   id: number
+  ticket_number?: string
   user_id: number
   user_name?: string
   user_phone?: string
@@ -150,7 +151,7 @@ export default function ChatSidebar({
                           : 'text-muted-foreground',
                       )}
                     >
-                      {chat.last_message || chat.subject || 'Нет сообщений'}
+                      {chat.last_message || `#${chat.ticket_number || chat.id}`}
                     </p>
                     <Badge
                       className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-[10px] px-1.5 py-0 shrink-0`}

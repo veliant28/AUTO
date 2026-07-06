@@ -20,9 +20,9 @@ class ChatConversation(Base):
     __tablename__ = "chat_conversations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_number = Column(String(20), unique=True, index=True, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     status = Column(SAEnum(ChatStatus, name="chatstatus", create_type=False), default=ChatStatus.NEW, nullable=False, index=True)
-    subject = Column(String(255), nullable=True)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -29,12 +29,12 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
     assignee = chat.assignee
     return ChatConversationOut(
         id=chat.id,
+        ticket_number=chat.ticket_number,
         user_id=chat.user_id,
         user_name=user.full_name or f"{user.first_name or ''} {user.last_name or ''}".strip() or user.email,
         user_phone=user.phone,
         user_email=user.email,
         status=chat.status.value,
-        subject=chat.subject,
         assigned_to=chat.assigned_to,
         assignee_name=assignee.full_name if assignee else None,
         last_message=last_msg.message if last_msg else None,
@@ -131,9 +131,9 @@ def get_chat_detail(
 
     return ChatConversationDetail(
         id=chat.id,
+        ticket_number=chat.ticket_number,
         user_id=chat.user_id,
         status=chat.status.value,
-        subject=chat.subject,
         assigned_to=chat.assigned_to,
         created_at=chat.created_at,
         updated_at=chat.updated_at,

@@ -28,6 +28,7 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
     
     return ChatConversationOut(
         id=chat.id,
+        ticket_number=chat.ticket_number,
         user_id=chat.user_id,
         user_name=user.full_name or f"{user.first_name or ''} {user.last_name or ''}".strip() or user.email,
         user_phone=user.phone,
@@ -68,11 +69,11 @@ def create_chat(
 
     chat = ChatConversation(
         user_id=user_id,
-        subject=req.subject,
         status=ChatStatus.NEW,
     )
     db.add(chat)
     db.flush()
+    chat.ticket_number = f"TKT-{chat.id:010d}"
 
     message = ChatMessage(
         conversation_id=chat.id,

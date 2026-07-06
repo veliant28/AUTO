@@ -17,12 +17,12 @@ class ChatMessageOut(BaseModel):
 
 class ChatConversationOut(BaseModel):
     id: int
+    ticket_number: Optional[str] = None
     user_id: int
     user_name: Optional[str] = None
     user_phone: Optional[str] = None
     user_email: Optional[str] = None
     status: str
-    subject: Optional[str] = None
     assigned_to: Optional[int] = None
     assignee_name: Optional[str] = None
     last_message: Optional[str] = None
@@ -37,9 +37,9 @@ class ChatConversationOut(BaseModel):
 
 class ChatConversationDetail(BaseModel):
     id: int
+    ticket_number: Optional[str] = None
     user_id: int
     status: str
-    subject: Optional[str] = None
     assigned_to: Optional[int] = None
     created_at: datetime
     updated_at: datetime
@@ -50,7 +50,6 @@ class ChatConversationDetail(BaseModel):
 
 
 class CreateChatRequest(BaseModel):
-    subject: str
     message: str
 
 

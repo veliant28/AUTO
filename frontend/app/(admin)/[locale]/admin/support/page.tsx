@@ -41,12 +41,12 @@ const PERIODS = ['day', 'week', 'month', 'year'] as const
 
 interface Chat {
   id: number
+  ticket_number?: string
   user_id: number
   user_name?: string
   user_phone?: string
   user_email?: string
   status: string
-  subject?: string
   last_message?: string
   last_message_at?: string
   updated_at: string
@@ -308,11 +308,9 @@ export default function SupportAdminPage() {
                   <CardTitle className="text-sm font-medium">
                     {activeChat.user_name || `User #${activeChat.user_id}`}
                   </CardTitle>
-                  {activeChat.subject && (
-                    <p className="text-xs text-muted-foreground">
-                      {activeChat.subject}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground">
+                    #{activeChat.ticket_number || activeChat.id}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select
