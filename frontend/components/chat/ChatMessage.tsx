@@ -92,7 +92,7 @@ export default function ChatMessage({
           <span className="text-sm text-muted-foreground">
             {senderName || 'Пользователь'}
           </span>
-          {isAdmin && senderGroup && (
+          {isMine && senderGroup && (
             <Badge className={`${badgeColor} border-0 text-sm`}>
               {t(senderGroup)}
             </Badge>
