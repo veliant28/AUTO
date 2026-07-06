@@ -46,7 +46,7 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
 
 def _msg_to_out(m: ChatMessage) -> ChatMessageOut:
     sender = m.sender
-    sender_name = sender.full_name or f"{sender.first_name or ''} {sender.last_name or ''}".strip() or sender.email
+    sender_name = f"{sender.first_name or ''} {sender.last_name or ''}".strip() or sender.full_name or sender.email
     return ChatMessageOut(
         id=m.id,
         conversation_id=m.conversation_id,
