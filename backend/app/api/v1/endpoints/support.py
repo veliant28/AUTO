@@ -1,4 +1,5 @@
 import logging
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
@@ -66,9 +67,11 @@ def create_chat(
     if not user:
         raise HTTPException(404, "User not found")
 
+    import uuid
     chat = ChatConversation(
         user_id=user_id,
         status=ChatStatus.NEW,
+        ticket_number=f"TMP-{uuid.uuid4().hex[:8]}",
     )
     db.add(chat)
     db.flush()
