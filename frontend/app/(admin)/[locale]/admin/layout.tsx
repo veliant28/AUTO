@@ -35,6 +35,7 @@ import {
   Truck,
   Gift,
   ScanBarcode,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -122,6 +123,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
     '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
     '/admin/staff': { icon: Users, titleKey: 'staff_title' },
+    '/admin/support': { icon: MessageSquare, titleKey: 'support_title' },
   }
 
   const pageMetaEntries = Object.entries(pageMeta).sort(
@@ -765,6 +767,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       icon: ScanBarcode,
       label: t('waybills_title'),
       roles: ['admin'],
+    },
+    {
+      href: '/admin/support',
+      icon: MessageSquare,
+      label: t('support_title'),
+      roles: ['admin', 'manager'],
     },
     {
       href: '/admin/products',

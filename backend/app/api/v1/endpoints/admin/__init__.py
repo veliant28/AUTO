@@ -19,6 +19,7 @@ from app.api.v1.endpoints.admin.loyalty import router as loyalty_router
 from app.api.v1.endpoints.admin.checkbox import router as checkbox_router
 from app.api.v1.endpoints.admin.payments import router as payments_router
 from app.api.v1.endpoints.admin.staff import router as staff_router
+from app.api.v1.endpoints.admin.support import router as admin_support_router
 
 admin_router = APIRouter()
 
@@ -42,5 +43,6 @@ admin_router.include_router(loyalty_router, tags=["Admin Loyalty"])
 admin_router.include_router(checkbox_router, prefix="/checkbox", tags=["Checkbox"])
 admin_router.include_router(payments_router, prefix="/payments", tags=["Payments"])
 admin_router.include_router(staff_router, tags=["Staff"])
+admin_router.include_router(admin_support_router, tags=["Admin Support"])
 
 __all__ = ["admin_router"]

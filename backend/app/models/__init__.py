@@ -18,6 +18,7 @@ from .returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from .loyalty import Promocode
 from .checkbox import OrderCheckboxReceipt
 from .payments import PaymentTransaction
+from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 
 __all__ = [
     "Base", 
@@ -41,4 +42,5 @@ __all__ = [
     "Promocode",
     "OrderCheckboxReceipt",
     "PaymentTransaction",
+    "ChatConversation", "ChatMessage", "ChatStatus", "SenderRole",
 ]

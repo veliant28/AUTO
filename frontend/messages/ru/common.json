@@ -297,6 +297,7 @@
     "support": "Поддержка",
     "terms": "Условия",
     "admin_panel": "Админ-панель",
+    "tech_support": "Тех. поддержка",
     "copyright": "© 2026 SVOM Store",
     "contact_phone": "+380 (44) 123-45-67",
     "contact_email": "info@autoparts.local",
@@ -1191,7 +1192,17 @@
     "staff_period_month": "Месяц",
     "staff_period_year": "Год",
     "staff_select_dates": "Выбрать даты",
-    "staff_reset": "Сбросить"
+    "staff_reset": "Сбросить",
+    "support_title": "Тех. поддержка",
+    "support_search_placeholder": "Поиск по имени, телефону, email...",
+    "support_type_message": "Напишите сообщение... (Enter для отправки)",
+    "support_send": "Отправить",
+    "support_new_chat": "Новое обращение",
+    "support_no_chats": "Нет чатов",
+    "support_typing": "печатает...",
+    "support_status_new": "Новый",
+    "support_status_active": "Активный",
+    "support_status_closed": "Закрыт"
   },
   "catalog": {
     "title": "Каталог",

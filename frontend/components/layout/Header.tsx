@@ -13,7 +13,10 @@ import {
   Search,
   Heart,
   ClipboardList,
-	  RotateCcw, Gift,
+  RotateCcw,
+  Gift,
+  Shield,
+  LifeBuoy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -206,6 +209,12 @@ export default function Header() {
                           <Gift className="mr-2 h-4 w-4" /> {t('loyalty')}
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/support">
+                          <LifeBuoy className="mr-2 h-4 w-4" />{' '}
+                          {t('tech_support')}
+                        </Link>
+                      </DropdownMenuItem>
                       {user?.role &&
                         ['admin', 'manager', 'operator'].includes(
                           user.role,
@@ -217,7 +226,7 @@ export default function Header() {
                               className="text-primary font-medium"
                             >
                               <Link href="/admin">
-                                <Package className="mr-2 h-4 w-4" />{' '}
+                                <Shield className="mr-2 h-4 w-4" />{' '}
                                 {t('admin_panel')}
                               </Link>
                             </DropdownMenuItem>

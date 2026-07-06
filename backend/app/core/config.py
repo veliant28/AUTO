@@ -50,4 +50,7 @@ class Settings(BaseSettings):
     TELEGRAM_WEBHOOK_URL: str = ""
     TELEGRAM_BOT_USERNAME: str = "SVOMBot"
 
+    # Chat / Support
+    CHAT_HISTORY_DAYS: int = 180
+
 settings = Settings()

@@ -297,6 +297,7 @@
     "support": "Support",
     "terms": "Terms",
     "admin_panel": "Admin Panel",
+    "tech_support": "Tech Support",
     "copyright": "© 2026 SVOM Store",
     "contact_phone": "+380 (44) 123-45-67",
     "contact_email": "info@autoparts.local",
@@ -1191,7 +1192,17 @@
     "staff_period_month": "Month",
     "staff_period_year": "Year",
     "staff_select_dates": "Select dates",
-    "staff_reset": "Reset"
+    "staff_reset": "Reset",
+    "support_title": "Tech Support",
+    "support_search_placeholder": "Search by name, phone, email...",
+    "support_type_message": "Type a message... (Enter to send)",
+    "support_send": "Send",
+    "support_new_chat": "New Ticket",
+    "support_no_chats": "No chats yet",
+    "support_typing": "typing...",
+    "support_status_new": "New",
+    "support_status_active": "Active",
+    "support_status_closed": "Closed"
   },
   "catalog": {
     "title": "Catalog",
