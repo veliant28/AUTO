@@ -285,10 +285,16 @@ export default function SupportAdminPage() {
           </PopoverContent>
         </Popover>
 
-        {chatStore.activeChatId && (
+        {(chatStore.activeChatId || customRange || statusFilter || search) && (
           <Button
             variant="destructive"
-            onClick={() => chatStore.setActiveChat(null)}
+            onClick={() => {
+              chatStore.setActiveChat(null)
+              setPeriod('month')
+              setCustomRange(undefined)
+              setStatusFilter('')
+              setSearch('')
+            }}
           >
             {t('staff_reset')}
           </Button>
