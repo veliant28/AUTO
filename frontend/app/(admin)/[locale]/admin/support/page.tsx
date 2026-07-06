@@ -220,14 +220,14 @@ export default function SupportAdminPage() {
   return (
     <div className="p-6 flex flex-col gap-4 h-[calc(100vh-4rem)]">
       {/* Top bar filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Поиск по имени, телефону, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
+            className="pl-9 h-10"
           />
         </div>
 
@@ -235,11 +235,11 @@ export default function SupportAdminPage() {
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}
         >
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Все статусы" />
+          <SelectTrigger className="w-[140px] h-10">
+            <SelectValue placeholder="Статус" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
+            <SelectItem value="all">Статус</SelectItem>
             <SelectItem value="new">Новый</SelectItem>
             <SelectItem value="active">Активный</SelectItem>
             <SelectItem value="closed">Закрыт</SelectItem>
