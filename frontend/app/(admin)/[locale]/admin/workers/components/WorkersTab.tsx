@@ -538,7 +538,9 @@ export default function WorkersTab() {
                   ? 'Импорт'
                   : taskName === 'deactivate_orphaned_offers'
                     ? 'Деактивация'
-                    : taskName
+                    : taskName === 'cleanup_old_chat_messages'
+                      ? 'Чат: очистка'
+                      : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`
