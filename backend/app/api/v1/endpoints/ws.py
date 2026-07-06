@@ -127,11 +127,13 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(...)):
                     db.refresh(chat)
 
                     # Prepare message data for broadcast
+                    sender_name = message.sender.full_name or f"{message.sender.first_name or ''} {message.sender.last_name or ''}".strip() or message.sender.email
                     msg_data = {
                         "id": message.id,
                         "conversation_id": message.conversation_id,
                         "sender_id": message.sender_id,
                         "sender_role": message.sender_role.value,
+                        "sender_name": sender_name,
                         "message": message.message,
                         "created_at": message.created_at.isoformat(),
                     }

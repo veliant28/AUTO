@@ -45,11 +45,14 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
 
 
 def _msg_to_out(m: ChatMessage) -> ChatMessageOut:
+    sender = m.sender
+    sender_name = sender.full_name or f"{sender.first_name or ''} {sender.last_name or ''}".strip() or sender.email
     return ChatMessageOut(
         id=m.id,
         conversation_id=m.conversation_id,
         sender_id=m.sender_id,
         sender_role=m.sender_role.value,
+        sender_name=sender_name,
         message=m.message,
         created_at=m.created_at,
     )

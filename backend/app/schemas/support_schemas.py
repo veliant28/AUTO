@@ -8,6 +8,7 @@ class ChatMessageOut(BaseModel):
     conversation_id: int
     sender_id: int
     sender_role: str
+    sender_name: Optional[str] = None
     message: str
     created_at: datetime
 

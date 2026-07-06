@@ -14,6 +14,7 @@ interface Message {
   conversation_id: number
   sender_id: number
   sender_role: 'user' | 'admin'
+  sender_name?: string
   message: string
   created_at: string
 }
@@ -112,6 +113,7 @@ export default function ChatWindow({
                   message={msg.message}
                   senderId={msg.sender_id}
                   senderRole={msg.sender_role}
+                  senderName={msg.sender_name}
                   createdAt={msg.created_at}
                   currentUserId={currentUserId}
                 />
