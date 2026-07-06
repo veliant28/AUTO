@@ -23,6 +23,7 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { ru } from 'date-fns/locale'
 import api from '@/lib/api'
+import { STORAGE_KEYS } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
 import ChatWindow from '@/components/chat/ChatWindow'
@@ -97,7 +98,7 @@ export default function SupportAdminPage() {
   // Auth token for WebSocket
   const authToken = useAuthStore((s) => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token') || ''
+      return localStorage.getItem(STORAGE_KEYS.TOKEN) || ''
     }
     return ''
   })

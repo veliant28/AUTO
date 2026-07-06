@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { STORAGE_KEYS } from '@/lib/constants'
 
 interface TypingUser {
   userId: number
@@ -58,7 +59,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     ws.onclose = () => {
       set({ ws: null, connected: false })
       // Auto-reconnect after 5 seconds
-      const token = localStorage.getItem('auth_token')
+      const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
       if (token) {
         setTimeout(() => {
           const { connected } = get()

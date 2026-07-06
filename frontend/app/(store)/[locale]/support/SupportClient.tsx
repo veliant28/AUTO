@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatPhone } from '@/components/ui/PhoneInput'
 import api from '@/lib/api'
+import { STORAGE_KEYS } from '@/lib/constants'
 import StaticPage from '@/components/features/StaticPage'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
@@ -77,7 +78,7 @@ export default function SupportClient() {
   const authToken = useAuthStore((s) => {
     // Get token from localStorage
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token') || ''
+      return localStorage.getItem(STORAGE_KEYS.TOKEN) || ''
     }
     return ''
   })
