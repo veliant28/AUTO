@@ -206,7 +206,7 @@ export default function SupportAdminPage() {
       const chat = chats.find((c: Chat) => c.id === chatStore.activeChatId)
       if (chat?.status === 'closed') return
       if (chatStore.connected) {
-        chatStore.sendMessage(chatStore.activeChatId, text)
+        chatStore.sendMessage(chatStore.activeChatId, text, 'admin')
       }
     },
     [chatStore.activeChatId, chatStore.connected, chats],
@@ -375,7 +375,6 @@ export default function SupportAdminPage() {
                       ? 'Чат закрыт'
                       : 'Напишите ответ... (Enter для отправки)'
                   }
-                  alignRight
                   className="h-full"
                 />
               </CardContent>

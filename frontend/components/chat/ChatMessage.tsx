@@ -16,7 +16,6 @@ interface MessageProps {
   senderAvatarIndex?: number | null
   createdAt: string
   currentUserId: number
-  alignRight?: boolean
 }
 
 const roleBadgeColors: Record<string, string> = {
@@ -58,10 +57,8 @@ export default function ChatMessage({
   senderAvatarIndex,
   createdAt,
   currentUserId,
-  alignRight,
 }: MessageProps) {
-  const isMine = alignRight && senderId === currentUserId
-  const isAdmin = senderRole === 'admin'
+  const isMine = senderRole === 'admin'
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
   const badgeColor =
     roleBadgeColors[senderGroup || ''] || 'bg-gray-500 text-white'

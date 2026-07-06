@@ -99,18 +99,19 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(...)):
                         await websocket.send_text(json.dumps({"type": "error", "message": "Access denied"}))
                         continue
 
-                    # Determine sender role
-                    sender_role = SenderRole.ADMIN if is_admin else SenderRole.USER
+                    # Determine sender role based on source, not user role
+                    source = data.get("source", "storefront")
+                    sender_role = SenderRole.ADMIN if source == "admin" else SenderRole.USER
 
                     # Ensure subscription
                     manager.subscribe(user_id, chat_id)
 
-                    # Auto-assign admin if not assigned
-                    if is_admin and not chat.assigned_to:
+                    # Auto-assign admin if not assigned (only for admin source)
+                    if source == "admin" and not chat.assigned_to:
                         chat.assigned_to = user_id
 
-                    # Update status to active if it was new
-                    if chat.status == ChatStatus.NEW and is_admin:
+                    # Update status to active if it was new (only for admin source)
+                    if chat.status == ChatStatus.NEW and source == "admin":
                         chat.status = ChatStatus.ACTIVE
 
                     # Create the message

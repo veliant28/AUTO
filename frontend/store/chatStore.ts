@@ -116,10 +116,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  sendMessage: (chatId, text) => {
+  sendMessage: (chatId, text, source = 'storefront') => {
     const { ws, connected } = get()
     if (ws && connected && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'message', chat_id: chatId, text }))
+      ws.send(
+        JSON.stringify({ type: 'message', chat_id: chatId, text, source }),
+      )
     }
   },
 

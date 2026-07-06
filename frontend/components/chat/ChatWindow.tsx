@@ -30,7 +30,6 @@ interface ChatWindowProps {
   typingName?: string
   showTyping?: boolean
   disabled?: boolean
-  alignRight?: boolean
   className?: string
 }
 
@@ -43,7 +42,6 @@ export default function ChatWindow({
   typingName,
   showTyping,
   disabled,
-  alignRight,
   className,
 }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -134,7 +132,6 @@ export default function ChatWindow({
                   senderAvatarIndex={msg.sender_avatar_index}
                   createdAt={msg.created_at}
                   currentUserId={currentUserId}
-                  alignRight={alignRight}
                 />
               </div>
             )
