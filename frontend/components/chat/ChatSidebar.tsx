@@ -144,48 +144,54 @@ export default function ChatSidebar({
                       >
                         {chat.ticket_number || `#${chat.id}`}
                       </span>
-                      <div className="flex flex-col items-end gap-0.5 shrink-0">
-                        <Badge
-                          className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-                        >
-                          {STATUS_LABEL[chat.status] || chat.status}
-                        </Badge>
-                        <span
-                          className={cn(
-                            'text-[10px]',
-                            isActive
-                              ? 'text-primary-foreground/60'
-                              : 'text-muted-foreground/50',
-                          )}
-                        >
-                          {formatTime(chat.last_message_at || chat.created_at)}
-                        </span>
-                      </div>
+                      <Badge
+                        className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
+                      >
+                        {STATUS_LABEL[chat.status] || chat.status}
+                      </Badge>
                     </div>
                     {(chat.user_name || chat.user_phone) && (
                       <div className="mt-1 space-y-0.5">
-                        <p
-                          className={cn(
-                            'text-sm leading-tight truncate',
-                            isActive
-                              ? 'text-primary-foreground/90'
-                              : 'text-foreground',
-                          )}
-                        >
-                          {chat.user_name || ''}
-                        </p>
-                        {chat.user_phone && (
+                        {chat.user_name && (
                           <p
                             className={cn(
-                              'text-sm font-mono leading-tight',
+                              'text-sm leading-tight truncate',
                               isActive
-                                ? 'text-primary-foreground/70'
-                                : 'text-muted-foreground',
+                                ? 'text-primary-foreground/90'
+                                : 'text-foreground',
                             )}
                           >
-                            {formatPhone(chat.user_phone)}
+                            {chat.user_name}
                           </p>
                         )}
+                        <div className="flex items-center justify-between gap-2">
+                          {chat.user_phone ? (
+                            <span
+                              className={cn(
+                                'text-sm font-mono leading-tight truncate',
+                                isActive
+                                  ? 'text-primary-foreground/70'
+                                  : 'text-muted-foreground',
+                              )}
+                            >
+                              {formatPhone(chat.user_phone)}
+                            </span>
+                          ) : (
+                            <span />
+                          )}
+                          <span
+                            className={cn(
+                              'text-xs shrink-0',
+                              isActive
+                                ? 'text-primary-foreground/60'
+                                : 'text-muted-foreground/50',
+                            )}
+                          >
+                            {formatTime(
+                              chat.last_message_at || chat.created_at,
+                            )}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
