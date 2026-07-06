@@ -34,7 +34,6 @@ def _chat_to_out(chat: ChatConversation) -> ChatConversationOut:
         user_phone=user.phone,
         user_email=user.email,
         status=chat.status.value,
-        subject=chat.subject,
         assigned_to=chat.assigned_to,
         assignee_name=assignee.full_name if assignee else None,
         last_message=last_msg.message if last_msg else None,
