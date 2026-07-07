@@ -68,12 +68,6 @@ export default function PaymentBlock({
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         ) : tx ? (
           <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">
-                {t('payment_status')}:
-              </span>
-              <PaymentStatusBadge status={tx.status} t={t} />
-            </div>
             {tx.provider_tx_id && (
               <p className="text-muted-foreground text-xs font-mono">
                 ID: {tx.provider_tx_id}
