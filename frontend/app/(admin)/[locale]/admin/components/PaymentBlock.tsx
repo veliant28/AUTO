@@ -137,7 +137,7 @@ export default function PaymentBlock({
                         <XCircle className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="right">
+                    <TooltipContent side="bottom">
                       Отозвать инвойс
                     </TooltipContent>
                   </Tooltip>
@@ -155,7 +155,7 @@ export default function PaymentBlock({
                       <FileText className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">
+                  <TooltipContent side="bottom">
                     {t('payment_receipt')}
                   </TooltipContent>
                 </Tooltip>
