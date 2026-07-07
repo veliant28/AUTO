@@ -123,6 +123,14 @@ class PaymentService:
         if existing:
             raise PaymentAlreadyCompletedError("Order already paid")
 
+        # Check for existing pending payment — reuse its URL instead of creating a new invoice
+        pending = self.db.query(PaymentTransaction).filter(
+            PaymentTransaction.order_id == order_id,
+            PaymentTransaction.status == "pending",
+        ).first()
+        if pending and pending.payment_url:
+            return pending
+
         # Check if method is enabled
         methods = self.get_available_methods()
         method_info = next((m for m in methods if m["code"] == method), None)
