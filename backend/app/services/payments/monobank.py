@@ -104,7 +104,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
             "merchantPaymInfo": {
                 "reference": f"order-{order_id}-{hash(order_id) % 10000:04d}",
                 "destination": description or f"Order #{order_id}",
-                "basket": [
+                "basketOrder": [
                     {
                         "name": description or f"Order #{order_id}",
                         "qty": 1,
