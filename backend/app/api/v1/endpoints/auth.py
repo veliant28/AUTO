@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -16,6 +16,7 @@ from app.schemas.auth_schemas import (
     ForgotPasswordSchema, ResetPasswordSchema, GoogleAuthSchema
 )
 from app.models import User, Role, PasswordReset, OAuthAccount
+from app.models.protection import BanRecord, Whitelist, ProtectionEvent
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,15 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login", 
     auto_error=False
 )
+
+def get_client_ip(request: Request) -> str | None:
+    """Get client IP from request, checking X-Forwarded-For first."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return None
 
 def create_token(user_id: int) -> str:
     payload = f"{user_id}:{int(datetime.utcnow().timestamp())}"
@@ -58,8 +68,27 @@ def get_user_role(user: User) -> str:
     return user.role.name
 
 @router.post("/register", response_model=TokenResponse)
-async def register(data: RegisterSchema, db: Session = Depends(get_db)):
+async def register(data: RegisterSchema, request: Request, db: Session = Depends(get_db)):
     """Регистрация нового пользователя. Возвращает JWT токен и данные пользователя."""
+    client_ip = get_client_ip(request)
+    
+    # Check if email is banned
+    active_ban = db.query(BanRecord).filter(
+        BanRecord.is_active == True,
+        BanRecord.email == data.email,
+    ).first()
+    if active_ban:
+        raise HTTPException(403, f"Ваш аккаунт заблокирован. Причина: {active_ban.reason}")
+    
+    # Check if IP is banned
+    if client_ip:
+        ip_ban = db.query(BanRecord).filter(
+            BanRecord.is_active == True,
+            BanRecord.ip_address == client_ip,
+        ).first()
+        if ip_ban:
+            raise HTTPException(403, f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}")
+    
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(400, "Email already registered")
@@ -84,13 +113,53 @@ async def register(data: RegisterSchema, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginSchema, db: Session = Depends(get_db)):
+async def login(data: LoginSchema, request: Request, db: Session = Depends(get_db)):
     """Аутентификация пользователя по email и паролю. Возвращает JWT токен."""
+    client_ip = get_client_ip(request)
+    
+    # Check if email is banned
+    active_ban = db.query(BanRecord).filter(
+        BanRecord.is_active == True,
+        BanRecord.email == data.email,
+    ).first()
+    if active_ban:
+        raise HTTPException(403, f"Ваш аккаунт заблокирован. Причина: {active_ban.reason}")
+    
+    # Check if IP is banned
+    if client_ip:
+        ip_ban = db.query(BanRecord).filter(
+            BanRecord.is_active == True,
+            BanRecord.ip_address == client_ip,
+        ).first()
+        if ip_ban:
+            raise HTTPException(403, f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}")
+    
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
+        # Log failed login attempt
+        event = ProtectionEvent(
+            email=data.email,
+            ip_address=client_ip,
+            event_type="failed_login",
+            description="User not found",
+            created_at=datetime.utcnow(),
+        )
+        db.add(event)
+        db.commit()
         raise HTTPException(401, "Invalid credentials")
     
     if not verify_password(data.password, user.password_hash):
+        # Log failed login attempt
+        event = ProtectionEvent(
+            user_id=user.id,
+            email=data.email,
+            ip_address=client_ip,
+            event_type="failed_login",
+            description="Invalid password",
+            created_at=datetime.utcnow(),
+        )
+        db.add(event)
+        db.commit()
         raise HTTPException(401, "Invalid credentials")
     access_token = create_token(user.id)
     return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=data.email)

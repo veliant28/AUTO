@@ -53,4 +53,14 @@ class Settings(BaseSettings):
     # Chat / Support
     CHAT_HISTORY_DAYS: int = 365
 
+    # Protection / Rate Limiting
+    PROTECTION_ENABLED: bool = True
+    AUTO_BAN_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = Field(default=60, ge=1, le=10000)
+    RATE_LIMIT_PER_HOUR: int = Field(default=1000, ge=1, le=100000)
+    RATE_LIMIT_PER_ENDPOINT: int = Field(default=30, ge=1, le=5000)
+    FAILED_LOGIN_BAN_THRESHOLD: int = Field(default=10, ge=1, le=1000)
+    AUTO_BAN_DURATION_MINUTES: int = Field(default=60, ge=0, le=525600)
+    WHITELIST_BYPASS_LIMITS: bool = True
+
 settings = Settings()

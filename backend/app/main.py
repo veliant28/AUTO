@@ -14,6 +14,7 @@ from app.core.exceptions import (
 from app.core.middleware import LoggingMiddleware, LocaleMiddleware
 from app.core.logger import logger
 from app.core.health import router as health_router
+from app.core.protection_middleware import ProtectionMiddleware
 from app.services.nova_poshta.errors import NovaPoshtaApiError
 
 if settings.SENTRY_DSN:
@@ -32,7 +33,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Middleware
+# Middleware — Protection must be FIRST (outermost) to catch all requests
+app.add_middleware(ProtectionMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(LoggingMiddleware)
 # Locale middleware must be added LAST so it runs FIRST (outermost layer)

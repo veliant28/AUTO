@@ -24,10 +24,14 @@ async def list_users(
     """Список пользователей с пагинацией и поиском."""
     query = db.query(User)
     if search:
-        like = f"%{search}%"
-        query = query.filter(
-            User.email.ilike(like) | User.full_name.ilike(like)
-        )
+            like = f"%{search}%"
+            query = query.filter(
+                User.email.ilike(like) |
+                User.full_name.ilike(like) |
+                User.first_name.ilike(like) |
+                User.last_name.ilike(like) |
+                User.phone.ilike(like)
+            )
     total = query.count()
     users = query.order_by(User.id).offset((page - 1) * page_size).limit(page_size).all()
     return AdminUserListResponse(
@@ -36,6 +40,9 @@ async def list_users(
                 id=u.id,
                 email=u.email,
                 full_name=u.full_name,
+                first_name=u.first_name,
+                last_name=u.last_name,
+                middle_name=u.middle_name,
                 role=u.role.name,
                 is_active=u.is_active,
                 phone=u.phone,

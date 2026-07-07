@@ -36,6 +36,7 @@ import {
   Gift,
   ScanBarcode,
   MessageSquare,
+  ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -89,6 +90,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isSettings = pathname.includes('/admin/settings')
   const isNovaposhta = pathname.includes('/admin/novaposhta')
   const isSuppliers = pathname.includes('/admin/suppliers')
+  const isProtection = pathname.includes('/admin/protection')
   const isImport = pathname.includes('/admin/import')
   const isPricing = pathname.includes('/admin/pricing')
   const isAdmin =
@@ -100,6 +102,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
     { key: 'staff', label: ta('staff_title') },
+    { key: 'protection', label: 'ГЛАЗ' },
     { key: 'workers', label: ta('workers_title') },
   ]
 
@@ -119,6 +122,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/tecdoc': { icon: Database, titleKey: 'tecdoc_title' },
     '/admin/settings': { icon: Settings, titleKey: 'settings_title' },
     '/admin/suppliers': { icon: Truck, titleKey: 'suppliers_title' },
+    '/admin/protection': { icon: ShieldAlert, titleKey: 'protection_title' },
     '/admin/import': { icon: FileDown, titleKey: 'import_title' },
     '/admin/footer': { icon: FileText, titleKey: 'footer_title' },
     '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
@@ -187,6 +191,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     { key: 'settings', label: ta('tecdoc_settings') },
   ]
 
+  const protectionTabs = [
+    { key: 'blacklist', label: ta('protection_blacklist') },
+    { key: 'whitelist', label: ta('protection_whitelist') },
+  ]
+
   const settingsNavTabs = [
     { key: 'settings', label: ta('settings_title') },
     { key: 'novaposhta', label: ta('novaposhta_title') },
@@ -220,6 +229,29 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         {isTecDoc &&
           tecdocTabs.map((t) => {
             const active = (searchParams.get('tab') || 'dashboard') === t.key
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.set('tab', t.key)
+                  router.replace(`${pathname}?${params.toString()}`, {
+                    scroll: false,
+                  })
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {t.label.toUpperCase()}
+              </button>
+            )
+          })}
+        {isProtection &&
+          protectionTabs.map((t) => {
+            const active = (searchParams.get('tab') || 'blacklist') === t.key
             return (
               <button
                 key={t.key}
@@ -355,6 +387,135 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </Tooltip>
             </div>
           )}
+        {isAdmin &&
+          (searchParams.get('tab') || 'dashboard') === 'protection' && (
+            <div className="border-r pr-2 self-stretch flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={
+                      searchParams.get('period') === 'day'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      const p = new URLSearchParams(searchParams.toString())
+                      p.set('period', 'day')
+                      router.replace(`${pathname}?${p.toString()}`, {
+                        scroll: false,
+                      })
+                    }}
+                  >
+                    Д
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {ta('staff_period_day') || 'День'}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={
+                      searchParams.get('period') === 'week'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      const p = new URLSearchParams(searchParams.toString())
+                      p.set('period', 'week')
+                      router.replace(`${pathname}?${p.toString()}`, {
+                        scroll: false,
+                      })
+                    }}
+                  >
+                    Н
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {ta('staff_period_week') || 'Неделя'}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={
+                      !searchParams.get('period') ||
+                      searchParams.get('period') === 'month'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      const p = new URLSearchParams(searchParams.toString())
+                      p.delete('period')
+                      router.replace(`${pathname}?${p.toString()}`, {
+                        scroll: false,
+                      })
+                    }}
+                  >
+                    М
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {ta('staff_period_month') || 'Месяц'}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={
+                      searchParams.get('period') === 'year'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => {
+                      const p = new URLSearchParams(searchParams.toString())
+                      p.set('period', 'year')
+                      router.replace(`${pathname}?${p.toString()}`, {
+                        scroll: false,
+                      })
+                    }}
+                  >
+                    Г
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {ta('staff_period_year') || 'Год'}
+                </TooltipContent>
+              </Tooltip>
+              <div className="ml-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant={
+                        searchParams.get('realtime') === '1'
+                          ? 'default'
+                          : 'outline'
+                      }
+                      onClick={() => {
+                        const p = new URLSearchParams(searchParams.toString())
+                        if (p.get('realtime') === '1') p.delete('realtime')
+                        else p.set('realtime', '1')
+                        router.replace(`${pathname}?${p.toString()}`, {
+                          scroll: false,
+                        })
+                      }}
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${searchParams.get('realtime') === '1' ? 'animate-spin' : ''}`}
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{ta('protection_realtime')}</TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'workers' && (
           <div className="border-r pr-2 self-stretch flex items-center gap-2">
             <Tooltip>
@@ -446,6 +607,22 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('import_request')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {isProtection && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={() => (window as any).__openBanModal?.()}
+                >
+                  <Ban className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('protection_ban')}</TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -840,7 +1017,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('suppliers_title'),
       roles: ['admin'],
     },
-
+    {
+      href: '/admin/protection',
+      icon: ShieldAlert,
+      label: t('protection_title'),
+      roles: ['admin'],
+    },
     {
       href: '/admin/footer',
       icon: FileText,

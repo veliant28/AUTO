@@ -62,6 +62,9 @@ class AdminUserResponse(BaseModel):
     id: int
     email: str
     full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
     role: str
     is_active: bool
     phone: Optional[str] = None

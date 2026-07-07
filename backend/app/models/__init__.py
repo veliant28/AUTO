@@ -19,6 +19,7 @@ from .loyalty import Promocode
 from .checkbox import OrderCheckboxReceipt
 from .payments import PaymentTransaction
 from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
+from .protection import BanRecord, ProtectionEvent, Whitelist
 
 __all__ = [
     "Base", 
@@ -43,4 +44,5 @@ __all__ = [
     "OrderCheckboxReceipt",
     "PaymentTransaction",
     "ChatConversation", "ChatMessage", "ChatStatus", "SenderRole",
+    "BanRecord", "ProtectionEvent", "Whitelist",
 ]
