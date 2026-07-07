@@ -691,6 +691,7 @@
     "protection_error_not_found": "Запис не знайдено",
     "protection_error_already_in_whitelist": "Email вже у білому списку",
     "protection_error_not_banned": "Користувач не забанений",
+    "protection_cannot_ban_admin": "Не можна заблокувати адміністратора",
     "settings_email_title": "SMTP / Email",
     "settings_email_desc": "Налаштування для відправки листів через Resend (відновлення пароля тощо)",
     "settings_resend_api_key": "Resend API Key",

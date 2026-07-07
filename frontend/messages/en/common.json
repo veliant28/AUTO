@@ -691,6 +691,7 @@
     "protection_error_not_found": "Record not found",
     "protection_error_already_in_whitelist": "Email already in whitelist",
     "protection_error_not_banned": "User is not banned",
+    "protection_cannot_ban_admin": "Cannot ban an administrator",
     "settings_email_title": "SMTP / Email",
     "settings_email_desc": "Configure email sending via Resend (password recovery etc.)",
     "settings_resend_api_key": "Resend API Key",

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Search, Ban } from 'lucide-react'
+import { Loader2, Search, Ban, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -215,6 +215,10 @@ export default function BanModal({
       toast.warning(t('protection_ban_reason_required'))
       return
     }
+    if (selectedUser?.role === 'admin') {
+      toast.error(t('protection_cannot_ban_admin'))
+      return
+    }
     banMutation.mutate({ email: searchQuery.trim(), reason: reason.trim() })
   }
 
@@ -345,6 +349,14 @@ export default function BanModal({
               >
                 {t(selectedUser.role)}
               </Badge>
+            </div>
+          )}
+          {selectedUser?.role === 'admin' && (
+            <div className="flex items-center gap-2 p-2.5 rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {t('protection_cannot_ban_admin')}
+              </p>
             </div>
           )}
 
