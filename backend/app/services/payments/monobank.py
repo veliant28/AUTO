@@ -146,7 +146,6 @@ class MonobankPaymentProvider(BasePaymentProvider):
         return PaymentResult(
             tx_id=invoice_id,
             payment_url=page_url,
-            invoice_url=page_url,
         )
 
     async def process_webhook(self, data: dict) -> PaymentStatusResult:
