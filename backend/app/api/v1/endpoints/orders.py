@@ -347,19 +347,19 @@ async def get_monopay_config(
     payload = {
         "amount": amount_kopecks,
         "ccy": 980,
-        "merchantPaymInfo": {
-            "reference": reference,
-            "destination": order_ref,
-            "comment": order_ref,
-            "basketOrder": [
-                {
-                    "name": order_ref,
-                    "qty": 1,
-                    "sum": amount_kopecks,
-                    "code": order_ref,
-                    "taxes": [{"amount": int(amount_kopecks * 20 / 120), "type": 20}],
-                }
-            ],
+            "merchantPaymInfo": {
+                "reference": reference,
+                "destination": order_ref,
+                "comment": order_ref,
+                "basketOrder": [
+                    {
+                        "name": order_ref,
+                        "qty": 1,
+                        "sum": amount_kopecks,
+                        "code": order_ref,
+                    }
+                ],
+                "taxes": [{"amount": 0}],
         },
         "redirectUrl": "",
         "webHookUrl": "",

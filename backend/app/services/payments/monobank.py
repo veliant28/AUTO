@@ -113,9 +113,9 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "qty": 1,
                         "sum": amount_kopecks,
                         "code": order_ref,
-                        "taxes": [{"amount": int(amount_kopecks * 20 / 120), "type": 20}],
                     }
                 ],
+                "taxes": [{"amount": 0}],
             },
             "redirectUrl": return_url,
             "webHookUrl": kwargs.get("webhook_url", ""),
