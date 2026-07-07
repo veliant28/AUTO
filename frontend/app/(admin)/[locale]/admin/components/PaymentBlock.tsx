@@ -119,45 +119,47 @@ export default function PaymentBlock({
                 />
               )}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="space-y-1.5">
               {tx.provider_tx_id && (
                 <Badge className="bg-blue-500 text-white border-0 text-sm">
                   ID: {tx.provider_tx_id}
                 </Badge>
               )}
-              {tx.status === 'pending' && (
+              <div className="flex gap-2">
+                {tx.status === 'pending' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={handleCancelInvoice}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      Отозвать инвойс
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="icon"
-                      className="w-7 h-7"
-                      onClick={handleCancelInvoice}
+                      disabled={!tx.receipt_url}
+                      onClick={() =>
+                        tx.receipt_url && window.open(tx.receipt_url, '_blank')
+                      }
                     >
-                      <XCircle className="w-3.5 h-3.5" />
+                      <FileText className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">Отозвать инвойс</TooltipContent>
+                  <TooltipContent side="right">
+                    {t('payment_receipt')}
+                  </TooltipContent>
                 </Tooltip>
-              )}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="w-7 h-7"
-                    disabled={!tx.receipt_url}
-                    onClick={() =>
-                      tx.receipt_url && window.open(tx.receipt_url, '_blank')
-                    }
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {t('payment_receipt')}
-                </TooltipContent>
-              </Tooltip>
+              </div>
             </div>
           </div>
         ) : (
