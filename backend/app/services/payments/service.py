@@ -195,6 +195,7 @@ class PaymentService:
         )
         self.db.add(tx)
         self.db.flush()
+        self.db.commit()
 
         return tx
 
@@ -247,6 +248,7 @@ class PaymentService:
         if result.receipt_url:
             tx.receipt_url = result.receipt_url
         self.db.flush()
+        self.db.commit()
 
         return tx
 
