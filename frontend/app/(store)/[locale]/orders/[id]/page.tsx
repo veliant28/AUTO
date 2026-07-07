@@ -364,6 +364,23 @@ export default function OrderDetailPage() {
 
 // ── Payment Display component ─────────────────────────────────────
 // ── Payment Badge (shown inline next to "Оплата") ───────────────
+const PAYMENT_STATUS_CFG_STORE: Record<
+  string,
+  { labelKey: string; className: string }
+> = {
+  paid: { labelKey: 'payment_paid', className: 'bg-green-600 text-white' },
+  pending: {
+    labelKey: 'payment_pending',
+    className: 'bg-yellow-500 text-white',
+  },
+  failed: { labelKey: 'payment_failed', className: 'bg-red-600 text-white' },
+  refunded: {
+    labelKey: 'payment_refunded',
+    className: 'bg-purple-600 text-white',
+  },
+  expired: { labelKey: 'payment_expired', className: 'bg-gray-500 text-white' },
+}
+
 function PaymentBadge({
   orderId,
   paymentMethod,
@@ -392,19 +409,19 @@ function PaymentBadge({
     )
   }
 
-  if (payment?.status === 'paid') {
+  const status = payment?.status || 'pending'
+  const cfg = PAYMENT_STATUS_CFG_STORE[status]
+  if (cfg) {
     return (
-      <Badge className="bg-green-600 text-white border-0 text-sm">
-        {t('payment_paid')}
+      <Badge className={`${cfg.className} border-0 text-sm`}>
+        {t(cfg.labelKey)}
       </Badge>
     )
   }
 
-  // Bank method, not paid yet
+  // Unknown status — fallback
   return (
-    <Badge className="bg-gray-500 text-white border-0 text-sm">
-      {t('payment_not_paid')}
-    </Badge>
+    <Badge className="bg-gray-500 text-white border-0 text-sm">{status}</Badge>
   )
 }
 
