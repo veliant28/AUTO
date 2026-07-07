@@ -87,3 +87,39 @@ async def get_transaction(
         created_at=tx.created_at,
         updated_at=tx.updated_at,
     )
+
+
+@router.post("/orders/{order_id}/cancel-invoice")
+async def cancel_invoice(
+    order_id: int,
+    current_user: User = Depends(require_role("admin", "manager")),
+    db: DBSession = Depends(get_db),
+):
+    """Cancel/remove a pending invoice for an order."""
+    from app.services.payments.service import PaymentService
+    service = PaymentService(db)
+    tx = service.get_transaction(order_id)
+    if not tx or not tx.provider_tx_id:
+        raise HTTPException(404, "No active invoice found")
+
+    if tx.status == "paid":
+        raise HTTPException(400, "Cannot cancel a paid invoice")
+
+    from app.services.payments.monobank import MonobankPaymentProvider
+    from app.models.settings import SiteSettings
+    from app.services.crypto_util import decrypt_password
+
+    settings = db.query(SiteSettings).first()
+    token = decrypt_password(settings.monobank_token_encrypted) if settings and settings.monobank_token_encrypted else ""
+    if not token:
+        raise HTTPException(400, "Monobank not configured")
+
+    provider = MonobankPaymentProvider(token)
+    success = await provider.cancel_invoice(tx.provider_tx_id)
+
+    if success:
+        tx.status = "expired"
+        db.commit()
+        return {"status": "ok", "message": "Invoice cancelled"}
+    else:
+        raise HTTPException(502, "Failed to cancel invoice in Monobank")

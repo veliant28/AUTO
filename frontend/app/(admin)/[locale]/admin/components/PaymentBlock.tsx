@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { getTransaction, initPayment } from '@/lib/api/payments'
+import { getTransaction, initPayment, cancelInvoice } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
 import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
@@ -60,6 +60,17 @@ export default function PaymentBlock({
 
   const [initLoading, setInitLoading] = useState<string | null>(null)
 
+  const handleCancelInvoice = async () => {
+    try {
+      await cancelInvoice(orderId)
+      toast.success('Инвойс отозван')
+      refetch()
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || ''
+      toast.error(msg || 'Ошибка отмены инвойса')
+    }
+  }
+
   const handleInitPayment = async (method: string) => {
     setInitLoading(method)
     try {
@@ -106,6 +117,16 @@ export default function PaymentBlock({
                 <MonopayStandaloneButton
                   onClick={() => handleInitPayment('monobank')}
                 />
+              )}
+              {tx.status === 'pending' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={handleCancelInvoice}
+                >
+                  Отозвать инвойс
+                </Button>
               )}
               {tx.receipt_url && (
                 <Button

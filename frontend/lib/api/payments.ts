@@ -64,3 +64,15 @@ export async function getTransaction(
   )
   return data
 }
+
+/**
+ * Cancel a pending invoice for an order (admin)
+ */
+export async function cancelInvoice(
+  orderId: number,
+): Promise<{ status: string; message: string }> {
+  const { data } = await apiClient.post(
+    `/admin/payments/orders/${orderId}/cancel-invoice`,
+  )
+  return data
+}
