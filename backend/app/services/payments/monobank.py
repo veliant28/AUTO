@@ -87,6 +87,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
         self,
         amount: float,
         order_id: int,
+        order_number: str = "",
         description: str = "",
         return_url: str = "",
         **kwargs,
@@ -97,19 +98,20 @@ class MonobankPaymentProvider(BasePaymentProvider):
         Amount is in kopecks (integer).
         """
         amount_kopecks = int(round(amount * 100))
+        order_ref = order_number or f"Order #{order_id}"
 
         payload = {
             "amount": amount_kopecks,
             "ccy": 980,  # UAH
             "merchantPaymInfo": {
-                "reference": f"order-{order_id}-{hash(order_id) % 10000:04d}",
-                "destination": description or f"Order #{order_id}",
+                "reference": order_ref,
+                "destination": description or order_ref,
                 "basketOrder": [
                     {
-                        "name": description or f"Order #{order_id}",
+                        "name": order_ref,
                         "qty": 1,
                         "sum": amount_kopecks,
-                        "code": f"order-{order_id}",
+                        "code": order_ref,
                         "taxes": [{"amount": 0, "type": "0"}],
                     }
                 ],

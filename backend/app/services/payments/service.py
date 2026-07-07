@@ -143,13 +143,15 @@ class PaymentService:
 
         # Bank payment — call provider
         provider = self._get_provider(method, webhook_url)
-        description = f"Order #{order_id}"
+	        description = f"Order #{order_id}"
+	        order_number = order.order_number or f"ORD-{order_id:010d}"
 
-        try:
-            result = await provider.create_payment(
-                amount=float(order.total),
-                order_id=order_id,
-                description=description,
+	        try:
+	            result = await provider.create_payment(
+	                amount=float(order.total),
+	                order_id=order_id,
+	                order_number=order_number,
+	                description=description,
                 return_url=return_url,
                 webhook_url=webhook_url,
             )

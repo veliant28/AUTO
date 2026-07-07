@@ -340,26 +340,27 @@ async def get_monopay_config(
     if not settings or not settings.monobank_monopay_key_id or not settings.monobank_ecdsa_private_key_encrypted:
         raise HTTPException(400, "Monopay not configured")
 
-    amount_kopecks = int(round(float(order.total) * 100))
-    reference = f"order-{order_id}-{hash(order_id) % 10000:04d}"
+	    amount_kopecks = int(round(float(order.total) * 100))
+	    order_ref = order.order_number or f"ORD-{order_id:010d}"
+	    reference = f"{order_ref}-{hash(order_id) % 10000:04d}"
 
-    payload = {
-        "amount": amount_kopecks,
-        "ccy": 980,
-        "merchantPaymInfo": {
-            "reference": reference,
-            "destination": f"Order #{order_id}",
-            "comment": f"Order #{order_id}",
-            "basketOrder": [
-                {
-                    "name": f"Order #{order_id}",
-                    "qty": 1,
-                    "sum": amount_kopecks,
-                    "code": f"order-{order_id}",
-                    "taxes": [{"amount": 0, "type": "0"}],
-                }
-            ],
-        },
+	    payload = {
+	        "amount": amount_kopecks,
+	        "ccy": 980,
+	        "merchantPaymInfo": {
+	            "reference": reference,
+	            "destination": order_ref,
+	            "comment": order_ref,
+	            "basketOrder": [
+	                {
+	                    "name": order_ref,
+	                    "qty": 1,
+	                    "sum": amount_kopecks,
+	                    "code": order_ref,
+	                    "taxes": [{"amount": 0, "type": "0"}],
+	                }
+	            ],
+	        },
         "redirectUrl": "",
         "webHookUrl": "",
         "validity": 86400,
