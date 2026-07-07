@@ -109,6 +109,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "name": description or f"Order #{order_id}",
                         "qty": 1,
                         "sum": amount_kopecks,
+                        "code": f"order-{order_id}",
                     }
                 ],
             },
