@@ -87,16 +87,6 @@ export default function PaymentBlock({
                   onClick={() => handleInitPayment('monobank')}
                 />
               )}
-              {tx.invoice_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => window.open(tx.invoice_url!, '_blank')}
-                >
-                  {t('payment_invoice')}
-                </Button>
-              )}
               {tx.receipt_url && (
                 <Button
                   variant="outline"
