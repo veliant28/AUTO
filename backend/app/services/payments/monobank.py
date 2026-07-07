@@ -113,7 +113,8 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "name": order_ref,
                         "qty": 1,
                         "sum": amount_kopecks,
-                        "taxes": [{"amount": 0, "type": "0"}],
+                        "code": order_ref,
+                        "taxes": [{"amount": 0, "type": 0}],
                     }
                 ],
             },
