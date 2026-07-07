@@ -156,9 +156,16 @@ class PaymentService:
                 "sum": int(round(float(oi.price or 0) * (oi.quantity or 1) * 100)),
                 "code": part.article if part else order_number,
             }
-            # Try to get product image
+            # Try to get product image — make URL absolute
             if part and part.image_url:
-                item["icon_url"] = part.image_url
+                url = part.image_url
+                # Make relative URLs absolute using webhook base
+                if url.startswith("/"):
+                    # Extract base from webhook_url: http://host:port/api/v1/...
+                    base = webhook_url.rsplit("/api/", 1)[0] if "/api/" in webhook_url else ""
+                    if base:
+                        url = base.rstrip("/") + url
+                item["icon_url"] = url
             items.append(item)
 
         try:

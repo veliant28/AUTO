@@ -61,7 +61,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
     async def _request(self, method: str, path: str, payload: Optional[dict] = None) -> dict:
         url = f"{MONOBANK_API_URL}{path}"
         import json as _json
-        logger.info("Monobank %s %s body=%s", method, url, _json.dumps(payload, ensure_ascii=False))
+        logger.debug("Monobank %s %s body=%s", method, url, _json.dumps(payload, ensure_ascii=False))
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(30)) as client:
                 resp = await client.request(method, url, headers=self._headers(), json=payload)
