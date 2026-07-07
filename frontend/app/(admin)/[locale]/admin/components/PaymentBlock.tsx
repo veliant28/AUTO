@@ -111,9 +111,9 @@ export default function PaymentBlock({
         ) : tx ? (
           <div className="space-y-2 text-sm">
             {tx.provider_tx_id && (
-              <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-sm font-mono">
+              <Badge className="bg-blue-500 text-white border-0 text-sm">
                 ID: {tx.provider_tx_id}
-              </span>
+              </Badge>
             )}
             <div className="flex gap-2 pt-1">
               {(tx.status === 'pending' ||
@@ -269,9 +269,9 @@ export default function PaymentBlock({
             })()}
           </div>
           {tx.provider_tx_id && (
-            <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-sm font-mono">
+            <Badge className="bg-blue-500 text-white border-0 text-sm">
               ID: {tx.provider_tx_id}
-            </span>
+            </Badge>
           )}
           <div className="flex gap-2 pt-1">
             {(tx.status === 'pending' ||
