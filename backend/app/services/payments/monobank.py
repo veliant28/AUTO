@@ -92,31 +92,46 @@ class MonobankPaymentProvider(BasePaymentProvider):
         order_number: str = "",
         description: str = "",
         return_url: str = "",
+        items: Optional[list] = None,
         **kwargs,
     ) -> PaymentResult:
         """
         Create Monobank invoice → returns payment URL.
 
         Amount is in kopecks (integer).
+        items: list of dicts with name, qty, sum, code, icon_url
         """
         amount_kopecks = int(round(amount * 100))
         order_ref = order_number or f"Order #{order_id}"
+
+        basket = []
+        if items:
+            for item in items:
+                basket.append({
+                    "name": item.get("name", order_ref)[:128],
+                    "qty": item.get("qty", 1),
+                    "sum": int(round(item.get("sum", amount_kopecks))),
+                    "code": item.get("code", order_ref)[:32],
+                    "taxes": [{"amount": 0, "type": 0}],
+                })
+                if item.get("icon_url"):
+                    basket[-1]["icon"] = item["icon_url"]
+        else:
+            basket = [{
+                "name": order_ref,
+                "qty": 1,
+                "sum": amount_kopecks,
+                "code": order_ref,
+                "taxes": [{"amount": 0, "type": 0}],
+            }]
 
         payload = {
             "amount": amount_kopecks,
             "ccy": 980,  # UAH
             "merchantPaymInfo": {
                 "reference": order_ref,
-                "destination": description or order_ref,
-                "basketOrder": [
-                    {
-                        "name": order_ref,
-                        "qty": 1,
-                        "sum": amount_kopecks,
-                        "code": order_ref,
-                        "taxes": [{"amount": 0, "type": 0}],
-                    }
-                ],
+                "destination": order_ref,
+                "basketOrder": basket,
             },
             "redirectUrl": return_url,
             "webHookUrl": kwargs.get("webhook_url", ""),

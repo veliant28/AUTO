@@ -146,14 +146,30 @@ class PaymentService:
         description = f"Order #{order_id}"
         order_number = order.order_number or f"ORD-{order_id:010d}"
 
+        # Build items for basket
+        items = []
+        for oi in order.items:
+            part = oi.part
+            item = {
+                "name": part.name if part else order_number,
+                "qty": oi.quantity or 1,
+                "sum": int(round(float(oi.price or 0) * (oi.quantity or 1) * 100)),
+                "code": part.article if part else order_number,
+            }
+            # Try to get product image
+            if part and part.image_url:
+                item["icon_url"] = part.image_url
+            items.append(item)
+
         try:
             result = await provider.create_payment(
-	                amount=float(order.total),
-	                order_id=order_id,
-	                order_number=order_number,
-	                description=description,
+                amount=float(order.total),
+                order_id=order_id,
+                order_number=order_number,
+                description=description,
                 return_url=return_url,
                 webhook_url=webhook_url,
+                items=items,
             )
         except PaymentError:
             raise
