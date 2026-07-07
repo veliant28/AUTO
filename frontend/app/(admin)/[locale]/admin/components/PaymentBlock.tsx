@@ -5,7 +5,12 @@ import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CreditCard } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
+import { Loader2, CreditCard, XCircle } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getTransaction, initPayment, cancelInvoice } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
@@ -119,14 +124,18 @@ export default function PaymentBlock({
                 />
               )}
               {tx.status === 'pending' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={handleCancelInvoice}
-                >
-                  Отозвать инвойс
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={handleCancelInvoice}
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">Отозвать инвойс</TooltipContent>
+                </Tooltip>
               )}
               {tx.receipt_url && (
                 <Button
