@@ -356,6 +356,7 @@ async def get_monopay_config(
                     "qty": 1,
                     "sum": amount_kopecks,
                     "code": f"order-{order_id}",
+                    "taxes": [{"amount": 0, "type": "0"}],
                 }
             ],
         },

@@ -110,6 +110,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "qty": 1,
                         "sum": amount_kopecks,
                         "code": f"order-{order_id}",
+                        "taxes": [{"amount": 0, "type": "0"}],
                     }
                 ],
             },
