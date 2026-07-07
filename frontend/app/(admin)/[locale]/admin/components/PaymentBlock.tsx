@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
-import { Loader2, CreditCard, XCircle } from 'lucide-react'
+import { Loader2, CreditCard, XCircle, FileText } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getTransaction, initPayment, cancelInvoice } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
@@ -137,17 +137,23 @@ export default function PaymentBlock({
                   <TooltipContent side="left">Отозвать инвойс</TooltipContent>
                 </Tooltip>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                disabled={!tx.receipt_url}
-                onClick={() =>
-                  tx.receipt_url && window.open(tx.receipt_url, '_blank')
-                }
-              >
-                {t('payment_receipt')}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={!tx.receipt_url}
+                    onClick={() =>
+                      tx.receipt_url && window.open(tx.receipt_url, '_blank')
+                    }
+                  >
+                    <FileText className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  {t('payment_receipt')}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         ) : (
