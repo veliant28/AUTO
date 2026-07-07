@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getTransaction, initPayment } from '@/lib/api/payments'
@@ -11,7 +12,32 @@ import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
 import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
 import DefaultPaymentButton from '@/components/ui/DefaultPaymentButton'
-import PaymentStatusBadge from './PaymentStatusBadge'
+
+const PAYMENT_STATUS_CFG: Record<
+  string,
+  { labelKey: string; className: string }
+> = {
+  paid: {
+    labelKey: 'payment_status_paid',
+    className: 'bg-green-600 text-white',
+  },
+  pending: {
+    labelKey: 'payment_status_pending',
+    className: 'bg-yellow-500 text-white',
+  },
+  failed: {
+    labelKey: 'payment_status_failed',
+    className: 'bg-red-600 text-white',
+  },
+  refunded: {
+    labelKey: 'payment_status_refunded',
+    className: 'bg-purple-600 text-white',
+  },
+  expired: {
+    labelKey: 'payment_status_expired',
+    className: 'bg-gray-500 text-white',
+  },
+}
 
 export default function PaymentBlock({
   orderId,
@@ -29,7 +55,7 @@ export default function PaymentBlock({
   } = useQuery({
     queryKey: ['order-payment', orderId],
     queryFn: () => getTransaction(orderId).catch(() => null),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   })
 
   const [initLoading, setInitLoading] = useState<string | null>(null)
@@ -114,7 +140,15 @@ export default function PaymentBlock({
               <span className="text-muted-foreground">
                 {t('payment_status')}:
               </span>
-              <PaymentStatusBadge status={tx.status} t={t} />
+              {(() => {
+                const c =
+                  PAYMENT_STATUS_CFG[tx.status] || PAYMENT_STATUS_CFG.pending
+                return (
+                  <Badge className={`${c.className} border-0 text-sm`}>
+                    {t(c.labelKey)}
+                  </Badge>
+                )
+              })()}
             </div>
             {tx.receipt_url && (
               <Button
@@ -148,7 +182,15 @@ export default function PaymentBlock({
               <span className="text-muted-foreground">
                 {t('payment_status')}:
               </span>
-              <PaymentStatusBadge status={tx.status} t={t} />
+              {(() => {
+                const c =
+                  PAYMENT_STATUS_CFG[tx.status] || PAYMENT_STATUS_CFG.pending
+                return (
+                  <Badge className={`${c.className} border-0 text-sm`}>
+                    {t(c.labelKey)}
+                  </Badge>
+                )
+              })()}
             </div>
             {tx.receipt_url && (
               <Button
@@ -179,7 +221,15 @@ export default function PaymentBlock({
             <span className="text-muted-foreground">
               {t('payment_status')}:
             </span>
-            <PaymentStatusBadge status={tx.status} t={t} />
+            {(() => {
+              const c =
+                PAYMENT_STATUS_CFG[tx.status] || PAYMENT_STATUS_CFG.pending
+              return (
+                <Badge className={`${c.className} border-0 text-sm`}>
+                  {t(c.labelKey)}
+                </Badge>
+              )
+            })()}
           </div>
           {tx.provider_tx_id && (
             <p className="text-muted-foreground text-xs font-mono">
