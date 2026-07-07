@@ -60,7 +60,8 @@ class MonobankPaymentProvider(BasePaymentProvider):
 
     async def _request(self, method: str, path: str, payload: Optional[dict] = None) -> dict:
         url = f"{MONOBANK_API_URL}{path}"
-        logger.info("Monobank %s %s payload=%s", method, url, payload)
+        import json as _json
+        logger.info("Monobank %s %s body=%s", method, url, _json.dumps(payload, ensure_ascii=False))
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(30)) as client:
                 resp = await client.request(method, url, headers=self._headers(), json=payload)
@@ -113,9 +114,9 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "qty": 1,
                         "sum": amount_kopecks,
                         "code": order_ref,
+                        "taxes": [{"amount": 0, "type": 0}],
                     }
                 ],
-                "taxes": [{"amount": 0}],
             },
             "redirectUrl": return_url,
             "webHookUrl": kwargs.get("webhook_url", ""),

@@ -351,15 +351,15 @@ async def get_monopay_config(
                 "reference": reference,
                 "destination": order_ref,
                 "comment": order_ref,
-                "basketOrder": [
-                    {
-                        "name": order_ref,
-                        "qty": 1,
-                        "sum": amount_kopecks,
-                        "code": order_ref,
-                    }
-                ],
-                "taxes": [{"amount": 0}],
+            "basketOrder": [
+                {
+                    "name": order_ref,
+                    "qty": 1,
+                    "sum": amount_kopecks,
+                    "code": order_ref,
+                    "taxes": [{"amount": 0, "type": 0}],
+                }
+            ],
         },
         "redirectUrl": "",
         "webHookUrl": "",
