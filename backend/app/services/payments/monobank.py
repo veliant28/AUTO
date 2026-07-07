@@ -108,12 +108,12 @@ class MonobankPaymentProvider(BasePaymentProvider):
             "merchantPaymInfo": {
                 "reference": order_ref,
                 "destination": description or order_ref,
-                "basket": [
+                "basketOrder": [
                     {
                         "name": order_ref,
                         "qty": 1,
                         "sum": amount_kopecks,
-                        "taxes": [{"amount": 0}],
+                        "taxes": [{"amount": 0, "type": "0"}],
                     }
                 ],
             },
