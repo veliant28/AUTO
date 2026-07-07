@@ -66,7 +66,7 @@ export default function PaymentBlock({
       <div className="space-y-3">
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-        ) : tx?.status === 'paid' ? (
+        ) : tx ? (
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">
@@ -74,16 +74,40 @@ export default function PaymentBlock({
               </span>
               <PaymentStatusBadge status={tx.status} t={t} />
             </div>
-            {tx.receipt_url && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => window.open(tx.receipt_url!, '_blank')}
-              >
-                {t('payment_receipt')}
-              </Button>
+            {tx.provider_tx_id && (
+              <p className="text-muted-foreground text-xs font-mono">
+                ID: {tx.provider_tx_id}
+              </p>
             )}
+            <div className="flex gap-2 pt-1">
+              {(tx.status === 'pending' ||
+                tx.status === 'failed' ||
+                tx.status === 'expired') && (
+                <MonopayStandaloneButton
+                  onClick={() => handleInitPayment('monobank')}
+                />
+              )}
+              {tx.invoice_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => window.open(tx.invoice_url!, '_blank')}
+                >
+                  {t('payment_invoice')}
+                </Button>
+              )}
+              {tx.receipt_url && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => window.open(tx.receipt_url!, '_blank')}
+                >
+                  {t('payment_receipt')}
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <MonopayStandaloneButton
