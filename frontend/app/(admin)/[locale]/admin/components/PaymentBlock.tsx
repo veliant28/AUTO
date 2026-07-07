@@ -126,22 +126,6 @@ export default function PaymentBlock({
                 </Badge>
               )}
               <div className="flex gap-2">
-                {tx.status === 'pending' && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={handleCancelInvoice}
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Отозвать инвойс
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -159,6 +143,22 @@ export default function PaymentBlock({
                     {t('payment_receipt')}
                   </TooltipContent>
                 </Tooltip>
+                {tx.status === 'pending' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={handleCancelInvoice}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Отозвать инвойс
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </div>
           </div>
