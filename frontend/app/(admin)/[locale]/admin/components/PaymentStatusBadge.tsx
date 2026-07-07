@@ -36,6 +36,6 @@ export default function PaymentStatusBadge({
     className: 'bg-gray-500 text-white',
   }
   return (
-    <Badge className={`${cfg.className} border-0 text-xs`}>{cfg.label}</Badge>
+    <Badge className={`${cfg.className} border-0 text-sm`}>{cfg.label}</Badge>
   )
 }

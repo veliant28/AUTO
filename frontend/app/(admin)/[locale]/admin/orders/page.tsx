@@ -86,7 +86,6 @@ import {
 } from '@/lib/api/checkbox'
 import PaymentBlock from '../components/PaymentBlock'
 import PaymentBadge from '../components/PaymentBadge'
-import PaymentStatusBadge from '../components/PaymentStatusBadge'
 import {
   paymentBadgeClass,
   paymentMethodLabel,

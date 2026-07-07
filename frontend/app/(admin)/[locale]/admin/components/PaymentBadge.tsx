@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { getTransaction } from '@/lib/api/payments'
+import PaymentStatusBadge from './PaymentStatusBadge'
 
 export default function PaymentBadge({
   orderId,
@@ -16,7 +17,7 @@ export default function PaymentBadge({
   const { data: tx } = useQuery({
     queryKey: ['order-payment-badge', orderId],
     queryFn: () => getTransaction(orderId).catch(() => null),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   })
 
   if (paymentMethod === 'cod') {
@@ -27,17 +28,5 @@ export default function PaymentBadge({
     )
   }
 
-  if (tx?.status === 'paid') {
-    return (
-      <Badge className="bg-green-600 text-white border-0 text-sm">
-        {t('payment_status_paid')}
-      </Badge>
-    )
-  }
-
-  return (
-    <Badge className="bg-gray-500 text-white border-0 text-sm">
-      {t('payment_status_not_paid')}
-    </Badge>
-  )
+  return <PaymentStatusBadge status={tx?.status || 'pending'} t={t} />
 }
