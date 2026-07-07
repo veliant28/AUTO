@@ -110,11 +110,6 @@ export default function PaymentBlock({
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         ) : tx ? (
           <div className="space-y-2 text-sm">
-            {tx.provider_tx_id && (
-              <Badge className="bg-blue-500 text-white border-0 text-sm">
-                ID: {tx.provider_tx_id}
-              </Badge>
-            )}
             <div className="flex gap-2 pt-1">
               {(tx.status === 'pending' ||
                 tx.status === 'failed' ||
@@ -123,18 +118,26 @@ export default function PaymentBlock({
                   onClick={() => handleInitPayment('monobank')}
                 />
               )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {tx.provider_tx_id && (
+                <Badge className="bg-blue-500 text-white border-0 text-sm">
+                  ID: {tx.provider_tx_id}
+                </Badge>
+              )}
               {tx.status === 'pending' && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="destructive"
                       size="icon"
+                      className="w-7 h-7"
                       onClick={handleCancelInvoice}
                     >
-                      <XCircle className="w-4 h-4" />
+                      <XCircle className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="left">Отозвать инвойс</TooltipContent>
+                  <TooltipContent side="right">Отозвать инвойс</TooltipContent>
                 </Tooltip>
               )}
               <Tooltip>
@@ -142,15 +145,16 @@ export default function PaymentBlock({
                   <Button
                     variant="outline"
                     size="icon"
+                    className="w-7 h-7"
                     disabled={!tx.receipt_url}
                     onClick={() =>
                       tx.receipt_url && window.open(tx.receipt_url, '_blank')
                     }
                   >
-                    <FileText className="w-4 h-4" />
+                    <FileText className="w-3.5 h-3.5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left">
+                <TooltipContent side="right">
                   {t('payment_receipt')}
                 </TooltipContent>
               </Tooltip>
