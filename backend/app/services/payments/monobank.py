@@ -58,10 +58,10 @@ class MonobankPaymentProvider(BasePaymentProvider):
         """Map HTTP status to human-readable message."""
         return MONOBANK_ERROR_CODES.get(str(status_code), f"Помилка Monobank (HTTP {status_code})")
 
-    async def _request(self, method: str, path: str, payload: Optional[dict] = None) -> dict:
-        url = f"{MONOBANK_API_URL}{path}"
-        logger.debug("Monobank %s %s", method, url)
-        try:
+	    async def _request(self, method: str, path: str, payload: Optional[dict] = None) -> dict:
+	        url = f"{MONOBANK_API_URL}{path}"
+	        logger.info("Monobank %s %s payload=%s", method, url, payload)
+	        try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(30)) as client:
                 resp = await client.request(method, url, headers=self._headers(), json=payload)
                 resp.raise_for_status()
@@ -112,7 +112,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
                         "qty": 1,
                         "sum": amount_kopecks,
                         "code": order_ref,
-                        "taxes": [{"amount": 0, "type": "0"}],
+                        "taxes": [{"amount": 0, "type": 0}],
                     }
                 ],
             },
