@@ -60,7 +60,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
 
     async def _request(self, method: str, path: str, payload: Optional[dict] = None) -> dict:
         url = f"{MONOBANK_API_URL}{path}"
-        logger.debug("Monobank %s %s payload=%s", method, url, payload)
+        logger.info("Monobank %s %s payload=%s", method, url, payload)
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(30)) as client:
                 resp = await client.request(method, url, headers=self._headers(), json=payload)
@@ -70,6 +70,7 @@ class MonobankPaymentProvider(BasePaymentProvider):
             detail = ""
             try:
                 err_json = e.response.json()
+                logger.info("Monobank error response: %s", err_json)
                 detail = err_json.get("errText", self._map_http_error(e.response.status_code))
             except Exception:
                 detail = self._map_http_error(e.response.status_code)
