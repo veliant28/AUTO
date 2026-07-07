@@ -137,16 +137,17 @@ export default function PaymentBlock({
                   <TooltipContent side="left">Отозвать инвойс</TooltipContent>
                 </Tooltip>
               )}
-              {tx.receipt_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => window.open(tx.receipt_url!, '_blank')}
-                >
-                  {t('payment_receipt')}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={!tx.receipt_url}
+                onClick={() =>
+                  tx.receipt_url && window.open(tx.receipt_url, '_blank')
+                }
+              >
+                {t('payment_receipt')}
+              </Button>
             </div>
           </div>
         ) : (
