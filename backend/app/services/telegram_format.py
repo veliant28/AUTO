@@ -15,7 +15,7 @@ ORDER_STATUSES: dict[str, str] = {
     "pending": "Ожидает",
     "confirmed": "Подтвержден",
     "processing": "В обработке",
-    "shipped": "Отгружен",
+    "shipped": "Отправлен",
     "delivered": "Доставлен",
     "cancelled": "Отменен",
 }
