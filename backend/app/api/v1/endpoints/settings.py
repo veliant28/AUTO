@@ -64,10 +64,16 @@ def _mask_generic_key(s: SiteSettings, field_name: str, decrypt_func) -> str | N
 
 
 def _mask_telegram_token(s: SiteSettings, decrypt_func) -> str | None:
-    """Маскировать Telegram Bot Token — показываем только ****."""
+    """Маскировать Telegram Bot Token — точки по длине токена."""
     if not s.telegram_bot_token_encrypted:
         return None
-    return "****"
+    try:
+        token = decrypt_func(s.telegram_bot_token_encrypted)
+        if not token:
+            return None
+        return "*" * len(token)
+    except Exception:
+        return "****"
 
 
 def _build_settings_response(s: SiteSettings) -> SettingsResponse:
