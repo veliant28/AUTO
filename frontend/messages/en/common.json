@@ -1273,7 +1273,15 @@
     "support_typing": "typing...",
     "support_status_new": "New",
     "support_status_active": "Active",
-    "support_status_closed": "Closed"
+    "support_status_closed": "Closed",
+    "telegram_title": "Telegram notifications",
+    "telegram_desc": "Bot settings for sending notifications to a Telegram group",
+    "telegram_bot_token": "Bot Token",
+    "telegram_bot_token_placeholder": "Enter bot token",
+    "telegram_bot_token_hint": "Token length matches mask length. Get from @BotFather",
+    "telegram_chat_id": "Chat ID",
+    "telegram_chat_id_placeholder": "Telegram group ID",
+    "telegram_chat_id_hint": "Chat/group ID for notifications. Get via @getmyid_bot"
   },
   "catalog": {
     "title": "Catalog",

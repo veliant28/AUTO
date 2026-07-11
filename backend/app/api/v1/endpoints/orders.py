@@ -8,6 +8,7 @@ from app.models import Order, OrderItem, OrderStatus, Part
 from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user, get_current_user
+from app.services.notifications import send_telegram_notification
 
 router = APIRouter()
 
@@ -225,7 +226,17 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
     
     db.commit()
     db.refresh(order)
-    
+
+    # Telegram notification about new order (fire-and-forget)
+    import asyncio
+    asyncio.ensure_future(
+        send_telegram_notification(
+            f"🆕 <b>Новый заказ #{order.order_number}</b>\n"
+            f"Сумма: {order.total} грн\n"
+            f"Клиент: {order.full_name}, {order.phone}"
+        )
+    )
+
     return {"message": "Order created", "order_id": order.id, "order_number": order.order_number}
 
 

@@ -11,6 +11,7 @@ from app.core.db import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models import User, Order, OrderStatus, OrderItem, Part
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
+from app.services.notifications import send_telegram_notification
 from app.schemas.returns_schemas import (
     ReturnRequestSchema, ReturnListResponse, ReturnItemSchema, ReturnCreate, ReturnCreateItem,
 )
@@ -212,6 +213,15 @@ async def create_return(
 
     db.commit()
     db.refresh(return_request)
+
+    # Telegram notification about new return (fire-and-forget)
+    import asyncio
+    asyncio.ensure_future(
+        send_telegram_notification(
+            f"🔄 <b>Новый возврат #{return_request.return_number}</b>\n"
+            f"Заказ: #{return_request.order.order_number if return_request.order else '?'}"
+        )
+    )
 
     # Reload with relationships
     return_request = db.query(ReturnRequest).options(

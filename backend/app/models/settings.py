@@ -34,3 +34,7 @@ class SiteSettings(Base):
     # NovaPay
     novapay_merchant_id = Column(String, nullable=True)
     novapay_private_key_encrypted = Column(Text, nullable=True)
+
+    # Telegram notifications
+    telegram_bot_token_encrypted = Column(Text, nullable=True)
+    telegram_chat_id = Column(String, nullable=True)

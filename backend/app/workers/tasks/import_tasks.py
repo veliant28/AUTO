@@ -54,47 +54,74 @@ def _snapshot_margins(db):
 def _get_client(supplier: str, db) -> tuple:
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
     if not config:
+        LOG(f"{supplier}: supplier config not found")
         return None, None
 
     now = datetime.utcnow()
     token = config.token
-    token_valid = token and config.token_expires_at and config.token_expires_at > now
+    expires_at = config.token_expires_at
+    expires_in_hours = (expires_at - now).total_seconds() / 3600 if expires_at and token else 0
 
-    if not token_valid:
+    LOG(f"{supplier}: token expires_at={expires_at}, expires_in={expires_in_hours:.1f}h")
+
+    # Нужно обновить если: истёк ИЛИ expires < 1ч
+    needs_refresh = not (token and expires_at and expires_at > now)
+    needs_preemptive = token and expires_at and expires_at > now and expires_in_hours < 1
+
+    if needs_refresh:
+        LOG(f"{supplier}: token EXPIRED — need full auth")
+    elif needs_preemptive:
+        LOG(f"{supplier}: token expires in {expires_in_hours:.1f}h (< 1h) — preemptive auth")
+    else:
+        LOG(f"{supplier}: token valid ({expires_in_hours:.1f}h remaining) — using existing")
         if supplier.upper() == "GPL":
-            client = GPLAPIClient(config)
+            return GPLAPIClient(config), token
         elif supplier.upper() == "UTR":
-            client = UTRAPIClient(config)
-        else:
-            return None, None
-
-        result = None
-
-        # 1. Пробуем рефреш
-        if supplier.upper() == "GPL" and token:
-            result = client.refresh(token)
-        elif supplier.upper() == "UTR" and config.refresh_token:
-            result = client.refresh(config.refresh_token)
-
-        # 2. Рефреш не вышел или не пробовали — полная авторизация
-        if not result or not result.success:
-            result = client.auth()
-
-        # 3. Всё упало — ошибка
-        if not result.success:
-            return None, result.message or "Auth failed"
-
-        config.token = result.token
-        config.token_expires_at = result.expires_at
-        if result.refresh_token:
-            config.refresh_token = result.refresh_token
-        db.commit()
-        token = result.token
+            return UTRAPIClient(config), token
+        return None, None
 
     if supplier.upper() == "GPL":
-        return GPLAPIClient(config), token
+        client = GPLAPIClient(config)
     elif supplier.upper() == "UTR":
-        return UTRAPIClient(config), token
+        client = UTRAPIClient(config)
+    else:
+        return None, None
+
+    result = None
+
+    # GPL: только полная авторизация (refresh токена нет)
+    if supplier.upper() == "GPL":
+        LOG(f"{supplier}: performing full auth...")
+        result = client.auth()
+    else:
+        # UTR: сначала refresh, при неудаче — полная авторизация
+        if config.refresh_token:
+            LOG(f"{supplier}: trying refresh...")
+            result = client.refresh(config.refresh_token)
+        if not result or not result.success:
+            prev_msg = result.message if result else 'no refresh token'
+            LOG(f"{supplier}: refresh failed ({prev_msg}), performing full auth...")
+            result = client.auth()
+
+    if not result or not result.success:
+        msg = result.message if result else "Auth returned None"
+        LOG(f"{supplier}: AUTH FAILED — {msg}")
+        return None, msg
+
+    # Сохраняем новый токен
+    config.token = result.token
+    config.token_expires_at = result.expires_at
+    if result.refresh_token:
+        config.refresh_token = result.refresh_token
+    db.commit()
+
+    new_expires_in = (result.expires_at - datetime.utcnow()).total_seconds() / 3600 if result.expires_at else 0
+    LOG(f"{supplier}: auth SUCCESS — new token expires in {new_expires_in:.1f}h (at {result.expires_at})")
+
+    if supplier.upper() == "GPL":
+        return GPLAPIClient(config), result.token
+    elif supplier.upper() == "UTR":
+        return UTRAPIClient(config), result.token
     return None, None
 
 

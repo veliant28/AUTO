@@ -111,6 +111,12 @@ export default function SettingsPage() {
   const [showNovapayKey, setShowNovapayKey] = React.useState(false)
   const [hasNovapayPrivateKey, setHasNovapayPrivateKey] = React.useState(false)
 
+  // Telegram fields
+  const [telegramBotToken, setTelegramBotToken] = React.useState('')
+  const [showTelegramToken, setShowTelegramToken] = React.useState(false)
+  const [telegramChatId, setTelegramChatId] = React.useState('')
+  const [hasTelegramBotToken, setHasTelegramBotToken] = React.useState(false)
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => {
@@ -142,6 +148,9 @@ export default function SettingsPage() {
         has_novapay_private_key: boolean
         novapay_private_key_masked: string | null
         novapay_merchant_id: string | null
+        telegram_chat_id: string | null
+        has_telegram_bot_token: boolean
+        telegram_bot_token_masked: string | null
       }
     },
     enabled: !!user,
@@ -168,6 +177,9 @@ export default function SettingsPage() {
     string | null
   >(null)
   const [savedNovapayMerchantId, setSavedNovapayMerchantId] = React.useState<
+    string | null
+  >(null)
+  const [savedTelegramTokenMask, setSavedTelegramTokenMask] = React.useState<
     string | null
   >(null)
 
@@ -259,6 +271,21 @@ export default function SettingsPage() {
       setSavedNovapayKeyMask(null)
       setHasNovapayPrivateKey(false)
     }
+    // Telegram
+    if (data?.telegram_bot_token_masked) {
+      setTelegramBotToken(data.telegram_bot_token_masked)
+      setSavedTelegramTokenMask(data.telegram_bot_token_masked)
+      setHasTelegramBotToken(true)
+    } else {
+      setTelegramBotToken('')
+      setSavedTelegramTokenMask(null)
+      setHasTelegramBotToken(false)
+    }
+    if (data?.telegram_chat_id) {
+      setTelegramChatId(data.telegram_chat_id)
+    } else {
+      setTelegramChatId('')
+    }
   }, [data])
 
   const isKeyUnchanged = resendApiKey === savedKeyMask
@@ -268,6 +295,7 @@ export default function SettingsPage() {
   const isLiqpayPublicUnchanged = liqpayPublicKey === savedLiqpayPublicMask
   const isLiqpayPrivateUnchanged = liqpayPrivateKey === savedLiqpayPrivateMask
   const isNovapayKeyUnchanged = novapayPrivateKey === savedNovapayKeyMask
+  const isTelegramTokenUnchanged = telegramBotToken === savedTelegramTokenMask
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -295,6 +323,10 @@ export default function SettingsPage() {
       if (novapayMerchantId) payload.novapay_merchant_id = novapayMerchantId
       if (!isNovapayKeyUnchanged)
         payload.novapay_private_key = novapayPrivateKey
+      // Telegram
+      if (!isTelegramTokenUnchanged)
+        payload.telegram_bot_token = telegramBotToken
+      if (telegramChatId) payload.telegram_chat_id = telegramChatId
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
@@ -905,6 +937,75 @@ export default function SettingsPage() {
                       )}
                     </button>
                   </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Telegram Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              {t('telegram_title')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>{t('telegram_desc')}</TooltipContent>
+              </Tooltip>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('telegram_bot_token')}
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showTelegramToken ? 'text' : 'password'}
+                      value={telegramBotToken}
+                      onChange={(e) => setTelegramBotToken(e.target.value)}
+                      placeholder={t('telegram_bot_token_placeholder')}
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTelegramToken(!showTelegramToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showTelegramToken ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('telegram_bot_token_hint')}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('telegram_chat_id')}
+                  </label>
+                  <Input
+                    value={telegramChatId}
+                    onChange={(e) => setTelegramChatId(e.target.value)}
+                    placeholder={t('telegram_chat_id_placeholder')}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('telegram_chat_id_hint')}
+                  </p>
                 </div>
               </>
             )}

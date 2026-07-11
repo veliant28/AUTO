@@ -7,23 +7,20 @@ from app.services.rate_limiter import rate_limiter
 from sqlalchemy import func, text as sa_text
 from datetime import datetime
 import asyncio
-import json
 import logging
 
 
 def save_article_info(tecdoc_db, article: str, brand_id: int, data: dict):
+    # Таблица autodb_article_infos удалена, используем article_inf
     if not data:
         return
     try:
         name = data.get("name") or data.get("description") or ""
         desc = data.get("description") or data.get("info") or ""
         tecdoc_db.execute(
-            sa_text("""INSERT INTO autodb_article_infos (article_number, supplier_id, name, description, source_payload, imported_at)
-                       VALUES (:art, :bid, :name, :desc, :payload::jsonb, NOW())
-                       ON CONFLICT (article_number, supplier_id) DO UPDATE
-                       SET name = EXCLUDED.name, description = EXCLUDED.description,
-                           source_payload = EXCLUDED.source_payload, imported_at = NOW()"""),
-            {"art": str(article), "bid": brand_id, "name": str(name)[:255], "desc": str(desc)[:2048], "payload": json.dumps(data)},
+            sa_text("""INSERT INTO article_inf ("DataSupplierArticleNumber", "supplierId", "InformationText", "InformationType")
+                       VALUES (:art, :bid, :desc, :name)"""),
+            {"art": str(article), "bid": brand_id, "name": str(name)[:255], "desc": str(desc)[:2048]},
         )
         tecdoc_db.commit()
     except Exception:

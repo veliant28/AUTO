@@ -63,6 +63,21 @@ def _mask_generic_key(s: SiteSettings, field_name: str, decrypt_func) -> str | N
         return "****"
 
 
+def _mask_telegram_token(s: SiteSettings, decrypt_func) -> str | None:
+    """Маскировать Telegram Bot Token, сохраняя его длину."""
+    if not s.telegram_bot_token_encrypted:
+        return None
+    try:
+        token = decrypt_func(s.telegram_bot_token_encrypted)
+        if not token:
+            return None
+        if len(token) < 8:
+            return "****"
+        return token[:3] + "*" * (len(token) - 7) + token[-4:]
+    except Exception:
+        return "****"
+
+
 def _build_settings_response(s: SiteSettings) -> SettingsResponse:
     """Собрать SettingsResponse с маскированным API ключом."""
     masked = None
@@ -103,6 +118,10 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         has_novapay_private_key=bool(s.novapay_private_key_encrypted),
         novapay_private_key_masked=_mask_generic_key(s, "novapay_private_key_encrypted", decrypt_password),
         novapay_merchant_id=s.novapay_merchant_id,
+        # Telegram
+        telegram_chat_id=s.telegram_chat_id,
+        has_telegram_bot_token=bool(s.telegram_bot_token_encrypted),
+        telegram_bot_token_masked=_mask_telegram_token(s, decrypt_password),
     )
 
 
@@ -208,6 +227,14 @@ async def update_settings(
             s.novapay_private_key_encrypted = encrypt_password(body.novapay_private_key)
         else:
             s.novapay_private_key_encrypted = None
+    # Telegram
+    if body.telegram_bot_token is not None:
+        if body.telegram_bot_token:
+            s.telegram_bot_token_encrypted = encrypt_password(body.telegram_bot_token)
+        else:
+            s.telegram_bot_token_encrypted = None
+    if body.telegram_chat_id is not None:
+        s.telegram_chat_id = body.telegram_chat_id or None
     db.commit()
     db.refresh(s)
     return _build_settings_response(s)

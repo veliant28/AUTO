@@ -1273,7 +1273,15 @@
     "support_typing": "друкує...",
     "support_status_new": "Новий",
     "support_status_active": "Активний",
-    "support_status_closed": "Закрито"
+    "support_status_closed": "Закрито",
+    "telegram_title": "Telegram сповіщення",
+    "telegram_desc": "Налаштування бота для відправки сповіщень у групу Telegram",
+    "telegram_bot_token": "Bot Token",
+    "telegram_bot_token_placeholder": "Введіть токен бота",
+    "telegram_bot_token_hint": "Довжина токена = довжині маски. Отримати у @BotFather",
+    "telegram_chat_id": "Chat ID",
+    "telegram_chat_id_placeholder": "ID групи з Telegram",
+    "telegram_chat_id_hint": "ID чату/групи для відправки сповіщень. Дізнайтесь через @getmyid_bot"
   },
   "catalog": {
     "title": "Каталог",

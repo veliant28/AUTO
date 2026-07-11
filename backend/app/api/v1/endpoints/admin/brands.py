@@ -32,7 +32,7 @@ async def list_brands(
     name_map: dict[int, str] = {}
     if brand_ids:
         names = tecdoc_db.execute(
-            sa_text("SELECT id, name FROM autodb_suppliers WHERE id = ANY(:ids)"),
+            sa_text("SELECT DISTINCT id, description FROM suppliers WHERE id = ANY(:ids)"),
             {"ids": brand_ids},
         ).fetchall()
         for row in names:

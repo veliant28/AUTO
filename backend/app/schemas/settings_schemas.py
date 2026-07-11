@@ -33,6 +33,11 @@ class SettingsResponse(BaseModel):
     novapay_private_key_masked: Optional[str] = None
     novapay_merchant_id: Optional[str] = None
 
+    # Telegram
+    telegram_chat_id: Optional[str] = None
+    has_telegram_bot_token: bool = False
+    telegram_bot_token_masked: Optional[str] = None
+
 class SettingsUpdate(BaseModel):
     brand_name: Optional[str] = None
     timezone: Optional[str] = None
@@ -57,6 +62,10 @@ class SettingsUpdate(BaseModel):
     # NovaPay
     novapay_merchant_id: Optional[str] = None
     novapay_private_key: Optional[str] = None
+
+    # Telegram
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = None
 
 class EmailTestRequest(BaseModel):
     to_email: str

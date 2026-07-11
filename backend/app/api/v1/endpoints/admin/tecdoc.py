@@ -278,15 +278,15 @@ async def manual_search(
 ):
     """Ручной поиск артикула в базе TecDoc."""
     t = sa_text("""
-        SELECT s.name, a.article_number, a.supplier_id, a.normalized_article
-        FROM autodb_articles a
-        JOIN autodb_suppliers s ON s.id = a.supplier_id
-        WHERE LOWER(a.article_number) LIKE :q
-        ORDER BY a.article_number
+        SELECT s.description as name, a."DataSupplierArticleNumber" as article_number, a."supplierId" as supplier_id
+        FROM articles a
+        JOIN suppliers s ON s.id = a."supplierId"
+        WHERE LOWER(a."DataSupplierArticleNumber") LIKE :q
+        ORDER BY a."DataSupplierArticleNumber"
         LIMIT 50
     """)
     rows = tecdoc_db.execute(t, {"q": f"%{data.article.lower()}%"}).fetchall()
-    return [{"brand": r[0], "article": r[1], "brand_id": r[2], "normalized": r[3]} for r in rows]
+    return [{"brand": r[0], "article": r[1], "brand_id": r[2], "normalized": r[1]} for r in rows]
 
 
 @router.post("/manual/details")
@@ -299,9 +299,9 @@ async def manual_details(
     art = data.article.lower()
 
     info = tecdoc_db.execute(
-        sa_text("""SELECT s.name, a.info_text FROM autodb_article_infos a
-                   JOIN autodb_suppliers s ON s.id = a.supplier_id
-                   WHERE LOWER(a.article_number) = :art LIMIT 1"""),
+        sa_text("""SELECT s.description as name, a."InformationText" as info_text FROM article_inf a
+                   JOIN suppliers s ON s.id = a."supplierId"
+                   WHERE LOWER(a."DataSupplierArticleNumber") = :art LIMIT 1"""),
         {"art": art},
     ).fetchone()
 
