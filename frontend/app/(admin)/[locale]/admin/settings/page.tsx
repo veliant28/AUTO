@@ -117,6 +117,11 @@ export default function SettingsPage() {
   const [telegramChatId, setTelegramChatId] = React.useState('')
   const [hasTelegramBotToken, setHasTelegramBotToken] = React.useState(false)
 
+  // When eye closed – show all stars; when open – show partial mask with visible edges
+  const telegramTokenDisplay = showTelegramToken
+    ? telegramBotToken
+    : '*'.repeat(telegramBotToken.length || 0)
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => {
@@ -972,7 +977,7 @@ export default function SettingsPage() {
                   <div className="relative">
                     <Input
                       type={showTelegramToken ? 'text' : 'password'}
-                      value={telegramBotToken}
+                      value={telegramTokenDisplay}
                       onChange={(e) => setTelegramBotToken(e.target.value)}
                       placeholder={t('telegram_bot_token_placeholder')}
                       className="pr-10 font-mono text-sm"
