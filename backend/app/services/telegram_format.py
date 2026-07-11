@@ -1,13 +1,7 @@
 """Форматирование сообщений для Telegram уведомлений."""
 
-# Цвета ролей — соответствуют badge-цветам в админке
-ROLE_COLORS: dict[str, str] = {
-    "admin": "#ef4444",      # red-500
-    "manager": "#3b82f6",    # blue-500
-    "operator": "#f97316",   # orange-500
-    "b2b": "#22c55e",        # green-500
-    "retail": "#9ca3af",     # gray-400
-}
+# Внимание: Telegram HTML не поддерживает style, color и т.д.
+# Доступны только: <b>, <i>, <u>, <s>, <code>, <pre>, <a>
 
 ROLE_NAMES: dict[str, str] = {
     "admin": "Администратор",
@@ -35,11 +29,10 @@ RETURN_STATUSES: dict[str, str] = {
 
 
 def _role_html(role: str | None) -> str:
-    """Роль с цветом."""
+    """Роль жирным шрифтом."""
     key = (role or "").lower()
     name = ROLE_NAMES.get(key, key or "—")
-    color = ROLE_COLORS.get(key, "#9ca3af")
-    return f'<span style="color:{color}">{name}</span>'
+    return f"<b>{name}</b>"
 
 
 def _status_html(status: str, status_map: dict[str, str]) -> str:
