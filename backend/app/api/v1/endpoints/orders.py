@@ -9,6 +9,7 @@ from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user, get_current_user
 from app.services.notifications import send_telegram_notification
+from app.services import telegram_format
 
 router = APIRouter()
 
@@ -231,9 +232,12 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
     import asyncio
     asyncio.ensure_future(
         send_telegram_notification(
-            f"🆕 <b>Новый заказ #{order.order_number}</b>\n"
-            f"Сумма: {order.total} грн\n"
-            f"Клиент: {order.full_name}, {order.phone}"
+            telegram_format.new_order(
+                number=order.order_number,
+                total=order.total,
+                full_name=order.full_name,
+                phone=order.phone,
+            )
         )
     )
 

@@ -12,6 +12,7 @@ from app.api.v1.deps import require_role
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from app.services.notifications import send_telegram_notification
+from app.services import telegram_format
 from app.schemas.returns_schemas import (
     AdminReturnListItem, AdminReturnListResponse,
     AdminReturnDetailResponse, AdminReturnItemSchema,
@@ -372,12 +373,16 @@ async def update_return_status(
 
     # Telegram notification about return status change (fire-and-forget)
     import asyncio
-    changer = f"{role_name} {current_user.last_name or ''} {current_user.first_name or ''}".strip()
     asyncio.ensure_future(
         send_telegram_notification(
-            f"🔄 <b>Возврат #{r.return_number}</b>\n"
-            f"Статус: {old_status} → {data.status}\n"
-            f"Изменил: {changer}"
+            telegram_format.return_status_changed(
+                return_number=r.return_number,
+                old_status=old_status,
+                new_status=data.status,
+                role=role_name,
+                last_name=current_user.last_name,
+                first_name=current_user.first_name,
+            )
         )
     )
 

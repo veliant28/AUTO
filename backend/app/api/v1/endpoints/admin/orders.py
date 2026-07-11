@@ -16,6 +16,7 @@ from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from datetime import datetime
 from app.services.notifications import send_telegram_notification
+from app.services import telegram_format
 
 router = APIRouter()
 
@@ -578,12 +579,16 @@ async def update_order_status(
 
     # Telegram notification about order status change (fire-and-forget)
     import asyncio
-    changer = f"{role_name} {current_user.last_name or ''} {current_user.first_name or ''}".strip()
     asyncio.ensure_future(
         send_telegram_notification(
-            f"📦 <b>Заказ #{order.order_number}</b>\n"
-            f"Статус: {old_status} → {data.status}\n"
-            f"Изменил: {changer}"
+            telegram_format.order_status_changed(
+                order_number=order.order_number,
+                old_status=old_status,
+                new_status=data.status,
+                role=role_name,
+                last_name=current_user.last_name,
+                first_name=current_user.first_name,
+            )
         )
     )
 
