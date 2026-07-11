@@ -989,9 +989,6 @@ export default function SettingsPage() {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t('telegram_bot_token_hint')}
-                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">
@@ -1003,9 +1000,6 @@ export default function SettingsPage() {
                     placeholder={t('telegram_chat_id_placeholder')}
                     className="font-mono text-sm"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t('telegram_chat_id_hint')}
-                  </p>
                 </div>
               </>
             )}
