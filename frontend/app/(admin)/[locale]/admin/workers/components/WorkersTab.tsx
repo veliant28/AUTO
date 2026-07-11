@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTheme } from '@wrksz/themes/client'
@@ -30,6 +30,7 @@ import {
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import dynamic from 'next/dynamic'
+import ChartErrorBoundary from '@/components/ChartErrorBoundary'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -267,8 +268,26 @@ export default function WorkersTab() {
   >(() => {
     try {
       const saved = sessionStorage.getItem('workers-active-history')
-      if (saved) return JSON.parse(saved)
-    } catch {}
+      if (saved) {
+        const parsed: { time: number; value: number }[] = JSON.parse(saved)
+        if (
+          Array.isArray(parsed) &&
+          parsed.length > 0 &&
+          parsed.every(
+            (p) =>
+              typeof p?.time === 'number' &&
+              isFinite(p.time) &&
+              typeof p?.value === 'number' &&
+              isFinite(p.value) &&
+              p.value >= 0,
+          )
+        ) {
+          return parsed
+        }
+      }
+    } catch {
+      // ignore corrupted data
+    }
     const now = Date.now()
     return Array.from({ length: 50 }, (_, i) => ({
       time: now - (49 - i) * 3000,
@@ -276,6 +295,14 @@ export default function WorkersTab() {
     }))
   })
   const [clock, setClock] = useState(Date.now())
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -656,16 +683,32 @@ export default function WorkersTab() {
     getCoreRowModel: getCoreRowModel(),
   })
 
+  if (!data?.worker) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] bg-muted/10 rounded-lg">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">{t('loading')}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Top row: donut + CPU */}
       <div className="grid md:grid-cols-3 gap-4">
         <Card className="md:col-span-1">
           <CardContent className="p-2">
-            <ReactECharts
-              option={donutOption}
-              style={{ width: '100%', height: 320 }}
-            />
+            <ChartErrorBoundary>
+              <ReactECharts
+                option={donutOption}
+                style={{ width: '100%', height: 320 }}
+                onChartReady={() => {
+                  /* chart ready */
+                }}
+              />
+            </ChartErrorBoundary>
           </CardContent>
         </Card>
         <Card className="md:col-span-2">
@@ -694,7 +737,12 @@ export default function WorkersTab() {
             </div>
           </CardHeader>
           <CardContent className="p-2">
-            <ReactECharts option={activeSlotsOption} style={{ height: 260 }} />
+            <ChartErrorBoundary>
+              <ReactECharts
+                option={activeSlotsOption}
+                style={{ height: 260 }}
+              />
+            </ChartErrorBoundary>
           </CardContent>
         </Card>
       </div>
