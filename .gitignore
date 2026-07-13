@@ -36,3 +36,4 @@ temp_np_pages/
 **/__pycache__/
 backend/logs/
 backend/media/
+bin/
