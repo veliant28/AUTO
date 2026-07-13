@@ -98,9 +98,10 @@ async def connection_status(user_id: int = Depends(get_current_user), db: Sessio
                 msg = update.get("message", {})
                 chat = msg.get("chat", {})
                 chat_id = chat.get("id")
-                text = msg.get("text", "")
+                text = msg.get("text", "").strip()
                 username = chat.get("username") or msg.get("from", {}).get("first_name", "")
-                if text == f"/start {pending.code}":
+                # Match "/start КОД" or just "КОД" (plain number)
+                if text == f"/start {pending.code}" or text == pending.code:
                     pending.chat_id = chat_id
                     pending.telegram_username = username
                     pending.connected = True
