@@ -184,6 +184,26 @@ export default function ProfilePage() {
     if (isAuthenticated) checkTelegramStatus()
   }, [isAuthenticated, checkTelegramStatus])
 
+  // Auto-poll Telegram status when a code is shown (waiting for user to press Start)
+  useEffect(() => {
+    if (!code) return
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await api.get('/telegram/status')
+        if (data.connected) {
+          setTgConnected(true)
+          setTgUsername(data.username)
+          setCode(null)
+          clearInterval(interval)
+          toast.success(tg('connect_success'))
+        }
+      } catch {
+        // ignore
+      }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [code])
+
   const handleConnectTelegram = async () => {
     setTgLoading(true)
     try {
