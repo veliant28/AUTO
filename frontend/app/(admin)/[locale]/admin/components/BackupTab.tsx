@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTheme } from '@wrksz/themes/client'
 import {
   Download,
   Trash2,
@@ -175,6 +176,8 @@ interface BackupRecord {
 export default function BackupTab() {
   const t = useTranslations('admin')
   const { user, isAuthenticated } = useAuthStore()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
   const queryClient = useQueryClient()
   const [deleteTarget, setDeleteTarget] = useState<BackupRecord | null>(null)
   const [backupTime, setBackupTime] = useState('02:00')
@@ -307,13 +310,18 @@ export default function BackupTab() {
     return days
   }, [completedBackups])
 
+  const textColor = isDark ? '#e5e7eb' : '#64748b'
+  const gridColor = isDark ? '#1e293b' : '#f1f5f9'
+
   const chartOption = {
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'rgba(255,255,255,0.95)',
-      borderColor: '#e2e8f0',
+      backgroundColor: isDark
+        ? 'rgba(30,41,59,0.95)'
+        : 'rgba(255,255,255,0.95)',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
       borderWidth: 1,
-      textStyle: { color: '#1e293b', fontSize: 12 },
+      textStyle: { color: isDark ? '#e5e7eb' : '#1e293b', fontSize: 12 },
       formatter: (params: any) => {
         const p = params[0]
         const day = chartData[Number(p.dataIndex)]
@@ -326,15 +334,15 @@ export default function BackupTab() {
     xAxis: {
       type: 'category',
       data: chartData.map((d) => d.date),
-      axisLabel: { color: '#94a3b8', fontSize: 11 },
+      axisLabel: { color: textColor, fontSize: 11 },
       axisLine: { show: false },
       axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+      splitLine: { lineStyle: { color: gridColor, type: 'dashed' } },
       axisLabel: {
-        color: '#94a3b8',
+        color: textColor,
         fontSize: 11,
         formatter: (v: number) => formatFileSize(v),
       },
@@ -376,7 +384,7 @@ export default function BackupTab() {
         label: {
           show: true,
           position: 'top',
-          color: '#64748b',
+          color: textColor,
           fontSize: 10,
           formatter: (p: any) => {
             const day = chartData[Number(p.dataIndex)]
