@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import dynamic from 'next/dynamic'
 import DashboardTab from './components/DashboardTab'
 import WorkersTab from './workers/components/WorkersTab'
-import StaffPage from './staff/page'
+import { StaffPageContent } from './staff/page'
 import ProtectionDashboard from './components/ProtectionDashboard'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
@@ -37,7 +37,7 @@ export default function AdminPage() {
   return (
     <div className="p-6">
       {tab === 'dashboard' && <DashboardTab />}
-      {tab === 'staff' && <StaffPage />}
+      {tab === 'staff' && <StaffPageContent />}
       {tab === 'protection' && <ProtectionDashboard />}
       {tab === 'workers' && <WorkersTab />}
     </div>

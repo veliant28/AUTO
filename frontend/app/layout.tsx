@@ -1,18 +1,25 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'SVOM — интернет-магазин автозапчастей',
   description: 'Более 235 000 запчастей. Мгновенный поиск по каталогу TecDoc.',
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
   },
-};
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html suppressHydrationWarning>
       <body>{children}</body>
     </html>
-  );
+  )
 }

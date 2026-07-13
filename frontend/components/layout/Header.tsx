@@ -16,7 +16,7 @@ import {
   RotateCcw,
   Gift,
   Shield,
-  LifeBuoy,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -211,7 +211,7 @@ export default function Header() {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/support">
-                          <LifeBuoy className="mr-2 h-4 w-4" />{' '}
+                          <MessageSquare className="mr-2 h-4 w-4" />{' '}
                           {t('tech_support')}
                         </Link>
                       </DropdownMenuItem>

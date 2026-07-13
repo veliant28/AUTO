@@ -1,28 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Users,
-  Activity,
-  ShoppingCart,
-  UserCheck,
-  CalendarDays,
-} from 'lucide-react'
+import { Users, Activity, ShoppingCart, UserCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import {
-  format,
   startOfDay,
   subDays,
   startOfMonth,
@@ -30,7 +16,6 @@ import {
   startOfYear,
   endOfDay,
 } from 'date-fns'
-import { ru } from 'date-fns/locale'
 import BarChart from '@/components/charts/BarChart'
 import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
@@ -80,7 +65,7 @@ const actionTypeLabels: Record<string, string> = {
 }
 const actionTypeColors = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444']
 
-export default function StaffPage() {
+export function StaffPageContent() {
   const t = useTranslations('admin')
   const { user, isAuthenticated } = useAuthStore()
   const [period, setPeriod] = useState<string>('month')
@@ -89,6 +74,31 @@ export default function StaffPage() {
   >()
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
   const range = customRange || getDateRange(period)
+
+  // Register global functions for TopBar buttons
+  useEffect(() => {
+    const win = window as any
+    win.__staffSetPeriod = (p: string) => {
+      setPeriod(p)
+      setCustomRange(undefined)
+    }
+    win.__staffSetCustomRange = (r: { from: Date; to: Date } | undefined) =>
+      setCustomRange(r)
+    win.__staffResetStaff = () => setSelectedStaffId(null)
+    return () => {
+      delete win.__staffSetPeriod
+      delete win.__staffSetCustomRange
+      delete win.__staffResetStaff
+    }
+  }, [])
+
+  // Sync state to window for TopBar polling
+  useEffect(() => {
+    const win = window as any
+    win.__staffPeriod = period
+    win.__staffCustomRange = customRange
+    win.__staffSelectedStaffId = selectedStaffId
+  }, [period, customRange, selectedStaffId])
 
   const {
     data: stats,
@@ -137,7 +147,7 @@ export default function StaffPage() {
   }, [stats?.actions_by_date])
 
   return (
-    <div className="p-6 flex flex-col gap-4">
+    <div className="space-y-6">
       {/* KPI */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
@@ -194,51 +204,6 @@ export default function StaffPage() {
       <div className="grid grid-cols-4 gap-4">
         {/* Колонки 1-3: период + графики */}
         <div className="col-span-3 flex flex-col gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            {PERIODS.map((p) => (
-              <Button
-                key={p}
-                variant={period === p && !customRange ? 'default' : 'outline'}
-                onClick={() => {
-                  setPeriod(p)
-                  setCustomRange(undefined)
-                }}
-              >
-                {t('staff_period_' + p)}
-              </Button>
-            ))}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1.5">
-                  <CalendarDays className="w-4 h-4" />
-                  {customRange
-                    ? `${format(customRange.from, 'dd.MM')} – ${format(customRange.to, 'dd.MM')}`
-                    : t('staff_select_dates')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range"
-                  navLayout="around"
-                  selected={customRange}
-                  onSelect={(r: any) => {
-                    if (r?.from && r?.to)
-                      setCustomRange({ from: r.from, to: endOfDay(r.to) })
-                  }}
-                  locale={ru}
-                />
-              </PopoverContent>
-            </Popover>
-            {selectedStaffId && (
-              <Button
-                variant="destructive"
-                onClick={() => setSelectedStaffId(null)}
-              >
-                {t('staff_reset')}
-              </Button>
-            )}
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardHeader className="p-4 pb-0">
@@ -357,6 +322,15 @@ export default function StaffPage() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  )
+}
+
+// Wrapper with padding for standalone page (not inside AdminClient)
+export default function StaffPage() {
+  return (
+    <div className="p-6">
+      <StaffPageContent />
     </div>
   )
 }

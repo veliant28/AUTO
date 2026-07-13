@@ -37,6 +37,7 @@ import {
   ScanBarcode,
   MessageSquare,
   ShieldAlert,
+  CalendarDays,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,6 +70,14 @@ import {
 } from './components/AdminLocaleContext'
 import { useBrandName } from '@/hooks/useBrandName'
 import FalconLogo from '@/components/ui/FalconLogo'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 
 const LOCALES = ['ru', 'en', 'ua']
 
@@ -98,6 +107,9 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isOrders = pathname.includes('/admin/orders')
   const isReturns = pathname.includes('/admin/returns')
   const isLoyalty = pathname.includes('/admin/loyalty')
+  const isStaff = pathname.includes('/admin/staff')
+  const isStaffTab =
+    isAdmin && (searchParams.get('tab') || 'dashboard') === 'staff'
 
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
@@ -180,6 +192,20 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     const id = setInterval(() => {
       const d = (window as any).__pricingOtpDigits
       if (d) setPricingOtpDigits([...d])
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  // Staff TopBar state
+  const [staffPeriod, setStaffPeriod] = useState<string>('month')
+  const [staffCustomRange, setStaffCustomRange] = useState<any>(undefined)
+  const [staffSelectedId, setStaffSelectedId] = useState<number | null>(null)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      setStaffPeriod(win.__staffPeriod ?? 'month')
+      setStaffCustomRange(win.__staffCustomRange)
+      setStaffSelectedId(win.__staffSelectedStaffId ?? null)
     }, 200)
     return () => clearInterval(id)
   }, [])
@@ -624,6 +650,81 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </TooltipTrigger>
               <TooltipContent>{ta('protection_ban')}</TooltipContent>
             </Tooltip>
+          </div>
+        )}
+        {(isStaff || isStaffTab) && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+            {(['day', 'week', 'month', 'year'] as const).map((p) => (
+              <Tooltip key={p}>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={
+                      staffPeriod === p && !staffCustomRange
+                        ? 'default'
+                        : 'outline'
+                    }
+                    onClick={() => (window as any).__staffSetPeriod?.(p)}
+                  >
+                    {p === 'day'
+                      ? 'Д'
+                      : p === 'week'
+                        ? 'Н'
+                        : p === 'month'
+                          ? 'М'
+                          : 'Г'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('staff_period_' + p)}</TooltipContent>
+              </Tooltip>
+            ))}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="icon"
+                  variant={staffCustomRange ? 'default' : 'outline'}
+                  className="ml-1"
+                >
+                  <CalendarDays className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  navLayout="around"
+                  selected={staffCustomRange}
+                  onSelect={(r: any) => {
+                    if (r?.from && r?.to)
+                      (window as any).__staffSetCustomRange?.({
+                        from: r.from,
+                        to: new Date(
+                          r.to.getFullYear(),
+                          r.to.getMonth(),
+                          r.to.getDate(),
+                          23,
+                          59,
+                          59,
+                        ),
+                      })
+                  }}
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+            {staffSelectedId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => (window as any).__staffResetStaff?.()}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('staff_reset')}</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         )}
         {pathname.includes('/admin/loyalty') && (

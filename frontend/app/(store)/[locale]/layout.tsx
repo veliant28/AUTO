@@ -48,7 +48,10 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     title: { default: m.title, template: `%s | ${brandName}` },
     description: m.desc,
     icons: {
-      icon: '/favicon.svg',
+      icon: [
+        { url: '/favicon.ico', sizes: 'any' },
+        { url: '/favicon.svg', type: 'image/svg+xml' },
+      ],
     },
     alternates: {
       languages: {
