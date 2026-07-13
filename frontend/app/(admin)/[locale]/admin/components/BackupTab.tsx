@@ -429,7 +429,7 @@ export default function BackupTab() {
 
       {/* Table */}
       <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 border-b">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-primary" />
             {t('backup_title')}
