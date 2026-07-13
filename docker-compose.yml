@@ -62,6 +62,8 @@ services:
     command: celery -A app.workers worker --loglevel=info
     volumes:
       - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./Backup:/Backup
     environment:
       AUTO_PARTS_POSTGRES_USER: ${AUTO_PARTS_POSTGRES_USER:-postgres}
       AUTO_PARTS_POSTGRES_PASSWORD: ${AUTO_PARTS_POSTGRES_PASSWORD}
