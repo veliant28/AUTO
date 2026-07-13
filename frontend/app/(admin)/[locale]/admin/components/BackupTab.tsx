@@ -342,11 +342,8 @@ export default function BackupTab() {
     series: [
       {
         type: 'bar',
-        data: {
-          name: 'Размер бэкапа',
-          type: 'bar',
-          data: chartData.map((d) => d.size),
-        },
+        name: 'Размер бэкапа',
+        data: chartData.map((d) => d.size),
         itemStyle: {
           color: {
             type: 'linear',
