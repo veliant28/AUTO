@@ -114,7 +114,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
     { key: 'staff', label: ta('staff_title') },
-    { key: 'protection', label: 'ГЛАЗ' },
+    { key: 'protection', label: ta('protection_title') },
     { key: 'backup', label: ta('backup_title') },
     { key: 'workers', label: ta('workers_title') },
   ]
