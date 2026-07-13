@@ -90,3 +90,39 @@ def return_status_changed(
         f"Статус: {_status_html(old_status, RETURN_STATUSES)} → {_status_html(new_status, RETURN_STATUSES)}\n"
         f"{_role_html(role)} {changer}"
     )
+
+
+# ── Customer-facing notifications (no role/person info) ──────────────
+
+def customer_new_order(number: str, total: float) -> str:
+    """🆕 Заказ оформлен — уведомление клиенту."""
+    return (
+        f"✅ <b>Заказ {number} оформлен</b>\n"
+        f"Сумма: {total} грн\n"
+        f"Мы свяжемся с вами для подтверждения."
+    )
+
+
+def customer_new_return(return_number: str, order_number: str) -> str:
+    """🔄 Возврат создан — уведомление клиенту."""
+    return (
+        f"🔄 <b>Возврат {return_number} создан</b>\n"
+        f"Заказ: {order_number}\n"
+        f"Мы обработаем ваш возврат в ближайшее время."
+    )
+
+
+def customer_order_status_changed(order_number: str, new_status: str) -> str:
+    """📦 Статус заказа изменён — уведомление клиенту."""
+    return (
+        f"📦 <b>Заказ {order_number}</b>\n"
+        f"Статус: {_status_html(new_status, ORDER_STATUSES)}"
+    )
+
+
+def customer_return_status_changed(return_number: str, new_status: str) -> str:
+    """🔄 Статус возврата изменён — уведомление клиенту."""
+    return (
+        f"🔄 <b>Возврат {return_number}</b>\n"
+        f"Статус: {_status_html(new_status, RETURN_STATUSES)}"
+    )

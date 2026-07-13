@@ -11,7 +11,7 @@ from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
-from app.services.notifications import send_telegram_notification
+from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 from app.schemas.returns_schemas import (
     AdminReturnListItem, AdminReturnListResponse,
@@ -383,6 +383,13 @@ async def update_return_status(
                 last_name=current_user.last_name,
                 first_name=current_user.first_name,
             )
+        )
+    )
+    # Notify customer via Telegram if linked
+    asyncio.ensure_future(
+        send_customer_telegram_notification(
+            r.user_id,
+            telegram_format.customer_return_status_changed(r.return_number, data.status),
         )
     )
 

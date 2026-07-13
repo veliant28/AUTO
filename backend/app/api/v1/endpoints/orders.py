@@ -9,7 +9,7 @@ from app.models import Order, OrderItem, OrderStatus, Part
 from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user, get_current_user
-from app.services.notifications import send_telegram_notification
+from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 
 router = APIRouter()
@@ -246,6 +246,13 @@ async def checkout(
                 full_name=order.full_name,
                 phone=order.phone,
             )
+        )
+    )
+    # Notify customer via Telegram if linked
+    asyncio.ensure_future(
+        send_customer_telegram_notification(
+            order.user_id,
+            telegram_format.customer_new_order(order.order_number, order.total),
         )
     )
 

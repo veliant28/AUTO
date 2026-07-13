@@ -11,7 +11,7 @@ from app.core.db import get_db
 from app.api.v1.endpoints.auth import get_current_user
 from app.models import User, Order, OrderStatus, OrderItem, Part
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
-from app.services.notifications import send_telegram_notification
+from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 from app.schemas.returns_schemas import (
     ReturnRequestSchema, ReturnListResponse, ReturnItemSchema, ReturnCreate, ReturnCreateItem,
@@ -223,6 +223,16 @@ async def create_return(
                 return_number=return_request.return_number,
                 order_number=return_request.order.order_number if return_request.order else "?",
             )
+        )
+    )
+    # Notify customer via Telegram if linked
+    asyncio.ensure_future(
+        send_customer_telegram_notification(
+            return_request.user_id,
+            telegram_format.customer_new_return(
+                return_number=return_request.return_number,
+                order_number=return_request.order.order_number if return_request.order else "?",
+            ),
         )
     )
 

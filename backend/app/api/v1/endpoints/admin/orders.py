@@ -17,7 +17,7 @@ from app.models.suppliers import SupplierOffer, Supplier
 from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from datetime import datetime
-from app.services.notifications import send_telegram_notification
+from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 
 router = APIRouter()
@@ -604,6 +604,13 @@ async def update_order_status(
                 last_name=current_user.last_name,
                 first_name=current_user.first_name,
             )
+        )
+    )
+    # Notify customer via Telegram if linked
+    asyncio.ensure_future(
+        send_customer_telegram_notification(
+            order.user_id,
+            telegram_format.customer_order_status_changed(order.order_number, data.status),
         )
     )
 
