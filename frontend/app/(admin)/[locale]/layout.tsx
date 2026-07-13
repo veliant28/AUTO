@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ThemeProvider } from '@wrksz/themes/next'
 import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
 import { Toaster } from 'sonner'
 import { use } from 'react'
 import Providers from '@/components/Providers'
@@ -54,9 +55,10 @@ async function fetchBrandName(): Promise<string> {
 }
 
 export default async function AdminRootLayout(props: any) {
-  const { children, messages } = props
+  const { children } = props
   const params = await props.params
   const locale = params.locale
+  const messages = await getMessages()
   const brandName = await fetchBrandName()
   return (
     <>
