@@ -1410,7 +1410,7 @@
     "title": "Telegram",
     "connect": "Connect",
     "disconnect": "Disconnect",
-    "check_after_send": "After sending, click «Check»",
+    "check_after_send": "Press «Start» in Telegram — it will connect automatically",
     "desc": "Receive order status notifications in Telegram",
     "checking": "Checking status...",
     "connected": "Connected",
@@ -1420,7 +1420,9 @@
     "code_sent": "Code sent",
     "connect_error": "Connection error",
     "disconnect_success": "Telegram disconnected",
-    "disconnect_error": "Disconnect error"
+    "disconnect_error": "Disconnect error",
+    "connect_success": "Telegram connected",
+    "check_not_connected": "Not connected yet. Press «Start» in Telegram"
   },
   "pages": {
     "about": {

@@ -920,8 +920,25 @@ export default function ProfilePage() {
                     {tg('check_after_send')}
                   </p>
                   <div className="flex gap-2">
-                    <Button size="lg" onClick={checkTelegramStatus}>
-                      <Loader2 className="w-3 h-3 mr-1" /> {tg('check')}
+                    <Button
+                      size="lg"
+                      onClick={async () => {
+                        try {
+                          const { data } = await api.get('/telegram/status')
+                          if (data.connected) {
+                            setTgConnected(true)
+                            setTgUsername(data.username)
+                            setCode(null)
+                            toast.success(tg('connect_success'))
+                          } else {
+                            toast.info(tg('check_not_connected'))
+                          }
+                        } catch {
+                          toast.error(tg('connect_error'))
+                        }
+                      }}
+                    >
+                      {tg('check')}
                     </Button>
                     <Button
                       variant="outline"
