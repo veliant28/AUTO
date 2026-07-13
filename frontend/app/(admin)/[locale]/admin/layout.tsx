@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -214,6 +214,20 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   // Backup TopBar state
   const [backupTime, setBackupTime] = useState('02:00')
   const [backupTimeOpen, setBackupTimeOpen] = useState(false)
+  const backupHoursRef = useRef<HTMLDivElement>(null)
+  const backupMinutesRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (backupTimeOpen) {
+      requestAnimationFrame(() => {
+        backupHoursRef.current
+          ?.querySelector<HTMLButtonElement>('[data-selected]')
+          ?.scrollIntoView({ block: 'start', behavior: 'instant' })
+        backupMinutesRef.current
+          ?.querySelector<HTMLButtonElement>('[data-selected]')
+          ?.scrollIntoView({ block: 'start', behavior: 'instant' })
+      })
+    }
+  }, [backupTimeOpen])
   useEffect(() => {
     const id = setInterval(() => {
       const win = window as any
@@ -590,27 +604,15 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'backup' && (
           <div className="border-r pr-2 self-stretch flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="default"
-                  onClick={() => (window as any).__triggerBackup?.()}
-                >
-                  <Play className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{ta('backup_run')}</TooltipContent>
-            </Tooltip>
             <Popover open={backupTimeOpen} onOpenChange={setBackupTimeOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  size="sm"
                   variant="outline"
-                  className="h-8 gap-1 font-mono text-xs"
+                  size="sm"
+                  className="h-9 w-24 font-normal text-center cursor-pointer gap-1 text-base"
                 >
-                  <Clock className="w-3.5 h-3.5" />
-                  {backupTime}
+                  <span className="flex-1">{backupTime}</span>
+                  <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -619,7 +621,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 sideOffset={4}
               >
                 <div className="flex gap-1">
-                  <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden">
+                  <div
+                    ref={backupHoursRef}
+                    className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  >
                     {Array.from({ length: 24 }, (_, i) =>
                       String(i).padStart(2, '0'),
                     ).map((h) => (
@@ -629,7 +634,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                         data-selected={
                           h === backupTime.split(':')[0] || undefined
                         }
-                        className={`px-3 py-0.5 text-sm rounded-md cursor-pointer transition-colors ${
+                        className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
                           h === backupTime.split(':')[0]
                             ? 'bg-primary text-primary-foreground font-medium'
                             : 'hover:bg-accent text-foreground'
@@ -638,6 +643,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                           ;(window as any).__setBackupTime?.(
                             `${h}:${backupTime.split(':')[1]}`,
                           )
+                          setBackupTimeOpen(false)
                         }}
                       >
                         {h}
@@ -645,7 +651,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     ))}
                   </div>
                   <div className="w-px bg-border self-stretch" />
-                  <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden">
+                  <div
+                    ref={backupMinutesRef}
+                    className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  >
                     {Array.from({ length: 60 }, (_, i) =>
                       String(i).padStart(2, '0'),
                     ).map((m) => (
@@ -655,7 +664,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                         data-selected={
                           m === backupTime.split(':')[1] || undefined
                         }
-                        className={`px-3 py-0.5 text-sm rounded-md cursor-pointer transition-colors ${
+                        className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
                           m === backupTime.split(':')[1]
                             ? 'bg-primary text-primary-foreground font-medium'
                             : 'hover:bg-accent text-foreground'
@@ -664,6 +673,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                           ;(window as any).__setBackupTime?.(
                             `${backupTime.split(':')[0]}:${m}`,
                           )
+                          setBackupTimeOpen(false)
                         }}
                       >
                         {m}
@@ -683,6 +693,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('backup_save_config')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="default"
+                  onClick={() => (window as any).__triggerBackup?.()}
+                >
+                  <Play className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('backup_run')}</TooltipContent>
             </Tooltip>
           </div>
         )}
