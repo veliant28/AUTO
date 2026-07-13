@@ -603,7 +603,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
         )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'backup' && (
-          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+          <div className="border-r pr-2 self-stretch flex items-center gap-2">
             <Popover open={backupTimeOpen} onOpenChange={setBackupTimeOpen}>
               <PopoverTrigger asChild>
                 <Button
