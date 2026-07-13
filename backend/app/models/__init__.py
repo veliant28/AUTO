@@ -20,6 +20,7 @@ from .checkbox import OrderCheckboxReceipt
 from .payments import PaymentTransaction
 from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from .protection import BanRecord, ProtectionEvent, Whitelist
+from .backup import BackupRecord
 
 __all__ = [
     "Base", 
@@ -45,4 +46,5 @@ __all__ = [
     "PaymentTransaction",
     "ChatConversation", "ChatMessage", "ChatStatus", "SenderRole",
     "BanRecord", "ProtectionEvent", "Whitelist",
+    "BackupRecord",
 ]

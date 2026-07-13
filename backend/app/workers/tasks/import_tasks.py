@@ -5,6 +5,7 @@ from app.workers import celery_app
 from app.core.db import SessionLocal, TecDocSessionLocal
 from app.models.imports import SupplierConfig, PriceImport, ImportSchedule
 from app.models.settings import SiteSettings
+from app.models.backup import BackupRecord
 from app.services.supplier_api import GPLAPIClient, UTRAPIClient
 from app.services.import_processor import (
     build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog,
@@ -367,14 +368,38 @@ def scheduler_tick(self):
                 db.commit()
                 db.refresh(pimport)
 
-                process_price_import.delay(pimport.id)
+	                process_price_import.delay(pimport.id)
 
-                s.last_import_id = pimport.id
-                s.last_run_at = now_utc
-                db.commit()
-            except Exception:
-                db.rollback()
-                continue
+	                s.last_import_id = pimport.id
+	                s.last_run_at = now_utc
+	                db.commit()
+	            except Exception:
+	                db.rollback()
+	                continue
+
+	        # Check backup schedule
+	        try:
+	            backup_time = settings_row.backup_run_at_time if settings_row else "02:00"
+	            if backup_time:
+	                bh, bm = map(int, backup_time.split(":"))
+	                backup_target = now_tz.replace(hour=bh, minute=bm, second=0, microsecond=0)
+
+	                if backup_target <= now_tz:
+	                    # Check if backup already ran today
+	                    today_start = now_tz.replace(hour=0, minute=0, second=0, microsecond=0)
+	                    today_start_utc = today_start.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+	                    existing = db.query(BackupRecord).filter(
+	                        BackupRecord.created_at >= today_start_utc,
+	                        BackupRecord.type == "full",
+	                    ).first()
+	                    if not existing:
+	                        from app.workers.tasks.backup_tasks import run_database_backup
+	                        import threading
+	                        logger.info("Scheduler tick: starting scheduled backup")
+	                        thread = threading.Thread(target=run_database_backup, daemon=True)
+	                        thread.start()
+	        except Exception:
+	            pass
     except Exception:
         db.rollback()
     finally:

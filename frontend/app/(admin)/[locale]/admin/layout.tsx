@@ -115,6 +115,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
     { key: 'staff', label: ta('staff_title') },
     { key: 'protection', label: 'ГЛАЗ' },
+    { key: 'backup', label: ta('backup_title') },
     { key: 'workers', label: ta('workers_title') },
   ]
 
@@ -573,6 +574,33 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('workers_restart')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        {isAdmin && (searchParams.get('tab') || 'dashboard') === 'backup' && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="default"
+                  onClick={() => (window as any).__triggerBackup?.()}
+                >
+                  <Play className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('backup_run')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__saveBackupConfig?.()}
+                >
+                  <Database className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('backup_save_config')}</TooltipContent>
             </Tooltip>
           </div>
         )}

@@ -21,6 +21,7 @@ from app.api.v1.endpoints.admin.payments import router as payments_router
 from app.api.v1.endpoints.admin.staff import router as staff_router
 from app.api.v1.endpoints.admin.support import router as admin_support_router
 from app.api.v1.endpoints.admin.protection import router as protection_router
+from app.api.v1.endpoints.admin.backup import router as backup_router
 
 admin_router = APIRouter()
 
@@ -46,5 +47,6 @@ admin_router.include_router(payments_router, prefix="/payments", tags=["Payments
 admin_router.include_router(staff_router, tags=["Staff"])
 admin_router.include_router(admin_support_router, tags=["Admin Support"])
 admin_router.include_router(protection_router, tags=["Protection"])
+admin_router.include_router(backup_router, tags=["Backup"])
 
 __all__ = ["admin_router"]

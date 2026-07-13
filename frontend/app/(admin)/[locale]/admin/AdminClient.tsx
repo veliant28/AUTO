@@ -11,6 +11,7 @@ import DashboardTab from './components/DashboardTab'
 import WorkersTab from './workers/components/WorkersTab'
 import { StaffPageContent } from './staff/page'
 import ProtectionDashboard from './components/ProtectionDashboard'
+import BackupTab from './components/BackupTab'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -39,6 +40,7 @@ export default function AdminPage() {
       {tab === 'dashboard' && <DashboardTab />}
       {tab === 'staff' && <StaffPageContent />}
       {tab === 'protection' && <ProtectionDashboard />}
+      {tab === 'backup' && <BackupTab />}
       {tab === 'workers' && <WorkersTab />}
     </div>
   )

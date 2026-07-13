@@ -567,7 +567,9 @@ export default function WorkersTab() {
                     ? 'Деактивация'
                     : taskName === 'cleanup_old_chat_messages'
                       ? 'Чат: очистка'
-                      : taskName
+                      : taskName === 'run_database_backup'
+                        ? 'Бэкап БД'
+                        : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`

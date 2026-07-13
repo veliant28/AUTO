@@ -38,3 +38,6 @@ class SiteSettings(Base):
     # Telegram notifications
     telegram_bot_token_encrypted = Column(Text, nullable=True)
     telegram_chat_id = Column(String, nullable=True)
+
+    # Backup schedule
+    backup_run_at_time = Column(String, nullable=False, default="02:00")
