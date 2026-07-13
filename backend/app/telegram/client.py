@@ -46,3 +46,20 @@ async def set_webhook(url: str, bot_token: str | None = None) -> bool:
             return res.is_success
     except Exception:
         return False
+
+
+async def get_me(bot_token: str) -> dict | None:
+    """Get bot info (username, id) from Telegram via getMe.
+
+    Returns dict with 'id' and 'username' keys, or None on failure.
+    """
+    try:
+        api_url = TELEGRAM_API_TEMPLATE.format(token=bot_token)
+        async with httpx.AsyncClient() as client:
+            res = await client.get(f"{api_url}/getMe")
+            if res.is_success:
+                data = res.json()
+                return data.get("result")
+    except Exception:
+        return None
+    return None

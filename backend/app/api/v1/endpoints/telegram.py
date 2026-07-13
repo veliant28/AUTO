@@ -5,10 +5,13 @@ import secrets
 from app.core.db import get_db
 from app.core.config import settings
 from app.models import TelegramLink, User
+from app.models.settings import SiteSettings
 from app.api.v1.endpoints.auth import get_current_user
-from app.telegram.client import send_message
+from app.telegram.client import send_message, get_me
+from app.services.crypto_util import decrypt_password
 
 router = APIRouter()
+
 
 @router.post("/start")
 async def start_connection(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -35,10 +38,23 @@ async def start_connection(user_id: int = Depends(get_current_user), db: Session
         db.add(link)
     db.commit()
 
+    # Get actual bot username from the configured token
+    bot_username = settings.TELEGRAM_BOT_USERNAME or "SVOMBot"
+    try:
+        s = db.query(SiteSettings).first()
+        if s and s.telegram_bot_token_encrypted:
+            token = decrypt_password(s.telegram_bot_token_encrypted)
+            if token:
+                me = await get_me(token)
+                if me and me.get("username"):
+                    bot_username = me["username"]
+    except Exception:
+        pass
+
     return {
         "message": "Код сгенерирован",
         "code": code,
-        "bot_username": settings.TELEGRAM_BOT_USERNAME or "SVOMBot",
+        "bot_username": bot_username,
         "connected": False,
     }
 
