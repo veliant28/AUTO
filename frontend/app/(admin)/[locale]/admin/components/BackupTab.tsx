@@ -493,7 +493,7 @@ export default function BackupTab() {
                           className={`${STATUS_BADGE[rec.status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
                         >
                           {rec.status === 'in_progress' && (
-                            <Loader className="w-4 h-4 animate-spin" />
+                            <Loader className="w-3.5 h-3.5 animate-spin" />
                           )}
                           {t(
                             STATUS_LABEL_KEY[rec.status] ||
