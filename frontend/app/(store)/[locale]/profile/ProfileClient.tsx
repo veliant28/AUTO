@@ -606,6 +606,7 @@ export default function ProfilePage() {
                     getLabel={(item) => item.label}
                     placeholder={t('city_placeholder')}
                     minSearchLength={2}
+                    hideSearchIcon
                     renderItem={(item) => (
                       <>
                         <div className="font-medium leading-tight">
@@ -653,6 +654,7 @@ export default function ProfilePage() {
                       getLabel={(item) => item.label}
                       placeholder="№ 1"
                       minSearchLength={1}
+                      hideSearchIcon
                       renderItem={(item) => {
                         const isPostomat = item.type === 'Postomat'
                         return (
@@ -720,6 +722,7 @@ export default function ProfilePage() {
                         getLabel={(item) => item.label}
                         placeholder={t('delivery_street')}
                         minSearchLength={2}
+                        hideSearchIcon
                         renderItem={(item) => (
                           <div className="font-medium leading-tight">
                             {item.street_type &&
