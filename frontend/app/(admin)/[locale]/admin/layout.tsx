@@ -1130,7 +1130,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!hasRole(user, 'admin', 'manager', 'operator')) {
+  if (!hasRole(user, 'admin', 'manager')) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/10 p-6">
         <Card className="max-w-md w-full">
