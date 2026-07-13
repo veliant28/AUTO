@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text as sa_text
 from app.core.db import get_tecdoc_db
+from app.api.v1.deps import require_permission
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permission("catalog.view"))])
 
 VEHICLE_TYPES = {
     'passenger': {'table': 'passanger_cars', 'has_engine': True, 'id_col': 'id', 'model_fk': 'modelid', 'man_fk': 'manufacturerid'},
