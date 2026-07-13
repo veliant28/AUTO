@@ -11,10 +11,15 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   async rewrites() {
+    const apiBase = process.env.INTERNAL_API_URL || 'http://backend:8000/api/v1'
     return [
       {
+        source: '/api/v1/:path*',
+        destination: `${apiBase}/:path*`,
+      },
+      {
         source: '/media/:path*',
-        destination: `${process.env.INTERNAL_API_URL?.replace('/api/v1', '') || 'http://localhost:8080'}/media/:path*`,
+        destination: `${apiBase.replace('/api/v1', '')}/media/:path*`,
       },
     ]
   },
