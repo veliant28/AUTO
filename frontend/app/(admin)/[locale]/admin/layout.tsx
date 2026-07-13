@@ -70,6 +70,7 @@ import {
 } from './components/AdminLocaleContext'
 import { useBrandName } from '@/hooks/useBrandName'
 import FalconLogo from '@/components/ui/FalconLogo'
+import NotificationBell from '@/components/layout/NotificationBell'
 import {
   Popover,
   PopoverContent,
@@ -1024,6 +1025,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <span className="hidden sm:inline">{brandName}</span>
         </Link>
         <div className="border-l pl-2 flex items-center gap-1">
+          <NotificationBell />
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
             <AvatarImage
@@ -1279,11 +1281,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground p-1.5 rounded">
-              <LayoutDashboard className="w-5 h-5" />
-            </div>
-          </Link>
+          <NotificationBell />
           <div className="flex items-center gap-1">
             {userRole && (
               <Badge
