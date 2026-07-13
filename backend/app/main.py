@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -25,12 +26,51 @@ if settings.SENTRY_DSN:
         profiles_sample_rate=0.1,
     )
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup/shutdown lifecycle."""
+    # ── Startup ──────────────────────────────────────────────────────
+    # Register Telegram webhook (fire-and-forget, non-blocking)
+    try:
+        from app.core.db import SessionLocal
+        from app.models.settings import SiteSettings
+        from app.services.crypto_util import decrypt_password
+        from app.telegram.client import set_webhook as tg_set_webhook
+
+        public_url = settings.TELEGRAM_WEBHOOK_URL
+        if public_url:
+            db = SessionLocal()
+            try:
+                s = db.query(SiteSettings).first()
+                if s and s.telegram_bot_token_encrypted:
+                    token = decrypt_password(s.telegram_bot_token_encrypted)
+                    if token:
+                        ok = await tg_set_webhook(public_url, bot_token=token)
+                        if ok:
+                            logger.info("Telegram webhook registered: %s", public_url)
+                        else:
+                            logger.warning("Failed to register Telegram webhook")
+            finally:
+                db.close()
+        else:
+            logger.info("TELEGRAM_WEBHOOK_URL not set — skipping webhook registration")
+    except Exception:
+        logger.exception("Telegram webhook registration error")
+
+    yield
+
+    # ── Shutdown ─────────────────────────────────────────────────────
+    pass
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Middleware — Protection must be FIRST (outermost) to catch all requests
