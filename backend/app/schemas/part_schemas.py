@@ -42,6 +42,7 @@ class PartSchema(BaseModel):
     price: Optional[float] = None
     quantity: Optional[int] = None
     supplier_name: Optional[str] = None
+    supplier_offer_id: Optional[int] = None
     currency: Optional[str] = 'UAH'
     image_url: Optional[str] = None
     sku: Optional[str] = None

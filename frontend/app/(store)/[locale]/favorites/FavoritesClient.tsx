@@ -83,7 +83,8 @@ export default function FavoritesClient() {
         part_name: product.name,
         quantity: 1,
         price: product.price,
-        supplier_name: null,
+        supplier_name: product.supplier_name ?? null,
+        supplier_offer_id: product.supplier_offer_id ?? null,
         brand: product.brand,
         image_url: product.image_url,
       })
@@ -122,6 +123,8 @@ export default function FavoritesClient() {
         image_url: item.image_url ?? null,
         isFavorite: true,
         sku: item.sku ?? null,
+        supplier_name: item.supplier_name ?? null,
+        supplier_offer_id: item.supplier_offer_id ?? null,
       })),
     [data],
   )

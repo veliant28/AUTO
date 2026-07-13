@@ -76,4 +76,4 @@ class CheckoutSchema(BaseModel):
     delivery_apartment: Optional[str] = None
     payment_method: str
     promocode: Optional[str] = None
-    items: List[dict]  # [{part_id, quantity, price}]
+    items: List[dict]  # [{part_id, quantity, price, supplier_offer_id?}]

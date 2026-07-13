@@ -107,7 +107,8 @@ export default function CatalogPage() {
         part_name: product.name,
         quantity: 1,
         price: product.price,
-        supplier_name: product.brand,
+        supplier_name: product.supplier_name ?? null,
+        supplier_offer_id: product.supplier_offer_id ?? null,
         brand: product.brand,
         image_url: product.image_url,
       })

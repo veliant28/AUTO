@@ -68,9 +68,11 @@ class OrderItem(Base):
     part_id = Column(Integer, ForeignKey("parts.id"), nullable=False, index=True)
     quantity = Column(Integer, default=1, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    supplier_offer_id = Column(Integer, ForeignKey("supplier_offers.id"), nullable=True, index=True)
     
     order = relationship("Order", back_populates="items")
     part = relationship("Part")
+    supplier_offer = relationship("SupplierOffer")
 
 class OrderChangeLog(Base):
     __tablename__ = "order_change_logs"

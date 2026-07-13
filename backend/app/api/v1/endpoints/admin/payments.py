@@ -122,4 +122,14 @@ async def cancel_invoice(
         db.commit()
         return {"status": "ok", "message": "Invoice cancelled"}
     else:
+        # Both cancel and remove failed — check actual status from Monobank
+        try:
+            status_result = await provider.check_status(tx.provider_tx_id)
+            if status_result.status in ("expired", "failed"):
+                tx.status = status_result.status
+                db.commit()
+                return {"status": "ok", "message": f"Invoice already {status_result.status} on Monobank side"}
+        except Exception:
+            pass
+
         raise HTTPException(502, "Failed to cancel invoice in Monobank")

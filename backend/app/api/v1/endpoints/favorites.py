@@ -5,21 +5,9 @@ from app.core.db import get_db
 from app.schemas.favorites_schemas import FavoriteItemSchema, FavoriteAddSchema, FavoriteListResponse, FavoritePartResult
 from app.models import Favorite, Part, SupplierOffer
 from app.api.v1.endpoints.auth import get_optional_user
+from app.services.catalog_utils import best_offer
 
 router = APIRouter()
-
-
-def _best_favorite_offer(offers: List[SupplierOffer]) -> Optional[Dict[str, Any]]:
-    in_stock = [o for o in offers if o.quantity > 0]
-    candidates = in_stock or offers
-    if not candidates:
-        return None
-    best = max(candidates, key=lambda o: (o.updated_at or o.id, o.id))
-    return {
-        "price": float(best.final_price) if best.final_price is not None else float(best.price),
-        "quantity": best.quantity or 0,
-        "currency": best.currency or "UAH",
-    }
 
 
 @router.get("/", response_model=FavoriteListResponse)
@@ -45,7 +33,7 @@ async def get_favorites(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = _best_favorite_offer(offers)
+        best = best_offer(offers)
         result.append({
             "id": part.id,
             "article": part.article,
@@ -55,7 +43,10 @@ async def get_favorites(
             "price": best["price"] if best else None,
             "quantity": best["quantity"] if best else None,
             "currency": best["currency"] if best else "UAH",
-            "image_url": part.image_url,        })
+            "image_url": part.image_url,
+            "supplier_name": best["supplier_name"] if best else None,
+            "supplier_offer_id": best["supplier_offer_id"] if best else None,
+        })
 
     return {"items": result, "total": total, "page": page, "page_size": page_size}
 

@@ -21,6 +21,8 @@ class FavoritePartResult(BaseModel):
     quantity: Optional[int] = None
     currency: Optional[str] = 'UAH'
     image_url: Optional[str] = None
+    supplier_name: Optional[str] = None
+    supplier_offer_id: Optional[int] = None
 
 class FavoriteListResponse(BaseModel):
     items: List[FavoritePartResult]

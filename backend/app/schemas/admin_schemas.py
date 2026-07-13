@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
+from app.schemas.tecdoc_schemas import AdminOfferItem
+
 class OrdersByDateItem(BaseModel):
     date: str
     count: int
@@ -92,6 +94,8 @@ class AdminOrderItemSchema(BaseModel):
     price: float
     sku: Optional[str] = None
     image_url: Optional[str] = None
+    offers: List[AdminOfferItem] = []
+    supplier_name: Optional[str] = None
 
     class Config:
         from_attributes = True

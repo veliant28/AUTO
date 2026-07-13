@@ -180,17 +180,26 @@ class MonobankPaymentProvider(BasePaymentProvider):
         )
 
     async def cancel_invoice(self, provider_tx_id: str) -> bool:
-        """Cancel/remove an invoice in Monobank."""
+        """Cancel/remove an invoice in Monobank.
+
+        Tries two endpoints:
+        1. POST /api/merchant/invoice/remove — for pending invoices (primary)
+        2. POST /api/merchant/invoice/cancel — for paid invoices (refund)
+        Returns True if any endpoint succeeded or invoice is already expired.
+        """
+        # Try remove first (for pending invoices)
+        try:
+            await self._request("POST", "/api/merchant/invoice/remove", {"invoiceId": provider_tx_id})
+            return True
+        except PaymentProviderError:
+            pass
+
+        # Fallback: try cancel (for paid invoices — refund)
         try:
             await self._request("POST", "/api/merchant/invoice/cancel", {"invoiceId": provider_tx_id})
             return True
         except PaymentProviderError:
-            # fallback: try remove endpoint
-            try:
-                await self._request("POST", "/api/merchant/invoice/remove", {"invoiceId": provider_tx_id})
-                return True
-            except PaymentProviderError:
-                return False
+            return False
 
     async def get_receipt_url(self, provider_tx_id: str) -> Optional[str]:
         """Get receipt URL for a paid invoice from Monobank."""

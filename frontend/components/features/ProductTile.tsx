@@ -30,6 +30,8 @@ export type ProductTileItem = {
   image_url: string | null
   isFavorite: boolean
   sku: string | null
+  supplier_name?: string | null
+  supplier_offer_id?: number | null
 }
 
 type ProductTileProps = {

@@ -200,6 +200,7 @@ async def get_part_details(
                 "original_price": best["original_price"],
                 "quantity": best["quantity"],
                 "supplier_name": best["supplier_name"],
+                "supplier_offer_id": best["supplier_offer_id"],
                 "currency": best["currency"],
             }
 
@@ -394,6 +395,7 @@ async def search_parts(
             "price": best["price"] if best else None,
             "quantity": best["quantity"] if best else None,
             "supplier_name": best["supplier_name"] if best else None,
+            "supplier_offer_id": best["supplier_offer_id"] if best else None,
             "currency": best["currency"] if best else "UAH",
             "sku": part.sku,
         })

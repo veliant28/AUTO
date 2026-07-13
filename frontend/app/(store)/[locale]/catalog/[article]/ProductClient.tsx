@@ -67,6 +67,7 @@ export default function ProductClient({ article }: { article: string }) {
       quantity: 1,
       price: data?.price?.price ?? null,
       supplier_name: data?.price?.supplier_name || null,
+      supplier_offer_id: data?.price?.supplier_offer_id ?? null,
       brand: data?.part?.brand,
       sku: data?.part?.sku ?? null,
       image_url: imgUrl,

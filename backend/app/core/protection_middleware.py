@@ -8,6 +8,7 @@ Runs on every request:
 4. Auto-bans IPs/users that exceed thresholds
 5. Logs all abuse events to ProtectionEvent
 """
+import ipaddress
 import logging
 import time
 from datetime import datetime, timedelta
@@ -56,6 +57,15 @@ def _get_client_ip(request: Request) -> Optional[str]:
     if request.client:
         return request.client.host
     return None
+
+
+def _is_private_ip(ip: str) -> bool:
+    """Check if an IP address is in a private/trusted range."""
+    try:
+        addr = ipaddress.ip_address(ip)
+        return addr.is_private or addr.is_loopback
+    except ValueError:
+        return False
 
 
 def _extract_user_id(request: Request) -> Optional[int]:
@@ -115,6 +125,12 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                         db.close()
                         db = None
                         return await call_next(request)
+
+                # Check if IP is private/trusted (e.g. Docker internal network)
+                if settings.TRUST_PRIVATE_IPS and _is_private_ip(client_ip):
+                    db.close()
+                    db = None
+                    return await call_next(request)
 
             # ── Check if user is banned ────────────────────────────────────
             if user_id and not is_auth_endpoint:
@@ -275,6 +291,11 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                     if whitelisted:
                         db.commit()
                         return
+
+                # Don't auto-ban private/trusted IPs (e.g. Docker internal)
+                if ip and settings.TRUST_PRIVATE_IPS and _is_private_ip(ip):
+                    db.commit()
+                    return
 
                 ban_duration = settings.AUTO_BAN_DURATION_MINUTES
                 unbanned_at = datetime.utcnow() + timedelta(minutes=ban_duration) if ban_duration > 0 else None

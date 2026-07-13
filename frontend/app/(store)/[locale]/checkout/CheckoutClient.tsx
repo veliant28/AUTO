@@ -193,6 +193,7 @@ export default function CheckoutPage() {
         part_id: i.part_id,
         quantity: i.quantity,
         price: i.price || 0,
+        supplier_offer_id: i.supplier_offer_id ?? null,
       }))
       const { data } = await api.post('/orders/checkout', {
         last_name: formData.last_name,
@@ -221,6 +222,9 @@ export default function CheckoutPage() {
       clearCart()
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['cart'] })
+      if (data.payment_url) {
+        window.open(data.payment_url, '_blank', 'noopener,noreferrer')
+      }
       router.push(`/order-confirmed?order=${data.order_number}`)
     },
     onError: () => {

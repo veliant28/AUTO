@@ -1,7 +1,7 @@
 import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from app.core.db import get_db
 from app.api.v1.deps import require_role
 from app.schemas.admin_schemas import (
@@ -11,7 +11,9 @@ from app.schemas.admin_schemas import (
     AdminOrderUpdateSchema, AdminOrderAddItemSchema,
     OrderChangeLogResponse, UnifiedEventResponse,
 )
+from app.schemas.tecdoc_schemas import AdminOfferItem
 from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
+from app.models.suppliers import SupplierOffer, Supplier
 from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from datetime import datetime
@@ -91,7 +93,9 @@ async def get_order_detail(
 ):
     """Детальная информация о заказе для админ-панели."""
     order = db.query(Order).options(
-        joinedload(Order.items).joinedload(OrderItem.part),
+        joinedload(Order.items).joinedload(OrderItem.part)
+        .selectinload(Part.offers).joinedload(SupplierOffer.supplier),
+        joinedload(Order.items).selectinload(OrderItem.supplier_offer).joinedload(SupplierOffer.supplier),
         joinedload(Order.updated_by),
     ).filter(Order.id == order_id).first()
     if not order:
@@ -139,6 +143,17 @@ async def get_order_detail(
                 price=float(item.price),
                 sku=item.part.sku,
                 image_url=item.part.image_url,
+                supplier_name=item.supplier_offer.supplier.name if item.supplier_offer and item.supplier_offer.supplier else None,
+                offers=[
+                    AdminOfferItem(
+                        supplier_name=offer.supplier.name,
+                        price=float(offer.price),
+                        final_price=float(offer.final_price) if offer.final_price else None,
+                        currency=offer.currency,
+                        quantity=offer.quantity,
+                    )
+                    for offer in (item.part.offers or [])
+                ],
             )
             for item in order.items
         ],

@@ -19,6 +19,7 @@ def best_offer(offers: List[SupplierOffer]) -> Optional[Dict[str, Any]]:
         "original_price": float(best.price),
         "quantity": best.quantity or 0,
         "supplier_name": best.supplier.name if best.supplier else None,
+        "supplier_offer_id": best.id,
         "currency": best.currency or "UAH",
     }
 
@@ -41,6 +42,7 @@ def part_to_result(part: Part, db) -> dict:
         "price": best["price"] if best else None,
         "quantity": best["quantity"] if best else None,
         "supplier_name": best["supplier_name"] if best else None,
+        "supplier_offer_id": best["supplier_offer_id"] if best else None,
         "currency": best["currency"] if best else "UAH",
         "image_url": part.image_url,
     }

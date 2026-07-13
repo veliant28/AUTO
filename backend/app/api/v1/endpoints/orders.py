@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
+import logging
 from app.core.db import get_db
 from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutSchema
 from app.models import Order, OrderItem, OrderStatus, Part
@@ -12,6 +13,7 @@ from app.services.notifications import send_telegram_notification
 from app.services import telegram_format
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 def _items_with_brand(order, db):
     items = []
@@ -130,7 +132,12 @@ async def get_order(order_id: int, user_id: int = Depends(get_optional_user), db
 from app.models.loyalty import Promocode
 
 @router.post("/checkout")
-async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_user), db: Session = Depends(get_db)):
+async def checkout(
+    data: CheckoutSchema,
+    request: Request = None,
+    user_id: int = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
     """Оформить заказ. Принимает список товаров и данные доставки, создаёт заказ со статусом pending."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
@@ -222,6 +229,7 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
             part_id=item_data["part_id"],
             quantity=item_data["quantity"],
             price=item_data["price"],
+            supplier_offer_id=item_data.get("supplier_offer_id"),
         )
         db.add(order_item)
     
@@ -241,7 +249,29 @@ async def checkout(data: CheckoutSchema, user_id: int = Depends(get_optional_use
         )
     )
 
-    return {"message": "Order created", "order_id": order.id, "order_number": order.order_number}
+    # Auto-initiate payment for online payment methods
+    payment_url = None
+    if data.payment_method in ("monobank", "novapay", "liqpay"):
+        try:
+            from app.services.payments.service import PaymentService
+            webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{data.payment_method}"
+            service = PaymentService(db)
+            tx = await service.init_payment(
+                order_id=order.id,
+                method=data.payment_method,
+                return_url="",
+                webhook_url=webhook_url,
+            )
+            payment_url = tx.payment_url
+        except Exception as e:
+            logger.warning(f"Auto-payment initiation failed for order {order.id}: {e}")
+
+    return {
+        "message": "Order created",
+        "order_id": order.id,
+        "order_number": order.order_number,
+        "payment_url": payment_url,
+    }
 
 
 @router.get("/{order_id}/receipt-link")

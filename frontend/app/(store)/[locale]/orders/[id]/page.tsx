@@ -101,6 +101,16 @@ export default function OrderDetailPage() {
     enabled: !!orderId && isAuthenticated,
   })
 
+  const { data: payment } = useQuery({
+    queryKey: ['order-payment-status', orderId],
+    queryFn: async () => {
+      const { data } = await api.get(`/orders/${orderId}/payment`)
+      return data
+    },
+    refetchInterval: 15000,
+    enabled: !!orderId && isAuthenticated,
+  })
+
   const locale = LOCALE_MAP[useLocale()] || 'ru-RU'
 
   if (!mounted) {
@@ -204,8 +214,12 @@ export default function OrderDetailPage() {
                   disabled={receiptLoading}
                   onClick={handleReceiptClick}
                 >
-                  <FileText className="w-5 h-5" />{' '}
-                  {receiptLoading ? t('loading') : t('receipt')}
+                  {receiptLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <FileText className="w-5 h-5" />
+                  )}
+                  {t('receipt')}
                 </Button>
               </div>
 
@@ -260,7 +274,7 @@ export default function OrderDetailPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-base">{t('payment')}</h3>
                   <PaymentBadge
-                    orderId={order.id}
+                    payment={payment}
                     paymentMethod={order.payment_method}
                     paymentLabel={paymentLabel}
                     t={t}
@@ -268,6 +282,7 @@ export default function OrderDetailPage() {
                 </div>
                 <PaymentActions
                   orderId={order.id}
+                  payment={payment}
                   paymentMethod={order.payment_method}
                   paymentLabel={paymentLabel}
                   t={t}
@@ -382,25 +397,16 @@ const PAYMENT_STATUS_CFG_STORE: Record<
 }
 
 function PaymentBadge({
-  orderId,
+  payment,
   paymentMethod,
   paymentLabel,
   t,
 }: {
-  orderId: number
+  payment: any
   paymentMethod: string
   paymentLabel: string
   t: (key: string) => string
 }) {
-  const { data: payment } = useQuery({
-    queryKey: ['order-payment-status', orderId],
-    queryFn: async () => {
-      const { data } = await api.get(`/orders/${orderId}/payment`)
-      return data
-    },
-    refetchInterval: 15000,
-  })
-
   if (paymentMethod === 'cod') {
     return (
       <Badge className="bg-green-600 text-white border-0 text-sm">
@@ -428,24 +434,17 @@ function PaymentBadge({
 // ── Payment Actions (pay button shown below) ─────────────────────
 function PaymentActions({
   orderId,
+  payment,
   paymentMethod,
   paymentLabel,
   t,
 }: {
   orderId: number
+  payment: any
   paymentMethod: string
   paymentLabel: string
   t: (key: string) => string
 }) {
-  const { data: payment } = useQuery({
-    queryKey: ['order-payment-status', orderId],
-    queryFn: async () => {
-      const { data } = await api.get(`/orders/${orderId}/payment`)
-      return data
-    },
-    refetchInterval: 15000,
-  })
-
   const [payLoading, setPayLoading] = React.useState(false)
 
   if (paymentMethod === 'cod' || payment?.status === 'paid') {
