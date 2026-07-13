@@ -211,6 +211,17 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     return () => clearInterval(id)
   }, [])
 
+  // Backup TopBar state
+  const [backupTime, setBackupTime] = useState('02:00')
+  const [backupTimeOpen, setBackupTimeOpen] = useState(false)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      if (win.__backupTime) setBackupTime(win.__backupTime)
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
     { key: 'batch', label: ta('tecdoc_batch') },
@@ -578,7 +589,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
         )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'backup' && (
-          <div className="border-r pr-2 self-stretch flex items-center gap-2">
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -591,13 +602,84 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </TooltipTrigger>
               <TooltipContent>{ta('backup_run')}</TooltipContent>
             </Tooltip>
+            <Popover open={backupTimeOpen} onOpenChange={setBackupTimeOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1 font-mono text-xs"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  {backupTime}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-fit p-2"
+                align="center"
+                sideOffset={4}
+              >
+                <div className="flex gap-1">
+                  <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden">
+                    {Array.from({ length: 24 }, (_, i) =>
+                      String(i).padStart(2, '0'),
+                    ).map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        data-selected={
+                          h === backupTime.split(':')[0] || undefined
+                        }
+                        className={`px-3 py-0.5 text-sm rounded-md cursor-pointer transition-colors ${
+                          h === backupTime.split(':')[0]
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'hover:bg-accent text-foreground'
+                        }`}
+                        onClick={() => {
+                          ;(window as any).__setBackupTime?.(
+                            `${h}:${backupTime.split(':')[1]}`,
+                          )
+                        }}
+                      >
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="w-px bg-border self-stretch" />
+                  <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden">
+                    {Array.from({ length: 60 }, (_, i) =>
+                      String(i).padStart(2, '0'),
+                    ).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        data-selected={
+                          m === backupTime.split(':')[1] || undefined
+                        }
+                        className={`px-3 py-0.5 text-sm rounded-md cursor-pointer transition-colors ${
+                          m === backupTime.split(':')[1]
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'hover:bg-accent text-foreground'
+                        }`}
+                        onClick={() => {
+                          ;(window as any).__setBackupTime?.(
+                            `${backupTime.split(':')[0]}:${m}`,
+                          )
+                        }}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   size="icon"
                   onClick={() => (window as any).__saveBackupConfig?.()}
                 >
-                  <Database className="w-4 h-4" />
+                  <Save className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{ta('backup_save_config')}</TooltipContent>

@@ -211,7 +211,7 @@ export default function BackupTab() {
     }
   }, [config?.run_at_time])
 
-  // Expose functions to window for TopBar
+  // Expose functions and state to window for TopBar
   useEffect(() => {
     const win = window as any
     win.__triggerBackup = () => {
@@ -220,10 +220,17 @@ export default function BackupTab() {
     win.__saveBackupConfig = () => {
       saveConfigMutation.mutate({ run_at_time: backupTime })
     }
+    win.__setBackupTime = (t: string) => setBackupTime(t)
     return () => {
       delete win.__triggerBackup
       delete win.__saveBackupConfig
+      delete win.__setBackupTime
     }
+  }, [backupTime])
+
+  // Sync backupTime to window for TopBar TimePicker display
+  useEffect(() => {
+    ;(window as any).__backupTime = backupTime
   }, [backupTime])
 
   // Run backup mutation
@@ -412,35 +419,6 @@ export default function BackupTab() {
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Schedule settings */}
-      <Card>
-        <CardContent className="flex items-center gap-4 p-5 flex-wrap">
-          <Clock className="w-5 h-5 text-primary shrink-0" />
-          <span className="text-sm font-medium whitespace-nowrap">
-            {t('backup_schedule_time')}
-          </span>
-          <TimePicker
-            value={backupTime}
-            onChange={setBackupTime}
-            disabled={saveConfigMutation.isPending}
-          />
-          <span className="text-xs text-muted-foreground">(Europe/Kiev)</span>
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() =>
-              saveConfigMutation.mutate({ run_at_time: backupTime })
-            }
-            disabled={saveConfigMutation.isPending}
-          >
-            {saveConfigMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-1" />
-            ) : null}
-            {t('backup_save_config')}
-          </Button>
         </CardContent>
       </Card>
 
