@@ -5,7 +5,7 @@ from sqlalchemy import desc, func
 from datetime import datetime, timedelta
 from typing import Optional, List
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models.support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from app.schemas.support_schemas import (
     ChatConversationOut,
@@ -83,7 +83,7 @@ def list_chats(
     period: str = Query("month"),
     from_date: Optional[str] = Query(None),
     to_date: Optional[str] = Query(None),
-    admin: User = Depends(require_role("admin", "manager")),
+    admin: User = Depends(require_permission("support.view")),
     db: Session = Depends(get_db),
 ):
     """List all support chats with filters."""
@@ -120,7 +120,7 @@ def list_chats(
 @router.get("/chats/{chat_id}", response_model=ChatConversationDetail)
 def get_chat_detail(
     chat_id: int,
-    admin: User = Depends(require_role("admin", "manager")),
+    admin: User = Depends(require_permission("support.view")),
     db: Session = Depends(get_db),
 ):
     """Get full chat detail with messages."""
@@ -151,7 +151,7 @@ def get_chat_detail(
 async def update_chat_status(
     chat_id: int,
     req: UpdateStatusRequest,
-    admin: User = Depends(require_role("admin", "manager")),
+    admin: User = Depends(require_permission("support.reply")),
     db: Session = Depends(get_db),
 ):
     """Update chat status (new -> active -> closed)."""
@@ -178,7 +178,7 @@ async def update_chat_status(
 def assign_chat(
     chat_id: int,
     req: AssignRequest,
-    admin: User = Depends(require_role("admin", "manager")),
+    admin: User = Depends(require_permission("support.reply")),
     db: Session = Depends(get_db),
 ):
     """Assign or unassign a chat to an admin."""

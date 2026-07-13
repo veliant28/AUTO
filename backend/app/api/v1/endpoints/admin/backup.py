@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User, SiteSettings
 from app.models.backup import BackupRecord
 from app.schemas.backup_schemas import (
@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.get("/backups", response_model=list[BackupRecordResponse])
 async def list_backups(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.view")),
     db: Session = Depends(get_db),
 ):
     """Get list of all backup records (ordered newest first, max 50)."""
@@ -36,7 +36,7 @@ async def list_backups(
 
 @router.post("/backups/run", response_model=dict)
 async def run_backup(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.run")),
 ):
     """Trigger a manual database backup via Celery."""
     run_database_backup_task.delay()
@@ -46,7 +46,7 @@ async def run_backup(
 @router.delete("/backups/{backup_id}", response_model=dict)
 async def delete_backup(
     backup_id: int,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.delete")),
     db: Session = Depends(get_db),
 ):
     """Delete a backup record and its file."""
@@ -67,7 +67,7 @@ async def delete_backup(
 @router.get("/backups/{backup_id}/download")
 async def download_backup(
     backup_id: int,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.download")),
     db: Session = Depends(get_db),
 ):
     """Download a backup file."""
@@ -87,7 +87,7 @@ async def download_backup(
 
 @router.get("/backups/config", response_model=BackupConfigResponse)
 async def get_backup_config(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.config")),
     db: Session = Depends(get_db),
 ):
     """Get backup schedule configuration."""
@@ -98,7 +98,7 @@ async def get_backup_config(
 @router.put("/backups/config", response_model=BackupConfigResponse)
 async def update_backup_config(
     body: BackupConfigUpdate,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("backup.config")),
     db: Session = Depends(get_db),
 ):
     """Update backup schedule configuration."""

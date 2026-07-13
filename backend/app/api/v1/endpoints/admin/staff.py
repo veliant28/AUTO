@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from datetime import datetime, timedelta
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.orders import OrderChangeLog
 from pydantic import BaseModel
@@ -65,7 +65,7 @@ async def get_staff_stats(
     to_date: Optional[str] = Query(None),
     staff_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("staff.view")),
 ):
     """Статистика активности сотрудников за период."""
     from_dt, to_dt = get_period_range(period, from_date, to_date)

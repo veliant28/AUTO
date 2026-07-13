@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 from typing import List, Optional
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from app.models.parts import PartCategory
@@ -65,7 +65,7 @@ class HistoryItem(BaseModel):
 @router.get("/pricing/general", response_model=PriceRuleResponse)
 async def get_general_margin(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.view")),
 ):
     """Получить общую маржу."""
     rule = db.query(PriceRule).filter(PriceRule.type == "general").first()
@@ -87,7 +87,7 @@ async def get_general_margin(
 async def update_general_margin(
     data: GeneralMarginUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.edit")),
 ):
     """Обновить общую маржу."""
     rule = get_or_create_general_rule(db)
@@ -107,7 +107,7 @@ async def get_category_margins(
     page_size: int = Query(25, ge=1, le=1000),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.view")),
 ):
     """Получить маржу по категориям с поиском."""
     q = db.query(PartCategory)
@@ -148,7 +148,7 @@ async def update_category_margin(
     category_id: int,
     data: CategoryMarginUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.edit")),
 ):
     """Обновить маржу для конкретной категории."""
     category = db.query(PartCategory).filter(PartCategory.id == category_id).first()
@@ -178,7 +178,7 @@ async def update_category_margin(
 async def update_category_margins_bulk(
     data: CategoryMarginBulkUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.edit")),
 ):
     """Массово обновить маржу по категориям."""
     for item in data.rules:
@@ -215,7 +215,7 @@ async def get_pricing_history(
     type: str = "general",
     category_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.view")),
 ):
     """Получить историю изменений маржи."""
     query = db.query(PriceRuleHistory).join(PriceRule)
@@ -248,7 +248,7 @@ async def get_pricing_history(
 @router.post("/pricing/apply")
 async def apply_pricing(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.apply")),
 ):
     """Запустить применение маржи ко всем товарам."""
     from app.workers.tasks.pricing_tasks import apply_margins_task
@@ -259,7 +259,7 @@ async def apply_pricing(
 @router.get("/pricing/task-status/{task_id}")
 async def get_task_status(
     task_id: str,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.view")),
 ):
     """Получить статус задачи применения маржи."""
     from celery.result import AsyncResult
@@ -275,7 +275,7 @@ async def get_task_status(
 @router.get("/pricing/applied-history")
 async def get_applied_pricing_history(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("pricing.view")),
 ):
     """Получить историю применений маржи."""
     items = db.query(PricingApplySnapshot).order_by(

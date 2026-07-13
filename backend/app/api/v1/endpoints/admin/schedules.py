@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.imports import ImportSchedule, PriceImport
 from app.schemas.import_schemas import ImportScheduleItem, ImportScheduleUpdate
@@ -76,7 +76,7 @@ def _schedule_to_response(s: ImportSchedule) -> ImportScheduleItem:
 @router.get("/schedules", response_model=list[ImportScheduleItem])
 async def list_schedules(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.view")),
 ):
     """Список расписаний импорта."""
     schedules = db.query(ImportSchedule).order_by(ImportSchedule.supplier).all()
@@ -97,7 +97,7 @@ async def update_schedule(
     supplier: str,
     body: ImportScheduleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.edit")),
 ):
     """Обновить расписание импорта для поставщика."""
     s = db.query(ImportSchedule).filter(ImportSchedule.supplier == supplier).first()
@@ -123,7 +123,7 @@ async def update_schedule(
 async def run_schedule_now(
     supplier: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.create")),
 ):
     """Запустить импорт по расписанию немедленно."""
     s = db.query(ImportSchedule).filter(ImportSchedule.supplier == supplier).first()

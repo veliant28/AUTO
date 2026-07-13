@@ -4,7 +4,7 @@ from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 import time
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.protection import BanRecord, ProtectionEvent, Whitelist
 from app.schemas.protection_schemas import (
@@ -38,7 +38,7 @@ async def list_blacklist(
     search: str = Query("", max_length=100),
     status: str = Query("active", regex="^(active|all)$"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.view")),
 ):
     """Список забаненных пользователей с пагинацией и поиском."""
     query = db.query(BanRecord)
@@ -118,7 +118,7 @@ async def list_blacklist(
 async def ban_user(
     data: BanCreateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.ban")),
 ):
     """Забанить пользователя вручную. Причина обязательна."""
     if not data.reason or not data.reason.strip():
@@ -260,7 +260,7 @@ async def ban_user(
 async def unban_user(
     ban_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.unban")),
 ):
     """Разбанить пользователя."""
     ban = db.query(BanRecord).filter(BanRecord.id == ban_id).first()
@@ -298,7 +298,7 @@ async def unban_user(
 async def get_ban_stats(
     ban_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.view")),
 ):
     """Получить статистику событий для забаненного пользователя."""
     ban = db.query(BanRecord).filter(BanRecord.id == ban_id).first()
@@ -390,7 +390,7 @@ async def list_whitelist(
     page_size: int = Query(25, ge=1, le=100),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.view")),
 ):
     """Список пользователей в белом списке."""
     query = db.query(Whitelist)
@@ -459,7 +459,7 @@ async def list_whitelist(
 async def add_to_whitelist(
     data: WhitelistCreateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.edit")),
 ):
     """Добавить email в белый список."""
     if not data.email:
@@ -517,7 +517,7 @@ async def add_to_whitelist(
 async def remove_from_whitelist(
     whitelist_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.edit")),
 ):
     """Удалить из белого списка."""
     entry = db.query(Whitelist).filter(Whitelist.id == whitelist_id).first()
@@ -539,7 +539,7 @@ async def get_protection_dashboard(
     from_date: Optional[str] = Query(None),
     to_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.view")),
 ):
     """Статистика для дашборда защиты."""
     now = datetime.utcnow()
@@ -674,7 +674,7 @@ class AbuseStatsResponse(BaseModel):
 
 @router.get("/protection/abuse-stats", response_model=AbuseStatsResponse)
 async def get_abuse_stats(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("protection.view")),
 ):
     """Статистика злоупотреблений для дашборда защиты."""
     recent_auto_bans = 0

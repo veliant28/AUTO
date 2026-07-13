@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.imports import SupplierConfig
 from app.schemas.import_schemas import (
@@ -38,7 +38,7 @@ def _config_to_response(c: SupplierConfig) -> SupplierConfigResponse:
 @router.get("/suppliers", response_model=list[SupplierConfigResponse])
 async def list_suppliers(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("suppliers.view")),
 ):
     """Список поставщиков с их конфигурацией."""
     configs = db.query(SupplierConfig).all()
@@ -50,7 +50,7 @@ async def update_supplier(
     supplier: str,
     body: SupplierConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("suppliers.edit")),
 ):
     """Обновить конфигурацию поставщика (логин/пароль)."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
@@ -70,7 +70,7 @@ async def update_supplier(
 async def authenticate_supplier(
     supplier: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("suppliers.edit")),
 ):
     """Аутентифицироваться в API поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
@@ -103,7 +103,7 @@ async def authenticate_supplier(
 async def get_token_status(
     supplier: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("suppliers.view")),
 ):
     """Получить статус токена поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
@@ -128,7 +128,7 @@ async def get_token_status(
 async def refresh_supplier_token(
     supplier: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("suppliers.edit")),
 ):
     """Обновить токен поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()

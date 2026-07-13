@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification

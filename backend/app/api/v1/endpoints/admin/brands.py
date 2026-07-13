@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case, text as sa_text
 from app.core.db import get_db, get_tecdoc_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User, SupplierPrice
 from app.schemas.admin_schemas import BrandListItem, BrandListResponse
 
@@ -16,7 +16,7 @@ async def list_brands(
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("brands.view")),
 ):
     """Список брендов с агрегированной статистикой по наличию, сопоставлению и применимости."""
     agg_rows = db.query(

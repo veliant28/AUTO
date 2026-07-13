@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 from app.core.db import get_db
 from app.models import User, PartCategory
 from app.schemas.part_schemas import PartCategorySchema, CategoryCreate, CategoryUpdate, CategoryListResponse
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 
 router = APIRouter()
 
@@ -31,7 +31,7 @@ async def list_categories(
     page_size: int = Query(25, ge=1, le=1000),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("categories.view")),
 ):
     """Список категорий с поиском и плоским деревом с отступами."""
     query = db.query(PartCategory)
@@ -61,7 +61,7 @@ async def list_categories(
 @router.post("/categories", response_model=PartCategorySchema)
 async def create_category(
     data: CategoryCreate,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("categories.create")),
     db: Session = Depends(get_db),
 ):
     """Создать новую категорию."""
@@ -76,7 +76,7 @@ async def create_category(
 async def update_category(
     cat_id: int,
     data: CategoryUpdate,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("categories.edit")),
     db: Session = Depends(get_db),
 ):
     """Обновить категорию по ID."""
@@ -102,7 +102,7 @@ async def update_category(
 @router.delete("/categories/{cat_id}")
 async def delete_category(
     cat_id: int,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("categories.delete")),
     db: Session = Depends(get_db),
 ):
     """Удалить категорию по ID (только без дочерних)."""

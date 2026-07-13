@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User, TecDocConfig, SupplierPrice
 from app.schemas.tecdoc_schemas import (
     TecDocSettingsSchema, TecDocSettingsUpdateSchema, TecDocTestResult,
@@ -25,7 +25,7 @@ router = APIRouter()
 @router.get("/settings", response_model=TecDocSettingsSchema)
 async def get_settings(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.settings")),
 ):
     """Получить настройки подключения к TecDoc."""
     config = db.query(TecDocConfig).first()
@@ -50,7 +50,7 @@ async def get_settings(
 async def update_settings(
     data: TecDocSettingsUpdateSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.settings")),
 ):
     """Обновить настройки подключения к TecDoc."""
     config = db.query(TecDocConfig).first()
@@ -79,7 +79,7 @@ async def update_settings(
 @router.post("/settings/test", response_model=TecDocTestResult)
 async def test_settings(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.settings")),
 ):
     """Проверить подключение к TecDoc."""
     gateway = get_gateway(db)
@@ -92,7 +92,7 @@ async def test_settings(
 @router.get("/dashboard", response_model=TecDocDashboardSchema)
 async def get_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Получить статистику использования лимитов TecDoc."""
     used = rate_limiter.current_hour_usage(db)
@@ -117,7 +117,7 @@ async def list_articles(
     search: str = Query("", max_length=100),
     brand: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Список товаров из каталога (Part) с фильтрацией."""
     from app.models.parts import Part
@@ -194,7 +194,7 @@ async def list_articles(
 @router.get("/batch/status", response_model=BatchStatusResponse)
 async def batch_status(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Получить статус текущего пакетного сопоставления."""
     return batch_manager.status()
@@ -204,7 +204,7 @@ async def batch_status(
 async def set_batch_size(
     data: BatchStartRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Установить размер пакета для сопоставления."""
     return {"size": data.size}
@@ -214,7 +214,7 @@ async def set_batch_size(
 async def start_batch(
     data: BatchStartRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Запустить пакетное сопоставление всех артикулов."""
     gateway = get_gateway(db)
@@ -227,7 +227,7 @@ async def start_batch(
 async def start_selected_batch(
     data: BatchStartSelectedRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Запустить пакетное сопоставление для выбранных артикулов."""
     gateway = get_gateway(db)
@@ -239,7 +239,7 @@ async def start_selected_batch(
 @router.post("/batch/stop")
 async def stop_batch(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Остановить текущее пакетное сопоставление."""
     return batch_manager.stop()
@@ -248,7 +248,7 @@ async def stop_batch(
 @router.get("/brands")
 async def list_brand_names(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Получить список уникальных брендов поставщиков."""
     rows = db.query(SupplierPrice.brand).filter(SupplierPrice.brand.isnot(None), SupplierPrice.brand != "").distinct().order_by(SupplierPrice.brand).all()
@@ -274,7 +274,7 @@ class ManualBindRequest(BaseModel):
 async def manual_search(
     data: ManualSearchRequest,
     tecdoc_db: Session = Depends(get_tecdoc_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Ручной поиск артикула в базе TecDoc."""
     t = sa_text("""
@@ -293,7 +293,7 @@ async def manual_search(
 async def manual_details(
     data: ManualSearchRequest,
     tecdoc_db: Session = Depends(get_tecdoc_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Получить детальную информацию об артикуле (кроссы, OEM, изображения, применимость)."""
     art = data.article.lower()
@@ -349,7 +349,7 @@ async def manual_details(
 async def manual_bind(
     data: ManualBindRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.sync")),
 ):
     """Вручную привязать артикул поставщика к артикулу TecDoc."""
     sp = db.query(SupplierPrice).filter(SupplierPrice.id == data.supplier_price_id).first()
@@ -374,7 +374,7 @@ async def manual_bind(
 async def manual_search_remote(
     data: ManualSearchRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("tecdoc.view")),
 ):
     """Поиск артикула через удалённое API TecDoc."""
     gateway = get_gateway(db)

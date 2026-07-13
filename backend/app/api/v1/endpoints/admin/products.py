@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, selectinload
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User, Part, SupplierOffer, Supplier
 from app.models.pricing import PriceRule
 from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse, ProductUpdateSchema
@@ -34,7 +34,7 @@ async def list_products(
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("products.view")),
 ):
     """Список товаров с фильтрацией и расчётом маржи."""
     query = db.query(Part)
@@ -137,7 +137,7 @@ async def list_products(
 async def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("products.delete")),
 ):
     """Удалить товар вместе с предложениями."""
     part = db.query(Part).filter(Part.id == product_id).first()
@@ -155,7 +155,7 @@ async def update_product(
     product_id: int,
     data: ProductUpdateSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("products.edit")),
 ):
     """Обновление товара."""
     part = db.query(Part).filter(Part.id == product_id).first()
@@ -174,7 +174,7 @@ async def update_product(
 async def reactivate_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("products.edit")),
 ):
     """Ручная реактивация товара."""
     part = db.query(Part).filter(Part.id == product_id).first()
@@ -190,7 +190,7 @@ async def reactivate_product(
 @router.post("/products/generate-skus")
 async def generate_skus(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("products.create")),
 ):
     """Сгенерировать SKU для товаров без артикула."""
     from app.services.sku_generator import bulk_generate_skus

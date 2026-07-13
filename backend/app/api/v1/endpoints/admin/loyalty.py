@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, text
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.loyalty import Promocode
 from app.schemas.loyalty_schemas import (
@@ -72,7 +72,7 @@ async def list_promocodes(
     search: str = Query("", max_length=200),
     staff_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("loyalty.view")),
 ):
     """List promocodes with pagination, search, and staff filter."""
     query = db.query(Promocode).options(
@@ -109,7 +109,7 @@ async def list_promocodes(
 async def get_promocode_stats(
     days: int = Query(30, ge=1, le=365),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("loyalty.view")),
 ):
     """Get promocode issuance stats grouped by date and staff."""
     since = datetime.utcnow() - timedelta(days=days)
@@ -142,7 +142,7 @@ async def get_promocode_stats(
 async def create_promocode(
     data: PromocodeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("loyalty.create")),
 ):
     """Create a new promocode with auto-generated code."""
     code = _generate_code(db)
@@ -171,7 +171,7 @@ async def create_promocode(
 @router.get("/loyalty/staff")
 async def list_staff(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("loyalty.view")),
 ):
     """List staff members who have issued promocodes."""
     rows = db.execute(text("""
@@ -187,7 +187,7 @@ async def list_staff(
 async def search_users(
     q: str = Query("", min_length=2),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("loyalty.view")),
 ):
     """Search users by phone, email, or name."""
     like = f"%{q}%"

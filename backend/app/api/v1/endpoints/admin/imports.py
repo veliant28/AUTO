@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.models import User
 from app.models.imports import SupplierConfig, PriceImport
 from app.schemas.import_schemas import (
@@ -23,7 +23,7 @@ async def list_imports(
     supplier: str = Query("", max_length=50),
     status: str = Query("", max_length=50),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.view")),
 ):
     """Список импортов с фильтрацией по поставщику и статусу."""
     query = db.query(PriceImport)
@@ -55,7 +55,7 @@ async def list_imports(
 async def get_export_params(
     supplier: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.view")),
 ):
     """Получить параметры экспорта для поставщика (форматы, бренды, категории)."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
@@ -83,7 +83,7 @@ async def get_export_params(
 async def request_export(
     body: ExportRequestCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.create")),
 ):
     """Запросить выгрузку прайс-листа от поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == body.supplier).first()
@@ -115,7 +115,7 @@ async def request_export(
 async def download_import(
     import_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.view")),
 ):
     """Скачать файл импорта."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -134,7 +134,7 @@ async def download_import(
 async def promote_import(
     import_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.create")),
 ):
     """Запустить продвижение импорта в каталог."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()
@@ -155,7 +155,7 @@ async def promote_import(
 async def delete_import(
     import_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("imports.delete")),
 ):
     """Удалить импорт вместе с файлом."""
     pimport = db.query(PriceImport).filter(PriceImport.id == import_id).first()

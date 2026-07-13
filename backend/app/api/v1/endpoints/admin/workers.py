@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.api.v1.deps import require_role, get_db
+from app.api.v1.deps import require_role, require_permission, get_db
 from app.models import User
 from app.models.imports import PriceImport
 from app.workers import celery_app
@@ -180,7 +180,7 @@ def _collect_tasks(
 
 @router.get("/workers", response_model=WorkersResponse)
 async def get_workers(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("workers.view")),
     db: Session = Depends(get_db),
 ):
     """Получить статус Celery воркеров и активных задач."""
@@ -229,7 +229,7 @@ async def get_workers(
 @router.post("/workers/tasks/{task_id}/revoke")
 async def revoke_task(
     task_id: str,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("workers.restart")),
 ):
     """Отменить задачу Celery."""
     try:
@@ -242,7 +242,7 @@ async def revoke_task(
 
 @router.post("/workers/restart")
 async def restart_worker(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("workers.restart")),
 ):
     """Перезапустить Celery воркер."""
     try:

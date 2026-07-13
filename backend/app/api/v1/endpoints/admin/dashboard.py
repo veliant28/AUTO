@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_role, require_permission
 from app.schemas.admin_schemas import (
     DashboardResponse, OrdersByDateItem, PartsByCategoryItem,
     WeekdayDistribution, PaymentMethodDistribution,
