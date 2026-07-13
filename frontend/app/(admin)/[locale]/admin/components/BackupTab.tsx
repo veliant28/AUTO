@@ -7,7 +7,7 @@ import { useTheme } from '@wrksz/themes/client'
 import {
   Download,
   Trash2,
-  Loader2,
+  Loader,
   Play,
   Clock,
   AlertTriangle,
@@ -421,7 +421,7 @@ export default function BackupTab() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-[280px]">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           )}
         </CardContent>
@@ -493,7 +493,7 @@ export default function BackupTab() {
                           className={`${STATUS_BADGE[rec.status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
                         >
                           {rec.status === 'in_progress' && (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader className="w-4 h-4 animate-spin" />
                           )}
                           {t(
                             STATUS_LABEL_KEY[rec.status] ||
@@ -603,7 +603,7 @@ export default function BackupTab() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                <Loader className="w-4 h-4 animate-spin mr-1" />
               ) : (
                 <Trash2 className="w-4 h-4 mr-1" />
               )}

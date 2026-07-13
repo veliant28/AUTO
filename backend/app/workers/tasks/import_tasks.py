@@ -368,38 +368,36 @@ def scheduler_tick(self):
                 db.commit()
                 db.refresh(pimport)
 
-	                process_price_import.delay(pimport.id)
+                process_price_import.delay(pimport.id)
 
-	                s.last_import_id = pimport.id
-	                s.last_run_at = now_utc
-	                db.commit()
-	            except Exception:
-	                db.rollback()
-	                continue
+                s.last_import_id = pimport.id
+                s.last_run_at = now_utc
+                db.commit()
+            except Exception:
+                db.rollback()
+                continue
 
-	        # Check backup schedule
-	        try:
-	            backup_time = settings_row.backup_run_at_time if settings_row else "02:00"
-	            if backup_time:
-	                bh, bm = map(int, backup_time.split(":"))
-	                backup_target = now_tz.replace(hour=bh, minute=bm, second=0, microsecond=0)
+        # Check backup schedule
+        try:
+            backup_time = settings_row.backup_run_at_time if settings_row else "02:00"
+            if backup_time:
+                bh, bm = map(int, backup_time.split(":"))
+                backup_target = now_tz.replace(hour=bh, minute=bm, second=0, microsecond=0)
 
-	                if backup_target <= now_tz:
-	                    # Check if backup already ran today
-	                    today_start = now_tz.replace(hour=0, minute=0, second=0, microsecond=0)
-	                    today_start_utc = today_start.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-	                    existing = db.query(BackupRecord).filter(
-	                        BackupRecord.created_at >= today_start_utc,
-	                        BackupRecord.type == "full",
-	                    ).first()
-	                    if not existing:
-	                        from app.workers.tasks.backup_tasks import run_database_backup
-	                        import threading
-	                        logger.info("Scheduler tick: starting scheduled backup")
-	                        thread = threading.Thread(target=run_database_backup, daemon=True)
-	                        thread.start()
-	        except Exception:
-	            pass
+                if backup_target <= now_tz:
+                    # Check if backup already ran today
+                    today_start = now_tz.replace(hour=0, minute=0, second=0, microsecond=0)
+                    today_start_utc = today_start.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+                    existing = db.query(BackupRecord).filter(
+                        BackupRecord.created_at >= today_start_utc,
+                        BackupRecord.type == "full",
+                    ).first()
+                    if not existing:
+                        from app.workers.tasks.backup_tasks import run_database_backup_task
+                        logger.info("Scheduler tick: starting scheduled backup")
+                        run_database_backup_task.delay()
+        except Exception:
+            pass
     except Exception:
         db.rollback()
     finally:

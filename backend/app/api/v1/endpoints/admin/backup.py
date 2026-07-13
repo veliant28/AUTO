@@ -12,8 +12,8 @@ from app.schemas.backup_schemas import (
     BackupConfigResponse,
     BackupConfigUpdate,
 )
-from app.workers.tasks.backup_tasks import run_database_backup
-import threading
+from app.workers.tasks.backup_tasks import run_database_backup_task
+import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -38,9 +38,8 @@ async def list_backups(
 async def run_backup(
     current_user: User = Depends(require_role("admin")),
 ):
-    """Trigger a manual database backup in background thread."""
-    thread = threading.Thread(target=run_database_backup, daemon=True)
-    thread.start()
+    """Trigger a manual database backup via Celery."""
+    run_database_backup_task.delay()
     return {"status": "started"}
 
 

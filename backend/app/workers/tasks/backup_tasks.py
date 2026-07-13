@@ -8,6 +8,7 @@ import docker
 
 from app.core.db import SessionLocal
 from app.models.backup import BackupRecord
+from app.workers import celery_app
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,13 @@ def _kyiv_now() -> datetime:
     return datetime.now(KYIV_TZ)
 
 
-def run_database_backup():
+@celery_app.task(bind=True, name="run_database_backup")
+def run_database_backup_task(self):
+    """Celery task wrapper for database backup."""
+    _run_backup()
+
+
+def _run_backup():
     """Create a full database dump via pg_dump in the postgres container."""
     os.makedirs(BACKUP_DIR, exist_ok=True)
 
