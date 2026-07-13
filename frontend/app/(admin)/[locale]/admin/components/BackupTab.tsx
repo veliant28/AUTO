@@ -457,7 +457,7 @@ export default function BackupTab() {
                     <th className="text-left p-3 font-medium text-muted-foreground">
                       {t('backup_filename')}
                     </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-24">
+                    <th className="text-left p-3 font-medium text-muted-foreground w-32">
                       {t('backup_size')}
                     </th>
                     <th className="text-left p-3 font-medium text-muted-foreground w-28">
