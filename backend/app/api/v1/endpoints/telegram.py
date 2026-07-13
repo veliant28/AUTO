@@ -65,10 +65,58 @@ async def connection_status(user_id: int = Depends(get_current_user), db: Sessio
         TelegramLink.user_id == user_id,
         TelegramLink.connected == True
     ).first()
-    return {
-        "connected": bool(link),
-        "username": link.telegram_username if link else None,
-    }
+    if link:
+        return {
+            "connected": True,
+            "username": link.telegram_username if link else None,
+        }
+
+    # If not connected, try polling Telegram directly in case webhook wasn't received
+    try:
+        pending = db.query(TelegramLink).filter(
+            TelegramLink.user_id == user_id,
+            TelegramLink.connected == False,
+            TelegramLink.code.isnot(None),
+            TelegramLink.code_expires_at > datetime.utcnow(),
+        ).first()
+        if pending and pending.code:
+            from app.models.settings import SiteSettings
+            from app.services.crypto_util import decrypt_password
+            from app.telegram.client import get_updates
+
+            s = db.query(SiteSettings).first()
+            if s and s.telegram_bot_token_encrypted:
+                token = decrypt_password(s.telegram_bot_token_encrypted)
+                if token:
+                    updates = await get_updates(token)
+                    for update in updates:
+                        msg = update.get("message", {})
+                        chat = msg.get("chat", {})
+                        chat_id = chat.get("id")
+                        text = msg.get("text", "")
+                        username = chat.get("username") or msg.get("from", {}).get("first_name", "")
+                        if text == f"/start {pending.code}":
+                            pending.chat_id = chat_id
+                            pending.telegram_username = username
+                            pending.connected = True
+                            pending.code = None
+                            pending.code_expires_at = None
+                            db.commit()
+
+                            from app.telegram.client import send_message
+                            user = db.query(User).filter(User.id == user_id).first()
+                            email = user.email if user else "?"
+                            await send_message(chat_id,
+                                f"🔗 Аккаунт <b>{email}</b> привязан!\n"
+                                "Теперь вы будете получать уведомления о статусе заказов.",
+                                bot_token=token,
+                            )
+
+                            return {"connected": True, "username": username}
+    except Exception:
+        pass
+
+    return {"connected": False, "username": None}
 
 @router.post("/disconnect")
 async def disconnect(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):

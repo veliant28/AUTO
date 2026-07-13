@@ -63,3 +63,29 @@ async def get_me(bot_token: str) -> dict | None:
     except Exception:
         return None
     return None
+
+
+async def get_updates(bot_token: str, offset: int = 0, timeout: int = 5) -> list:
+    """Poll Telegram for new updates (messages sent to the bot).
+
+    Args:
+        bot_token: Bot token.
+        offset: Last update_id to acknowledge (next update will have offset+1).
+        timeout: Long polling timeout in seconds.
+
+    Returns:
+        List of update objects from Telegram.
+    """
+    try:
+        api_url = TELEGRAM_API_TEMPLATE.format(token=bot_token)
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                f"{api_url}/getUpdates",
+                params={"offset": offset, "timeout": timeout},
+            )
+            if res.is_success:
+                data = res.json()
+                return data.get("result", [])
+    except Exception:
+        return []
+    return []
