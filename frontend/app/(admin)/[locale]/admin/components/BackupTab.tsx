@@ -428,7 +428,7 @@ export default function BackupTab() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-primary" />
@@ -476,7 +476,10 @@ export default function BackupTab() {
                     >
                       <td className="p-3 whitespace-nowrap text-muted-foreground">
                         {rec.created_at
-                          ? format(new Date(rec.created_at), 'dd.MM.yyyy HH:mm')
+                          ? new Date(rec.created_at + 'Z').toLocaleString(
+                              'uk-UA',
+                              { timeZone: 'Europe/Kyiv', hour12: false },
+                            )
                           : '—'}
                       </td>
                       <td className="p-3 font-mono text-xs truncate max-w-[300px]">
