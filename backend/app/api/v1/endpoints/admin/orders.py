@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload, selectinload
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     AdminOrderItem, AdminAdminOrderListResponse,
     UpdateOrderStatusSchema,
@@ -30,7 +30,7 @@ async def list_orders(
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("orders.view")),
 ):
     """Список заказов для админ-панели с пагинацией, фильтром по статусу и поиском."""
     query = db.query(Order)
@@ -89,7 +89,7 @@ async def list_orders(
 async def get_order_detail(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("orders.view")),
 ):
     """Детальная информация о заказе для админ-панели."""
     order = db.query(Order).options(
@@ -165,7 +165,7 @@ async def update_order(
     order_id: int,
     data: AdminOrderUpdateSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("orders.edit_status")),
 ):
     """Обновить заказ: товары, контактные данные, доставку."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -275,7 +275,7 @@ async def delete_order_item(
     order_id: int,
     item_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("orders.delete")),
 ):
     """Удалить товар из заказа. Пересчитывает итоговую сумму."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -367,7 +367,7 @@ async def delete_order_item(
 async def delete_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("orders.delete")),
 ):
     """Полностью удалить заказ вместе с товарами, изменениями и ТТН."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -403,7 +403,7 @@ async def add_order_item(
     order_id: int,
     data: AdminOrderAddItemSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("orders.edit_status")),
 ):
     """Добавить товар в заказ. Только для заказов со статусом 'В обработке'."""
     order = db.query(Order).options(
@@ -557,7 +557,7 @@ async def update_order_status(
     order_id: int,
     data: UpdateOrderStatusSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("orders.edit_status")),
 ):
     """Изменить статус заказа. Создаёт запись в истории изменений."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -621,7 +621,7 @@ async def update_order_status(
 async def get_order_history(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("orders.view")),
 ):
     """Получить историю изменений заказа."""
     order_obj = db.query(Order).filter(Order.id == order_id).first()
@@ -637,7 +637,7 @@ async def get_order_history(
 async def get_order_all_events(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("orders.view")),
 ):
     """Получить объединённую историю заказа: изменения заказа + события ТТН."""
     order_obj = db.query(Order).filter(Order.id == order_id).first()

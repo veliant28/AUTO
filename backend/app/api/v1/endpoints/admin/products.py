@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, selectinload
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User, Part, SupplierOffer, Supplier
 from app.models.pricing import PriceRule
 from app.schemas.tecdoc_schemas import AdminProductItem, AdminProductListResponse, ProductUpdateSchema

@@ -4,7 +4,7 @@ from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 import time
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.models.protection import BanRecord, ProtectionEvent, Whitelist
 from app.schemas.protection_schemas import (

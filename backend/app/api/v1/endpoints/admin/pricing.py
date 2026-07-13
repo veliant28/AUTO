@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 from typing import List, Optional
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.models.pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from app.models.parts import PartCategory

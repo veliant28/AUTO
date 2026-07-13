@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     RoleResponse, RoleCreate, RoleUpdate, PermissionResponse,
 )
@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/roles", response_model=list[RoleResponse])
 async def list_roles(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("roles.view")),
 ):
     """Список всех ролей с разрешениями."""
     roles = db.query(Role).options(joinedload(Role.permissions)).order_by(Role.id).all()
@@ -45,7 +45,7 @@ async def list_roles(
 async def create_role(
     data: RoleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("roles.create")),
 ):
     """Создать новую роль с разрешениями."""
     existing = db.query(Role).filter(Role.name == data.name).first()
@@ -89,7 +89,7 @@ async def update_role(
     role_id: int,
     data: RoleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("roles.edit")),
 ):
     """Обновить роль (название, описание, разрешения)."""
     role = db.query(Role).options(joinedload(Role.permissions)).filter(Role.id == role_id).first()
@@ -137,7 +137,7 @@ async def update_role(
 async def delete_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("roles.delete")),
 ):
     """Удалить роль (кроме системной)."""
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -153,7 +153,7 @@ async def delete_role(
 @router.get("/permissions", response_model=list[PermissionResponse])
 async def list_permissions(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("roles.view")),
 ):
     """Список всех разрешений."""
     permissions = db.query(Permission).order_by(Permission.group_name, Permission.id).all()

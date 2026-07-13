@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User, SiteSettings
 from app.models.backup import BackupRecord
 from app.schemas.backup_schemas import (

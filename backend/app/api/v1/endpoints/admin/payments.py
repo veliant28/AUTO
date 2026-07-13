@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session as DBSession
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.schemas.payment_schemas import (
     PaymentTransactionResponse,
@@ -32,7 +32,7 @@ router = APIRouter()
 async def init_payment(
     order_id: int,
     method: str = "monobank",
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("payments.view")),
     request: Request = None,
     db: DBSession = Depends(get_db),
 ):
@@ -65,7 +65,7 @@ async def init_payment(
 @router.get("/orders/{order_id}/transaction", response_model=PaymentTransactionResponse | None)
 async def get_transaction(
     order_id: int,
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("payments.view")),
     db: DBSession = Depends(get_db),
 ):
     """Get payment transaction for an order."""
@@ -92,7 +92,7 @@ async def get_transaction(
 @router.post("/orders/{order_id}/cancel-invoice")
 async def cancel_invoice(
     order_id: int,
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("payments.view")),
     db: DBSession = Depends(get_db),
 ):
     """Cancel/remove a pending invoice for an order."""

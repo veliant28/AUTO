@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.models.imports import SupplierConfig, PriceImport
 from app.schemas.import_schemas import (

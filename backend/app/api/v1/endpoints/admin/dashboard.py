@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     DashboardResponse, OrdersByDateItem, PartsByCategoryItem,
     WeekdayDistribution, PaymentMethodDistribution,
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/dashboard", response_model=DashboardResponse)
 async def get_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("dashboard.view")),
 ):
     """Статистика админ-панели: пользователи, заказы, выручка, товары."""
     now = datetime.utcnow()

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.models.imports import ImportSchedule, PriceImport
 from app.schemas.import_schemas import ImportScheduleItem, ImportScheduleUpdate

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
@@ -205,7 +205,7 @@ async def list_returns(
 async def get_return(
     return_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("returns.view")),
 ):
     """Get return request detail with items."""
     r = db.query(ReturnRequest).options(
@@ -313,7 +313,7 @@ async def update_return_status(
     return_id: int,
     data: AdminUpdateReturnStatusSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("returns.edit_status")),
 ):
     """Change return request status (approve/reject/complete)."""
     r = db.query(ReturnRequest).filter(ReturnRequest.id == return_id).first()

@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User, TecDocConfig, SupplierPrice
 from app.schemas.tecdoc_schemas import (
     TecDocSettingsSchema, TecDocSettingsUpdateSchema, TecDocTestResult,

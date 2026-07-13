@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 from app.core.db import get_db
 from app.models import User, PartCategory
 from app.schemas.part_schemas import PartCategorySchema, CategoryCreate, CategoryUpdate, CategoryListResponse
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 
 router = APIRouter()
 

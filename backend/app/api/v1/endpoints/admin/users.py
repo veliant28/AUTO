@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     AdminUserResponse, AdminUserListResponse,
 )
@@ -19,7 +19,7 @@ async def list_users(
     page_size: int = Query(20, ge=1, le=100),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("users.view")),
 ):
     """Список пользователей с пагинацией и поиском."""
     query = db.query(User)
@@ -60,7 +60,7 @@ async def list_users(
 async def create_user(
     data: AdminUserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("users.create")),
 ):
     """Создать нового пользователя."""
     existing = db.query(User).filter(User.email == data.email).first()
@@ -101,7 +101,7 @@ async def update_user(
     user_id: int,
     data: AdminUserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("users.edit")),
 ):
     """Обновить данные пользователя."""
     user = db.query(User).filter(User.id == user_id).first()
@@ -143,7 +143,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("users.delete")),
 ):
     """Удалить пользователя."""
     if user_id == current_user.id:

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.schemas.nova_poshta_schemas import (
     # Sender
@@ -82,7 +82,7 @@ router = APIRouter()
 async def list_senders(
     include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """List all Nova Poshta sender profiles."""
     service = NovaPoshtaSenderService(db)
@@ -134,7 +134,7 @@ def _sender_to_response(p: NovaPoshtaSenderProfile, service: NovaPoshtaSenderSer
 async def create_sender(
     data: NovaPoshtaSenderProfileCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.create")),
 ):
     """Create a new Nova Poshta sender profile."""
     service = NovaPoshtaSenderService(db)
@@ -148,7 +148,7 @@ async def update_sender(
     sender_id: int,
     data: NovaPoshtaSenderProfileUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.edit")),
 ):
     """Update a sender profile."""
     service = NovaPoshtaSenderService(db)
@@ -165,7 +165,7 @@ async def update_sender(
 async def delete_sender(
     sender_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.delete")),
 ):
     """Delete (or deactivate if used in waybills) a sender profile."""
     service = NovaPoshtaSenderService(db)
@@ -181,7 +181,7 @@ async def delete_sender(
 async def validate_sender(
     sender_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Validate a sender profile against NP API."""
     service = NovaPoshtaSenderService(db)
@@ -199,7 +199,7 @@ async def validate_sender(
 async def fetch_sender_from_token(
     data: NovaPoshtaSenderFetchFromToken,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Fetch sender counterparty data from NP API using a raw token.
 
@@ -215,7 +215,7 @@ async def fetch_sender_from_token(
 async def get_sender_addresses(
     sender_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """List all addresses for a sender's counterparty from NP API.
 
@@ -247,7 +247,7 @@ async def get_sender_addresses(
 async def lookup_settlements(
     data: NovaPoshtaLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Search settlements (cities) by name."""
     service = NovaPoshtaLookupService(db)
@@ -268,7 +268,7 @@ async def lookup_settlements(
 async def lookup_streets(
     data: NovaPoshtaStreetLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Search streets within a settlement."""
     service = NovaPoshtaLookupService(db)
@@ -290,7 +290,7 @@ async def lookup_streets(
 async def lookup_warehouses(
     data: NovaPoshtaWarehouseLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Search warehouses in a city."""
     service = NovaPoshtaLookupService(db)
@@ -313,7 +313,7 @@ async def lookup_warehouses(
 async def lookup_pack_types(
     data: NovaPoshtaPackListLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """List available packaging types."""
     service = NovaPoshtaLookupService(db)
@@ -335,7 +335,7 @@ async def lookup_pack_types(
 async def lookup_services(
     data: NovaPoshtaServiceLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """List available additional services."""
     service = NovaPoshtaLookupService(db)
@@ -354,7 +354,7 @@ async def lookup_services(
 async def lookup_time_intervals(
     data: NovaPoshtaTimeIntervalsLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get delivery time intervals for a route."""
     service = NovaPoshtaLookupService(db)
@@ -376,7 +376,7 @@ async def lookup_time_intervals(
 async def lookup_delivery_date(
     data: NovaPoshtaDeliveryDateLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get estimated delivery date."""
     service = NovaPoshtaLookupService(db)
@@ -399,7 +399,7 @@ async def lookup_delivery_date(
 async def lookup_counterparties(
     data: NovaPoshtaCounterpartyLookupQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Search counterparties (recipients/senders)."""
     service = NovaPoshtaLookupService(db)
@@ -421,7 +421,7 @@ async def lookup_counterparties(
 async def lookup_counterparty_details(
     data: NovaPoshtaCounterpartyDetailsQuery,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Get detailed info about a counterparty."""
     service = NovaPoshtaLookupService(db)
@@ -450,7 +450,7 @@ async def lookup_counterparty_details(
 async def calculate_price(
     data: NovaPoshtaPriceRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager", "operator")),
+    current_user: User = Depends(require_permission("novaposhta.view")),
 ):
     """Calculate delivery price via NP API's getDocumentPrice."""
     sender_service = NovaPoshtaSenderService(db)

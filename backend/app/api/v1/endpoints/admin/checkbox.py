@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session as DBSession
 
 from app.core.db import get_db
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.models import User
 from app.schemas.checkbox_schemas import (
     CheckboxReceiptResponse,
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.get("/orders/{order_id}/receipt", response_model=Optional[CheckboxReceiptResponse])
 async def get_receipt(
     order_id: int,
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("checkbox.view")),
     db: DBSession = Depends(get_db),
 ):
     """Get fiscal receipt info for an order."""
@@ -49,7 +49,7 @@ async def get_receipt(
 @router.post("/orders/{order_id}/receipt", response_model=CheckboxReceiptCreateResponse)
 async def create_receipt(
     order_id: int,
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("checkbox.view")),
     db: DBSession = Depends(get_db),
 ):
     """Create a fiscal receipt for an order via Checkbox."""
@@ -76,7 +76,7 @@ async def create_receipt(
 @router.get("/orders/{order_id}/receipt/link", response_model=Optional[CheckboxReceiptLinkResponse])
 async def get_receipt_link(
     order_id: int,
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("checkbox.view")),
     db: DBSession = Depends(get_db),
 ):
     """Get a link to view the fiscal receipt."""

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.api.v1.deps import require_role, require_permission, get_db
+from app.api.v1.deps import require_permission, get_db
 from app.models import User
 from app.models.imports import PriceImport
 from app.workers import celery_app

@@ -5,7 +5,7 @@ from sqlalchemy import desc, func
 from datetime import datetime, timedelta
 from typing import Optional, List
 from app.core.db import get_db
-from app.api.v1.deps import require_role, require_permission
+from app.api.v1.deps import require_permission
 from app.models.support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from app.schemas.support_schemas import (
     ChatConversationOut,
