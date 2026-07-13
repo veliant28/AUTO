@@ -1025,7 +1025,6 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <span className="hidden sm:inline">{brandName}</span>
         </Link>
         <div className="border-l pl-2 flex items-center gap-1">
-          <NotificationBell />
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
             <AvatarImage

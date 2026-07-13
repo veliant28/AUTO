@@ -98,7 +98,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-96 max-h-[70vh] bg-card border rounded-lg shadow-xl z-50 flex flex-col overflow-hidden">
+        <div className="absolute left-0 top-12 w-96 max-h-[70vh] bg-card border rounded-lg shadow-xl z-[999] flex flex-col overflow-hidden">
           <div className="p-3 border-b font-semibold text-sm flex items-center gap-2">
             <Bell className="w-4 h-4" />
             Уведомления
