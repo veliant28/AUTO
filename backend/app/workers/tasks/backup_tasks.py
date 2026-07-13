@@ -50,7 +50,7 @@ def run_database_backup():
         # Parse DATABASE_URL: postgresql://user:pass@host:port/dbname
         import re
         match = re.match(
-            r"postgresql(?:\.dryrun)?://(?:([^:@]+):?([^@]*)@)?([^:/]+):?(\d+)?/(.+)",
+            r"postgresql(?:\+[a-z0-9]+)?(?:\.dryrun)?://(?:([^:@]+):?([^@]*)@)?([^:/]+):?(\d+)?/(.+)",
             db_url,
         )
         if not match:
