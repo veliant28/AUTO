@@ -155,7 +155,7 @@ async def list_returns(
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("returns.view")),
 ):
     """List all return requests with pagination, status filter, and search."""
     query = db.query(ReturnRequest).options(
@@ -227,7 +227,7 @@ async def update_return(
     return_id: int,
     data: AdminReturnUpdateSchema,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("returns.edit")),
 ):
     """Update return request (admin_notes)."""
     r = db.query(ReturnRequest).filter(ReturnRequest.id == return_id).first()
@@ -400,7 +400,7 @@ async def update_return_status(
 async def delete_return(
     return_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin", "manager")),
+    current_user: User = Depends(require_permission("returns.delete")),
 ):
     """Delete a return request and log it."""
     r = db.query(ReturnRequest).filter(ReturnRequest.id == return_id).first()
