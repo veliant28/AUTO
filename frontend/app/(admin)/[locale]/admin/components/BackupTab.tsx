@@ -482,9 +482,7 @@ export default function BackupTab() {
                             )
                           : '—'}
                       </td>
-                      <td className="p-3 font-mono text-xs truncate max-w-[300px]">
-                        {rec.filename}
-                      </td>
+                      <td className="p-3 font-mono text-xs">{rec.filename}</td>
                       <td className="p-3 whitespace-nowrap">
                         {formatFileSize(rec.file_size)}
                       </td>
