@@ -36,9 +36,23 @@ interface NotificationsData {
 function timeColor(createdAt: string | null): string {
   if (!createdAt) return 'bg-gray-500'
   const diff = Date.now() - new Date(createdAt).getTime()
-  if (diff < ONE_HOUR) return 'bg-blue-500'
+  if (diff < ONE_HOUR) return 'bg-green-500'
   if (diff < TWO_HOURS) return 'bg-orange-500'
   return 'bg-red-500'
+}
+
+function worstBadgeColor(
+  items: { created_at: string | null }[],
+): string | null {
+  if (items.length === 0) return null
+  let hasOrange = false
+  for (const item of items) {
+    if (!item.created_at) continue
+    const diff = Date.now() - new Date(item.created_at).getTime()
+    if (diff >= TWO_HOURS) return 'bg-red-500'
+    if (diff >= ONE_HOUR) hasOrange = true
+  }
+  return hasOrange ? 'bg-orange-500' : 'bg-green-500'
 }
 
 function timeAgo(createdAt: string | null): string {
@@ -97,6 +111,14 @@ export default function NotificationBell() {
   const messages = data?.unread_messages || []
   const total = orders.length + returns.length + messages.length
 
+  // Badge color: priority orders/returns > support
+  const allItems = [...orders, ...returns]
+  const orderReturnColor = worstBadgeColor(allItems)
+  const badgeColor =
+    messages.length > 0 && allItems.length === 0
+      ? 'bg-blue-500'
+      : orderReturnColor || 'bg-red-500'
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -105,7 +127,9 @@ export default function NotificationBell() {
       >
         <Bell className="w-5 h-5" />
         {total > 0 && (
-          <Badge className="absolute -top-1.5 -right-1.5 bg-red-500 text-white border-0 text-[10px] min-w-[18px] h-[18px] flex items-center justify-center px-1">
+          <Badge
+            className={`absolute -top-1.5 -right-1.5 ${badgeColor} text-white border-0 text-[10px] min-w-[18px] h-[18px] flex items-center justify-center px-1`}
+          >
             {total > 99 ? '99+' : total}
           </Badge>
         )}
