@@ -3,7 +3,6 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import NotificationProvider from '@/components/NotificationProvider'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages } from 'next-intl/server'
 import { Toaster } from 'sonner'
 import Providers from '@/components/Providers'
 import type { Metadata } from 'next'
@@ -104,10 +103,9 @@ async function fetchFooter(locale: string): Promise<Record<string, string>> {
 }
 
 export default async function RootLayout(props: any) {
-  const { children } = props
+  const { children, messages } = props
   const params = await props.params
   const locale = params.locale
-  const messages = await getMessages()
   const [brandName, footerData] = await Promise.all([
     fetchBrandName(),
     fetchFooter(locale),
