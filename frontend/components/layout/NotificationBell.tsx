@@ -59,16 +59,12 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
   const { data } = useQuery<NotificationsData>({
     queryKey: ['admin-notifications'],
     queryFn: async () => {
       const { data } = await api.get('/admin/notifications')
       return data
     },
-    enabled: mounted,
     refetchInterval: 15000,
     retry: true,
   })

@@ -6,7 +6,7 @@ from app.api.v1.deps import require_permission
 from app.models import User
 from app.models.orders import Order, OrderStatus
 from app.models.returns import ReturnRequest, ReturnStatus
-from app.models.support import ChatConversation, ChatMessage, SenderRole
+from app.models.support import ChatConversation, ChatMessage, SenderRole, ChatStatus
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -72,7 +72,7 @@ async def get_notifications(
     unread_messages = []
     conversations = (
         db.query(ChatConversation)
-        .filter(ChatConversation.status != "closed")
+        .filter(ChatConversation.status != ChatStatus.CLOSED)
         .order_by(desc(ChatConversation.updated_at))
         .limit(20)
         .all()
