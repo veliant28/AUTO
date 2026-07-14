@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTheme } from '@wrksz/themes/client'
@@ -268,6 +268,26 @@ export default function BackupTab() {
     },
   })
 
+  // Download backup with auth
+  const downloadBackup = useCallback(
+    async (id: number, filename: string) => {
+      try {
+        const response = await api.get(`/admin/backups/${id}/download`, {
+          responseType: 'blob',
+        })
+        const url = URL.createObjectURL(new Blob([response.data]))
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch {
+        toast.error(t('backup_download_error') || 'Ошибка скачивания')
+      }
+    },
+    [t],
+  )
+
   // Delete backup mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -507,14 +527,15 @@ export default function BackupTab() {
                             <>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <a
-                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/backups/${rec.id}/download`}
-                                    target="_blank"
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() =>
+                                      downloadBackup(rec.id, rec.filename)
+                                    }
                                   >
-                                    <Button variant="outline" size="icon">
-                                      <Download className="w-4 h-4" />
-                                    </Button>
-                                  </a>
+                                    <Download className="w-4 h-4" />
+                                  </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom">
                                   <p>{t('backup_download')}</p>
