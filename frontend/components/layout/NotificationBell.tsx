@@ -2,10 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell, MessageCircle, ShoppingCart, RotateCcw } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
-import { format } from 'date-fns'
-import api from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 
 const ONE_HOUR = 60 * 60 * 1000
@@ -55,19 +51,36 @@ function timeAgo(createdAt: string | null): string {
 }
 
 export default function NotificationBell() {
-  const t = useTranslations('admin')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const [data, setData] = useState<NotificationsData | null>(null)
 
-  const { data } = useQuery<NotificationsData>({
-    queryKey: ['admin-notifications'],
-    queryFn: async () => {
-      const { data } = await api.get('/admin/notifications')
-      return data
-    },
-    refetchInterval: 15000,
-    retry: true,
-  })
+  useEffect(() => {
+    let cancelled = false
+    const API =
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+
+    async function fetchNotifs() {
+      try {
+        const token = localStorage.getItem('token') || ''
+        const res = await fetch(`${API}/admin/notifications`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (cancelled) return
+        if (res.ok) {
+          const json = await res.json()
+          setData(json)
+        }
+      } catch {}
+    }
+
+    fetchNotifs()
+    const id = setInterval(fetchNotifs, 15000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
