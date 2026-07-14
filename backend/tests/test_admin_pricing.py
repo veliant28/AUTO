@@ -5,17 +5,6 @@ from app.models.pricing import PriceRule
 
 
 @pytest.fixture
-def admin_role(db):
-    role = db.query(Role).filter(Role.name == "admin").first()
-    if not role:
-        role = Role(name="admin")
-        db.add(role)
-        db.commit()
-        db.refresh(role)
-    return role
-
-
-@pytest.fixture
 def admin_user(db, admin_role):
     user = User(email="admin@pricing.example.com", password_hash=get_password_hash("pass123"),
                 role_id=admin_role.id, is_active=True, first_name="Admin")

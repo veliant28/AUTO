@@ -7,17 +7,6 @@ from app.models.suppliers import Supplier
 
 
 @pytest.fixture
-def admin_role(db):
-    role = db.query(Role).filter(Role.name == "admin").first()
-    if not role:
-        role = Role(name="admin")
-        db.add(role)
-        db.commit()
-        db.refresh(role)
-    return role
-
-
-@pytest.fixture
 def manager_role(db):
     role = db.query(Role).filter(Role.name == "manager").first()
     if not role:

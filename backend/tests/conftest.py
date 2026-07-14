@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.config import settings
 from app.core.db import get_db, get_tecdoc_db
 from app.main import app
-from app.models import Base, User, Role
+from app.models import Base, User, Role, Permission, RolePermission
 import os
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["TECDOC_DATABASE_URL"] = "sqlite:///:memory:"
@@ -57,6 +57,39 @@ def admin_role(db):
     db.add(role)
     db.commit()
     db.refresh(role)
+
+    # Seed all permissions and assign them to admin role
+    all_perms = [
+        "dashboard.view", "orders.view", "orders.edit_status", "orders.delete",
+        "users.view", "users.create", "users.edit", "users.delete",
+        "catalog.view",
+        "roles.view", "roles.create", "roles.edit", "roles.delete", "roles.assign",
+        "tecdoc.view", "tecdoc.batch", "tecdoc.sync", "tecdoc.settings",
+        "footer.edit", "settings.edit",
+        "novaposhta.view", "novaposhta.create", "novaposhta.edit", "novaposhta.print", "novaposhta.tracking", "novaposhta.delete",
+        "products.view", "products.create", "products.edit", "products.delete",
+        "brands.view",
+        "categories.view", "categories.create", "categories.edit", "categories.delete",
+        "pricing.view", "pricing.edit", "pricing.apply",
+        "suppliers.view", "suppliers.create", "suppliers.edit", "suppliers.delete",
+        "protection.view", "protection.ban", "protection.unban", "protection.edit",
+        "imports.view", "imports.create", "imports.delete", "imports.edit",
+        "support.view", "support.reply",
+        "backup.view", "backup.run", "backup.download", "backup.config", "backup.delete",
+        "workers.view", "workers.restart",
+        "staff.view",
+        "loyalty.view", "loyalty.create",
+        "waybills.view", "waybills.print",
+        "returns.view", "returns.edit_status", "returns.delete", "returns.edit",
+        "checkbox.view", "payments.view",
+    ]
+    for i, codename in enumerate(all_perms, start=1):
+        perm = Permission(id=i, codename=codename, description="", group_name="")
+        db.add(perm)
+        db.flush()
+        rp = RolePermission(role_id=role.id, permission_id=perm.id)
+        db.add(rp)
+    db.commit()
     return role
 
 @pytest.fixture
