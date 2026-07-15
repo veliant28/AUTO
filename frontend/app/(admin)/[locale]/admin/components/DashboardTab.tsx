@@ -44,7 +44,7 @@ function formatPhone(phone: string | null | undefined): string {
 const STATUS_COLORS: Record<string, string> = {
   pending: '#6b7280', // gray — как бейдж
   confirmed: '#374151', // dark gray
-  processing: '#6366f1', // indigo
+  processing: '#3b82f6', // blue — как бейдж
   shipped: '#f97316', // orange — как бейдж
   delivered: '#22c55e', // green — как бейдж
   cancelled: '#ef4444', // red — как бейдж
@@ -160,6 +160,16 @@ export default function DashboardTab() {
     dashboard?.orders_by_date?.map((d: any) => d.date.slice(5)) || []
   const counts = dashboard?.orders_by_date?.map((d: any) => d.count) || []
   const margins = dashboard?.orders_by_date?.map((d: any) => d.margin) || []
+
+  // Статусы заказов — только те, у кого count > 0
+  const statusEntries = STATUS_ORDER.map((s) => ({
+    label: t('order_' + s),
+    value: dashboard?.orders_by_status?.[s] || 0,
+    color: STATUS_COLORS[s],
+  })).filter((e) => e.value > 0)
+  const chartLabels = statusEntries.map((e) => e.label)
+  const chartValues = statusEntries.map((e) => e.value)
+  const chartColors = statusEntries.map((e) => e.color)
 
   const radarIndicators = [
     { name: t('dash_radar_orders_day'), max: Math.max(...counts, 5) * 1.5 },
@@ -352,11 +362,9 @@ export default function DashboardTab() {
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
               <DoughnutChart
-                labels={STATUS_ORDER.map((s: string) => t('order_' + s))}
-                values={STATUS_ORDER.map(
-                  (s: string) => dashboard?.orders_by_status?.[s] || 0,
-                )}
-                colors={STATUS_ORDER.map((s: string) => STATUS_COLORS[s])}
+                labels={chartLabels}
+                values={chartValues}
+                colors={chartColors}
                 height={280}
               />
             </CardContent>
