@@ -1,0 +1,18 @@
+{
+  "title": "Telegram",
+  "connect": "Подключить",
+  "disconnect": "Отключить",
+  "check_after_send": "Нажмите «Запустить» в Telegram — подключится автоматически",
+  "desc": "Получайте уведомления о статусе заказов в Telegram",
+  "checking": "Проверка статуса...",
+  "connected": "Подключено",
+  "send_code": "Отправьте код в Telegram",
+  "check": "Проверить",
+  "cancel": "Отмена",
+  "code_sent": "Код отправлен",
+  "connect_error": "Ошибка подключения",
+  "disconnect_success": "Telegram отключён",
+  "disconnect_error": "Ошибка отключения",
+  "connect_success": "Telegram подключён",
+  "check_not_connected": "Ещё не подключено. Нажмите «Запустить» в Telegram"
+}

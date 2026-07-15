@@ -1,0 +1,20 @@
+{
+  "description": "Крупнейший интернет-магазин автозапчастей с интеграцией TecDoc. Мгновенный поиск и точная применимость.",
+  "company_title": "Компания",
+  "about": "О нас",
+  "contacts": "Контакты",
+  "delivery": "Доставка",
+  "help_title": "Помощь",
+  "faq": "FAQ",
+  "support": "Поддержка",
+  "terms": "Условия",
+  "admin_panel": "Админ-панель",
+  "tech_support": "Тех. поддержка",
+  "copyright": "© 2026 SVOM Store",
+  "contact_phone": "+380 (44) 123-45-67",
+  "contact_email": "info@autoparts.local",
+  "contact_address": "Украина, г. Киев, ул. Автозаводская, 1",
+  "support_chat": "Онлайн-чат",
+  "support_phone": "+380 (44) 123-45-67",
+  "support_email": "support@autoparts.local"
+}

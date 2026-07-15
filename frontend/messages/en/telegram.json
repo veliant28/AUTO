@@ -1,0 +1,18 @@
+{
+  "title": "Telegram",
+  "connect": "Connect",
+  "disconnect": "Disconnect",
+  "check_after_send": "Press «Start» in Telegram — it will connect automatically",
+  "desc": "Receive order status notifications in Telegram",
+  "checking": "Checking status...",
+  "connected": "Connected",
+  "send_code": "Send the code to Telegram",
+  "check": "Check",
+  "cancel": "Cancel",
+  "code_sent": "Code sent",
+  "connect_error": "Connection error",
+  "disconnect_success": "Telegram disconnected",
+  "disconnect_error": "Disconnect error",
+  "connect_success": "Telegram connected",
+  "check_not_connected": "Not connected yet. Press «Start» in Telegram"
+}

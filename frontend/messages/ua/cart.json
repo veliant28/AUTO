@@ -1,0 +1,9 @@
+{
+  "title": "Кошик",
+  "empty": "Кошик порожній",
+  "your_order": "Замовлення",
+  "summary_items": "Товари",
+  "summary_total": "Разом",
+  "items_count": "шт",
+  "checkout": "Оформити замовлення"
+}

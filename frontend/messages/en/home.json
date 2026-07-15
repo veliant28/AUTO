@@ -1,0 +1,22 @@
+{
+  "badge": "Online Auto Parts Store",
+  "title_line1": "All Auto Parts",
+  "title_line2": "in One Place",
+  "subtitle": "Original parts and quality alternatives from top manufacturers. Instant selection by car make and part number.",
+  "cta": "Find by Car",
+  "why_title": "Why Choose Us",
+  "why_desc": "We combined trusted suppliers and modern technology for fast search",
+  "feature_parts": "235,000+ Parts",
+  "feature_parts_desc": "Huge catalog of OEM and aftermarket parts",
+  "feature_search": "Instant Search",
+  "feature_search_desc": "Find parts by article number or TecDoc catalog",
+  "feature_delivery": "Fast Delivery",
+  "feature_delivery_desc": "Delivery across Ukraine. Pickup points available",
+  "feature_quality": "Quality Guarantee",
+  "feature_quality_desc": "Only verified suppliers with up to 2-year warranty",
+  "b2b_title": "Running an Auto Service?",
+  "b2b_desc": "Register for priority support and fast order processing for your business.",
+  "b2b_cta": "Register",
+  "not_found_cta": "Didn't find a part? Contact us — we'll help!",
+  "search_placeholder": "Enter part number or name..."
+}

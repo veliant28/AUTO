@@ -554,24 +554,9 @@ export default function WorkersTab() {
         const taskName = info.getValue()
         const stage = info.row.original.import_stage
         const isProgressStage = stage?.includes('/')
-        const label =
-          taskName === 'download_product_images'
-            ? 'Фото'
-            : taskName === 'apply_margins'
-              ? 'Наценка'
-              : taskName === 'match_parts_with_tecdoc'
-                ? 'Матчинг'
-                : taskName === 'process_price_import'
-                  ? 'Импорт'
-                  : taskName === 'deactivate_orphaned_offers'
-                    ? 'Деактивация'
-                    : taskName === 'cleanup_old_chat_messages'
-                      ? 'Чат: очистка'
-                      : taskName === 'run_database_backup'
-                        ? 'Бэкап БД'
-                        : taskName === 'cleanup_old_price_imports'
-                          ? 'Очистка прайсов'
-                          : taskName
+        const key = `workers_task_${taskName}`
+        const translated = t(key as any)
+        const label = translated !== key ? translated : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`

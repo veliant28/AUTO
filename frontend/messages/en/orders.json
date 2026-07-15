@@ -1,0 +1,9 @@
+{
+  "my_orders": "My Orders",
+  "order": "Order",
+  "total": "Total",
+  "status": "Status",
+  "items": "items",
+  "back": "Back",
+  "order_not_found": "Order not found"
+}

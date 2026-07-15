@@ -1,0 +1,9 @@
+{
+  "title": "Cart",
+  "empty": "Cart is empty",
+  "your_order": "Order",
+  "summary_items": "Items",
+  "summary_total": "Total",
+  "items_count": "pcs",
+  "checkout": "Checkout"
+}
