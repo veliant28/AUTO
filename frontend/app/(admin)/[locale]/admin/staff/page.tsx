@@ -147,7 +147,7 @@ export function StaffPageContent() {
   }, [stats?.actions_by_date])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* KPI */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>

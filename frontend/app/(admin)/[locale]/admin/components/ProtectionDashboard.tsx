@@ -156,7 +156,7 @@ export default function ProtectionDashboard() {
         {/* Threats by day */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">
+            <CardTitle className="text-lg font-medium">
               {t('protection_threats_by_day')}
             </CardTitle>
           </CardHeader>
@@ -179,7 +179,7 @@ export default function ProtectionDashboard() {
         {/* Threat types */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">
+            <CardTitle className="text-lg font-medium">
               {t('protection_threat_types')}
             </CardTitle>
           </CardHeader>
@@ -202,7 +202,7 @@ export default function ProtectionDashboard() {
         {/* Threat timeline */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold">
+            <CardTitle className="text-lg font-medium">
               {t('protection_threats_timeline')}
             </CardTitle>
           </CardHeader>
