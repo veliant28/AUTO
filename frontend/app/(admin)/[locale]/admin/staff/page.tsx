@@ -250,7 +250,7 @@ export function StaffPageContent() {
                   xData={lineData.dates}
                   yData={lineData.counts}
                   color="#22c55e"
-                  height={250}
+                  height={300}
                   formatY={(v) => v.toLocaleString()}
                 />
               </CardContent>
