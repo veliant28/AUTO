@@ -43,7 +43,7 @@ function formatPhone(phone: string | null | undefined): string {
 
 const STATUS_COLORS: Record<string, string> = {
   pending: '#6b7280', // gray — как бейдж
-  confirmed: '#3b82f6', // blue — вместо чёрного
+  confirmed: '#374151', // dark gray
   processing: '#6366f1', // indigo
   shipped: '#f97316', // orange — как бейдж
   delivered: '#22c55e', // green — как бейдж
