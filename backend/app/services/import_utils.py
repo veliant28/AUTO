@@ -105,3 +105,14 @@ def queue_post_import_tasks(supplier: str):
             logger.warning("%s: failed to queue tecdoc matching: %s", supplier, e)
     else:
         logger.info("%s: match_parts_with_tecdoc already active, skipped", supplier)
+
+    # Cleanup old price imports (keep only last N per supplier)
+    if not is_task_active("cleanup_old_price_imports"):
+        try:
+            from app.workers.tasks.price_cleanup_tasks import cleanup_old_price_imports
+            cleanup_old_price_imports.delay()
+            logger.info("%s: old price imports cleanup queued", supplier)
+        except Exception as e:
+            logger.warning("%s: failed to queue price cleanup: %s", supplier, e)
+    else:
+        logger.info("%s: cleanup_old_price_imports already active, skipped", supplier)

@@ -569,7 +569,9 @@ export default function WorkersTab() {
                       ? 'Чат: очистка'
                       : taskName === 'run_database_backup'
                         ? 'Бэкап БД'
-                        : taskName
+                        : taskName === 'cleanup_old_price_imports'
+                          ? 'Очистка прайсов'
+                          : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`
