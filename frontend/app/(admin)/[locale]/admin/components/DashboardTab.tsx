@@ -42,12 +42,12 @@ function formatPhone(phone: string | null | undefined): string {
 }
 
 const STATUS_COLORS_CHART = [
-  '#f59e0b',
-  '#374151',
-  '#3b82f6',
-  '#f97316',
-  '#22c55e',
-  '#ef4444',
+  '#6b7280', // pending — gray (соответствует бейджу)
+  '#3b82f6', // confirmed — blue (вместо чёрного, как у processing)
+  '#6366f1', // processing — indigo
+  '#f97316', // shipped — orange (как бейдж)
+  '#22c55e', // delivered — green (как бейдж)
+  '#ef4444', // cancelled — red (как бейдж)
 ]
 
 export default function DashboardTab() {
