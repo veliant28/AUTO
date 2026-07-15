@@ -131,7 +131,7 @@ export default function ProtectionDashboard() {
   }, [data])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {kpiCards.map((card) => (
@@ -152,7 +152,7 @@ export default function ProtectionDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Threats by day */}
         <Card>
           <CardHeader>
