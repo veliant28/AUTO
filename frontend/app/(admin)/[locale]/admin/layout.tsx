@@ -212,6 +212,19 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     return () => clearInterval(id)
   }, [])
 
+  // Dashboard TopBar state
+  const [dashboardPeriod, setDashboardPeriod] = useState<string>('month')
+  const [dashboardCustomRange, setDashboardCustomRange] =
+    useState<any>(undefined)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      setDashboardPeriod(win.__dashboardPeriod ?? 'month')
+      setDashboardCustomRange(win.__dashboardCustomRange)
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
   // Backup TopBar state
   const [backupTime, setBackupTime] = useState('02:00')
   const [backupTimeOpen, setBackupTimeOpen] = useState(false)
@@ -418,7 +431,63 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       <div className="flex items-center gap-2">
         {isAdmin &&
           (searchParams.get('tab') || 'dashboard') === 'dashboard' && (
-            <div className="border-r pr-2 self-stretch flex items-center">
+            <div className="border-r pr-2 self-stretch flex items-center gap-1">
+              {(['day', 'week', 'month', 'year'] as const).map((p) => (
+                <Tooltip key={p}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant={
+                        dashboardPeriod === p && !dashboardCustomRange
+                          ? 'default'
+                          : 'outline'
+                      }
+                      onClick={() => (window as any).__dashboardSetPeriod?.(p)}
+                    >
+                      {p === 'day'
+                        ? 'Д'
+                        : p === 'week'
+                          ? 'Н'
+                          : p === 'month'
+                            ? 'М'
+                            : 'Г'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{ta('staff_period_' + p)}</TooltipContent>
+                </Tooltip>
+              ))}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant={dashboardCustomRange ? 'default' : 'outline'}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    navLayout="around"
+                    selected={dashboardCustomRange}
+                    onSelect={(r: any) => {
+                      if (r?.from && r?.to)
+                        (window as any).__dashboardSetCustomRange?.({
+                          from: r.from,
+                          to: new Date(
+                            r.to.getFullYear(),
+                            r.to.getMonth(),
+                            r.to.getDate(),
+                            23,
+                            59,
+                            59,
+                          ),
+                        })
+                    }}
+                    locale={ru}
+                  />
+                </PopoverContent>
+              </Popover>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

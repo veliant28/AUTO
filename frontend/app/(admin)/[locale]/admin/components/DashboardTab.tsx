@@ -23,6 +23,7 @@ import RadarChart from '@/components/charts/RadarChart'
 import KipTimer from '@/components/ui/KipTimer'
 import OrderDetailModal from './OrderDetailModal'
 import { toast } from '@/lib/toast'
+import { startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -53,10 +54,66 @@ export default function DashboardTab() {
   const { user, isAuthenticated } = useAuthStore()
   const t = useTranslations('admin')
 
+  // ── Period filter state (synced with TopBar via window) ──────────
+  const [period, setPeriod] = useState<string>('month')
+  const [customRange, setCustomRange] = useState<
+    { from: Date; to: Date } | undefined
+  >()
+
+  function getDateRange(period: string): { from: Date; to: Date } {
+    const now = new Date()
+    switch (period) {
+      case 'day':
+        return { from: startOfDay(now), to: endOfDay(now) }
+      case 'week':
+        return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) }
+      case 'month':
+        return { from: startOfMonth(now), to: endOfDay(now) }
+      case 'year':
+        return { from: startOfDay(subDays(now, 365)), to: endOfDay(now) }
+      default:
+        return { from: startOfMonth(now), to: endOfDay(now) }
+    }
+  }
+
+  const range = customRange || getDateRange(period)
+
+  // Expose setters to window for TopBar buttons
+  useEffect(() => {
+    const win = window as any
+    win.__dashboardSetPeriod = (p: string) => {
+      setPeriod(p)
+      setCustomRange(undefined)
+    }
+    win.__dashboardSetCustomRange = (r: { from: Date; to: Date }) =>
+      setCustomRange(r)
+    return () => {
+      delete win.__dashboardSetPeriod
+      delete win.__dashboardSetCustomRange
+    }
+  }, [])
+
+  // Sync state back to window for TopBar polling
+  useEffect(() => {
+    const win = window as any
+    win.__dashboardPeriod = period
+    win.__dashboardCustomRange = customRange
+  }, [period, customRange])
+
   const { data: dashboard } = useQuery({
-    queryKey: ['admin-dashboard'],
+    queryKey: [
+      'admin-dashboard',
+      period,
+      customRange?.from?.toISOString(),
+      customRange?.to?.toISOString(),
+    ],
     queryFn: async () => {
-      const { data } = await api.get('/admin/dashboard')
+      const params: any = {
+        period,
+        from_date: range.from.toISOString(),
+        to_date: range.to.toISOString(),
+      }
+      const { data } = await api.get('/admin/dashboard', { params })
       return data
     },
     enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),

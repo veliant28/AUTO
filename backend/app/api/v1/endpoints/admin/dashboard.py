@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from app.core.db import get_db
@@ -10,6 +10,7 @@ from app.schemas.admin_schemas import (
 from app.models import User, Order, OrderStatus, Part, PartCategory, OrderItem
 from app.models.suppliers import SupplierOffer
 from datetime import datetime, timedelta
+from typing import Optional
 
 # PostgreSQL enum cast helper for raw SQL (OrderStatus enum values are UPPERCASE in DB)
 _NOT_CANCELLED = "o.status != 'CANCELLED'::orderstatus"
@@ -18,21 +19,47 @@ _NOT_CANCELLED_WO = "status != 'CANCELLED'::orderstatus"
 router = APIRouter()
 
 
+def get_period_range(period: str, from_date: Optional[str] = None, to_date: Optional[str] = None):
+    """Convert period string and optional custom range to (from_dt, to_dt) UTC."""
+    now = datetime.utcnow()
+    if from_date and to_date:
+        return (
+            datetime.fromisoformat(from_date).replace(tzinfo=None),
+            datetime.fromisoformat(to_date).replace(tzinfo=None),
+        )
+    if period == "day":
+        return now.replace(hour=0, minute=0, second=0, microsecond=0), now
+    elif period == "week":
+        return now - timedelta(days=7), now
+    elif period == "year":
+        return now - timedelta(days=365), now
+    else:  # month
+        return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0), now
+
+
 @router.get("/dashboard", response_model=DashboardResponse)
 async def get_dashboard(
+    period: str = Query("month", regex="^(day|week|month|year)$"),
+    from_date: Optional[str] = Query(None),
+    to_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("dashboard.view")),
 ):
     """Статистика админ-панели: пользователи, заказы, выручка, товары."""
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    from_dt, to_dt = get_period_range(period, from_date, to_date)
 
     # ── Основные KPI ───────────────────────────────────────────────
     total_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
     total_orders = db.query(func.count(Order.id)).scalar() or 0
     total_revenue = float(
         db.query(func.coalesce(func.sum(Order.total), 0))
-        .filter(Order.status != OrderStatus.CANCELLED)
+        .filter(
+            Order.status != OrderStatus.CANCELLED,
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+        )
         .scalar()
     )
     total_parts = db.query(func.count(Part.id)).scalar() or 0
@@ -43,7 +70,7 @@ async def get_dashboard(
         Order.status != OrderStatus.CANCELLED,
     ).scalar() or 0
 
-	    # ── Новые пользователи сегодня ──────────────────────────────────
+    # ── Новые пользователи сегодня ──────────────────────────────────
     new_users_today = db.query(func.count(User.id)).filter(
         User.created_at >= today_start.strftime('%Y-%m-%d %H:%M:%S'),
         User.is_active == True,
@@ -51,16 +78,19 @@ async def get_dashboard(
 
     # ── Средний чек ────────────────────────────────────────────────
     total_orders_inc = db.query(func.count(Order.id)).filter(
-        Order.status != OrderStatus.CANCELLED
+        Order.status != OrderStatus.CANCELLED,
+        Order.created_at >= from_dt,
+        Order.created_at <= to_dt,
     ).scalar() or 0
     average_check = round(total_revenue / total_orders_inc, 2) if total_orders_inc > 0 else 0
 
     # ── Наценка (margin) ───────────────────────────────────────────
-    # Сумма: (продажная_цена - закупочная_цена) по каждому товару в заказе
     margin_rows = db.execute(text(f"""
         SELECT COALESCE(SUM(oi.price - so.price), 0)
         FROM order_items oi
         JOIN orders o ON o.id = oi.order_id AND {_NOT_CANCELLED}
+            AND o.created_at >= :from_dt
+            AND o.created_at <= :to_dt
         JOIN LATERAL (
             SELECT so2.price
             FROM supplier_offers so2
@@ -68,7 +98,7 @@ async def get_dashboard(
             ORDER BY so2.price ASC
             LIMIT 1
         ) so ON true
-    """)).scalar() or 0
+    """), {"from_dt": from_dt, "to_dt": to_dt}).scalar() or 0
     total_margin = float(margin_rows)
 
     # ── Pending orders / KIP таймер ─────────────────────────────────
@@ -83,29 +113,31 @@ async def get_dashboard(
         delta = now - oldest_pending
         oldest_pending_seconds = int(delta.total_seconds())
 
-    # ── Заказы по дням (14 дней) ───────────────────────────────────
-    fourteen_days_ago = now - timedelta(days=14)
+    # ── Заказы по дням ─────────────────────────────────────────────
     orders_by_date_rows = (
         db.query(
             func.date(Order.created_at).label("date"),
             func.count(Order.id).label("count"),
             func.coalesce(func.sum(Order.total), 0).label("revenue"),
         )
-        .filter(Order.created_at >= fourteen_days_ago)
-        .filter(Order.status != OrderStatus.CANCELLED)
+        .filter(
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+            Order.status != OrderStatus.CANCELLED,
+        )
         .group_by(func.date(Order.created_at))
         .order_by(func.date(Order.created_at))
         .all()
     )
 
-    # Наценка по дням
     margin_by_date_rows = db.execute(text(f"""
         SELECT
             DATE(o.created_at) AS date,
             COALESCE(SUM(oi.price - so.price), 0) AS margin
         FROM order_items oi
         JOIN orders o ON o.id = oi.order_id AND {_NOT_CANCELLED}
-            AND o.created_at >= :start_date
+            AND o.created_at >= :from_dt
+            AND o.created_at <= :to_dt
         JOIN LATERAL (
             SELECT so2.price
             FROM supplier_offers so2
@@ -115,7 +147,7 @@ async def get_dashboard(
         ) so ON true
         GROUP BY DATE(o.created_at)
         ORDER BY DATE(o.created_at)
-    """), {"start_date": fourteen_days_ago}).fetchall()
+    """), {"from_dt": from_dt, "to_dt": to_dt}).fetchall()
     margin_map = {str(row[0]): float(row[1]) for row in margin_by_date_rows}
 
     orders_by_date = [
@@ -142,9 +174,11 @@ async def get_dashboard(
         SELECT EXTRACT(DOW FROM created_at)::int AS dow, COUNT(*)
         FROM orders
         WHERE {_NOT_CANCELLED_WO}
+            AND created_at >= :from_dt
+            AND created_at <= :to_dt
         GROUP BY EXTRACT(DOW FROM created_at)
         ORDER BY dow
-    """)).fetchall()
+    """), {"from_dt": from_dt, "to_dt": to_dt}).fetchall()
     weekday_map = {row[0]: row[1] for row in weekday_rows}
     # DOW: 0=воскресенье, 1=понедельник... переводим в Пн=0
     orders_by_weekday = []
@@ -158,7 +192,12 @@ async def get_dashboard(
     # ── Способы оплаты (Pie) ───────────────────────────────────────
     payment_rows = (
         db.query(Order.payment_method, func.count(Order.id))
-        .filter(Order.payment_method.isnot(None), Order.status != OrderStatus.CANCELLED)
+        .filter(
+            Order.payment_method.isnot(None),
+            Order.status != OrderStatus.CANCELLED,
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+        )
         .group_by(Order.payment_method)
         .all()
     )
