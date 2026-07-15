@@ -41,13 +41,21 @@ function formatPhone(phone: string | null | undefined): string {
   return `+38 (0${rest.slice(0, 2)}) ${rest.slice(2, 5)}-${rest.slice(5, 7)}-${rest.slice(7)}`
 }
 
-const STATUS_COLORS_CHART = [
-  '#6b7280', // pending — gray (соответствует бейджу)
-  '#3b82f6', // confirmed — blue (вместо чёрного, как у processing)
-  '#6366f1', // processing — indigo
-  '#f97316', // shipped — orange (как бейдж)
-  '#22c55e', // delivered — green (как бейдж)
-  '#ef4444', // cancelled — red (как бейдж)
+const STATUS_COLORS: Record<string, string> = {
+  pending: '#6b7280', // gray — как бейдж
+  confirmed: '#3b82f6', // blue — вместо чёрного
+  processing: '#6366f1', // indigo
+  shipped: '#f97316', // orange — как бейдж
+  delivered: '#22c55e', // green — как бейдж
+  cancelled: '#ef4444', // red — как бейдж
+}
+const STATUS_ORDER = [
+  'pending',
+  'confirmed',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
 ]
 
 export default function DashboardTab() {
@@ -344,11 +352,11 @@ export default function DashboardTab() {
             </CardHeader>
             <CardContent className="p-4 pt-2 h-full">
               <DoughnutChart
-                labels={Object.keys(dashboard?.orders_by_status || {}).map(
-                  (s: string) => t('order_' + s),
+                labels={STATUS_ORDER.map((s: string) => t('order_' + s))}
+                values={STATUS_ORDER.map(
+                  (s: string) => dashboard?.orders_by_status?.[s] || 0,
                 )}
-                values={Object.values(dashboard?.orders_by_status || {})}
-                colors={STATUS_COLORS_CHART}
+                colors={STATUS_ORDER.map((s: string) => STATUS_COLORS[s])}
                 height={280}
               />
             </CardContent>
