@@ -203,8 +203,8 @@ export function StaffPageContent() {
       {/* Charts + Staff — grid-cols-4 как KPI */}
       <div className="grid grid-cols-4 gap-4">
         {/* Колонки 1-3: период + графики */}
-        <div className="col-span-3 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-3 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Card>
               <CardHeader className="p-4 pb-0">
                 <CardTitle className="text-lg font-medium">
@@ -216,7 +216,7 @@ export function StaffPageContent() {
                   xData={barData.labels}
                   yData={barData.values}
                   color="#3b82f6"
-                  height={250}
+                  height={220}
                 />
               </CardContent>
             </Card>
@@ -235,7 +235,7 @@ export function StaffPageContent() {
                     (t: any) => t.count,
                   )}
                   colors={actionTypeColors}
-                  height={250}
+                  height={220}
                 />
               </CardContent>
             </Card>
@@ -250,7 +250,7 @@ export function StaffPageContent() {
                   xData={lineData.dates}
                   yData={lineData.counts}
                   color="#22c55e"
-                  height={250}
+                  height={200}
                   formatY={(v) => v.toLocaleString()}
                 />
               </CardContent>
