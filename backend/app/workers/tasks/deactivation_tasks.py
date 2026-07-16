@@ -180,7 +180,7 @@ def deactivate_orphaned_offers(self, supplier: str):
                 if part and part.is_active:
                     part.is_active = False
                     part.deactivated_at = datetime.utcnow()
-                    part.deactivation_reason = DEACTIVATION_REASONS["orphaned"]
+                    part.deactivation_reason = "orphaned"
                     deactivated_count += 1
                     logger.info("  Deactivated part %s (article=%s, brand=%s)",
                                pid, part.article, part.brand)
