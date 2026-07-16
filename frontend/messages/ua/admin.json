@@ -999,5 +999,6 @@
   "workers_task_deactivate_orphaned_offers": "Деактивація",
   "workers_task_cleanup_old_chat_messages": "Чат: очищення",
   "workers_task_run_database_backup": "Бекап БД",
-  "workers_task_cleanup_old_price_imports": "Очищення прайсів"
+  "workers_task_cleanup_old_price_imports": "Очищення прайсів",
+  "deactivation_orphaned": "Зник із прайсу постачальника"
 }
