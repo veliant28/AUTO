@@ -15,6 +15,8 @@ from app.services.pricing_service import apply_margins_bulk
 from app.services.sku_generator import bulk_generate_skus, sync_skus_to_parts
 from app.services.import_utils import make_progress_cb, safe_fail_import, complete_import, queue_post_import_tasks
 from app.models.pricing import PriceRule, PricingApplySnapshot
+from sqlalchemy import delete as sa_delete
+from app.models.tecdoc import SupplierPrice
 import json
 import os
 import time
@@ -167,6 +169,10 @@ def process_price_import(self, import_id: int):
             set_progress(pi, db, 30)
             LOG(f"GPL: XLSX saved ({len(xlsx_data)} bytes)")
 
+            LOG("GPL: cleaning up old supplier prices...")
+            db.execute(sa_delete(SupplierPrice).where(SupplierPrice.supplier == "GPL"))
+            db.commit()
+
             LOG("GPL: parsing XLSX and upserting supplier_prices...")
             set_stage(pi, db, "Импорт остатков и цен в БД")
             tecdb = TecDocSessionLocal()
@@ -247,6 +253,10 @@ def process_price_import(self, import_id: int):
             pi.file_size = len(xlsx_data)
             set_progress(pi, db, 30)
             LOG(f"UTR: downloaded {len(xlsx_data)} bytes")
+
+            LOG("UTR: cleaning up old supplier prices...")
+            db.execute(sa_delete(SupplierPrice).where(SupplierPrice.supplier == "UTR"))
+            db.commit()
 
             LOG("UTR: parsing XLSX and upserting supplier_prices...")
             set_stage(pi, db, "Импорт остатков и цен в БД")
