@@ -62,7 +62,7 @@ async def get_dashboard(
         )
         .scalar()
     )
-    total_parts = db.query(func.count(Part.id)).scalar() or 0
+    total_parts = db.query(func.count(Part.id)).filter(Part.is_active == True).scalar() or 0
 
     # ── Заказы сегодня ─────────────────────────────────────────────
     orders_today = db.query(func.count(Order.id)).filter(
