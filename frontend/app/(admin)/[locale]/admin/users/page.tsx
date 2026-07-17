@@ -251,16 +251,16 @@ export default function AdminUsersPage() {
               <DialogTitle className="text-lg font-semibold">{t('create_user')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input placeholder={tc('email_label')} autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
                 <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                <Input placeholder={tc('first_name_label')} value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+                <Input placeholder={tc('first_name_label')} autoComplete="given-name" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input placeholder={tc('last_name_label')} value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                <Input placeholder={tc('middle_name_label')} value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })} />
+                <Input placeholder={tc('last_name_label')} autoComplete="family-name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+                <Input placeholder={tc('middle_name_label')} autoComplete="additional-name" value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })} />
               </div>
-              <Input placeholder={tc('password_label')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <Input placeholder={tc('password_label')} type="password" autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">{t('role_label')}</label>
                 <Select value={String(form.role_id)} onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}>
@@ -342,16 +342,16 @@ export default function AdminUsersPage() {
               <DialogTitle className="text-lg font-semibold">{t('edit_user')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Input placeholder={tc('email_label')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input placeholder={tc('email_label')} autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <div className="grid grid-cols-2 gap-3">
                 <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} placeholder={t('phone_placeholder')} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                <Input placeholder={tc('first_name_label')} value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+                <Input placeholder={tc('first_name_label')} autoComplete="given-name" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input placeholder={tc('last_name_label')} value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                <Input placeholder={tc('middle_name_label')} value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })} />
+                <Input placeholder={tc('last_name_label')} autoComplete="family-name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+                <Input placeholder={tc('middle_name_label')} autoComplete="additional-name" value={form.middle_name} onChange={(e) => setForm({ ...form, middle_name: e.target.value })} />
               </div>
-              <Input placeholder={tc('password_label')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <Input placeholder={tc('password_label')} type="password" autoComplete="new-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">{t('role_label')}</label>
                 <Select value={String(form.role_id)} onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}>
