@@ -39,7 +39,7 @@ class TestGetTypes:
         from app.main import app
         app.dependency_overrides[get_tecdoc_db] = override_fn
         try:
-            resp = client.get("/api/v1/admin/catalog/types")
+            resp = client.get("/api/v1/admin/catalog/types", headers=admin_headers)
             assert resp.status_code == 200
             assert len(resp.json()) == 3
         finally:
@@ -53,7 +53,7 @@ class TestGetYears:
         from app.main import app
         app.dependency_overrides[get_tecdoc_db] = override_fn
         try:
-            resp = client.get("/api/v1/admin/catalog/years?type=passenger")
+            resp = client.get("/api/v1/admin/catalog/years?type=passenger", headers=admin_headers)
             assert resp.status_code == 200
         finally:
             app.dependency_overrides.pop(get_tecdoc_db, None)
@@ -67,7 +67,7 @@ class TestGetMakes:
         from app.main import app
         app.dependency_overrides[get_tecdoc_db] = override_fn
         try:
-            resp = client.get("/api/v1/admin/catalog/makes?type=passenger&year=2020")
+            resp = client.get("/api/v1/admin/catalog/makes?type=passenger&year=2020", headers=admin_headers)
             assert resp.status_code == 200
         finally:
             app.dependency_overrides.pop(get_tecdoc_db, None)

@@ -53,5 +53,5 @@ class TestVehicleVolumes:
 
 class TestVehicleEngines:
     def test_requires_year_and_model(self, client, mock_tecdoc):
-        resp = client.get("/api/v1/catalog/vehicle/engines?year=2020&model_id=1")
+        resp = client.get("/api/v1/catalog/vehicle/engines?year=2020&car_id=1")
         assert resp.status_code == 200

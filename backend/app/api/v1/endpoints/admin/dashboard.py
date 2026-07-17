@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text
+from sqlalchemy import func, extract
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
@@ -11,10 +11,6 @@ from app.models import User, Order, OrderStatus, Part, PartCategory, OrderItem
 from app.models.suppliers import SupplierOffer
 from datetime import datetime, timedelta
 from typing import Optional
-
-# PostgreSQL enum cast helper for raw SQL (OrderStatus enum values are UPPERCASE in DB)
-_NOT_CANCELLED = "o.status != 'CANCELLED'::orderstatus"
-_NOT_CANCELLED_WO = "status != 'CANCELLED'::orderstatus"
 
 router = APIRouter()
 
@@ -85,21 +81,29 @@ async def get_dashboard(
     average_check = round(total_revenue / total_orders_inc, 2) if total_orders_inc > 0 else 0
 
     # ── Наценка (margin) ───────────────────────────────────────────
-    margin_rows = db.execute(text(f"""
-        SELECT COALESCE(SUM(oi.price - so.price), 0)
-        FROM order_items oi
-        JOIN orders o ON o.id = oi.order_id AND {_NOT_CANCELLED}
-            AND o.created_at >= :from_dt
-            AND o.created_at <= :to_dt
-        JOIN LATERAL (
-            SELECT so2.price
-            FROM supplier_offers so2
-            WHERE so2.part_id = oi.part_id
-            ORDER BY so2.price ASC
-            LIMIT 1
-        ) so ON true
-    """), {"from_dt": from_dt, "to_dt": to_dt}).scalar() or 0
-    total_margin = float(margin_rows)
+    cheapest_subq = (
+        db.query(SupplierOffer.price)
+        .filter(SupplierOffer.part_id == OrderItem.part_id)
+        .order_by(SupplierOffer.price.asc())
+        .limit(1)
+        .correlate(OrderItem)
+        .scalar_subquery()
+    )
+    total_margin = float(
+        db.query(
+            func.coalesce(
+                func.sum(OrderItem.price - func.coalesce(cheapest_subq, 0)),
+                0,
+            )
+        )
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(
+            Order.status != OrderStatus.CANCELLED,
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+        )
+        .scalar() or 0
+    )
 
     # ── Pending orders / KIP таймер ─────────────────────────────────
     oldest_pending = db.query(func.min(Order.created_at)).filter(
@@ -130,25 +134,25 @@ async def get_dashboard(
         .all()
     )
 
-    margin_by_date_rows = db.execute(text(f"""
-        SELECT
-            DATE(o.created_at) AS date,
-            COALESCE(SUM(oi.price - so.price), 0) AS margin
-        FROM order_items oi
-        JOIN orders o ON o.id = oi.order_id AND {_NOT_CANCELLED}
-            AND o.created_at >= :from_dt
-            AND o.created_at <= :to_dt
-        JOIN LATERAL (
-            SELECT so2.price
-            FROM supplier_offers so2
-            WHERE so2.part_id = oi.part_id
-            ORDER BY so2.price ASC
-            LIMIT 1
-        ) so ON true
-        GROUP BY DATE(o.created_at)
-        ORDER BY DATE(o.created_at)
-    """), {"from_dt": from_dt, "to_dt": to_dt}).fetchall()
-    margin_map = {str(row[0]): float(row[1]) for row in margin_by_date_rows}
+    margin_by_date_rows = (
+        db.query(
+            func.date(Order.created_at).label("date"),
+            func.coalesce(
+                func.sum(OrderItem.price - func.coalesce(cheapest_subq, 0)),
+                0,
+            ).label("margin"),
+        )
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(
+            Order.status != OrderStatus.CANCELLED,
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+        )
+        .group_by(func.date(Order.created_at))
+        .order_by(func.date(Order.created_at))
+        .all()
+    )
+    margin_map = {str(row.date): float(row.margin) for row in margin_by_date_rows}
 
     orders_by_date = [
         OrdersByDateItem(
@@ -170,16 +174,21 @@ async def get_dashboard(
 
     # ── Заказы по дням недели (Polar Area) ─────────────────────────
     weekday_names = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-    weekday_rows = db.execute(text(f"""
-        SELECT EXTRACT(DOW FROM created_at)::int AS dow, COUNT(*)
-        FROM orders
-        WHERE {_NOT_CANCELLED_WO}
-            AND created_at >= :from_dt
-            AND created_at <= :to_dt
-        GROUP BY EXTRACT(DOW FROM created_at)
-        ORDER BY dow
-    """), {"from_dt": from_dt, "to_dt": to_dt}).fetchall()
-    weekday_map = {row[0]: row[1] for row in weekday_rows}
+    weekday_rows = (
+        db.query(
+            extract('dow', Order.created_at).label("dow"),
+            func.count(Order.id).label("count"),
+        )
+        .filter(
+            Order.status != OrderStatus.CANCELLED,
+            Order.created_at >= from_dt,
+            Order.created_at <= to_dt,
+        )
+        .group_by(extract('dow', Order.created_at))
+        .order_by(extract('dow', Order.created_at))
+        .all()
+    )
+    weekday_map = {int(row.dow): row.count for row in weekday_rows}
     # DOW: 0=воскресенье, 1=понедельник... переводим в Пн=0
     orders_by_weekday = []
     for i in range(7):

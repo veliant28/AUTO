@@ -1,3 +1,8 @@
+import os
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["TECDOC_DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["AUTO_PARTS_PROTECTION_ENABLED"] = "false"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -8,9 +13,7 @@ from app.core.config import settings
 from app.core.db import get_db, get_tecdoc_db
 from app.main import app
 from app.models import Base, User, Role, Permission, RolePermission
-import os
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["TECDOC_DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["AUTO_PARTS_PROTECTION_ENABLED"] = "false"
 
 engine = create_engine(
     "sqlite:///:memory:",
