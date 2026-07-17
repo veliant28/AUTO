@@ -71,6 +71,10 @@ class AdminUserResponse(BaseModel):
     is_active: bool
     phone: Optional[str] = None
     created_at: Optional[str] = None
+    orders_delivered: int = 0
+    orders_cancelled: int = 0
+    returns_completed: int = 0
+    success_index: int = 0
 
     class Config:
         from_attributes = True
@@ -137,6 +141,8 @@ class AdminOrderDetailResponse(BaseModel):
     updated_by_group: Optional[str] = None
     updated_at: Optional[datetime] = None
     items: List[AdminOrderItemSchema]
+    user_success_index: int = 0
+    user_total_orders: int = 0
 
     class Config:
         from_attributes = True

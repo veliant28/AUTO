@@ -2,6 +2,7 @@ import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy import func, case
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
@@ -16,6 +17,7 @@ from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
 from app.models.suppliers import SupplierOffer, Supplier
 from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
+from app.models.returns import ReturnRequest, ReturnStatus
 from datetime import datetime
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
@@ -100,6 +102,35 @@ async def get_order_detail(
     ).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(404, "Order not found")
+
+    # Compute user rating stats for this order's user
+    user_id = order.user_id
+    order_vals = db.query(
+        func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)).label("delivered_total"),
+        func.sum(case((Order.status == OrderStatus.CANCELLED, Order.total), else_=0)).label("cancelled_total"),
+        func.sum(case((Order.status == OrderStatus.DELIVERED, 1), else_=0)).label("delivered_count"),
+        func.sum(case((Order.status == OrderStatus.CANCELLED, 1), else_=0)).label("cancelled_count"),
+    ).filter(Order.user_id == user_id).first()
+
+    refund_vals = db.query(
+        func.sum(ReturnRequest.total_refund).label("refunded_total"),
+    ).filter(
+        ReturnRequest.user_id == user_id,
+        ReturnRequest.status == ReturnStatus.COMPLETED,
+    ).first()
+
+    delivered_total = float(order_vals.delivered_total or 0)
+    cancelled_total = float(order_vals.cancelled_total or 0)
+    refunded = float(refund_vals.refunded_total or 0)
+    total_value = delivered_total + cancelled_total
+    user_total_orders = (order_vals.delivered_count or 0) + (order_vals.cancelled_count or 0)
+
+    if total_value > 0:
+        retained = max(delivered_total - refunded, 0)
+        user_success_index = round((retained / total_value) * 100)
+    else:
+        user_success_index = 0
+
     return AdminOrderDetailResponse(
         id=order.id,
         order_number=order.order_number or f"ORD-{order.id:010d}",
@@ -132,6 +163,8 @@ async def get_order_detail(
         updated_by_name=order.updated_by_name,
         updated_by_group=order.updated_by_group,
         updated_at=order.updated_at,
+        user_success_index=user_success_index,
+        user_total_orders=user_total_orders,
         items=[
             AdminOrderItemSchema(
                 id=item.id,

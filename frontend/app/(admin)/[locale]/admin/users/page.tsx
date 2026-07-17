@@ -36,6 +36,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/lib/toast';
 import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
@@ -55,12 +61,63 @@ interface AdminUser {
   is_active: boolean;
   phone: string | null;
   created_at: string | null;
+  orders_delivered: number;
+  orders_cancelled: number;
+  returns_completed: number;
+  success_index: number;
 }
 
 interface RoleOption {
   id: number;
   name: string;
   description: string | null;
+}
+
+function RatingCell({ delivered, cancelled, returns: returnsCount, successIndex }: { delivered: number; cancelled: number; returns: number; successIndex: number }) {
+  const total = delivered + cancelled + returnsCount;
+
+  if (total === 0) {
+    return <span className="text-muted-foreground text-sm">—</span>;
+  }
+
+  const pctDelivered = (delivered / total) * 100;
+  const pctCancelled = (cancelled / total) * 100;
+  const pctReturns = (returnsCount / total) * 100;
+
+  let indexColor: string;
+  if (successIndex >= 70) indexColor = 'text-green-500';
+  else if (successIndex >= 30) indexColor = 'text-yellow-500';
+  else if (successIndex >= 1) indexColor = 'text-orange-500';
+  else indexColor = 'text-red-500';
+
+  return (
+    <div className="flex items-center gap-3 justify-center px-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="h-2.5 flex-1 max-w-[140px] rounded-full bg-gray-200 overflow-hidden flex cursor-pointer">
+              {pctDelivered > 0 && (
+                <div className="h-full bg-green-500 transition-all duration-700" style={{ width: `${pctDelivered}%` }} />
+              )}
+              {pctCancelled > 0 && (
+                <div className="h-full bg-red-500 transition-all duration-700" style={{ width: `${pctCancelled}%` }} />
+              )}
+              {pctReturns > 0 && (
+                <div className="h-full bg-orange-500 transition-all duration-700" style={{ width: `${pctReturns}%` }} />
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="whitespace-nowrap">{delivered} / {cancelled} / {returnsCount}</p>
+            <p className="whitespace-nowrap text-muted-foreground">Заказ / Отказ / Возврат</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <span className={`text-sm font-semibold w-10 text-right tabular-nums ${indexColor}`}>
+        {successIndex}%
+      </span>
+    </div>
+  );
 }
 
 const columnHelper = createColumnHelper<AdminUser>();
@@ -194,6 +251,19 @@ export default function AdminUsersPage() {
     columnHelper.accessor('phone', {
       header: t('phone_label'),
       cell: (info) => info.getValue() ? formatPhone(info.getValue()!) : '—',
+    }),
+    columnHelper.display({
+      id: 'rating',
+      header: t('rating_label'),
+      size: 220,
+      cell: ({ row }) => (
+        <RatingCell
+          delivered={row.original.orders_delivered}
+          cancelled={row.original.orders_cancelled}
+          returns={row.original.returns_completed}
+          successIndex={row.original.success_index}
+        />
+      ),
     }),
     columnHelper.display({
       id: 'actions',
