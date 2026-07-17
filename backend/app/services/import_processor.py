@@ -111,17 +111,17 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         nonlocal batch
         if not batch:
             return
-        # Deduplicate within batch — keep the last row for each (supplier, article)
+        # Deduplicate within batch — keep the last row for each (supplier, article, brand)
         seen = {}
         for row in batch:
-            key = (row["supplier"], row["article"])
+            key = (row["supplier"], row["article"], row["brand"] or "")
             seen[key] = row
         batch = list(seen.values())
         if not batch:
             return
         stmt = pg_insert(SupplierPrice).values(batch)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["supplier", "article"],
+            index_elements=["supplier", "article", "brand"],
             set_={
                 "brand": stmt.excluded.brand,
                 "name": stmt.excluded.name,
