@@ -208,7 +208,9 @@ export default function AdminUsersPage() {
             setForm({
               email: u.email,
               password: '',
-              full_name: u.full_name || '',
+              first_name: u.first_name || '',
+              last_name: u.last_name || '',
+              middle_name: u.middle_name || '',
               role_id: roleId,
               is_active: u.is_active,
               phone: u.phone || '',
