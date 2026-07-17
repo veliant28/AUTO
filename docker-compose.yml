@@ -85,7 +85,7 @@ services:
 
   celery_beat:
     build: ./backend
-    command: sh -c "rm -f celerybeat-schedule-wal celerybeat-schedule-shm && celery -A app.workers beat --loglevel=info"
+    command: sh -c "while true; do sleep 300; rm -f /app/celerybeat-schedule-wal /app/celerybeat-schedule-shm 2>/dev/null; done & celery -A app.workers beat --loglevel=info"
     volumes:
       - ./backend:/app
     environment:
