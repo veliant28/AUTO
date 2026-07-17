@@ -20,6 +20,9 @@ from app.models.tecdoc import SupplierPrice
 import json
 import os
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 LOG = lambda msg: print(f"[{datetime.utcnow().strftime('%H:%M:%S')}] {msg}")
@@ -406,8 +409,8 @@ def scheduler_tick(self):
                         from app.workers.tasks.backup_tasks import run_database_backup_task
                         logger.info("Scheduler tick: starting scheduled backup")
                         run_database_backup_task.delay()
-        except Exception:
-            pass
+        except Exception as backup_err:
+            logger.warning("Backup check failed: %s", backup_err)
     except Exception:
         db.rollback()
     finally:
