@@ -1000,8 +1000,5 @@
   "workers_task_cleanup_old_chat_messages": "Chat cleanup",
   "workers_task_run_database_backup": "DB backup",
   "workers_task_cleanup_old_price_imports": "Price cleanup",
-  "deactivation_orphaned": "Disappeared from supplier price list",
-  "first_name_label": "First name",
-  "last_name_label": "Last name",
-  "middle_name_label": "Middle name"
+  "deactivation_orphaned": "Disappeared from supplier price list"
 }

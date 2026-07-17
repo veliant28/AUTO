@@ -274,5 +274,8 @@
   "loyalty_status_expired": "Expired",
   "loyalty_used_at": "Used",
   "loyalty_expired_at": "Expired",
-  "loyalty_valid_until": "Valid until"
+  "loyalty_valid_until": "Valid until",
+  "first_name_label": "First name",
+  "last_name_label": "Last name",
+  "middle_name_label": "Middle name"
 }

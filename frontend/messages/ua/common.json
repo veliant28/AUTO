@@ -274,5 +274,8 @@
   "loyalty_status_expired": "Прострочено",
   "loyalty_used_at": "Використано",
   "loyalty_expired_at": "Прострочено",
-  "loyalty_valid_until": "Діє до"
+  "loyalty_valid_until": "Діє до",
+  "first_name_label": "Ім'я",
+  "last_name_label": "Прізвище",
+  "middle_name_label": "По батькові"
 }

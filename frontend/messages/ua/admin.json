@@ -1000,8 +1000,5 @@
   "workers_task_cleanup_old_chat_messages": "Чат: очищення",
   "workers_task_run_database_backup": "Бекап БД",
   "workers_task_cleanup_old_price_imports": "Очищення прайсів",
-  "deactivation_orphaned": "Зник із прайсу постачальника",
-  "first_name_label": "Ім'я",
-  "last_name_label": "Прізвище",
-  "middle_name_label": "По батькові"
+  "deactivation_orphaned": "Зник із прайсу постачальника"
 }
