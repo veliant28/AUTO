@@ -1000,5 +1000,8 @@
   "workers_task_cleanup_old_chat_messages": "Чат: очистка",
   "workers_task_run_database_backup": "Бэкап БД",
   "workers_task_cleanup_old_price_imports": "Очистка прайсов",
-  "deactivation_orphaned": "Пропал из прайса поставщика"
+  "deactivation_orphaned": "Пропал из прайса поставщика",
+  "first_name_label": "Имя",
+  "last_name_label": "Фамилия",
+  "middle_name_label": "Отчество"
 }

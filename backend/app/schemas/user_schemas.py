@@ -60,6 +60,9 @@ class AdminUserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
     role_id: int = 1
     is_active: bool = True
     phone: Optional[str] = None
@@ -67,6 +70,9 @@ class AdminUserCreate(BaseModel):
 class AdminUserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
     role_id: Optional[int] = None
     is_active: Optional[bool] = None
     phone: Optional[str] = None

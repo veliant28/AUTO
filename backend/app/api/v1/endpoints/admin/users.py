@@ -76,6 +76,9 @@ async def create_user(
         email=data.email,
         password_hash=hashed,
         full_name=data.full_name,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        middle_name=data.middle_name,
         is_active=data.is_active,
         phone=data.phone,
         role_id=data.role_id,
@@ -114,6 +117,12 @@ async def update_user(
         user.email = data.email
     if data.full_name is not None:
         user.full_name = data.full_name
+    if data.first_name is not None:
+        user.first_name = data.first_name
+    if data.last_name is not None:
+        user.last_name = data.last_name
+    if data.middle_name is not None:
+        user.middle_name = data.middle_name
     if data.role_id is not None:
         role = db.query(Role).filter(Role.id == data.role_id).first()
         if not role:
