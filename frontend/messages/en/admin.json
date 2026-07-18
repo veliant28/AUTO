@@ -1001,5 +1001,6 @@
   "workers_task_cleanup_old_chat_messages": "Chat cleanup",
   "workers_task_run_database_backup": "DB backup",
   "workers_task_cleanup_old_price_imports": "Price cleanup",
+  "workers_task_check_product_deactivation": "Check deactivation",
   "deactivation_orphaned": "Disappeared from supplier price list"
 }

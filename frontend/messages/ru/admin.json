@@ -1001,5 +1001,6 @@
   "workers_task_cleanup_old_chat_messages": "Чат: очистка",
   "workers_task_run_database_backup": "Бэкап БД",
   "workers_task_cleanup_old_price_imports": "Очистка прайсов",
+  "workers_task_check_product_deactivation": "Проверка деактивации",
   "deactivation_orphaned": "Пропал из прайса поставщика"
 }
