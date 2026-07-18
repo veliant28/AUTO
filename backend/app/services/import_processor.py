@@ -121,7 +121,7 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             return
         stmt = pg_insert(SupplierPrice).values(batch)
         stmt = stmt.on_conflict_do_update(
-            constraint="uq_supplier_prices_supplier_article_brand",
+            index_elements=["supplier", "article", sa.text("COALESCE(brand, '')")],
             set_={
                 "brand": stmt.excluded.brand,
                 "name": stmt.excluded.name,
