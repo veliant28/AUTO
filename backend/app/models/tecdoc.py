@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON, BigInteger, UniqueConstraint
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, JSON, BigInteger, UniqueConstraint, Index
+from sqlalchemy.sql import func, text
 from .vehicles import Base
 
 
@@ -51,5 +51,5 @@ class SupplierPrice(Base):
     updated_at = Column(DateTime, default=func.now())
 
     __table_args__ = (
-        UniqueConstraint("supplier", "article", name="uq_supplier_prices_supplier_article"),
+        Index("uq_supplier_prices_supplier_article_brand", "supplier", "article", text("COALESCE(brand, '')"), unique=True, postgresql_using="btree"),
     )
