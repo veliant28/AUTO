@@ -28,6 +28,12 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { toast } from '@/lib/toast'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
 
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
@@ -134,18 +140,7 @@ export default function CreateReturnPage() {
   }
 
   const handleCardChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 16)
-    const formatted = digits.replace(
-      /(\d{4})(\d{0,4})?(\d{0,4})?(\d{0,4})?/,
-      (_, p1, p2, p3, p4) => {
-        let res = p1
-        if (p2) res += ' ' + p2
-        if (p3) res += ' ' + p3
-        if (p4) res += ' ' + p4
-        return res
-      },
-    )
-    setCardInput(formatted)
+    setCardInput(value.replace(/\D/g, '').slice(0, 16))
   }
 
   const handleSubmit = () => {
@@ -314,15 +309,41 @@ export default function CreateReturnPage() {
                 <h3 className="font-semibold text-base">
                   {t('return_card_label')}
                 </h3>
-                <input
-                  type="text"
+                <InputOTP
+                  maxLength={16}
                   value={cardInput}
-                  onChange={(e) => handleCardChange(e.target.value)}
-                  placeholder={t('return_card_placeholder')}
-                  maxLength={19}
+                  onChange={handleCardChange}
                   inputMode="numeric"
-                  className="w-full h-10 rounded-md border px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-background"
-                />
+                  pattern="[0-9]*"
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={8} />
+                    <InputOTPSlot index={9} />
+                    <InputOTPSlot index={10} />
+                    <InputOTPSlot index={11} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={12} />
+                    <InputOTPSlot index={13} />
+                    <InputOTPSlot index={14} />
+                    <InputOTPSlot index={15} />
+                  </InputOTPGroup>
+                </InputOTP>
                 {cardInput.replace(/\s/g, '').length > 0 &&
                   cardInput.replace(/\s/g, '').length < 16 && (
                     <p className="text-xs text-destructive">

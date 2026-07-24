@@ -71,6 +71,12 @@ import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { RETURN_STATUS_LABELS } from '@/lib/constants'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -378,18 +384,7 @@ export default function AdminReturnsPage() {
   }
 
   const handleCardChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 16)
-    const formatted = digits.replace(
-      /(\d{4})(\d{0,4})?(\d{0,4})?(\d{0,4})?/,
-      (_, p1, p2, p3, p4) => {
-        let res = p1
-        if (p2) res += ' ' + p2
-        if (p3) res += ' ' + p3
-        if (p4) res += ' ' + p4
-        return res
-      },
-    )
-    setEditCard(formatted)
+    setEditCard(value.replace(/\D/g, '').slice(0, 16))
   }
 
   const enterEditMode = () => {
@@ -1201,17 +1196,41 @@ export default function AdminReturnsPage() {
                               </span>
                               <span className="font-mono text-sm">
                                 {editMode ? (
-                                  <input
-                                    type="text"
+                                  <InputOTP
+                                    maxLength={16}
                                     value={editCard}
-                                    onChange={(e) =>
-                                      handleCardChange(e.target.value)
-                                    }
-                                    placeholder="0000 0000 0000 0000"
-                                    maxLength={19}
+                                    onChange={handleCardChange}
                                     inputMode="numeric"
-                                    className="w-[180px] h-8 rounded border px-2 py-1 text-sm font-mono bg-background text-right"
-                                  />
+                                    pattern="[0-9]*"
+                                  >
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={0} />
+                                      <InputOTPSlot index={1} />
+                                      <InputOTPSlot index={2} />
+                                      <InputOTPSlot index={3} />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={4} />
+                                      <InputOTPSlot index={5} />
+                                      <InputOTPSlot index={6} />
+                                      <InputOTPSlot index={7} />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={8} />
+                                      <InputOTPSlot index={9} />
+                                      <InputOTPSlot index={10} />
+                                      <InputOTPSlot index={11} />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={12} />
+                                      <InputOTPSlot index={13} />
+                                      <InputOTPSlot index={14} />
+                                      <InputOTPSlot index={15} />
+                                    </InputOTPGroup>
+                                  </InputOTP>
                                 ) : (
                                   maskCard(returnDetail.bank_card)
                                 )}
