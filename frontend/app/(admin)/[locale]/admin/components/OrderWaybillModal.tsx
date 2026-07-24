@@ -184,6 +184,8 @@ export default function OrderWaybillModal({
     recipient_middle_name: '',
     recipient_phone: '',
     recipient_counterparty_ref: '',
+    recipient_counterparty_type: '',
+    recipient_counterparty_label: '',
     recipient_contact_ref: '',
     third_person_ref: '',
     recipient_street_ref: '',
@@ -444,6 +446,9 @@ export default function OrderWaybillModal({
         recipient_middle_name: waybill.recipient_middle_name,
         recipient_phone: waybill.recipient_phone,
         recipient_counterparty_ref: waybill.recipient_counterparty_ref || '',
+        recipient_counterparty_type: waybill.recipient_counterparty_type || '',
+        recipient_counterparty_label:
+          waybill.recipient_counterparty_label || '',
         recipient_contact_ref: waybill.recipient_contact_ref || '',
         third_person_ref: waybill.third_person_ref || '',
         recipient_street_ref: waybill.recipient_street_ref || '',
@@ -914,6 +919,8 @@ export default function OrderWaybillModal({
       setForm((prev) => ({
         ...prev,
         recipient_counterparty_ref: item.counterparty_ref,
+        recipient_counterparty_type: item.counterparty_type,
+        recipient_counterparty_label: item.label,
         recipient_contact_ref: item.ref,
         // Auto-fill FIO from counterparty data
         recipient_name: item.full_name || item.label,
@@ -1379,6 +1386,8 @@ export default function OrderWaybillModal({
                   recipientHouse={form.recipient_house}
                   recipientApartment={form.recipient_apartment}
                   recipientCounterpartyRef={form.recipient_counterparty_ref}
+                  recipientCounterpartyType={form.recipient_counterparty_type}
+                  recipientCounterpartyLabel={form.recipient_counterparty_label}
                   recipientContactRef={form.recipient_contact_ref}
                   cityQuery={cityQuery}
                   settlements={settlements}

@@ -369,6 +369,8 @@ export interface OrderNovaPoshtaWaybillUpsert {
   recipient_address_ref: string
   recipient_address_label: string
   recipient_counterparty_ref?: string
+  recipient_counterparty_type?: string
+  recipient_counterparty_label?: string
   recipient_contact_ref?: string
   third_person_ref?: string
   recipient_name: string
@@ -478,6 +480,8 @@ export interface OrderNovaPoshtaWaybillResponse {
   recipient_address_ref: string
   recipient_address_label: string
   recipient_counterparty_ref: string
+  recipient_counterparty_type: string
+  recipient_counterparty_label: string
   recipient_contact_ref: string
   third_person_ref?: string
   recipient_name: string

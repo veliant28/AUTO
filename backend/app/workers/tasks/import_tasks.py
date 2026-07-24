@@ -139,6 +139,25 @@ def process_price_import(self, import_id: int):
         if not pi:
             return {"error": "Import not found"}
 
+        # Prevent concurrent imports for the same supplier
+        existing_active = db.query(PriceImport).filter(
+            PriceImport.supplier == pi.supplier,
+            PriceImport.id != pi.id,
+            PriceImport.status.in_(["processing", "in_queue"]),
+        ).first()
+        if existing_active:
+            pi.status = "failed"
+            pi.error_message = json.dumps({
+                "code": "concurrent_import",
+                "params": {
+                    "import_id": existing_active.id,
+                    "supplier": pi.supplier,
+                },
+            }, ensure_ascii=False)
+            db.commit()
+            LOG(f"Concurrent import blocked: #{import_id} — #{existing_active.id} already running for {pi.supplier}")
+            return {"error": pi.error_message}
+
         pi.status = "processing"
         pi.progress = 0
         db.commit()

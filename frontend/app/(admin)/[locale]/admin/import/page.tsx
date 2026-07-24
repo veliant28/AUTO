@@ -204,6 +204,20 @@ export default function ImportPage() {
     )
   }
 
+  function getImportError(item: any): string | null {
+    if (!item.error_message) return null
+    try {
+      const parsed = JSON.parse(item.error_message)
+      if (parsed.code && parsed.params) {
+        const key = `import_error_${parsed.code}`
+        return t(key, parsed.params) as string
+      }
+    } catch {
+      // not JSON — show as-is
+    }
+    return item.error_message
+  }
+
   if (!user || user.role !== 'admin') return null
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0
@@ -324,14 +338,22 @@ export default function ImportPage() {
                             {t('import_promoted')}
                           </Badge>
                         ) : (
-                          <Badge
-                            className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
-                          >
-                            <StatusIcon
-                              className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
-                            />
-                            {t(`import_${item.status}`)}
-                          </Badge>
+                          <>
+                            <Badge
+                              className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
+                            >
+                              <StatusIcon
+                                className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
+                              />
+                              {t(`import_${item.status}`)}
+                            </Badge>
+                            {item.status === 'failed' &&
+                              getImportError(item) && (
+                                <div className="text-xs text-red-400 mt-1 max-w-[200px] leading-tight">
+                                  {getImportError(item)}
+                                </div>
+                              )}
+                          </>
                         )}
                       </td>
                       <td className="p-3">

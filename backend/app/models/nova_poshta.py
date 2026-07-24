@@ -81,6 +81,8 @@ class OrderNovaPoshtaWaybill(Base):
     recipient_address_ref = Column(String(36), default="")
     recipient_address_label = Column(String(255), default="")
     recipient_counterparty_ref = Column(String(36), default="")
+    recipient_counterparty_type = Column(String(32), default="")    # "PrivatePerson" | "Organization"
+    recipient_counterparty_label = Column(String(255), default="")  # название/ФИО от NP "Description"
     recipient_contact_ref = Column(String(36), default="")
     third_person_ref = Column(String(36), default="")
     recipient_name = Column(String(255), default="")

@@ -91,6 +91,8 @@ interface Props {
 
   // Counterparty
   recipientCounterpartyRef: string | undefined
+  recipientCounterpartyType: string | undefined
+  recipientCounterpartyLabel: string | undefined
   recipientContactRef: string | undefined
 
   // ── City lookup ──
@@ -146,6 +148,8 @@ export default function OrderWaybillRecipientSection({
   recipientHouse,
   recipientApartment,
   recipientCounterpartyRef,
+  recipientCounterpartyType,
+  recipientCounterpartyLabel,
   recipientContactRef,
 
   cityQuery,
@@ -449,18 +453,40 @@ export default function OrderWaybillRecipientSection({
               {t('novaposhta_counterparty')}
             </Label>
             {disabled ? (
-              <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
-                <span
-                  className={
-                    selectedCounterparty?.label
-                      ? 'truncate'
-                      : 'truncate text-muted-foreground'
+              <div className="flex flex-col gap-1">
+                {(() => {
+                  // PrivatePerson → показываем "Частное лицо"
+                  if (recipientCounterpartyType === 'PrivatePerson') {
+                    return (
+                      <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                        <span>
+                          {t('novaposhta_counterparty_type_privateperson')}
+                        </span>
+                      </div>
+                    )
                   }
-                >
-                  {selectedCounterparty?.label ||
-                    recipientCounterpartyRef ||
-                    '—'}
-                </span>
+                  // Organization → показываем название (ФОП/юрлицо)
+                  const label =
+                    recipientCounterpartyLabel ||
+                    selectedCounterparty?.label ||
+                    ''
+                  if (label) {
+                    return (
+                      <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                        <span className="truncate">{label}</span>
+                      </div>
+                    )
+                  }
+                  // Старые записи без type/label → показываем ФИО или телефон
+                  const fallback = recipientName || recipientPhone || '—'
+                  return (
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 text-sm min-w-0 overflow-hidden h-10">
+                      <span className="truncate text-muted-foreground">
+                        {fallback}
+                      </span>
+                    </div>
+                  )
+                })()}
               </div>
             ) : (
               <SearchableSelect

@@ -401,6 +401,8 @@ class OrderNovaPoshtaWaybillUpsert(BaseModel):
     recipient_address_ref: str
     recipient_address_label: str = ""
     recipient_counterparty_ref: Optional[str] = None
+    recipient_counterparty_type: Optional[str] = None
+    recipient_counterparty_label: Optional[str] = None
     recipient_contact_ref: Optional[str] = None
     third_person_ref: Optional[str] = None
     recipient_name: str
@@ -508,6 +510,8 @@ class OrderNovaPoshtaWaybillResponse(BaseModel):
     recipient_address_ref: str = ""
     recipient_address_label: str = ""
     recipient_counterparty_ref: str = ""
+    recipient_counterparty_type: str = ""
+    recipient_counterparty_label: str = ""
     recipient_contact_ref: str = ""
     third_person_ref: str = ""
     recipient_name: str = ""

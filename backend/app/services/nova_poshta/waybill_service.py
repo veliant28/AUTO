@@ -414,6 +414,8 @@ class NovaPoshtaWaybillService:
             recipient_address_ref=data.recipient_address_ref,
             recipient_address_label=data.recipient_address_label,
             recipient_counterparty_ref=data.recipient_counterparty_ref,
+            recipient_counterparty_type=data.recipient_counterparty_type or "",
+            recipient_counterparty_label=data.recipient_counterparty_label or "",
             recipient_contact_ref=data.recipient_contact_ref,
             third_person_ref=data.third_person_ref or "",
             recipient_name=data.recipient_name,
@@ -538,6 +540,8 @@ class NovaPoshtaWaybillService:
         wb.recipient_address_label = data.recipient_address_label or wb.recipient_address_label
         wb.recipient_name = data.recipient_name or wb.recipient_name
         wb.recipient_phone = data.recipient_phone or wb.recipient_phone
+        wb.recipient_counterparty_type = data.recipient_counterparty_type or wb.recipient_counterparty_type
+        wb.recipient_counterparty_label = data.recipient_counterparty_label or wb.recipient_counterparty_label
         wb.description_snapshot = data.description or wb.description_snapshot
         wb.service_params = data.service_params or {}
         wb.updated_by_id = user_id
@@ -914,6 +918,8 @@ class NovaPoshtaWaybillService:
             recipient_address_ref=wb.recipient_address_ref,
             recipient_address_label=wb.recipient_address_label,
             recipient_counterparty_ref=wb.recipient_counterparty_ref,
+            recipient_counterparty_type=wb.recipient_counterparty_type or "",
+            recipient_counterparty_label=wb.recipient_counterparty_label or "",
             recipient_contact_ref=wb.recipient_contact_ref,
             third_person_ref=wb.third_person_ref,
             recipient_name=wb.recipient_name,
