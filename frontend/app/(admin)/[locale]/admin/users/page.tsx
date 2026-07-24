@@ -76,16 +76,13 @@ interface RoleOption {
 function RatingCell({ delivered, cancelled, returns: returnsCount, successIndex }: { delivered: number; cancelled: number; returns: number; successIndex: number }) {
   const total = delivered + cancelled + returnsCount;
 
-  if (total === 0) {
-    return <span className="text-muted-foreground text-sm">—</span>;
-  }
-
-  const pctDelivered = (delivered / total) * 100;
-  const pctCancelled = (cancelled / total) * 100;
-  const pctReturns = (returnsCount / total) * 100;
+  const pctDelivered = total > 0 ? (delivered / total) * 100 : 0;
+  const pctCancelled = total > 0 ? (cancelled / total) * 100 : 0;
+  const pctReturns = total > 0 ? (returnsCount / total) * 100 : 0;
 
   let indexColor: string;
-  if (successIndex >= 70) indexColor = 'text-green-500';
+  if (total === 0) indexColor = 'text-gray-500';
+  else if (successIndex >= 70) indexColor = 'text-green-500';
   else if (successIndex >= 30) indexColor = 'text-yellow-500';
   else if (successIndex >= 1) indexColor = 'text-orange-500';
   else indexColor = 'text-red-500';
@@ -96,14 +93,20 @@ function RatingCell({ delivered, cancelled, returns: returnsCount, successIndex 
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="h-2.5 flex-1 max-w-[140px] rounded-full bg-gray-200 overflow-hidden flex cursor-pointer">
-              {pctDelivered > 0 && (
-                <div className="h-full bg-green-500 transition-all duration-700" style={{ width: `${pctDelivered}%` }} />
-              )}
-              {pctCancelled > 0 && (
-                <div className="h-full bg-red-500 transition-all duration-700" style={{ width: `${pctCancelled}%` }} />
-              )}
-              {pctReturns > 0 && (
-                <div className="h-full bg-orange-500 transition-all duration-700" style={{ width: `${pctReturns}%` }} />
+              {total === 0 ? (
+                <div className="h-full bg-gray-500 transition-all duration-700 w-full" />
+              ) : (
+                <>
+                  {pctDelivered > 0 && (
+                    <div className="h-full bg-green-500 transition-all duration-700" style={{ width: `${pctDelivered}%` }} />
+                  )}
+                  {pctCancelled > 0 && (
+                    <div className="h-full bg-red-500 transition-all duration-700" style={{ width: `${pctCancelled}%` }} />
+                  )}
+                  {pctReturns > 0 && (
+                    <div className="h-full bg-orange-500 transition-all duration-700" style={{ width: `${pctReturns}%` }} />
+                  )}
+                </>
               )}
             </div>
           </TooltipTrigger>

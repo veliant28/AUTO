@@ -35,6 +35,11 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useTheme } from '@wrksz/themes/client'
@@ -537,42 +542,20 @@ export default function PricingPageClient() {
                           <Minus className="w-3.5 h-3.5" />
                         </Button>
                         <div className="flex items-center gap-0.5">
-                          {digits.map((digit, i) => (
-                            <Input
-                              key={i}
-                              type="text"
-                              inputMode="numeric"
-                              value={digit}
-                              className="w-7 h-8 text-center text-xs font-mono p-0 rounded-md border-2 focus:border-primary"
-                              onFocus={(e) => e.target.select()}
-                              onChange={(e) => {
-                                const char = e.target.value
-                                if (char && /\d/.test(char)) {
-                                  const next = [...digits]
-                                  next[i] = char.slice(-1)
-                                  updateVal(next)
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace') {
-                                  const next = [...digits]
-                                  next[i] = '0'
-                                  setCategoryOtp((prev) => ({
-                                    ...prev,
-                                    [cat.category_id]: next,
-                                  }))
-                                  const num = Math.min(
-                                    100,
-                                    Math.max(0, Number(next.join(''))),
-                                  )
-                                  setCategoryMargins((prev) => ({
-                                    ...prev,
-                                    [cat.category_id]: num,
-                                  }))
-                                }
-                              }}
-                            />
-                          ))}
+                          <InputOTP
+                            maxLength={3}
+                            value={digits.join('')}
+                            onChange={(val) => {
+                              const padded = val.padEnd(3, '0').split('').slice(0, 3)
+                              updateVal(padded)
+                            }}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                              <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                              <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                            </InputOTPGroup>
+                          </InputOTP>
                         </div>
                         <Button
                           variant="outline"
