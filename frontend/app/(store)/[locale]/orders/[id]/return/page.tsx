@@ -28,7 +28,6 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { toast } from '@/lib/toast'
-import { CardInput } from '@/components/ui/input-otp'
 
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
@@ -73,7 +72,6 @@ export default function CreateReturnPage() {
   // Quantities state: keyed by part_id
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [removedItems, setRemovedItems] = useState<Set<number>>(new Set())
-  const [cardInput, setCardInput] = useState('')
 
   useEffect(() => {
     if (order?.items) {
@@ -93,7 +91,6 @@ export default function CreateReturnPage() {
     mutationFn: async (items: { part_id: number; quantity: number }[]) => {
       const { data } = await api.post(`/returns/from-order/${orderId}`, {
         items,
-        bank_card: cardInput.replace(/\s/g, ''),
       })
       return data
     },
@@ -132,10 +129,6 @@ export default function CreateReturnPage() {
   const handleRemoveItem = (partId: number) => {
     setRemovedItems((prev) => new Set(prev).add(partId))
     toast.info('Товар удалён из возврата')
-  }
-
-  const handleCardChange = (value: string) => {
-    setCardInput(value.replace(/\D/g, '').slice(0, 16))
   }
 
   const handleSubmit = () => {
@@ -215,11 +208,7 @@ export default function CreateReturnPage() {
             size="lg"
             className="gap-2"
             onClick={handleSubmit}
-            disabled={
-              submitMutation.isPending ||
-              visibleItems.length === 0 ||
-              cardInput.replace(/\s/g, '').length < 16
-            }
+            disabled={submitMutation.isPending || visibleItems.length === 0}
           >
             {submitMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -295,22 +284,6 @@ export default function CreateReturnPage() {
                 <p className="text-xs text-muted-foreground italic">
                   {t('return_data_hidden')}
                 </p>
-              </div>
-
-              <Separator />
-
-              {/* Card for refund */}
-              <div className="space-y-2">
-                <h3 className="font-semibold text-base">
-                  {t('return_card_label')}
-                </h3>
-                <CardInput value={cardInput} onChange={handleCardChange} />
-                {cardInput.replace(/\s/g, '').length > 0 &&
-                  cardInput.replace(/\s/g, '').length < 16 && (
-                    <p className="text-xs text-destructive">
-                      {t('return_card_required')}
-                    </p>
-                  )}
               </div>
             </div>
 

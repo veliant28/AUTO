@@ -15,7 +15,6 @@ from app.services.notifications import send_telegram_notification, send_customer
 from app.services import telegram_format
 from app.schemas.returns_schemas import (
     ReturnRequestSchema, ReturnListResponse, ReturnItemSchema, ReturnCreate, ReturnCreateItem,
-    ReturnCardUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,7 +52,6 @@ def _return_to_dict(r: ReturnRequest, max_qty_map: Optional[dict[int, int]] = No
         "return_delivery_city": r.return_delivery_city,
         "return_delivery_warehouse": r.return_delivery_warehouse,
         "ttn_number": r.ttn_number,
-        "bank_card": r.bank_card,
         "items": items,
     }
 
@@ -133,10 +131,6 @@ async def create_return(
     if not order:
         raise HTTPException(404, "Order not found")
 
-    # Validate bank_card is provided
-    if not data.bank_card or not data.bank_card.replace(" ", "").isdigit() or len(data.bank_card.replace(" ", "")) < 16:
-        raise HTTPException(400, "Bank card number is required and must be at least 16 digits")
-
     # If a pending return already exists, return it directly
     existing = db.query(ReturnRequest).options(
         joinedload(ReturnRequest.items),
@@ -202,7 +196,6 @@ async def create_return(
         user_id=user_id,
         status=ReturnStatus.PENDING,
         total_refund=total_refund,
-        bank_card=data.bank_card.replace(" ", ""),
     )
     db.add(return_request)
     db.flush()
@@ -314,65 +307,6 @@ async def save_return_ttn(
         user_group=user_group,
         action="ttn_update",
         details=f"ТТН обновлен: {clean}",
-    )
-    db.add(log)
-
-    db.commit()
-    db.refresh(r)
-
-    r = db.query(ReturnRequest).options(
-        joinedload(ReturnRequest.items),
-        joinedload(ReturnRequest.order),
-    ).filter(ReturnRequest.id == return_id).first()
-    return _return_to_dict(r)
-
-
-@router.put("/{return_id}/card", response_model=ReturnRequestSchema)
-async def save_return_card(
-    return_id: int,
-    data: ReturnCardUpdate,
-    db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user),
-):
-    """Save bank card number for a return."""
-    r = db.query(ReturnRequest).filter(
-        ReturnRequest.id == return_id,
-        ReturnRequest.user_id == user_id,
-    ).first()
-
-    if not r:
-        raise HTTPException(404, "Return request not found")
-
-    if r.status != ReturnStatus.PENDING:
-        raise HTTPException(400, "Card can only be changed for pending returns")
-
-    clean = data.bank_card.replace(" ", "")
-    if not clean.isdigit() or len(clean) < 16:
-        raise HTTPException(400, "Card number must be at least 16 digits")
-
-    # Mask for logging: show first 4 and last 4
-    masked = f"{clean[:4]} **** **** {clean[-4:]}"
-    old_masked = ""
-    if r.bank_card:
-        old_masked = f"{r.bank_card[:4]} **** **** {r.bank_card[-4:]}"
-
-    r.bank_card = clean
-
-    # Log card change
-    user = db.query(User).filter(User.id == user_id).first()
-    user_name = f"{user.last_name or ''} {user.first_name or ''}".strip() if user else ""
-    user_group = user.role.name if user and user.role else ""
-    if old_masked:
-        details = f"Номер карты изменён: {old_masked} → {masked}"
-    else:
-        details = f"Номер карты сохранён: {masked}"
-    log = ReturnChangeLog(
-        return_request_id=return_id,
-        user_id=user_id,
-        user_name=user_name,
-        user_group=user_group,
-        action="card_update",
-        details=details,
     )
     db.add(log)
 
