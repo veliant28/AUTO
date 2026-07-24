@@ -46,9 +46,13 @@ const InputOTPSlot = React.forwardRef<
       ref={ref}
       className={cn(
         'relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm font-mono transition-all first:rounded-l-md first:border-l last:rounded-r-md',
-        isActive && 'z-10 border-ring shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-ring)_50%,transparent)]',
         className,
       )}
+      style={
+        isActive
+          ? { zIndex: 10, borderColor: 'var(--color-ring)', boxShadow: '0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent)' }
+          : undefined
+      }
       {...props}
     >
       {char}
