@@ -93,13 +93,5 @@
     "tailwindcss": "^4.0.0",
     "to-ico": "^1.1.5",
     "typescript": "^5.7.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "unrs-resolver",
-      "sharp",
-      "@parcel/watcher",
-      "@swc/core"
-    ]
   }
 }
