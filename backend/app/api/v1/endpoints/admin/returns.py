@@ -122,6 +122,7 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
         "return_delivery_city": r.return_delivery_city,
         "return_delivery_warehouse": r.return_delivery_warehouse,
         "ttn_number": r.ttn_number,
+        "bank_card": r.bank_card,
         "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
         "total_refund": float(r.total_refund),
         "admin_notes": r.admin_notes,
@@ -238,6 +239,13 @@ async def update_return(
     if data.admin_notes is not None:
         r.admin_notes = data.admin_notes
 
+    # Update bank card
+    old_card = r.bank_card
+    if data.bank_card is not None:
+        clean_card = data.bank_card.replace(" ", "")
+        if clean_card:
+            r.bank_card = clean_card
+
     # Update return recipient data (saved on return, not on order)
     if any(field is not None for field in [data.last_name, data.first_name, data.middle_name, data.phone, data.delivery_city, data.delivery_warehouse]):
         if data.last_name is not None:
@@ -288,6 +296,13 @@ async def update_return(
     details_parts = []
     if data.admin_notes is not None:
         details_parts.append("заметки обновлены")
+    if data.bank_card is not None and old_card != r.bank_card:
+        masked_new = f"{r.bank_card[:4]} **** **** {r.bank_card[-4:]}" if r.bank_card else ""
+        masked_old = f"{old_card[:4]} **** **** {old_card[-4:]}" if old_card else ""
+        if masked_old:
+            details_parts.append(f"номер карты: {masked_old} → {masked_new}")
+        else:
+            details_parts.append(f"номер карты: {masked_new}")
     if any(field is not None for field in [data.last_name, data.first_name, data.middle_name, data.phone, data.delivery_city, data.delivery_warehouse]):
         details_parts.append("данные возврата обновлены")
     if data.items is not None and item_logs:

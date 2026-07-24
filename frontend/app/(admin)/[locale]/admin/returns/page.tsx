@@ -34,6 +34,7 @@ import {
   ScrollText,
   ScanBarcode,
   ScanLine,
+  CreditCard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -200,6 +201,7 @@ export default function AdminReturnsPage() {
     {},
   )
   const [editRecipient, setEditRecipient] = useState<Record<string, string>>({})
+  const [editCard, setEditCard] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminReturn | null>(null)
 
@@ -368,6 +370,28 @@ export default function AdminReturnsPage() {
     }, 0)
   }, [returnDetail, editQuantities])
 
+  function maskCard(card: string | null | undefined): string {
+    if (!card) return '—'
+    const digits = card.replace(/\s/g, '')
+    if (digits.length < 8) return digits
+    return `${digits.slice(0, 4)} **** **** ${digits.slice(-4)}`
+  }
+
+  const handleCardChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16)
+    const formatted = digits.replace(
+      /(\d{4})(\d{0,4})?(\d{0,4})?(\d{0,4})?/,
+      (_, p1, p2, p3, p4) => {
+        let res = p1
+        if (p2) res += ' ' + p2
+        if (p3) res += ' ' + p3
+        if (p4) res += ' ' + p4
+        return res
+      },
+    )
+    setEditCard(formatted)
+  }
+
   const enterEditMode = () => {
     if (!returnDetail) return
     setEditMode(true)
@@ -377,6 +401,7 @@ export default function AdminReturnsPage() {
       q[item.id] = item.quantity
     })
     setEditQuantities(q)
+    setEditCard(returnDetail.bank_card || '')
   }
 
   const historyEvents = useMemo(() => {
@@ -482,6 +507,13 @@ export default function AdminReturnsPage() {
       payload.phone = editRecipient.phone
       payload.delivery_city = editRecipient.delivery_city
       payload.delivery_warehouse = editRecipient.delivery_warehouse
+    }
+    // Card changed
+    const cardChanged =
+      editCard.replace(/\s/g, '') !==
+      (returnDetail.bank_card || '').replace(/\s/g, '')
+    if (cardChanged && editCard.replace(/\s/g, '').length >= 16) {
+      payload.bank_card = editCard.replace(/\s/g, '')
     }
     if (Object.keys(payload).length) {
       updateMutation.mutate({ returnId: viewReturnId, data: payload })
@@ -868,6 +900,9 @@ export default function AdminReturnsPage() {
                           } else if (ev.type === 'ttn_update') {
                             dotColor = 'bg-green-500'
                             IconComponent = ScanBarcode
+                          } else if (ev.type === 'card_update') {
+                            dotColor = 'bg-purple-500'
+                            IconComponent = CreditCard
                           } else if (ev.type === 'deleted') {
                             dotColor = 'bg-red-500'
                             IconComponent = Trash2
@@ -923,6 +958,17 @@ export default function AdminReturnsPage() {
                                         return (
                                           <>
                                             {t('ttn_updated')}: {m[1]}
+                                          </>
+                                        )
+                                    }
+                                    if (ev.type === 'card_update') {
+                                      const m = ev.details.match(
+                                        /номер карты[^:]*:\s*(.+)$/,
+                                      )
+                                      if (m)
+                                        return (
+                                          <>
+                                            {t('return_card_updated')}: {m[1]}
                                           </>
                                         )
                                     }
@@ -1146,6 +1192,29 @@ export default function AdminReturnsPage() {
                                     : returnDetail.total_refund,
                                 )}{' '}
                                 ₴
+                              </span>
+                            </div>
+                            {/* Bank card */}
+                            <div className="flex justify-between items-center pt-1 border-t border-border/50">
+                              <span className="text-muted-foreground">
+                                {t('return_card')}:
+                              </span>
+                              <span className="font-mono text-sm">
+                                {editMode ? (
+                                  <input
+                                    type="text"
+                                    value={editCard}
+                                    onChange={(e) =>
+                                      handleCardChange(e.target.value)
+                                    }
+                                    placeholder="0000 0000 0000 0000"
+                                    maxLength={19}
+                                    inputMode="numeric"
+                                    className="w-[180px] h-8 rounded border px-2 py-1 text-sm font-mono bg-background text-right"
+                                  />
+                                ) : (
+                                  maskCard(returnDetail.bank_card)
+                                )}
                               </span>
                             </div>
                           </div>

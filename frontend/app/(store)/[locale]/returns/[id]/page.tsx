@@ -89,6 +89,8 @@ export default function ReturnDetailPage() {
   const [removedItems, setRemovedItems] = useState<Set<number>>(new Set())
   const [ttnInput, setTtnInput] = useState('')
   const [ttnEditMode, setTtnEditMode] = useState(false)
+  const [cardInput, setCardInput] = useState('')
+  const [cardEditMode, setCardEditMode] = useState(false)
 
   useEffect(() => {
     if (ret?.items) {
@@ -106,6 +108,17 @@ export default function ReturnDetailPage() {
       )
       setTtnInput(formatted)
       setTtnEditMode(false)
+    }
+    if (ret?.bank_card) {
+      const formatted = ret.bank_card.replace(
+        /(\d{4})(\d{4})(\d{4})(\d{4})/,
+        '$1 $2 $3 $4',
+      )
+      setCardInput(formatted)
+      setCardEditMode(false)
+    } else {
+      setCardInput('')
+      setCardEditMode(canEdit)
     }
   }, [ret])
 
@@ -148,6 +161,24 @@ export default function ReturnDetailPage() {
     },
   })
 
+  const cardMutation = useMutation({
+    mutationFn: async (card: string) => {
+      const cleanCard = card.replace(/\s/g, '')
+      const { data } = await api.put(`/returns/${returnId}/card`, {
+        bank_card: cleanCard,
+      })
+      return data
+    },
+    onSuccess: () => {
+      setCardEditMode(false)
+      toast.success(t('return_card_saved'))
+      refetch()
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || t('error'))
+    },
+  })
+
   const handleTtnChange = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 14)
     const formatted = digits.replace(
@@ -161,6 +192,27 @@ export default function ReturnDetailPage() {
       },
     )
     setTtnInput(formatted)
+  }
+
+  const handleCardChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16)
+    const formatted = digits.replace(
+      /(\d{4})(\d{0,4})?(\d{0,4})?(\d{0,4})?/,
+      (_, p1, p2, p3, p4) => {
+        let res = p1
+        if (p2) res += ' ' + p2
+        if (p3) res += ' ' + p3
+        if (p4) res += ' ' + p4
+        return res
+      },
+    )
+    setCardInput(formatted)
+  }
+
+  function maskCard(card: string): string {
+    const digits = card.replace(/\s/g, '')
+    if (digits.length < 8) return card
+    return `${digits.slice(0, 4)} **** **** ${digits.slice(-4)}`
   }
 
   const visibleItems = useMemo(() => {
@@ -298,9 +350,76 @@ export default function ReturnDetailPage() {
                 Заказ: {ret.order_number}
               </p>
               <Separator />
-              <div className="space-y-4">
-                <h3 className="font-semibold text-base">{t('return_total')}</h3>
-                <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">
+                    {t('return_total')}
+                  </h3>
+                  <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">
+                    {t('return_card_label')}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {cardEditMode || !ret.bank_card ? (
+                      <>
+                        <input
+                          type="text"
+                          value={cardInput}
+                          onChange={(e) => handleCardChange(e.target.value)}
+                          placeholder={t('return_card_placeholder')}
+                          maxLength={19}
+                          inputMode="numeric"
+                          className="w-[210px] h-10 rounded-md border px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-background"
+                        />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              onClick={() => cardMutation.mutate(cardInput)}
+                              disabled={
+                                cardMutation.isPending ||
+                                cardInput.replace(/\s/g, '').length < 16
+                              }
+                            >
+                              {cardMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Save className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('return_card_save')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-[210px] h-10 rounded-md border bg-muted/30 px-3 py-2 text-sm font-mono flex items-center text-muted-foreground">
+                          {maskCard(cardInput || ret.bank_card)}
+                        </div>
+                        {canEdit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => setCardEditMode(true)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {t('return_card_edit')}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
               <Separator />
               <div className="space-y-2">

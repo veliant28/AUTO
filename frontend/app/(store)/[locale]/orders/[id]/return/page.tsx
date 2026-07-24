@@ -72,6 +72,7 @@ export default function CreateReturnPage() {
   // Quantities state: keyed by part_id
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [removedItems, setRemovedItems] = useState<Set<number>>(new Set())
+  const [cardInput, setCardInput] = useState('')
 
   useEffect(() => {
     if (order?.items) {
@@ -91,6 +92,7 @@ export default function CreateReturnPage() {
     mutationFn: async (items: { part_id: number; quantity: number }[]) => {
       const { data } = await api.post(`/returns/from-order/${orderId}`, {
         items,
+        bank_card: cardInput.replace(/\s/g, ''),
       })
       return data
     },
@@ -129,6 +131,21 @@ export default function CreateReturnPage() {
   const handleRemoveItem = (partId: number) => {
     setRemovedItems((prev) => new Set(prev).add(partId))
     toast.info('Товар удалён из возврата')
+  }
+
+  const handleCardChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16)
+    const formatted = digits.replace(
+      /(\d{4})(\d{0,4})?(\d{0,4})?(\d{0,4})?/,
+      (_, p1, p2, p3, p4) => {
+        let res = p1
+        if (p2) res += ' ' + p2
+        if (p3) res += ' ' + p3
+        if (p4) res += ' ' + p4
+        return res
+      },
+    )
+    setCardInput(formatted)
   }
 
   const handleSubmit = () => {
@@ -208,7 +225,11 @@ export default function CreateReturnPage() {
             size="lg"
             className="gap-2"
             onClick={handleSubmit}
-            disabled={submitMutation.isPending || visibleItems.length === 0}
+            disabled={
+              submitMutation.isPending ||
+              visibleItems.length === 0 ||
+              cardInput.replace(/\s/g, '').length < 16
+            }
           >
             {submitMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -284,6 +305,30 @@ export default function CreateReturnPage() {
                 <p className="text-xs text-muted-foreground italic">
                   {t('return_data_hidden')}
                 </p>
+              </div>
+
+              <Separator />
+
+              {/* Card for refund */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-base">
+                  {t('return_card_label')}
+                </h3>
+                <input
+                  type="text"
+                  value={cardInput}
+                  onChange={(e) => handleCardChange(e.target.value)}
+                  placeholder={t('return_card_placeholder')}
+                  maxLength={19}
+                  inputMode="numeric"
+                  className="w-full h-10 rounded-md border px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-background"
+                />
+                {cardInput.replace(/\s/g, '').length > 0 &&
+                  cardInput.replace(/\s/g, '').length < 16 && (
+                    <p className="text-xs text-destructive">
+                      {t('return_card_required')}
+                    </p>
+                  )}
               </div>
             </div>
 
