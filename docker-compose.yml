@@ -119,7 +119,7 @@ services:
       - WATCHPACK_POLLING=true
       - NODE_ENV=development
       - CI=true
-    command: pnpm dev
+    command: pnpm start
     restart: unless-stopped
     volumes:
       - ./frontend:/app
