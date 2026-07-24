@@ -34,12 +34,6 @@
   --animate-dropdown-out: dropdown-out 150ms ease-in both;
   --animate-fade-in: fade-in 150ms ease-out both;
   --animate-nav-in: nav-in 150ms ease-out both;
-  --animate-caret-blink: caret-blink 1.25s ease-out infinite;
-}
-
-@keyframes caret-blink {
-  0%, 70% { opacity: 1; }
-  80%, 100% { opacity: 0; }
 }
 
 .dark {

@@ -71,12 +71,7 @@ import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { RETURN_STATUS_LABELS } from '@/lib/constants'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
+import { CardInput } from '@/components/ui/input-otp'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -1196,41 +1191,10 @@ export default function AdminReturnsPage() {
                               </span>
                               <span className="font-mono text-sm">
                                 {editMode ? (
-                                  <InputOTP
-                                    maxLength={16}
+                                  <CardInput
                                     value={editCard}
                                     onChange={handleCardChange}
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                  >
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={0} />
-                                      <InputOTPSlot index={1} />
-                                      <InputOTPSlot index={2} />
-                                      <InputOTPSlot index={3} />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={4} />
-                                      <InputOTPSlot index={5} />
-                                      <InputOTPSlot index={6} />
-                                      <InputOTPSlot index={7} />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={8} />
-                                      <InputOTPSlot index={9} />
-                                      <InputOTPSlot index={10} />
-                                      <InputOTPSlot index={11} />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={12} />
-                                      <InputOTPSlot index={13} />
-                                      <InputOTPSlot index={14} />
-                                      <InputOTPSlot index={15} />
-                                    </InputOTPGroup>
-                                  </InputOTP>
+                                  />
                                 ) : (
                                   maskCard(returnDetail.bank_card)
                                 )}

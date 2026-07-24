@@ -1,71 +1,99 @@
 'use client'
 
-import * as React from 'react'
-import { OTPInput, OTPInputContext } from 'input-otp'
-import { Dot } from 'lucide-react'
-
+import React, { useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
-const InputOTP = React.forwardRef<
-  React.ElementRef<typeof OTPInput>,
-  React.ComponentPropsWithoutRef<typeof OTPInput>
->(({ className, containerClassName, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    containerClassName={cn(
-      'flex items-center gap-2 has-[:disabled]:opacity-50',
-      containerClassName,
-    )}
-    className={cn('disabled:cursor-not-allowed', className)}
-    {...props}
-  />
-))
-InputOTP.displayName = 'InputOTP'
+interface CardInputProps {
+  value: string
+  onChange: (value: string) => void
+  disabled?: boolean
+  className?: string
+}
 
-const InputOTPGroup = React.forwardRef<
-  React.ElementRef<'div'>,
-  React.ComponentPropsWithoutRef<'div'>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex items-center', className)} {...props} />
-))
-InputOTPGroup.displayName = 'InputOTPGroup'
+export function CardInput({
+  value,
+  onChange,
+  disabled,
+  className,
+}: CardInputProps) {
+  const digits = value.replace(/\D/g, '').slice(0, 16)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-const InputOTPSlot = React.forwardRef<
-  React.ElementRef<'div'>,
-  React.ComponentPropsWithoutRef<'div'> & { index: number }
->(({ index, className, ...props }, ref) => {
-  const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
+  const updateValue = useCallback(
+    (newDigits: string[]) => {
+      onChange(newDigits.join(''))
+    },
+    [onChange],
+  )
+
+  const handleChange = useCallback(
+    (idx: number, char: string) => {
+      if (char && /\d/.test(char)) {
+        const next = digits.split('')
+        next[idx] = char.slice(-1)
+        updateValue(next)
+        // Focus next empty slot
+        const nextIdx = next.findIndex((d, i) => i > idx && !d)
+        if (nextIdx >= 0) {
+          inputRefs.current[nextIdx]?.focus()
+        } else if (idx < 15) {
+          inputRefs.current[idx + 1]?.focus()
+        }
+      }
+    },
+    [digits, updateValue],
+  )
+
+  const handleKeyDown = useCallback(
+    (idx: number, e: React.KeyboardEvent) => {
+      if (e.key === 'Backspace') {
+        const next = digits.split('')
+        if (next[idx]) {
+          next[idx] = ''
+          updateValue(next)
+        } else if (idx > 0) {
+          inputRefs.current[idx - 1]?.focus()
+        }
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        inputRefs.current[idx - 1]?.focus()
+      } else if (e.key === 'ArrowRight' && idx < 15) {
+        inputRefs.current[idx + 1]?.focus()
+      }
+    },
+    [digits, updateValue],
+  )
 
   return (
-    <div
-      ref={ref}
-      className={cn(
-        'relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm font-mono transition-all first:rounded-l-md first:border-l last:rounded-r-md',
-        isActive && 'z-10 ring-2 ring-ring ring-offset-background',
-        className,
-      )}
-      {...props}
-    >
-      {char}
-      {hasFakeCaret && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
-        </div>
-      )}
+    <div className={cn('flex items-center gap-0.5', className)}>
+      {[0, 1, 2, 3].map((gi) => (
+        <React.Fragment key={gi}>
+          {gi > 0 && (
+            <span className="text-muted-foreground text-lg font-bold mx-0.5">
+              ·
+            </span>
+          )}
+          {[0, 1, 2, 3].map((si) => {
+            const idx = gi * 4 + si
+            return (
+              <input
+                key={si}
+                ref={(el) => {
+                  inputRefs.current[idx] = el
+                }}
+                type="text"
+                inputMode="numeric"
+                value={digits[idx] || ''}
+                onChange={(e) => handleChange(idx, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(idx, e)}
+                onFocus={(e) => e.target.select()}
+                disabled={disabled}
+                maxLength={1}
+                className="w-7 h-9 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            )
+          })}
+        </React.Fragment>
+      ))}
     </div>
   )
-})
-InputOTPSlot.displayName = 'InputOTPSlot'
-
-const InputOTPSeparator = React.forwardRef<
-  React.ElementRef<'div'>,
-  React.ComponentPropsWithoutRef<'div'>
->(({ ...props }, ref) => (
-  <div ref={ref} role="separator" {...props}>
-    <Dot />
-  </div>
-))
-InputOTPSeparator.displayName = 'InputOTPSeparator'
-
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+}

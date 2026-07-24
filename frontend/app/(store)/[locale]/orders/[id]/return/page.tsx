@@ -28,12 +28,7 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { toast } from '@/lib/toast'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
+import { CardInput } from '@/components/ui/input-otp'
 
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
@@ -309,41 +304,7 @@ export default function CreateReturnPage() {
                 <h3 className="font-semibold text-base">
                   {t('return_card_label')}
                 </h3>
-                <InputOTP
-                  maxLength={16}
-                  value={cardInput}
-                  onChange={handleCardChange}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                  </InputOTPGroup>
-                  <InputOTPSeparator />
-                  <InputOTPGroup>
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                    <InputOTPSlot index={6} />
-                    <InputOTPSlot index={7} />
-                  </InputOTPGroup>
-                  <InputOTPSeparator />
-                  <InputOTPGroup>
-                    <InputOTPSlot index={8} />
-                    <InputOTPSlot index={9} />
-                    <InputOTPSlot index={10} />
-                    <InputOTPSlot index={11} />
-                  </InputOTPGroup>
-                  <InputOTPSeparator />
-                  <InputOTPGroup>
-                    <InputOTPSlot index={12} />
-                    <InputOTPSlot index={13} />
-                    <InputOTPSlot index={14} />
-                    <InputOTPSlot index={15} />
-                  </InputOTPGroup>
-                </InputOTP>
+                <CardInput value={cardInput} onChange={handleCardChange} />
                 {cardInput.replace(/\s/g, '').length > 0 &&
                   cardInput.replace(/\s/g, '').length < 16 && (
                     <p className="text-xs text-destructive">
