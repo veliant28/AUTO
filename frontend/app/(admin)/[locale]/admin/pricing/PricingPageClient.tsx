@@ -543,20 +543,20 @@ export default function PricingPageClient() {
                         </Button>
                         <div className="flex items-center gap-0.5">
                           <InputOTP
-                            maxLength={3}
+                            maxLength={4}
                             value={digits.join('')}
                             onChange={(val) => {
-                              // Right-aligned: take last 3 chars, pad with zeros on left
+                              // Take last 3 chars (right-aligned shift)
                               const raw = val.replace(/\D/g, '')
-                              const padded = raw.slice(-3).padStart(3, '0').split('')
-                              updateVal(padded)
+                              const shifted = raw.slice(-3).padStart(3, '0').split('')
+                              updateVal(shifted)
                             }}
                             containerClassName="cursor-text"
                           >
                             <InputOTPGroup>
-                              <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
                               <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
                               <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                              <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
                             </InputOTPGroup>
                           </InputOTP>
                         </div>
