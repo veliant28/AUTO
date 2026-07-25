@@ -1180,47 +1180,6 @@ export default function AdminReturnsPage() {
                                 ₴
                               </span>
                             </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-border/50">
-                              <span className="text-muted-foreground">
-                                {t('return_card')}:
-                              </span>
-                              <span className="font-mono text-sm">
-                                {editMode ? (
-                                  <InputOTP maxLength={16} value={editCard} onChange={handleCardChange}>
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
-                                    </InputOTPGroup>
-                                    <InputOTPSeparator />
-                                    <InputOTPGroup>
-                                      <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
-                                      <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
-                                    </InputOTPGroup>
-                                  </InputOTP>
-                                ) : (
-                                  maskCard(returnDetail.bank_card)
-                                )}
-                              </span>
-                            </div>
-                          </div>
                         </div>
 
                         <div className="border rounded-lg p-4 flex-1 flex flex-col min-h-0">
@@ -1449,6 +1408,45 @@ export default function AdminReturnsPage() {
                       </span>
                     </div>
                   )}
+                  {/* Bank card */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">{t('return_card')}:</span>
+                    {editMode ? (
+                      <InputOTP maxLength={16} value={editCard} onChange={handleCardChange}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    ) : (
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {maskCard(returnDetail.bank_card)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </>
             )}
