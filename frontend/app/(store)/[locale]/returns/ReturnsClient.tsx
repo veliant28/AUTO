@@ -84,7 +84,7 @@ export default function ReturnsPage() {
 	      }
 	    },
 	    enabled: isAuthenticated,
-	    refetchInterval: 10000,
+	    refetchInterval: 30000,
 	  })
 
 	  React.useEffect(() => {

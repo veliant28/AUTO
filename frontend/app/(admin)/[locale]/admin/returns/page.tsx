@@ -257,7 +257,7 @@ export default function AdminReturnsPage() {
       return data as AdminReturnDetail
     },
     enabled: !!viewReturnId,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   })
 
   // Listen for broadcast updates (e.g. customer changed card)

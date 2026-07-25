@@ -77,7 +77,7 @@ export default function ReturnDetailPage() {
       return data
     },
     enabled: !!returnId && isAuthenticated,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   })
 
   // Listen for real-time status changes from admin
