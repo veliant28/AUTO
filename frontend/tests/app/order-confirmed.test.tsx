@@ -6,7 +6,7 @@ jest.mock('next-intl', () => ({
 }))
 
 jest.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams('id=123'),
+  useSearchParams: () => new URLSearchParams('order=123'),
   useRouter: () => ({ push: jest.fn() }),
 }))
 

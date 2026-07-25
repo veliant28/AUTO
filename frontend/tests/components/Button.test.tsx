@@ -19,7 +19,7 @@ describe('Button', () => {
 
   it('applies size classes', () => {
     const { container } = render(<Button size="lg">Large</Button>)
-    expect(container.firstChild).toHaveClass('h-10')
+    expect(container.firstChild).toHaveClass('h-11')
   })
 
   it('handles click events', () => {
