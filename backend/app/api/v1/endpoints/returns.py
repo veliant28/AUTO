@@ -157,7 +157,7 @@ async def create_return(
 
     # Validate bank card
     if not data.bank_card or not data.bank_card.replace(" ", "").isdigit() or len(data.bank_card.replace(" ", "")) < 16:
-        raise HTTPException(400, "Card number must be at least 16 digits")
+        raise HTTPException(400, "Номер карты должен содержать минимум 16 цифр")
 
     order_items_by_part = {oi.part_id: oi for oi in order.items}
 
@@ -342,10 +342,10 @@ async def save_return_card(
     if not r:
         raise HTTPException(404, "Return request not found")
     if r.status != ReturnStatus.PENDING:
-        raise HTTPException(400, "Card can only be changed for pending returns")
+        raise HTTPException(400, "Номер карты можно изменить только для ожидающих возвратов")
     clean = data.bank_card.replace(" ", "")
     if not clean.isdigit() or len(clean) < 16:
-        raise HTTPException(400, "Card number must be at least 16 digits")
+        raise HTTPException(400, "Номер карты должен содержать минимум 16 цифр")
     masked = f"{clean[:4]} **** **** {clean[-4:]}"
     old_masked = ""
     if r.bank_card:
