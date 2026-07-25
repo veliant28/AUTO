@@ -506,14 +506,15 @@ export default function PricingPageClient() {
               {categoryRules.map((cat) => {
                 const digits = categoryOtp[cat.category_id] || ['0', '0', '0']
                 const updateVal = (newDigits: string[]) => {
-                  setCategoryOtp((prev) => ({
-                    ...prev,
-                    [cat.category_id]: newDigits,
-                  }))
                   const num = Math.min(
                     100,
                     Math.max(0, Number(newDigits.join(''))),
                   )
+                  const clampedDigits = String(num).padStart(3, '0').split('')
+                  setCategoryOtp((prev) => ({
+                    ...prev,
+                    [cat.category_id]: clampedDigits,
+                  }))
                   setCategoryMargins((prev) => ({
                     ...prev,
                     [cat.category_id]: num,
