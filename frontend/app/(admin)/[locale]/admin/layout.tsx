@@ -1008,6 +1008,9 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               <InputOTP
                 maxLength={3}
                 value={pricingOtpDigits.join('')}
+                onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                  setTimeout(() => e.target.setSelectionRange(0, 0), 0)
+                }}
                 onChange={(val) => {
                   const raw = val.replace(/\D/g, '')
                   const padded = raw.padEnd(3, '0').split('')
