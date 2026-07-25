@@ -1181,6 +1181,7 @@ export default function AdminReturnsPage() {
                               </span>
                             </div>
                         </div>
+                      </div>
 
                         <div className="border rounded-lg p-4 flex-1 flex flex-col min-h-0">
                           <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
