@@ -260,6 +260,16 @@ export default function AdminReturnsPage() {
     refetchInterval: 10000,
   })
 
+  // Listen for broadcast updates (e.g. customer changed card)
+  useEffect(() => {
+    if (!viewReturnId) return
+    try {
+      const channel = new BroadcastChannel('return-status')
+      channel.onmessage = () => { refetchDetail() }
+      return () => channel.close()
+    } catch {}
+  }, [viewReturnId, refetchDetail])
+
   useEffect(() => {
     if (returnDetail) {
       setAdminNotes(returnDetail.admin_notes || '')

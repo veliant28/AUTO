@@ -169,11 +169,14 @@ export default function ReturnDetailPage() {
       })
       return data
     },
-    onSuccess: () => {
-      setEditCardMode(false)
-      toast.success(t('return_card_saved'))
-      refetch()
-    },
+	    onSuccess: () => {
+	      setEditCardMode(false)
+	      toast.success(t('return_card_saved'))
+	      refetch()
+	      try {
+	        new BroadcastChannel('return-status').postMessage({ returnId: Number(returnId) })
+	      } catch {}
+	    },
     onError: (err: any) => {
       toast.error(err?.response?.data?.detail || t('error'))
     },
