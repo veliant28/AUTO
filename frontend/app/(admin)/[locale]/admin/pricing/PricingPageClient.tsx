@@ -549,6 +549,7 @@ export default function PricingPageClient() {
                               const padded = val.padEnd(3, '0').split('').slice(0, 3)
                               updateVal(padded)
                             }}
+                            containerClassName="cursor-text"
                           >
                             <InputOTPGroup>
                               <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
