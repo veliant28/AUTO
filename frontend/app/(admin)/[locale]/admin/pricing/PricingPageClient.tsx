@@ -562,7 +562,6 @@ export default function PricingPageClient() {
                             }}
                             containerClassName="[&_[data-input-otp]]:pointer-events-auto"
                           >
-                          >
                             <InputOTPGroup>
                               <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
                               <InputOTPSlot index={1} className="w-7 h-8 text-xs" />

@@ -83,6 +83,11 @@ select:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent);
 }
 
+/* Ensure input-otp hidden input receives clicks */
+[data-input-otp] {
+  pointer-events: all !important;
+}
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
