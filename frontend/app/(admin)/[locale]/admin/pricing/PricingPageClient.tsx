@@ -543,20 +543,26 @@ export default function PricingPageClient() {
                         </Button>
                         <div className="flex items-center gap-0.5">
                           <InputOTP
-                            maxLength={4}
-                            value={digits.join('').padStart(4, '0')}
+                            maxLength={3}
+                            value={digits.join('')}
                             onChange={(val) => {
-                              // Take last 3 chars (right-aligned shift)
                               const raw = val.replace(/\D/g, '')
                               const shifted = raw.slice(-3).padStart(3, '0').split('')
                               updateVal(shifted)
                             }}
+                            onKeyDown={(e: React.KeyboardEvent) => {
+                              if (/^[0-9]$/.test(e.key)) {
+                                e.preventDefault()
+                                const shifted = [...digits.slice(1), e.key]
+                                updateVal(shifted)
+                              }
+                            }}
                             containerClassName="cursor-text"
                           >
                             <InputOTPGroup>
+                              <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
                               <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
                               <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
-                              <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
                             </InputOTPGroup>
                           </InputOTP>
                         </div>
