@@ -565,7 +565,8 @@ export default function PricingPageClient() {
                                 const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
                                 const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
                                 updateVal(padded)
-                                setTimeout(() => input.setSelectionRange(pos, pos), 0)
+                                const newPos = Math.max(0, pos - 1)
+                                requestAnimationFrame(() => input.setSelectionRange(newPos, newPos))
                               }
                             }}
                             onChange={(val) => {
@@ -573,7 +574,6 @@ export default function PricingPageClient() {
                               const padded = raw.padEnd(3, '0').split('')
                               updateVal(padded)
                             }}
-                            containerClassName="[&_[data-input-otp]]:pointer-events-auto"
                           >
                             <InputOTPGroup>
                               <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
