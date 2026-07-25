@@ -339,11 +339,12 @@ export default function ReturnDetailPage() {
                 Заказ: {ret.order_number}
               </p>
               <Separator />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <h3 className="font-semibold text-base">{t('return_total')}</h3>
                   <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
                 </div>
+                <Separator />
                 <div className="space-y-2">
                   <h3 className="font-semibold text-base">{t('return_card_label')}</h3>
                   <div className="flex items-center gap-2">
