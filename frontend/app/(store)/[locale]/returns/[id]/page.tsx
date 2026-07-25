@@ -354,19 +354,19 @@ export default function ReturnDetailPage() {
                       <>
                         <InputOTP maxLength={16} value={cardInput} onChange={handleCardChange}>
                           <InputOTPGroup>
-                            <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} /><InputOTPSlot index={3} />
+                            <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={4} /><InputOTPSlot index={5} /><InputOTPSlot index={6} /><InputOTPSlot index={7} />
+                            <InputOTPSlot index={4} className="w-7 h-8 text-xs" /><InputOTPSlot index={5} className="w-7 h-8 text-xs" /><InputOTPSlot index={6} className="w-7 h-8 text-xs" /><InputOTPSlot index={7} className="w-7 h-8 text-xs" />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={8} /><InputOTPSlot index={9} /><InputOTPSlot index={10} /><InputOTPSlot index={11} />
+                            <InputOTPSlot index={8} className="w-7 h-8 text-xs" /><InputOTPSlot index={9} className="w-7 h-8 text-xs" /><InputOTPSlot index={10} className="w-7 h-8 text-xs" /><InputOTPSlot index={11} className="w-7 h-8 text-xs" />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={12} /><InputOTPSlot index={13} /><InputOTPSlot index={14} /><InputOTPSlot index={15} />
+                            <InputOTPSlot index={12} className="w-7 h-8 text-xs" /><InputOTPSlot index={13} className="w-7 h-8 text-xs" /><InputOTPSlot index={14} className="w-7 h-8 text-xs" /><InputOTPSlot index={15} className="w-7 h-8 text-xs" />
                           </InputOTPGroup>
                         </InputOTP>
                         <Tooltip>
