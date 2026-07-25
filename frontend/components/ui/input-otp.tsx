@@ -56,7 +56,7 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm font-mono transition-all first:rounded-l-md first:border-l last:rounded-r-md pointer-events-auto',
+        'relative flex h-8 w-7 items-center justify-center border-y border-r border-input text-xs font-mono transition-all first:rounded-l-md first:border-l last:rounded-r-md pointer-events-auto',
         className,
       )}
       style={
