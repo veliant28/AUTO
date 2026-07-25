@@ -546,7 +546,9 @@ export default function PricingPageClient() {
                             maxLength={3}
                             value={digits.join('')}
                             onChange={(val) => {
-                              const padded = val.padEnd(3, '0').split('').slice(0, 3)
+                              // Right-aligned: take last 3 chars, pad with zeros on left
+                              const raw = val.replace(/\D/g, '')
+                              const padded = raw.slice(-3).padStart(3, '0').split('')
                               updateVal(padded)
                             }}
                             containerClassName="cursor-text"
