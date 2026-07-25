@@ -117,8 +117,7 @@ export default function ReturnDetailPage() {
     }
     if (ret?.bank_card) {
       const digits = ret.bank_card.replace(/\D/g, '')
-      const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ')
-      setCardInput(formatted)
+      setCardInput(digits)
       setEditCardMode(false)
     }
   }, [ret])
@@ -183,13 +182,11 @@ export default function ReturnDetailPage() {
   function maskCard(card: string): string {
     const digits = card.replace(/\D/g, '')
     if (digits.length < 16) return digits
-    return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${'*'.repeat(4)} ${digits.slice(12, 16)}`
+    return `${digits.slice(0, 4)} **** **** ${digits.slice(12, 16)}`
   }
 
   const handleCardChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 16)
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ')
-    setCardInput(formatted)
+    setCardInput(value.replace(/\D/g, '').slice(0, 16))
   }
 
   const handleTtnChange = (value: string) => {
