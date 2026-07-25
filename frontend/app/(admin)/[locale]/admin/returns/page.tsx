@@ -1434,10 +1434,35 @@ export default function AdminReturnsPage() {
                         </InputOTP>
                       </>
                     ) : returnDetail?.bank_card ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CreditCard className="w-4 h-4" />
-                        <span className="font-mono">{maskCard(returnDetail.bank_card)}</span>
-                      </div>
+                      <InputOTP maxLength={16} value={returnDetail.bank_card} onChange={() => {}} disabled className="opacity-60">
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                        <InputOTPSeparator />
+                        <InputOTPGroup>
+                          <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
+                          <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                        </InputOTPGroup>
+                      </InputOTP>
                     ) : null}
                   </div>
                   {returnDetail?.ttn_number ? (
