@@ -1434,7 +1434,7 @@ export default function AdminReturnsPage() {
                         </InputOTP>
                       </>
                     ) : returnDetail?.bank_card ? (
-                      <InputOTP maxLength={16} value={returnDetail.bank_card} onChange={() => {}} disabled className="opacity-60">
+                      <InputOTP maxLength={16} value={returnDetail.bank_card} onChange={() => {}} disabled containerClassName="bg-muted/30 rounded-md">
                         <InputOTPGroup>
                           <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
                           <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
