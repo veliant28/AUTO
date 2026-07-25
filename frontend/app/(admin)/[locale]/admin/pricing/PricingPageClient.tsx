@@ -544,7 +544,7 @@ export default function PricingPageClient() {
                         <div className="flex items-center gap-0.5">
                           <InputOTP
                             maxLength={4}
-                            value={digits.join('')}
+                            value={digits.join('').padStart(4, '0')}
                             onChange={(val) => {
                               // Take last 3 chars (right-aligned shift)
                               const raw = val.replace(/\D/g, '')
