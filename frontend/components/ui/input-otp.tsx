@@ -50,7 +50,7 @@ const InputOTPSlot = React.forwardRef<
       )}
       style={
         isActive
-          ? { zIndex: 10, borderColor: 'var(--color-ring)', borderLeftWidth: 1, borderLeftColor: 'var(--color-ring)', outline: '3px solid color-mix(in oklab, var(--color-ring) 50%, transparent)', outlineOffset: '-1px' }
+          ? { zIndex: 10, borderColor: 'var(--color-ring)', borderLeftWidth: 1, borderLeftColor: 'var(--color-ring)', outline: '3px solid color-mix(in oklab, var(--color-ring) 50%, transparent)', outlineOffset: '-1px', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }
           : undefined
       }
       {...props}
