@@ -28,7 +28,7 @@ const InputOTPGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex items-center', className)}
+    className={cn('flex items-center shadow-sm', className)}
     {...props}
   />
 ))
@@ -50,7 +50,7 @@ const InputOTPSlot = React.forwardRef<
       )}
       style={
         isActive
-          ? { zIndex: 10, borderColor: 'var(--color-ring)', borderLeftWidth: 1, borderLeftColor: 'var(--color-ring)', outline: '3px solid color-mix(in oklab, var(--color-ring) 50%, transparent)', outlineOffset: '-1px', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }
+          ? { zIndex: 10, borderColor: 'var(--color-ring)', borderLeftWidth: 1, borderLeftColor: 'var(--color-ring)', boxShadow: '0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent), 0 1px 2px 0 rgb(0 0 0 / 0.05)' }
           : undefined
       }
       {...props}
