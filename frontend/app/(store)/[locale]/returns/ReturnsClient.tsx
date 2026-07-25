@@ -70,21 +70,30 @@ export default function ReturnsPage() {
     return Number.isFinite(value) && value >= 1 ? Math.floor(value) : 1
   }, [searchParams])
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['returns', page],
-    queryFn: async () => {
-      const { data } = await api.get('/returns', {
-        params: { page, page_size: PAGE_SIZE },
-      })
-      return data as {
-        items: any[]
-        total: number
-        page: number
-        page_size: number
-      }
-    },
-    enabled: isAuthenticated,
-  })
+	  const { data, isLoading, refetch } = useQuery({
+	    queryKey: ['returns', page],
+	    queryFn: async () => {
+	      const { data } = await api.get('/returns', {
+	        params: { page, page_size: PAGE_SIZE },
+	      })
+	      return data as {
+	        items: any[]
+	        total: number
+	        page: number
+	        page_size: number
+	      }
+	    },
+	    enabled: isAuthenticated,
+	    refetchInterval: 10000,
+	  })
+
+	  React.useEffect(() => {
+	    try {
+	      const channel = new BroadcastChannel('return-status')
+	      channel.onmessage = () => { refetch() }
+	      return () => channel.close()
+	    } catch {}
+	  }, [refetch])
 
   const handlePageChange = useCallback(
     (nextPage: number) => {
