@@ -1398,17 +1398,6 @@ export default function AdminReturnsPage() {
                       </>
                     )}
                   </div>
-                  {returnDetail?.ttn_number && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
-                      <ScanBarcode className="w-4 h-4" />
-                      <span className="font-mono">
-                        {returnDetail.ttn_number.replace(
-                          /(\d{2})(\d{4})(\d{4})(\d{4})/,
-                          '$1 $2 $3 $4',
-                        )}
-                      </span>
-                    </div>
-                  )}
                   {/* Bank card */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground whitespace-nowrap">{t('return_card')}:</span>
@@ -1448,6 +1437,17 @@ export default function AdminReturnsPage() {
                       </span>
                     )}
                   </div>
+                  {returnDetail?.ttn_number && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
+                      <ScanBarcode className="w-4 h-4" />
+                      <span className="font-mono">
+                        {returnDetail.ttn_number.replace(
+                          /(\d{2})(\d{4})(\d{4})(\d{4})/,
+                          '$1 $2 $3 $4',
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             )}
