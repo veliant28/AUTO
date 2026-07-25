@@ -1029,8 +1029,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     setPricingOtpDigits(padded)
                     const num = Math.min(100, Math.max(0, Number(padded.join(''))))
                     ;(window as any).__pricingSetGeneralMargin?.(num)
-                    const newPos = Math.max(0, pos - 1)
-                    requestAnimationFrame(() => input.setSelectionRange(newPos, newPos))
+                    setTimeout(() => input.setSelectionRange(pos, pos), 0)
                   }
                 }}
                 onChange={(val) => {
