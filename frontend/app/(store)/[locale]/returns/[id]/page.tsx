@@ -22,6 +22,12 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from '@/components/ui/input-otp'
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -89,6 +95,8 @@ export default function ReturnDetailPage() {
   const [removedItems, setRemovedItems] = useState<Set<number>>(new Set())
   const [ttnInput, setTtnInput] = useState('')
   const [ttnEditMode, setTtnEditMode] = useState(false)
+  const [cardInput, setCardInput] = useState('')
+  const [editCardMode, setEditCardMode] = useState(false)
 
   useEffect(() => {
     if (ret?.items) {
@@ -106,6 +114,12 @@ export default function ReturnDetailPage() {
       )
       setTtnInput(formatted)
       setTtnEditMode(false)
+    }
+    if (ret?.bank_card) {
+      const digits = ret.bank_card.replace(/\D/g, '')
+      const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ')
+      setCardInput(formatted)
+      setEditCardMode(false)
     }
   }, [ret])
 
@@ -147,6 +161,36 @@ export default function ReturnDetailPage() {
       toast.error(err?.response?.data?.detail || t('error'))
     },
   })
+
+  const cardMutation = useMutation({
+    mutationFn: async (card: string) => {
+      const cleanCard = card.replace(/\s/g, '')
+      const { data } = await api.put(`/returns/${returnId}/card`, {
+        bank_card: cleanCard,
+      })
+      return data
+    },
+    onSuccess: () => {
+      setEditCardMode(false)
+      toast.success(t('return_card_saved'))
+      refetch()
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || t('error'))
+    },
+  })
+
+  function maskCard(card: string): string {
+    const digits = card.replace(/\D/g, '')
+    if (digits.length < 16) return digits
+    return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${'*'.repeat(4)} ${digits.slice(12, 16)}`
+  }
+
+  const handleCardChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16)
+    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ')
+    setCardInput(formatted)
+  }
 
   const handleTtnChange = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 14)
@@ -298,11 +342,62 @@ export default function ReturnDetailPage() {
                 Заказ: {ret.order_number}
               </p>
               <Separator />
-              <div className="space-y-4">
-                <h3 className="font-semibold text-base">{t('return_total')}</h3>
-                <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">{t('return_total')}</h3>
+                  <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-base">{t('return_card_label')}</h3>
+                  <div className="flex items-center gap-2">
+                    {editCardMode || !ret.bank_card ? (
+                      <>
+                        <InputOTP maxLength={16} value={cardInput} onChange={handleCardChange}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} /><InputOTPSlot index={3} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={4} /><InputOTPSlot index={5} /><InputOTPSlot index={6} /><InputOTPSlot index={7} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={8} /><InputOTPSlot index={9} /><InputOTPSlot index={10} /><InputOTPSlot index={11} />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={12} /><InputOTPSlot index={13} /><InputOTPSlot index={14} /><InputOTPSlot index={15} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" onClick={() => cardMutation.mutate(cardInput)} disabled={cardMutation.isPending || cardInput.replace(/\s/g, '').length < 16}>
+                              {cardMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t('return_card_save')}</TooltipContent>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center h-10 rounded-md border bg-muted/30 px-3 py-2 text-sm font-mono">
+                          {maskCard(cardInput || ret.bank_card)}
+                        </div>
+                        {ret.status === 'pending' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline" onClick={() => setEditCardMode(true)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('return_card_edit')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <Separator />
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-base">{t('recipient')}</h3>

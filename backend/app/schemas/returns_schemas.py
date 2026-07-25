@@ -35,6 +35,7 @@ class ReturnRequestSchema(BaseModel):
     return_delivery_city: Optional[str] = None
     return_delivery_warehouse: Optional[str] = None
     ttn_number: Optional[str] = None
+    bank_card: Optional[str] = None
     items: List[ReturnItemSchema] = []
 
     class Config:
@@ -55,6 +56,7 @@ class ReturnCreateItem(BaseModel):
 
 class ReturnCreate(BaseModel):
     items: List[ReturnCreateItem]
+    bank_card: str = ""
 
 
 # ─── Admin-facing schemas ─────────────────────────────────────────────────────
@@ -142,6 +144,7 @@ class AdminReturnDetailResponse(BaseModel):
     items: List[AdminReturnItemSchema] = []
     change_logs: List[ReturnChangeLogSchema] = []
     ttn_number: Optional[str] = None
+    bank_card: Optional[str] = None
 
 
 class ReturnChangeLogSchema(BaseModel):
@@ -174,6 +177,12 @@ class AdminReturnUpdateSchema(BaseModel):
     delivery_type: Optional[str] = None
     delivery_city: Optional[str] = None
     delivery_warehouse: Optional[str] = None
+    bank_card: Optional[str] = None
+
+
+class ReturnCardUpdate(BaseModel):
+    """Update bank card number for a return (storefront)."""
+    bank_card: str
 
 
 class AdminUpdateReturnStatusSchema(BaseModel):

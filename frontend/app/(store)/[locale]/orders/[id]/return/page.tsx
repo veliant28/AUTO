@@ -28,6 +28,12 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { toast } from '@/lib/toast'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from '@/components/ui/input-otp'
 
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
@@ -72,6 +78,7 @@ export default function CreateReturnPage() {
   // Quantities state: keyed by part_id
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [removedItems, setRemovedItems] = useState<Set<number>>(new Set())
+  const [cardInput, setCardInput] = useState('')
 
   useEffect(() => {
     if (order?.items) {
@@ -91,6 +98,7 @@ export default function CreateReturnPage() {
     mutationFn: async (items: { part_id: number; quantity: number }[]) => {
       const { data } = await api.post(`/returns/from-order/${orderId}`, {
         items,
+        bank_card: cardInput,
       })
       return data
     },
@@ -129,6 +137,10 @@ export default function CreateReturnPage() {
   const handleRemoveItem = (partId: number) => {
     setRemovedItems((prev) => new Set(prev).add(partId))
     toast.info('Товар удалён из возврата')
+  }
+
+  const handleCardChange = (value: string) => {
+    setCardInput(value.replace(/\D/g, '').slice(0, 16))
   }
 
   const handleSubmit = () => {
@@ -208,7 +220,7 @@ export default function CreateReturnPage() {
             size="lg"
             className="gap-2"
             onClick={handleSubmit}
-            disabled={submitMutation.isPending || visibleItems.length === 0}
+            disabled={submitMutation.isPending || visibleItems.length === 0 || cardInput.length < 16}
           >
             {submitMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -271,6 +283,31 @@ export default function CreateReturnPage() {
                 <p className="text-xs text-muted-foreground italic">
                   {t('return_data_hidden')}
                 </p>
+              </div>
+
+              <Separator />
+              <div className="space-y-2">
+                <h3 className="font-semibold text-base">{t('return_card_label')}</h3>
+                <InputOTP maxLength={16} value={cardInput} onChange={handleCardChange}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} /><InputOTPSlot index={3} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={4} /><InputOTPSlot index={5} /><InputOTPSlot index={6} /><InputOTPSlot index={7} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={8} /><InputOTPSlot index={9} /><InputOTPSlot index={10} /><InputOTPSlot index={11} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={12} /><InputOTPSlot index={13} /><InputOTPSlot index={14} /><InputOTPSlot index={15} />
+                  </InputOTPGroup>
+                </InputOTP>
+                {cardInput.length > 0 && cardInput.length < 16 && (
+                  <p className="text-xs text-destructive">{t('return_card_required')}</p>
+                )}
               </div>
 
               <Separator />

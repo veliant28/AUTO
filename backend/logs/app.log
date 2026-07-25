@@ -8089,3 +8089,321 @@ WHERE return_requests.id = %(id_1)s::INTEGER
 2026-07-24 20:03:15 - root - INFO - Health check called
 2026-07-24 20:03:46 - root - INFO - Health check called
 2026-07-24 20:04:16 - root - INFO - Health check called
+2026-07-25 14:53:46 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 14:53:58 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 14:54:16 - root - INFO - Health check called
+2026-07-25 14:54:47 - root - INFO - Health check called
+2026-07-25 14:54:49 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 14:55:17 - root - INFO - Health check called
+2026-07-25 14:55:47 - root - INFO - Health check called
+2026-07-25 14:56:17 - root - INFO - Health check called
+2026-07-25 14:56:48 - root - INFO - Health check called
+2026-07-25 14:57:18 - root - INFO - Health check called
+2026-07-25 14:57:48 - root - INFO - Health check called
+2026-07-25 14:58:18 - root - INFO - Health check called
+2026-07-25 14:58:48 - root - INFO - Health check called
+2026-07-25 14:59:18 - root - INFO - Health check called
+2026-07-25 14:59:49 - root - INFO - Health check called
+2026-07-25 15:00:19 - root - INFO - Health check called
+2026-07-25 15:00:49 - root - INFO - Health check called
+2026-07-25 15:01:19 - root - INFO - Health check called
+2026-07-25 15:01:50 - root - INFO - Health check called
+2026-07-25 15:02:20 - root - INFO - Health check called
+2026-07-25 15:02:50 - root - INFO - Health check called
+2026-07-25 15:03:20 - root - INFO - Health check called
+2026-07-25 15:03:48 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 15:03:50 - root - INFO - Health check called
+2026-07-25 15:04:21 - root - INFO - Health check called
+2026-07-25 15:04:51 - root - INFO - Health check called
+2026-07-25 15:05:21 - root - INFO - Health check called
+2026-07-25 15:05:51 - root - INFO - Health check called
+2026-07-25 15:06:21 - root - INFO - Health check called
+2026-07-25 15:06:51 - root - INFO - Health check called
+2026-07-25 15:07:21 - root - INFO - Health check called
+2026-07-25 15:07:52 - root - INFO - Health check called
+2026-07-25 15:08:22 - root - INFO - Health check called
+2026-07-25 15:08:52 - root - INFO - Health check called
+2026-07-25 15:09:22 - root - INFO - Health check called
+2026-07-25 15:09:52 - root - INFO - Health check called
+2026-07-25 15:10:23 - root - INFO - Health check called
+2026-07-25 15:10:53 - root - INFO - Health check called
+2026-07-25 15:11:23 - root - INFO - Health check called
+2026-07-25 15:11:53 - root - INFO - Health check called
+2026-07-25 15:12:24 - root - INFO - Health check called
+2026-07-25 15:12:54 - root - INFO - Health check called
+2026-07-25 15:13:24 - root - INFO - Health check called
+2026-07-25 15:13:54 - root - INFO - Health check called
+2026-07-25 15:14:24 - root - INFO - Health check called
+2026-07-25 15:14:55 - root - INFO - Health check called
+2026-07-25 15:15:25 - root - INFO - Health check called
+2026-07-25 15:15:55 - root - INFO - Health check called
+2026-07-25 15:16:25 - root - INFO - Health check called
+2026-07-25 15:16:55 - root - INFO - Health check called
+2026-07-25 15:17:25 - root - INFO - Health check called
+2026-07-25 15:17:55 - root - INFO - Health check called
+2026-07-25 15:18:26 - root - INFO - Health check called
+2026-07-25 15:18:56 - root - INFO - Health check called
+2026-07-25 15:19:26 - root - INFO - Health check called
+2026-07-25 15:19:56 - root - INFO - Health check called
+2026-07-25 15:20:26 - root - INFO - Health check called
+2026-07-25 15:20:56 - root - INFO - Health check called
+2026-07-25 15:21:26 - root - INFO - Health check called
+2026-07-25 15:21:57 - root - INFO - Health check called
+2026-07-25 15:22:27 - root - INFO - Health check called
+2026-07-25 15:22:57 - root - INFO - Health check called
+2026-07-25 15:23:27 - root - INFO - Health check called
+2026-07-25 15:23:57 - root - INFO - Health check called
+2026-07-25 15:24:27 - root - INFO - Health check called
+2026-07-25 15:24:58 - root - INFO - Health check called
+2026-07-25 15:25:28 - root - INFO - Health check called
+2026-07-25 15:25:58 - root - INFO - Health check called
+2026-07-25 15:26:28 - root - INFO - Health check called
+2026-07-25 15:26:58 - root - INFO - Health check called
+2026-07-25 15:27:19 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 15:27:29 - root - INFO - Health check called
+2026-07-25 15:27:59 - root - INFO - Health check called
+2026-07-25 15:28:29 - root - INFO - Health check called
+2026-07-25 15:28:59 - root - INFO - Health check called
+2026-07-25 15:29:30 - root - INFO - Health check called
+2026-07-25 15:30:00 - root - INFO - Health check called
+2026-07-25 15:30:30 - root - INFO - Health check called
+2026-07-25 15:30:45 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 15:31:00 - root - INFO - Health check called
+2026-07-25 15:31:30 - root - INFO - Health check called
+2026-07-25 15:32:00 - root - INFO - Health check called
+2026-07-25 15:32:31 - root - INFO - Health check called
+2026-07-25 15:33:01 - root - INFO - Health check called
+2026-07-25 15:33:31 - root - INFO - Health check called
+2026-07-25 15:34:01 - root - INFO - Health check called
+2026-07-25 15:34:31 - root - INFO - Health check called
+2026-07-25 15:35:02 - root - INFO - Health check called
+2026-07-25 15:35:32 - root - INFO - Health check called
+2026-07-25 15:36:02 - root - INFO - Health check called
+2026-07-25 15:36:32 - root - INFO - Health check called
+2026-07-25 15:37:02 - root - INFO - Health check called
+2026-07-25 15:37:32 - root - INFO - Health check called
+2026-07-25 15:38:03 - root - INFO - Health check called
+2026-07-25 15:38:33 - root - INFO - Health check called
+2026-07-25 15:39:03 - root - INFO - Health check called
+2026-07-25 15:39:33 - root - INFO - Health check called
+2026-07-25 15:40:03 - root - INFO - Health check called
+2026-07-25 15:40:34 - root - INFO - Health check called
+2026-07-25 15:41:04 - root - INFO - Health check called
+2026-07-25 15:41:34 - root - INFO - Health check called
+2026-07-25 15:42:04 - root - INFO - Health check called
+2026-07-25 15:42:34 - root - INFO - Health check called
+2026-07-25 15:43:04 - root - INFO - Health check called
+2026-07-25 15:43:34 - root - INFO - Health check called
+2026-07-25 15:44:05 - root - INFO - Health check called
+2026-07-25 15:44:35 - root - INFO - Health check called
+2026-07-25 15:45:05 - root - INFO - Health check called
+2026-07-25 15:45:35 - root - INFO - Health check called
+2026-07-25 15:46:05 - root - INFO - Health check called
+2026-07-25 15:46:35 - root - INFO - Health check called
+2026-07-25 15:47:06 - root - INFO - Health check called
+2026-07-25 15:47:36 - root - INFO - Health check called
+2026-07-25 15:48:06 - root - INFO - Health check called
+2026-07-25 15:48:36 - root - INFO - Health check called
+2026-07-25 15:49:06 - root - INFO - Health check called
+2026-07-25 15:49:36 - root - INFO - Health check called
+2026-07-25 15:50:07 - root - INFO - Health check called
+2026-07-25 15:50:37 - root - INFO - Health check called
+2026-07-25 15:51:07 - root - INFO - Health check called
+2026-07-25 15:51:37 - root - INFO - Health check called
+2026-07-25 15:52:08 - root - INFO - Health check called
+2026-07-25 15:52:38 - root - INFO - Health check called
+2026-07-25 15:53:08 - root - INFO - Health check called
+2026-07-25 15:53:38 - root - INFO - Health check called
+2026-07-25 15:54:08 - root - INFO - Health check called
+2026-07-25 15:54:38 - root - INFO - Health check called
+2026-07-25 15:55:09 - root - INFO - Health check called
+2026-07-25 15:55:39 - root - INFO - Health check called
+2026-07-25 15:56:09 - root - INFO - Health check called
+2026-07-25 15:56:39 - root - INFO - Health check called
+2026-07-25 15:57:09 - root - INFO - Health check called
+2026-07-25 15:57:39 - root - INFO - Health check called
+2026-07-25 15:58:10 - root - INFO - Health check called
+2026-07-25 15:58:40 - root - INFO - Health check called
+2026-07-25 15:59:10 - root - INFO - Health check called
+2026-07-25 15:59:40 - root - INFO - Health check called
+2026-07-25 16:00:10 - root - INFO - Health check called
+2026-07-25 16:00:40 - root - INFO - Health check called
+2026-07-25 16:01:10 - root - INFO - Health check called
+2026-07-25 16:01:41 - root - INFO - Health check called
+2026-07-25 16:02:11 - root - INFO - Health check called
+2026-07-25 16:02:41 - root - INFO - Health check called
+2026-07-25 16:03:11 - root - INFO - Health check called
+2026-07-25 16:03:41 - root - INFO - Health check called
+2026-07-25 16:04:11 - root - INFO - Health check called
+2026-07-25 16:04:42 - root - INFO - Health check called
+2026-07-25 16:05:12 - root - INFO - Health check called
+2026-07-25 16:05:42 - root - INFO - Health check called
+2026-07-25 16:06:13 - root - INFO - Health check called
+2026-07-25 16:06:43 - root - INFO - Health check called
+2026-07-25 16:07:13 - root - INFO - Health check called
+2026-07-25 16:07:43 - root - INFO - Health check called
+2026-07-25 16:08:01 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 16:08:13 - root - INFO - Health check called
+2026-07-25 16:08:44 - root - INFO - Health check called
+2026-07-25 16:09:14 - root - INFO - Health check called
+2026-07-25 16:09:44 - root - INFO - Health check called
+2026-07-25 16:10:14 - root - INFO - Health check called
+2026-07-25 16:10:44 - root - INFO - Health check called
+2026-07-25 16:11:14 - root - INFO - Health check called
+2026-07-25 16:11:45 - root - INFO - Health check called
+2026-07-25 16:12:15 - root - INFO - Health check called
+2026-07-25 16:12:45 - root - INFO - Health check called
+2026-07-25 16:12:51 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 16:13:15 - root - INFO - Health check called
+2026-07-25 16:13:46 - root - INFO - Health check called
+2026-07-25 16:14:16 - root - INFO - Health check called
+2026-07-25 16:14:46 - root - INFO - Health check called
+2026-07-25 16:15:16 - root - INFO - Health check called
+2026-07-25 16:15:23 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 16:15:47 - root - INFO - Health check called
+2026-07-25 16:16:17 - root - INFO - Health check called
+2026-07-25 16:16:47 - root - INFO - Health check called
+2026-07-25 16:17:17 - root - INFO - Health check called
+2026-07-25 16:17:47 - root - INFO - Health check called
+2026-07-25 16:18:17 - root - INFO - Health check called
+2026-07-25 16:18:47 - root - INFO - Health check called
+2026-07-25 16:19:18 - root - INFO - Health check called
+2026-07-25 16:19:48 - root - INFO - Health check called
+2026-07-25 16:20:18 - root - INFO - Health check called
+2026-07-25 16:20:48 - root - INFO - Health check called
+2026-07-25 16:21:18 - root - INFO - Health check called
+2026-07-25 16:21:49 - root - INFO - Health check called
+2026-07-25 16:22:19 - root - INFO - Health check called
+2026-07-25 16:22:49 - root - INFO - Health check called
+2026-07-25 16:23:19 - root - INFO - Health check called
+2026-07-25 16:23:49 - root - INFO - Health check called
+2026-07-25 16:24:19 - root - INFO - Health check called
+2026-07-25 16:24:50 - root - INFO - Health check called
+2026-07-25 16:25:20 - root - INFO - Health check called
+2026-07-25 16:25:50 - root - INFO - Health check called
+2026-07-25 16:26:20 - root - INFO - Health check called
+2026-07-25 16:26:50 - root - INFO - Health check called
+2026-07-25 16:27:21 - root - INFO - Health check called
+2026-07-25 16:27:51 - root - INFO - Health check called
+2026-07-25 16:28:21 - root - INFO - Health check called
+2026-07-25 16:28:51 - root - INFO - Health check called
+2026-07-25 16:29:21 - root - INFO - Health check called
+2026-07-25 16:29:51 - root - INFO - Health check called
+2026-07-25 16:30:22 - root - INFO - Health check called
+2026-07-25 16:30:52 - root - INFO - Health check called
+2026-07-25 16:31:22 - root - INFO - Health check called
+2026-07-25 16:31:52 - root - INFO - Health check called
+2026-07-25 16:32:22 - root - INFO - Health check called
+2026-07-25 16:32:53 - root - INFO - Health check called
+2026-07-25 16:33:23 - root - INFO - Health check called
+2026-07-25 16:33:53 - root - INFO - Health check called
+2026-07-25 16:34:23 - root - INFO - Health check called
+2026-07-25 16:34:53 - root - INFO - Health check called
+2026-07-25 16:35:24 - root - INFO - Health check called
+2026-07-25 16:35:54 - root - INFO - Health check called
+2026-07-25 16:36:24 - root - INFO - Health check called
+2026-07-25 16:36:54 - root - INFO - Health check called
+2026-07-25 16:37:24 - root - INFO - Health check called
+2026-07-25 16:37:54 - root - INFO - Health check called
+2026-07-25 16:38:25 - root - INFO - Health check called
+2026-07-25 16:38:55 - root - INFO - Health check called
+2026-07-25 16:39:25 - root - INFO - Health check called
+2026-07-25 16:39:55 - root - INFO - Health check called
+2026-07-25 16:40:11 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:40:12 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.order_id = %(order_id_1)s::INTEGER 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'order_id_1': 16, 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:40:19 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'status_1': 'PENDING', 'param_1': 20}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:40:25 - root - INFO - Health check called
+2026-07-25 16:40:34 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'status_1': 'PENDING', 'param_1': 20}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:40:49 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'status_1': 'PENDING', 'param_1': 20}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:40:55 - root - INFO - Health check called
+2026-07-25 16:41:04 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'status_1': 'PENDING', 'param_1': 20}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:41:14 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:41:17 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:41:17 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.order_id = %(order_id_1)s::INTEGER 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'order_id_1': 16, 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:41:19 - app.core.protection_middleware - ERROR - Protection middleware error: (psycopg.errors.UndefinedColumn) column return_requests.bank_card does not exist
+LINE 1: ...equests.ttn_number AS return_requests_ttn_number, return_req...
+                                                             ^
+[SQL: SELECT return_requests.id AS return_requests_id, return_requests.return_number AS return_requests_return_number, return_requests.order_id AS return_requests_order_id, return_requests.user_id AS return_requests_user_id, return_requests.status AS return_requests_status, return_requests.total_refund AS return_requests_total_refund, return_requests.admin_notes AS return_requests_admin_notes, return_requests.ttn_number AS return_requests_ttn_number, return_requests.bank_card AS return_requests_bank_card, return_requests.return_phone AS return_requests_return_phone, return_requests.return_last_name AS return_requests_return_last_name, return_requests.return_first_name AS return_requests_return_first_name, return_requests.return_middle_name AS return_requests_return_middle_name, return_requests.return_delivery_city AS return_requests_return_delivery_city, return_requests.return_delivery_warehouse AS return_requests_return_delivery_warehouse, return_requests.created_at AS return_requests_created_at, return_requests.updated_at AS return_requests_updated_at, return_requests.approved_at AS return_requests_approved_at, return_requests.completed_at AS return_requests_completed_at, return_requests.approved_by_user_id AS return_requests_approved_by_user_id, return_requests.updated_by_user_id AS return_requests_updated_by_user_id, return_requests.updated_by_name AS return_requests_updated_by_name, return_requests.updated_by_group AS return_requests_updated_by_group 
+FROM return_requests 
+WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at DESC 
+ LIMIT %(param_1)s::INTEGER]
+[parameters: {'status_1': 'PENDING', 'param_1': 20}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-07-25 16:41:26 - root - INFO - Health check called
+2026-07-25 16:41:42 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:41:48 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:41:54 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:41:56 - root - INFO - Health check called
+2026-07-25 16:42:00 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:26 - root - INFO - Health check called
+2026-07-25 16:42:32 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:35 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:42 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:45 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:54 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:42:56 - root - INFO - Health check called
+2026-07-25 16:43:00 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:43:05 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:43:08 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:43:26 - root - INFO - Health check called
+2026-07-25 16:43:56 - root - INFO - Health check called
+2026-07-25 16:44:27 - root - INFO - Health check called
+2026-07-25 16:44:57 - root - INFO - Health check called
+2026-07-25 16:45:27 - root - INFO - Health check called
+2026-07-25 16:45:57 - root - INFO - Health check called
+2026-07-25 16:46:27 - root - INFO - Health check called
+2026-07-25 16:46:57 - root - INFO - Health check called
+2026-07-25 16:47:28 - root - INFO - Health check called
+2026-07-25 16:47:58 - root - INFO - Health check called
+2026-07-25 16:48:28 - root - INFO - Health check called
+2026-07-25 16:48:58 - root - INFO - Health check called
+2026-07-25 16:49:23 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 16:49:25 - root - INFO - Health check called

@@ -34,6 +34,7 @@ import {
   ScrollText,
   ScanBarcode,
   ScanLine,
+  CreditCard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,6 +61,12 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from '@/components/ui/tooltip'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from '@/components/ui/input-otp'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -202,6 +209,7 @@ export default function AdminReturnsPage() {
   const [editRecipient, setEditRecipient] = useState<Record<string, string>>({})
   const [showHistory, setShowHistory] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminReturn | null>(null)
+  const [editCard, setEditCard] = useState('')
 
   const localeKey = useMemo(() => {
     try {
@@ -368,6 +376,17 @@ export default function AdminReturnsPage() {
     }, 0)
   }, [returnDetail, editQuantities])
 
+  function maskCard(card: string | null | undefined): string {
+    if (!card) return '—'
+    const digits = card.replace(/\s/g, '')
+    if (digits.length < 8) return digits
+    return `${digits.slice(0, 4)} **** **** ${digits.slice(-4)}`
+  }
+
+  const handleCardChange = (value: string) => {
+    setEditCard(value.replace(/\D/g, '').slice(0, 16))
+  }
+
   const enterEditMode = () => {
     if (!returnDetail) return
     setEditMode(true)
@@ -377,6 +396,7 @@ export default function AdminReturnsPage() {
       q[item.id] = item.quantity
     })
     setEditQuantities(q)
+    setEditCard(returnDetail.bank_card || '')
   }
 
   const historyEvents = useMemo(() => {
@@ -482,6 +502,11 @@ export default function AdminReturnsPage() {
       payload.phone = editRecipient.phone
       payload.delivery_city = editRecipient.delivery_city
       payload.delivery_warehouse = editRecipient.delivery_warehouse
+    }
+    // Card changed
+    const cardChanged = editCard.replace(/\s/g, '') !== (returnDetail.bank_card || '').replace(/\s/g, '')
+    if (cardChanged && editCard.replace(/\s/g, '').length >= 16) {
+      payload.bank_card = editCard.replace(/\s/g, '')
     }
     if (Object.keys(payload).length) {
       updateMutation.mutate({ returnId: viewReturnId, data: payload })
@@ -868,6 +893,9 @@ export default function AdminReturnsPage() {
                           } else if (ev.type === 'ttn_update') {
                             dotColor = 'bg-green-500'
                             IconComponent = ScanBarcode
+                          } else if (ev.type === 'card_update') {
+                            dotColor = 'bg-purple-500'
+                            IconComponent = CreditCard
                           } else if (ev.type === 'deleted') {
                             dotColor = 'bg-red-500'
                             IconComponent = Trash2
@@ -925,6 +953,10 @@ export default function AdminReturnsPage() {
                                             {t('ttn_updated')}: {m[1]}
                                           </>
                                         )
+                                    }
+                                    if (ev.type === 'card_update') {
+                                      const m = ev.details.match(/номер карты[^:]*:\s*(.+)$/)
+                                      if (m) return <>{t('return_card_updated')}: {m[1]}</>
                                     }
                                     return <>{ev.details}</>
                                   })()}
@@ -1146,6 +1178,46 @@ export default function AdminReturnsPage() {
                                     : returnDetail.total_refund,
                                 )}{' '}
                                 ₴
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center pt-1 border-t border-border/50">
+                              <span className="text-muted-foreground">
+                                {t('return_card')}:
+                              </span>
+                              <span className="font-mono text-sm">
+                                {editMode ? (
+                                  <InputOTP maxLength={16} value={editCard} onChange={handleCardChange}>
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                      <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
+                                      <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                                    </InputOTPGroup>
+                                  </InputOTP>
+                                ) : (
+                                  maskCard(returnDetail.bank_card)
+                                )}
                               </span>
                             </div>
                           </div>

@@ -23,6 +23,7 @@ class ReturnRequest(Base):
     total_refund = Column(Numeric(10, 2), nullable=False, default=0)
     admin_notes = Column(Text, nullable=True)
     ttn_number = Column(String(20), nullable=True)
+    bank_card = Column(String(19), nullable=True)
 
     # Return-specific recipient data (editable by admin, separate from order)
     return_phone = Column(String(32), nullable=True)
