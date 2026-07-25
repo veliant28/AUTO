@@ -1018,6 +1018,21 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   const input = e.target as HTMLInputElement
                   setTimeout(() => input.setSelectionRange(0, 0), 0)
                 }}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Backspace') {
+                    e.preventDefault()
+                    const input = e.target as HTMLInputElement
+                    const pos = Math.min(2, input.selectionStart ?? 2)
+                    const currentVal = pricingOtpDigits.join('')
+                    const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
+                    const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
+                    setPricingOtpDigits(padded)
+                    const num = Math.min(100, Math.max(0, Number(padded.join(''))))
+                    ;(window as any).__pricingSetGeneralMargin?.(num)
+                    const newPos = Math.max(0, pos - 1)
+                    setTimeout(() => input.setSelectionRange(newPos, newPos), 0)
+                  }
+                }}
                 onChange={(val) => {
                   const raw = val.replace(/\D/g, '')
                   const padded = raw.padEnd(3, '0').split('')
