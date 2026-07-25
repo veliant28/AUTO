@@ -396,6 +396,7 @@ export default function ReturnDetailPage() {
                   </div>
                 </div>
               </div>
+              <Separator />
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-base">{t('recipient')}</h3>
