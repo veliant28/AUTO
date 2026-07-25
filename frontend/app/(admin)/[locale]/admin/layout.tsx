@@ -42,6 +42,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
+import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -1000,41 +1005,33 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               <Minus className="w-3.5 h-3.5" />
             </Button>
             <div className="flex items-center gap-0.5">
-              {pricingOtpDigits.map((digit, i) => (
-                <Input
-                  key={i}
-                  type="text"
-                  inputMode="numeric"
-                  value={digit}
-                  className="w-7 h-8 text-center text-sm font-mono p-0 rounded-md border-2 focus:border-primary"
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    const char = e.target.value
-                    if (char && /\d/.test(char)) {
-                      const digits = [...pricingOtpDigits]
-                      digits[i] = char.slice(-1)
-                      setPricingOtpDigits(digits)
-                      const num = Math.min(
-                        100,
-                        Math.max(0, Number(digits.join(''))),
-                      )
-                      ;(window as any).__pricingSetGeneralMargin?.(num)
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace') {
-                      const digits = [...pricingOtpDigits]
-                      digits[i] = '0'
-                      setPricingOtpDigits(digits)
-                      const num = Math.min(
-                        100,
-                        Math.max(0, Number(digits.join(''))),
-                      )
-                      ;(window as any).__pricingSetGeneralMargin?.(num)
-                    }
-                  }}
-                />
-              ))}
+              <InputOTP
+                maxLength={3}
+                value={pricingOtpDigits.join('')}
+                onChange={(val) => {
+                  const raw = val.replace(/\D/g, '')
+                  const shifted = raw.slice(-3).padStart(3, '0').split('')
+                  setPricingOtpDigits(shifted)
+                  const num = Math.min(100, Math.max(0, Number(shifted.join(''))))
+                  ;(window as any).__pricingSetGeneralMargin?.(num)
+                }}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (/^[0-9]$/.test(e.key)) {
+                    e.preventDefault()
+                    const shifted = [...pricingOtpDigits.slice(1), e.key]
+                    setPricingOtpDigits(shifted)
+                    const num = Math.min(100, Math.max(0, Number(shifted.join(''))))
+                    ;(window as any).__pricingSetGeneralMargin?.(num)
+                  }
+                }}
+                containerClassName="cursor-text"
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                  <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                  <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
             <Button
               variant="outline"
