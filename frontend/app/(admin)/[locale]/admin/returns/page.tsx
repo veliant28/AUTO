@@ -1451,7 +1451,7 @@ export default function AdminReturnsPage() {
                       </span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
                       <ScanLine className="w-4 h-4" />
                       <span className="font-mono">XX XXXX XXXX XXXX</span>
                     </div>
