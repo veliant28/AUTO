@@ -555,6 +555,19 @@ export default function PricingPageClient() {
                               const input = e.target as HTMLInputElement
                               setTimeout(() => input.setSelectionRange(0, 0), 0)
                             }}
+                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                              if (e.key === 'Backspace') {
+                                e.preventDefault()
+                                const input = e.target as HTMLInputElement
+                                const pos = Math.max(0, (input.selectionStart || 0) - 1)
+                                // Use the digits for current value
+                                const currentVal = digits.join('')
+                                const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
+                                const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
+                                updateVal(padded)
+                                setTimeout(() => input.setSelectionRange(pos, pos), 0)
+                              }
+                            }}
                             onChange={(val) => {
                               const raw = val.replace(/\D/g, '')
                               const padded = raw.padEnd(3, '0').split('')
