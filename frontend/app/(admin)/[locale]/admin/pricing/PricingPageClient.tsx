@@ -559,7 +559,7 @@ export default function PricingPageClient() {
                               if (e.key === 'Backspace') {
                                 e.preventDefault()
                                 const input = e.target as HTMLInputElement
-                                const pos = Math.max(0, (input.selectionStart || 0) - 1)
+                                const pos = Math.min(2, input.selectionStart ?? 2)
                                 // Use the digits for current value
                                 const currentVal = digits.join('')
                                 const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
