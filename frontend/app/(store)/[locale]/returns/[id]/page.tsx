@@ -378,7 +378,7 @@ export default function ReturnDetailPage() {
                       </>
                     ) : (
                       <>
-                        <InputOTP maxLength={16} value={cardInput || ret.bank_card || ''} onChange={() => {}} disabled containerClassName="bg-muted/30 rounded-md">
+                        <InputOTP maxLength={16} value={(cardInput || ret.bank_card || '').replace(/^(\d{4})\d{8}(\d{4})$/, '$1********$2')} onChange={() => {}} disabled containerClassName="bg-muted/30 rounded-md">
                           <InputOTPGroup>
                             <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
                           </InputOTPGroup>
