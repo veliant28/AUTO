@@ -25,10 +25,21 @@ InputOTP.displayName = 'InputOTP'
 const InputOTPGroup = React.forwardRef<
   React.ElementRef<'div'>,
   React.ComponentPropsWithoutRef<'div'>
->(({ className, ...props }, ref) => (
+>(({ className, onClick, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex items-center rounded-md shadow-sm', className)}
+    className={cn('flex items-center rounded-md shadow-sm pointer-events-auto', className)}
+    onClick={(e) => {
+      onClick?.(e)
+      // Forward click to the hidden input for correct cursor positioning
+      const container = (e.currentTarget as HTMLElement).closest('[data-input-otp-container]')
+      const input = container?.querySelector<HTMLInputElement>('[data-input-otp]')
+      if (input && document.activeElement !== input) {
+        input.focus()
+        const slotIndex = 0
+        input.setSelectionRange(slotIndex, slotIndex)
+      }
+    }}
     {...props}
   />
 ))

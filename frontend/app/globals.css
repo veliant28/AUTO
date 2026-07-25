@@ -87,6 +87,9 @@ select:focus-visible {
 [data-input-otp] {
   pointer-events: all !important;
 }
+[data-input-otp-container] > :last-child {
+  pointer-events: none !important;
+}
 
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
