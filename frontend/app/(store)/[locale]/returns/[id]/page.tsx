@@ -378,9 +378,23 @@ export default function ReturnDetailPage() {
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center h-10 rounded-md border bg-muted/30 px-3 py-2 text-sm font-mono">
-                          {maskCard(cardInput || ret.bank_card)}
-                        </div>
+                        <InputOTP maxLength={16} value={cardInput || ret.bank_card || ''} onChange={() => {}} disabled className="opacity-60">
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={4} className="w-7 h-8 text-xs" /><InputOTPSlot index={5} className="w-7 h-8 text-xs" /><InputOTPSlot index={6} className="w-7 h-8 text-xs" /><InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={8} className="w-7 h-8 text-xs" /><InputOTPSlot index={9} className="w-7 h-8 text-xs" /><InputOTPSlot index={10} className="w-7 h-8 text-xs" /><InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                          </InputOTPGroup>
+                          <InputOTPSeparator />
+                          <InputOTPGroup>
+                            <InputOTPSlot index={12} className="w-7 h-8 text-xs" /><InputOTPSlot index={13} className="w-7 h-8 text-xs" /><InputOTPSlot index={14} className="w-7 h-8 text-xs" /><InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                          </InputOTPGroup>
+                        </InputOTP>
                         {ret.status === 'pending' && (
                           <Tooltip>
                             <TooltipTrigger asChild>
