@@ -1009,7 +1009,14 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 maxLength={3}
                 value={pricingOtpDigits.join('')}
                 onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                  setTimeout(() => e.target.setSelectionRange(0, 0), 0)
+                  const input = e.target as HTMLInputElement
+                  const set0 = () => input.setSelectionRange(0, 0)
+                  setTimeout(set0, 0)
+                  setTimeout(set0, 100)
+                }}
+                onPointerDown={(e: React.PointerEvent<HTMLInputElement>) => {
+                  const input = e.target as HTMLInputElement
+                  setTimeout(() => input.setSelectionRange(0, 0), 0)
                 }}
                 onChange={(val) => {
                   const raw = val.replace(/\D/g, '')
