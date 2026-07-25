@@ -547,17 +547,9 @@ export default function PricingPageClient() {
                             value={digits.join('')}
                             onChange={(val) => {
                               const raw = val.replace(/\D/g, '')
-                              const shifted = raw.slice(-3).padStart(3, '0').split('')
-                              updateVal(shifted)
+                              const padded = raw.padEnd(3, '0').split('')
+                              updateVal(padded)
                             }}
-                            onKeyDown={(e: React.KeyboardEvent) => {
-                              if (/^[0-9]$/.test(e.key)) {
-                                e.preventDefault()
-                                const shifted = [...digits.slice(1), e.key]
-                                updateVal(shifted)
-                              }
-                            }}
-                            containerClassName="cursor-text"
                           >
                             <InputOTPGroup>
                               <InputOTPSlot index={0} className="w-7 h-8 text-xs" />

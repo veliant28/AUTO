@@ -1010,21 +1010,11 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 value={pricingOtpDigits.join('')}
                 onChange={(val) => {
                   const raw = val.replace(/\D/g, '')
-                  const shifted = raw.slice(-3).padStart(3, '0').split('')
-                  setPricingOtpDigits(shifted)
-                  const num = Math.min(100, Math.max(0, Number(shifted.join(''))))
+                  const padded = raw.padEnd(3, '0').split('')
+                  setPricingOtpDigits(padded)
+                  const num = Math.min(100, Math.max(0, Number(padded.join(''))))
                   ;(window as any).__pricingSetGeneralMargin?.(num)
                 }}
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  if (/^[0-9]$/.test(e.key)) {
-                    e.preventDefault()
-                    const shifted = [...pricingOtpDigits.slice(1), e.key]
-                    setPricingOtpDigits(shifted)
-                    const num = Math.min(100, Math.max(0, Number(shifted.join(''))))
-                    ;(window as any).__pricingSetGeneralMargin?.(num)
-                  }
-                }}
-                containerClassName="cursor-text"
               >
                 <InputOTPGroup>
                   <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
