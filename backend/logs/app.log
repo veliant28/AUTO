@@ -8620,3 +8620,2393 @@ WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at 
 2026-07-25 18:24:42 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
 2026-07-25 18:24:44 - root - INFO - Health check called
 2026-07-25 18:25:14 - root - INFO - Health check called
+2026-07-25 18:25:44 - root - INFO - Health check called
+2026-07-25 18:25:46 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 18:26:14 - root - INFO - Health check called
+2026-07-25 18:26:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:22 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/dashboard "HTTP/1.1 200 OK"
+2026-07-25 18:26:23 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:23 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:23 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/users "HTTP/1.1 200 OK"
+2026-07-25 18:26:23 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/brands "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/products?page=1&page_size=10 "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders "HTTP/1.1 200 OK"
+2026-07-25 18:26:24 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:25 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:25 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/dashboard "HTTP/1.1 200 OK"
+2026-07-25 18:26:25 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:25 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:25 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/catalog/types "HTTP/1.1 200 OK"
+2026-07-25 18:26:25 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:26 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:26 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/catalog/years?type=passenger "HTTP/1.1 200 OK"
+2026-07-25 18:26:26 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:27 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/catalog/makes?type=passenger&year=2020 "HTTP/1.1 200 OK"
+2026-07-25 18:26:27 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:27 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/categories "HTTP/1.1 200 OK"
+2026-07-25 18:26:27 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:28 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:28 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/categories "HTTP/1.1 200 OK"
+2026-07-25 18:26:28 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:29 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:29 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/categories "HTTP/1.1 200 OK"
+2026-07-25 18:26:29 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:29 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:29 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/categories/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:29 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:30 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:30 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/categories/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:30 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:30 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:30 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/categories/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:30 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:31 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:31 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/categories/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:31 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:31 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:31 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/categories "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:31 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:32 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:32 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports "HTTP/1.1 200 OK"
+2026-07-25 18:26:32 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:33 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:33 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports "HTTP/1.1 200 OK"
+2026-07-25 18:26:33 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:33 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:33 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports?supplier=GPL "HTTP/1.1 200 OK"
+2026-07-25 18:26:33 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:34 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:34 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:34 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:34 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:34 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports/99999/download "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:34 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:35 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:35 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/imports/1/download "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:35 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/imports/99999/promote "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:36 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/imports/1/promote "HTTP/1.1 200 OK"
+2026-07-25 18:26:36 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:37 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:37 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/imports/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:37 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:38 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:38 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/imports/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:38 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:38 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:38 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders "HTTP/1.1 200 OK"
+2026-07-25 18:26:38 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:39 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:39 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders "HTTP/1.1 200 OK"
+2026-07-25 18:26:39 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:40 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:40 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders?status=pending "HTTP/1.1 200 OK"
+2026-07-25 18:26:40 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:41 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:41 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders?search=Petrov "HTTP/1.1 200 OK"
+2026-07-25 18:26:41 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:42 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:42 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders?search=1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:42 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:42 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:42 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders?page=1&page_size=3 "HTTP/1.1 200 OK"
+2026-07-25 18:26:42 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:43 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:43 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:43 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:44 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:44 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:44 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:44 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:44 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/orders/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:44 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:44 - root - INFO - Health check called
+2026-07-25 18:26:45 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:45 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/orders/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:45 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:46 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:46 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/orders/1/status "HTTP/1.1 200 OK"
+2026-07-25 18:26:46 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:47 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:47 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/orders/1/status "HTTP/1.1 400 Bad Request"
+2026-07-25 18:26:47 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:47 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:47 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/orders/99999/status "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:47 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:48 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:48 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders/1/history "HTTP/1.1 200 OK"
+2026-07-25 18:26:48 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:49 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:49 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/orders "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:49 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:49 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:49 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/general "HTTP/1.1 200 OK"
+2026-07-25 18:26:49 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:50 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:50 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/pricing/general "HTTP/1.1 200 OK"
+2026-07-25 18:26:50 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:50 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:50 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/general "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:50 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:51 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:51 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/categories "HTTP/1.1 200 OK"
+2026-07-25 18:26:51 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:52 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:52 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/pricing/categories/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:52 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:52 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:52 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/history "HTTP/1.1 200 OK"
+2026-07-25 18:26:52 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:53 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:53 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/history?type=category&category_id=1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:53 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:54 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:54 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/pricing/applied-history "HTTP/1.1 200 OK"
+2026-07-25 18:26:54 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:55 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:55 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/products "HTTP/1.1 200 OK"
+2026-07-25 18:26:55 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:55 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:55 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/products "HTTP/1.1 200 OK"
+2026-07-25 18:26:55 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:56 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:56 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/products "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:56 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:56 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:56 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/products/1 "HTTP/1.1 200 OK"
+2026-07-25 18:26:56 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:57 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:57 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/products/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:26:57 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:58 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:58 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/roles "HTTP/1.1 200 OK"
+2026-07-25 18:26:58 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:58 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:58 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/roles "HTTP/1.1 403 Forbidden"
+2026-07-25 18:26:58 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:59 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:59 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/roles "HTTP/1.1 200 OK"
+2026-07-25 18:26:59 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:26:59 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:26:59 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/roles "HTTP/1.1 200 OK"
+2026-07-25 18:26:59 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/roles "HTTP/1.1 400 Bad Request"
+2026-07-25 18:26:59 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:00 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:00 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/roles "HTTP/1.1 200 OK"
+2026-07-25 18:27:00 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/roles/2 "HTTP/1.1 200 OK"
+2026-07-25 18:27:00 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:01 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:01 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/roles/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:01 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:01 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:01 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/roles "HTTP/1.1 200 OK"
+2026-07-25 18:27:01 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/roles/2 "HTTP/1.1 200 OK"
+2026-07-25 18:27:01 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:02 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:02 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/admin/roles/99999 "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:02 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:03 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:03 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/permissions "HTTP/1.1 200 OK"
+2026-07-25 18:27:03 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:03 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:03 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/schedules "HTTP/1.1 200 OK"
+2026-07-25 18:27:03 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:04 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:04 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/schedules "HTTP/1.1 200 OK"
+2026-07-25 18:27:04 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:04 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:04 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/schedules "HTTP/1.1 403 Forbidden"
+2026-07-25 18:27:04 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:05 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:05 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/schedules/UTR "HTTP/1.1 200 OK"
+2026-07-25 18:27:05 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:05 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:05 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/schedules/UNKNOWN "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:05 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:06 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:06 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/schedules/UNKNOWN/run "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:06 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:07 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:07 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/suppliers "HTTP/1.1 200 OK"
+2026-07-25 18:27:07 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:07 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:07 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/suppliers "HTTP/1.1 200 OK"
+2026-07-25 18:27:07 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:08 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:08 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/suppliers "HTTP/1.1 403 Forbidden"
+2026-07-25 18:27:08 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:08 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:08 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/suppliers/GPL "HTTP/1.1 200 OK"
+2026-07-25 18:27:08 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:09 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:09 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/suppliers/UNKNOWN "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:09 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:10 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:10 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/suppliers/GPL/token-status "HTTP/1.1 200 OK"
+2026-07-25 18:27:10 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:10 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:10 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/suppliers/UNKNOWN/token-status "HTTP/1.1 404 Not Found"
+2026-07-25 18:27:10 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:11 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:12 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/workers "HTTP/1.1 200 OK"
+2026-07-25 18:27:12 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:12 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:12 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/workers "HTTP/1.1 403 Forbidden"
+2026-07-25 18:27:12 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:13 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:13 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/workers/tasks/fake-task-id/revoke "HTTP/1.1 200 OK"
+2026-07-25 18:27:13 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:14 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:14 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/admin/workers/restart "HTTP/1.1 200 OK"
+2026-07-25 18:27:15 - root - INFO - Health check called
+2026-07-25 18:27:15 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:15 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 200 OK"
+2026-07-25 18:27:15 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:16 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:16 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:16 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 401 Unauthorized"
+2026-07-25 18:27:16 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:16 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/register "HTTP/1.1 400 Bad Request"
+2026-07-25 18:27:16 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:16 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:16 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users/me "HTTP/1.1 200 OK"
+2026-07-25 18:27:16 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:17 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:17 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users/change-password "HTTP/1.1 200 OK"
+2026-07-25 18:27:17 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:17 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:18 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users/change-password "HTTP/1.1 400 Bad Request"
+2026-07-25 18:27:18 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:18 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:18 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/cart/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:18 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:18 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:18 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/cart/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:18 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/cart/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/cart/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/cart/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/cart/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/cart/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/cart/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:19 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:19 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/cart/ "HTTP/1.1 401 Unauthorized"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/makes "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/models/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/makes "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/makes "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/models/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/models/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/modifications/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/modifications/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/sections/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/search?q=BR001 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/search?q=ZZZ999 "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/search "HTTP/1.1 422 Unprocessable Entity"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/search/autocomplete?q=TEST "HTTP/1.1 200 OK"
+2026-07-25 18:27:20 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:20 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/years?type=passenger "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/years?type=invalid "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/makes?type=passenger&year=2020 "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/models?type=passenger&year=2020&make_id=1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/cars?type=passenger&year=2020&model_id=1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/volumes?year=2020&model_id=1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/catalog/vehicle/engines?year=2020&car_id=1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories/header "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories/header?locale=en "HTTP/1.1 200 OK"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:21 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/categories/header?locale=de "HTTP/1.1 422 Unprocessable Entity"
+2026-07-25 18:27:21 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/favorites/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/favorites/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/favorites/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: DELETE http://testserver/api/v1/favorites/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/favorites/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/footer "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:22 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/footer?locale=en "HTTP/1.1 200 OK"
+2026-07-25 18:27:22 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:23 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:23 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/footer "HTTP/1.1 200 OK"
+2026-07-25 18:27:23 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:24 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:24 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/footer/ru "HTTP/1.1 200 OK"
+2026-07-25 18:27:24 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:24 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:24 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/footer/ua "HTTP/1.1 200 OK"
+2026-07-25 18:27:25 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:25 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:25 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/footer/de "HTTP/1.1 400 Bad Request"
+2026-07-25 18:27:25 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/footer "HTTP/1.1 403 Forbidden"
+2026-07-25 18:27:26 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/orders/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:26 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:26 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/cart/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/orders/checkout "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/cart/add "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/orders/checkout "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/orders/1 "HTTP/1.1 200 OK"
+2026-07-25 18:27:27 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:27 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/orders/ "HTTP/1.1 401 Unauthorized"
+2026-07-25 18:27:32 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:33 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings "HTTP/1.1 200 OK"
+2026-07-25 18:27:33 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:33 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/settings "HTTP/1.1 200 OK"
+2026-07-25 18:27:33 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:33 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:33 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/settings "HTTP/1.1 200 OK"
+2026-07-25 18:27:33 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:34 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:34 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/admin/settings "HTTP/1.1 200 OK"
+2026-07-25 18:27:34 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:34 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:34 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/admin/settings "HTTP/1.1 403 Forbidden"
+2026-07-25 18:27:35 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:35 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:35 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/telegram/start "HTTP/1.1 200 OK"
+2026-07-25 18:27:35 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:35 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:35 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/telegram/status "HTTP/1.1 200 OK"
+2026-07-25 18:27:35 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/telegram/disconnect "HTTP/1.1 400 Bad Request"
+2026-07-25 18:27:36 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:36 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:36 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users/me "HTTP/1.1 200 OK"
+2026-07-25 18:27:37 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:37 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:37 - httpx - INFO - HTTP Request: PUT http://testserver/api/v1/users/me "HTTP/1.1 200 OK"
+2026-07-25 18:27:37 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:37 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:38 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/users/change-password "HTTP/1.1 200 OK"
+2026-07-25 18:27:38 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-25 18:27:38 - httpx - INFO - HTTP Request: POST http://testserver/api/v1/auth/login "HTTP/1.1 200 OK"
+2026-07-25 18:27:38 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 18:27:38 - httpx - INFO - HTTP Request: GET http://testserver/api/v1/users/garage "HTTP/1.1 200 OK"
+2026-07-25 18:27:45 - root - INFO - Health check called
+2026-07-25 18:27:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:27:51 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:28:15 - root - INFO - Health check called
+2026-07-25 18:28:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:28:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:28:34 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:28:45 - root - INFO - Health check called
+2026-07-25 18:29:06 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:29:06 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:29:06 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:29:15 - root - INFO - Health check called
+2026-07-25 18:29:46 - root - INFO - Health check called
+2026-07-25 18:30:16 - root - INFO - Health check called
+2026-07-25 18:30:46 - root - INFO - Health check called
+2026-07-25 18:31:10 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:31:10 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:31:10 - httpx - INFO - HTTP Request: POST https://api.novaposhta.ua/v2.0/json/ "HTTP/1.1 200 OK"
+2026-07-25 18:31:16 - root - INFO - Health check called
+2026-07-25 18:31:42 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-25 18:31:46 - root - INFO - Health check called
+2026-07-25 18:32:17 - root - INFO - Health check called
+2026-07-25 18:32:47 - root - INFO - Health check called
+2026-07-25 18:33:17 - root - INFO - Health check called
+2026-07-25 18:33:47 - root - INFO - Health check called
+2026-07-25 18:34:17 - root - INFO - Health check called
+2026-07-25 18:34:47 - root - INFO - Health check called
+2026-07-25 18:35:18 - root - INFO - Health check called
+2026-07-25 18:35:48 - root - INFO - Health check called
+2026-07-25 18:36:18 - root - INFO - Health check called
+2026-07-25 18:36:48 - root - INFO - Health check called
+2026-07-25 18:37:18 - root - INFO - Health check called
+2026-07-25 18:37:48 - root - INFO - Health check called
+2026-07-25 18:38:19 - root - INFO - Health check called
+2026-07-25 18:38:49 - root - INFO - Health check called
+2026-07-25 18:39:19 - root - INFO - Health check called
+2026-07-25 18:39:49 - root - INFO - Health check called
+2026-07-25 18:40:19 - root - INFO - Health check called
+2026-07-25 18:40:49 - root - INFO - Health check called
+2026-07-25 18:41:19 - root - INFO - Health check called
+2026-07-25 18:41:50 - root - INFO - Health check called
+2026-07-25 18:42:20 - root - INFO - Health check called
+2026-07-25 18:42:50 - root - INFO - Health check called
+2026-07-25 18:43:20 - root - INFO - Health check called
+2026-07-25 18:43:50 - root - INFO - Health check called
+2026-07-25 18:44:20 - root - INFO - Health check called
+2026-07-25 18:44:50 - root - INFO - Health check called
+2026-07-25 18:45:21 - root - INFO - Health check called
+2026-07-25 18:45:51 - root - INFO - Health check called
+2026-07-25 18:46:21 - root - INFO - Health check called
+2026-07-25 18:46:51 - root - INFO - Health check called
+2026-07-25 18:47:21 - root - INFO - Health check called
+2026-07-25 18:47:51 - root - INFO - Health check called
+2026-07-25 18:48:22 - root - INFO - Health check called
+2026-07-25 18:48:52 - root - INFO - Health check called
+2026-07-25 18:49:22 - root - INFO - Health check called
+2026-07-25 18:49:52 - root - INFO - Health check called
+2026-07-25 18:50:22 - root - INFO - Health check called
+2026-07-25 18:50:52 - root - INFO - Health check called
+2026-07-25 18:51:23 - root - INFO - Health check called
+2026-07-25 18:51:53 - root - INFO - Health check called
+2026-07-25 18:52:23 - root - INFO - Health check called
+2026-07-25 18:52:53 - root - INFO - Health check called
+2026-07-25 18:53:23 - root - INFO - Health check called
+2026-07-25 18:53:53 - root - INFO - Health check called
+2026-07-25 18:54:24 - root - INFO - Health check called
+2026-07-25 18:54:54 - root - INFO - Health check called
+2026-07-25 18:55:24 - root - INFO - Health check called
+2026-07-25 18:55:54 - root - INFO - Health check called
+2026-07-25 18:56:24 - root - INFO - Health check called
+2026-07-25 18:56:54 - root - INFO - Health check called
+2026-07-25 18:57:24 - root - INFO - Health check called
+2026-07-25 18:57:55 - root - INFO - Health check called
+2026-07-25 18:58:25 - root - INFO - Health check called
+2026-07-25 18:58:55 - root - INFO - Health check called
+2026-07-25 18:59:26 - root - INFO - Health check called
+2026-07-25 18:59:56 - root - INFO - Health check called
+2026-07-25 19:00:26 - root - INFO - Health check called
+2026-07-25 19:00:56 - root - INFO - Health check called
+2026-07-25 19:01:26 - root - INFO - Health check called
+2026-07-25 19:01:56 - root - INFO - Health check called
+2026-07-25 19:02:26 - root - INFO - Health check called
+2026-07-25 19:02:57 - root - INFO - Health check called
+2026-07-25 19:03:27 - root - INFO - Health check called
+2026-07-25 19:03:57 - root - INFO - Health check called
+2026-07-25 19:04:27 - root - INFO - Health check called
+2026-07-25 19:04:57 - root - INFO - Health check called
+2026-07-25 19:05:27 - root - INFO - Health check called
+2026-07-25 19:05:57 - root - INFO - Health check called
+2026-07-25 19:06:28 - root - INFO - Health check called
+2026-07-25 19:06:58 - root - INFO - Health check called
+2026-07-25 19:07:28 - root - INFO - Health check called
+2026-07-25 19:07:58 - root - INFO - Health check called
+2026-07-25 19:08:28 - root - INFO - Health check called
+2026-07-25 19:08:58 - root - INFO - Health check called
+2026-07-25 19:09:29 - root - INFO - Health check called
+2026-07-25 19:09:59 - root - INFO - Health check called
+2026-07-25 19:10:29 - root - INFO - Health check called
+2026-07-25 19:10:59 - root - INFO - Health check called
+2026-07-25 19:11:29 - root - INFO - Health check called
+2026-07-25 19:11:59 - root - INFO - Health check called
+2026-07-25 19:12:29 - root - INFO - Health check called
+2026-07-25 19:13:00 - root - INFO - Health check called
+2026-07-25 19:13:30 - root - INFO - Health check called
+2026-07-25 19:14:00 - root - INFO - Health check called
+2026-07-25 19:14:30 - root - INFO - Health check called
+2026-07-25 19:15:00 - root - INFO - Health check called
+2026-07-25 19:15:30 - root - INFO - Health check called
+2026-07-25 19:16:00 - root - INFO - Health check called
+2026-07-25 19:16:31 - root - INFO - Health check called
+2026-07-25 19:17:01 - root - INFO - Health check called
+2026-07-25 19:17:31 - root - INFO - Health check called
+2026-07-25 19:18:01 - root - INFO - Health check called
+2026-07-25 19:18:31 - root - INFO - Health check called
+2026-07-25 19:19:01 - root - INFO - Health check called
+2026-07-25 19:19:31 - root - INFO - Health check called
+2026-07-25 19:20:02 - root - INFO - Health check called
+2026-07-25 19:20:32 - root - INFO - Health check called
+2026-07-25 19:21:02 - root - INFO - Health check called
+2026-07-25 19:21:32 - root - INFO - Health check called
+2026-07-25 19:22:02 - root - INFO - Health check called
+2026-07-25 19:22:32 - root - INFO - Health check called
+2026-07-25 19:23:03 - root - INFO - Health check called
+2026-07-25 19:23:33 - root - INFO - Health check called
+2026-07-25 19:24:03 - root - INFO - Health check called
+2026-07-25 19:24:33 - root - INFO - Health check called
+2026-07-25 19:25:03 - root - INFO - Health check called
+2026-07-25 19:25:33 - root - INFO - Health check called
+2026-07-25 19:26:03 - root - INFO - Health check called
+2026-07-25 19:26:34 - root - INFO - Health check called
+2026-07-25 19:27:04 - root - INFO - Health check called
+2026-07-25 19:27:34 - root - INFO - Health check called
+2026-07-25 19:28:04 - root - INFO - Health check called
+2026-07-25 19:28:34 - root - INFO - Health check called
+2026-07-25 19:29:04 - root - INFO - Health check called
+2026-07-25 19:29:34 - root - INFO - Health check called
+2026-07-25 19:30:05 - root - INFO - Health check called
+2026-07-25 19:30:35 - root - INFO - Health check called
+2026-07-25 19:31:05 - root - INFO - Health check called
+2026-07-25 19:31:35 - root - INFO - Health check called
+2026-07-25 19:32:05 - root - INFO - Health check called
+2026-07-25 19:32:35 - root - INFO - Health check called
+2026-07-25 19:33:05 - root - INFO - Health check called
+2026-07-25 19:33:36 - root - INFO - Health check called
+2026-07-25 19:34:06 - root - INFO - Health check called
+2026-07-25 19:34:36 - root - INFO - Health check called
+2026-07-25 19:35:06 - root - INFO - Health check called
+2026-07-25 19:35:36 - root - INFO - Health check called
+2026-07-25 19:36:06 - root - INFO - Health check called
+2026-07-25 19:36:36 - root - INFO - Health check called
+2026-07-25 19:37:07 - root - INFO - Health check called
+2026-07-25 19:37:37 - root - INFO - Health check called
+2026-07-25 19:38:07 - root - INFO - Health check called
+2026-07-25 19:38:37 - root - INFO - Health check called
+2026-07-25 19:39:07 - root - INFO - Health check called
+2026-07-25 19:39:37 - root - INFO - Health check called
+2026-07-25 19:40:07 - root - INFO - Health check called
+2026-07-25 19:40:38 - root - INFO - Health check called
+2026-07-25 19:41:08 - root - INFO - Health check called
+2026-07-25 19:41:38 - root - INFO - Health check called
+2026-07-25 19:42:08 - root - INFO - Health check called
+2026-07-25 19:42:38 - root - INFO - Health check called
+2026-07-25 19:43:08 - root - INFO - Health check called
+2026-07-25 19:43:38 - root - INFO - Health check called
+2026-07-25 19:44:09 - root - INFO - Health check called
+2026-07-25 19:44:39 - root - INFO - Health check called
+2026-07-25 19:45:09 - root - INFO - Health check called
+2026-07-25 19:45:39 - root - INFO - Health check called
+2026-07-25 19:46:09 - root - INFO - Health check called
+2026-07-25 19:46:39 - root - INFO - Health check called
+2026-07-25 19:47:09 - root - INFO - Health check called
+2026-07-25 19:47:40 - root - INFO - Health check called
+2026-07-25 19:48:10 - root - INFO - Health check called
+2026-07-25 19:48:40 - root - INFO - Health check called
+2026-07-25 19:49:10 - root - INFO - Health check called
+2026-07-25 19:49:40 - root - INFO - Health check called
+2026-07-25 19:50:10 - root - INFO - Health check called
+2026-07-25 19:50:40 - root - INFO - Health check called
+2026-07-25 19:51:11 - root - INFO - Health check called
+2026-07-25 19:51:41 - root - INFO - Health check called
+2026-07-25 19:52:11 - root - INFO - Health check called
+2026-07-25 19:52:41 - root - INFO - Health check called
+2026-07-25 19:53:11 - root - INFO - Health check called
+2026-07-25 19:53:41 - root - INFO - Health check called
+2026-07-25 19:54:12 - root - INFO - Health check called
+2026-07-25 19:54:42 - root - INFO - Health check called
+2026-07-25 19:55:12 - root - INFO - Health check called
+2026-07-25 19:55:42 - root - INFO - Health check called
+2026-07-25 19:56:12 - root - INFO - Health check called
+2026-07-25 19:56:42 - root - INFO - Health check called
+2026-07-25 19:57:12 - root - INFO - Health check called
+2026-07-25 19:57:43 - root - INFO - Health check called
+2026-07-25 19:58:13 - root - INFO - Health check called
+2026-07-25 19:58:43 - root - INFO - Health check called
+2026-07-25 19:59:13 - root - INFO - Health check called
+2026-07-25 19:59:43 - root - INFO - Health check called
+2026-07-25 20:00:13 - root - INFO - Health check called
+2026-07-25 20:00:43 - root - INFO - Health check called
+2026-07-25 20:01:14 - root - INFO - Health check called
+2026-07-25 20:01:44 - root - INFO - Health check called
+2026-07-25 20:02:14 - root - INFO - Health check called
+2026-07-25 20:02:44 - root - INFO - Health check called
+2026-07-25 20:03:14 - root - INFO - Health check called
+2026-07-25 20:03:44 - root - INFO - Health check called
+2026-07-25 20:04:14 - root - INFO - Health check called
+2026-07-25 20:04:45 - root - INFO - Health check called
+2026-07-25 20:05:15 - root - INFO - Health check called
+2026-07-25 20:05:45 - root - INFO - Health check called
+2026-07-25 20:06:15 - root - INFO - Health check called
+2026-07-25 20:06:45 - root - INFO - Health check called
+2026-07-25 20:07:15 - root - INFO - Health check called
+2026-07-25 20:07:45 - root - INFO - Health check called
+2026-07-25 20:08:16 - root - INFO - Health check called
+2026-07-25 20:08:46 - root - INFO - Health check called
+2026-07-25 20:09:16 - root - INFO - Health check called
+2026-07-25 20:09:46 - root - INFO - Health check called
+2026-07-25 20:10:16 - root - INFO - Health check called
+2026-07-25 20:10:46 - root - INFO - Health check called
+2026-07-25 20:11:16 - root - INFO - Health check called
+2026-07-25 20:11:47 - root - INFO - Health check called
+2026-07-25 20:12:17 - root - INFO - Health check called
+2026-07-25 20:12:47 - root - INFO - Health check called
+2026-07-25 20:13:17 - root - INFO - Health check called
+2026-07-25 20:13:47 - root - INFO - Health check called
+2026-07-25 20:14:17 - root - INFO - Health check called
+2026-07-25 20:14:48 - root - INFO - Health check called
+2026-07-25 20:15:18 - root - INFO - Health check called
+2026-07-25 20:15:48 - root - INFO - Health check called
+2026-07-25 20:16:18 - root - INFO - Health check called
+2026-07-25 20:16:48 - root - INFO - Health check called
+2026-07-25 20:17:18 - root - INFO - Health check called
+2026-07-25 20:17:48 - root - INFO - Health check called
+2026-07-25 20:18:19 - root - INFO - Health check called
+2026-07-25 20:18:49 - root - INFO - Health check called
+2026-07-25 20:19:19 - root - INFO - Health check called
+2026-07-25 20:19:49 - root - INFO - Health check called
+2026-07-25 20:20:19 - root - INFO - Health check called
+2026-07-25 20:20:49 - root - INFO - Health check called
+2026-07-25 20:21:19 - root - INFO - Health check called
+2026-07-25 20:21:50 - root - INFO - Health check called
+2026-07-25 20:22:20 - root - INFO - Health check called
+2026-07-25 20:22:50 - root - INFO - Health check called
+2026-07-25 20:23:20 - root - INFO - Health check called
+2026-07-25 20:23:50 - root - INFO - Health check called
+2026-07-25 20:24:21 - root - INFO - Health check called
+2026-07-25 20:24:51 - root - INFO - Health check called
+2026-07-25 20:25:21 - root - INFO - Health check called
+2026-07-25 20:25:51 - root - INFO - Health check called
+2026-07-25 20:26:21 - root - INFO - Health check called
+2026-07-25 20:26:51 - root - INFO - Health check called
+2026-07-25 20:27:21 - root - INFO - Health check called
+2026-07-25 20:27:52 - root - INFO - Health check called
+2026-07-25 20:28:22 - root - INFO - Health check called
+2026-07-25 20:28:52 - root - INFO - Health check called
+2026-07-25 20:29:22 - root - INFO - Health check called
+2026-07-25 20:29:52 - root - INFO - Health check called
+2026-07-25 20:30:22 - root - INFO - Health check called
+2026-07-25 20:30:52 - root - INFO - Health check called
+2026-07-25 20:31:23 - root - INFO - Health check called
+2026-07-25 20:31:53 - root - INFO - Health check called
+2026-07-25 20:32:23 - root - INFO - Health check called
+2026-07-25 20:32:53 - root - INFO - Health check called
+2026-07-25 20:33:23 - root - INFO - Health check called
+2026-07-25 20:33:53 - root - INFO - Health check called
+2026-07-25 20:34:24 - root - INFO - Health check called
+2026-07-25 20:34:54 - root - INFO - Health check called
+2026-07-25 20:35:24 - root - INFO - Health check called
+2026-07-25 20:35:54 - root - INFO - Health check called
+2026-07-25 20:36:24 - root - INFO - Health check called
+2026-07-25 20:36:54 - root - INFO - Health check called
+2026-07-25 20:37:24 - root - INFO - Health check called
+2026-07-25 20:37:55 - root - INFO - Health check called
+2026-07-25 20:38:25 - root - INFO - Health check called
+2026-07-25 20:38:55 - root - INFO - Health check called
+2026-07-25 20:39:25 - root - INFO - Health check called
+2026-07-25 20:39:55 - root - INFO - Health check called
+2026-07-25 20:40:25 - root - INFO - Health check called
+2026-07-25 20:40:56 - root - INFO - Health check called
+2026-07-25 20:41:26 - root - INFO - Health check called
+2026-07-25 20:41:56 - root - INFO - Health check called
+2026-07-25 20:42:26 - root - INFO - Health check called
+2026-07-25 20:42:56 - root - INFO - Health check called
+2026-07-25 20:43:26 - root - INFO - Health check called
+2026-07-25 20:43:57 - root - INFO - Health check called
+2026-07-25 20:44:27 - root - INFO - Health check called
+2026-07-25 20:44:57 - root - INFO - Health check called
+2026-07-25 20:45:27 - root - INFO - Health check called
+2026-07-25 20:45:57 - root - INFO - Health check called
+2026-07-25 20:46:27 - root - INFO - Health check called
+2026-07-25 20:46:57 - root - INFO - Health check called
+2026-07-25 20:47:28 - root - INFO - Health check called
+2026-07-25 20:47:58 - root - INFO - Health check called
+2026-07-25 20:48:28 - root - INFO - Health check called
+2026-07-25 20:48:58 - root - INFO - Health check called
+2026-07-25 20:49:28 - root - INFO - Health check called
+2026-07-25 20:49:58 - root - INFO - Health check called
+2026-07-25 20:50:28 - root - INFO - Health check called
+2026-07-25 20:50:59 - root - INFO - Health check called
+2026-07-25 20:51:29 - root - INFO - Health check called
+2026-07-25 20:51:59 - root - INFO - Health check called
+2026-07-25 20:52:29 - root - INFO - Health check called
+2026-07-25 20:52:59 - root - INFO - Health check called
+2026-07-25 20:53:29 - root - INFO - Health check called
+2026-07-25 20:53:59 - root - INFO - Health check called
+2026-07-25 20:54:30 - root - INFO - Health check called
+2026-07-25 20:55:00 - root - INFO - Health check called
+2026-07-25 20:55:30 - root - INFO - Health check called
+2026-07-25 20:56:00 - root - INFO - Health check called
+2026-07-25 20:56:30 - root - INFO - Health check called
+2026-07-25 20:57:00 - root - INFO - Health check called
+2026-07-25 20:57:31 - root - INFO - Health check called
+2026-07-25 20:58:01 - root - INFO - Health check called
+2026-07-25 20:58:31 - root - INFO - Health check called
+2026-07-25 20:59:01 - root - INFO - Health check called
+2026-07-25 20:59:31 - root - INFO - Health check called
+2026-07-25 21:00:01 - root - INFO - Health check called
+2026-07-25 21:00:31 - root - INFO - Health check called
+2026-07-25 21:01:02 - root - INFO - Health check called
+2026-07-25 21:01:32 - root - INFO - Health check called
+2026-07-25 21:02:02 - root - INFO - Health check called
+2026-07-25 21:02:32 - root - INFO - Health check called
+2026-07-25 21:03:02 - root - INFO - Health check called
+2026-07-25 21:03:32 - root - INFO - Health check called
+2026-07-25 21:04:02 - root - INFO - Health check called
+2026-07-25 21:04:33 - root - INFO - Health check called
+2026-07-25 21:05:03 - root - INFO - Health check called
+2026-07-25 21:05:33 - root - INFO - Health check called
+2026-07-25 21:06:03 - root - INFO - Health check called
+2026-07-25 21:06:33 - root - INFO - Health check called
+2026-07-25 21:07:03 - root - INFO - Health check called
+2026-07-25 21:07:34 - root - INFO - Health check called
+2026-07-25 21:08:04 - root - INFO - Health check called
+2026-07-25 21:08:34 - root - INFO - Health check called
+2026-07-25 21:09:04 - root - INFO - Health check called
+2026-07-25 21:09:34 - root - INFO - Health check called
+2026-07-25 21:10:04 - root - INFO - Health check called
+2026-07-25 21:10:34 - root - INFO - Health check called
+2026-07-25 21:11:05 - root - INFO - Health check called
+2026-07-25 21:11:35 - root - INFO - Health check called
+2026-07-25 21:12:05 - root - INFO - Health check called
+2026-07-25 21:12:35 - root - INFO - Health check called
+2026-07-25 21:13:05 - root - INFO - Health check called
+2026-07-25 21:13:35 - root - INFO - Health check called
+2026-07-25 21:14:05 - root - INFO - Health check called
+2026-07-25 21:14:36 - root - INFO - Health check called
+2026-07-25 21:15:06 - root - INFO - Health check called
+2026-07-25 21:15:36 - root - INFO - Health check called
+2026-07-25 21:16:06 - root - INFO - Health check called
+2026-07-25 21:16:36 - root - INFO - Health check called
+2026-07-25 21:17:06 - root - INFO - Health check called
+2026-07-25 21:17:37 - root - INFO - Health check called
+2026-07-25 21:18:07 - root - INFO - Health check called
+2026-07-25 21:18:37 - root - INFO - Health check called
+2026-07-25 21:19:07 - root - INFO - Health check called
+2026-07-25 21:19:37 - root - INFO - Health check called
+2026-07-25 21:20:07 - root - INFO - Health check called
+2026-07-25 21:20:37 - root - INFO - Health check called
+2026-07-25 21:21:08 - root - INFO - Health check called
+2026-07-25 21:21:38 - root - INFO - Health check called
+2026-07-25 21:22:08 - root - INFO - Health check called
+2026-07-25 21:22:38 - root - INFO - Health check called
+2026-07-25 21:23:08 - root - INFO - Health check called
+2026-07-25 21:23:38 - root - INFO - Health check called
+2026-07-25 21:24:08 - root - INFO - Health check called
+2026-07-25 21:24:39 - root - INFO - Health check called
+2026-07-25 21:25:09 - root - INFO - Health check called
+2026-07-25 21:25:39 - root - INFO - Health check called
+2026-07-25 21:26:09 - root - INFO - Health check called
+2026-07-25 21:26:39 - root - INFO - Health check called
+2026-07-25 21:27:09 - root - INFO - Health check called
+2026-07-25 21:27:40 - root - INFO - Health check called
+2026-07-25 21:28:10 - root - INFO - Health check called
+2026-07-25 21:28:40 - root - INFO - Health check called
+2026-07-25 21:29:10 - root - INFO - Health check called
+2026-07-25 21:29:40 - root - INFO - Health check called
+2026-07-25 21:30:10 - root - INFO - Health check called
+2026-07-25 21:30:40 - root - INFO - Health check called
+2026-07-25 21:31:11 - root - INFO - Health check called
+2026-07-25 21:31:41 - root - INFO - Health check called
+2026-07-25 21:32:11 - root - INFO - Health check called
+2026-07-25 21:32:41 - root - INFO - Health check called
+2026-07-25 21:33:11 - root - INFO - Health check called
+2026-07-25 21:33:41 - root - INFO - Health check called
+2026-07-25 21:34:11 - root - INFO - Health check called
+2026-07-25 21:34:42 - root - INFO - Health check called
+2026-07-25 21:35:12 - root - INFO - Health check called
+2026-07-25 21:35:42 - root - INFO - Health check called
+2026-07-25 21:36:12 - root - INFO - Health check called
+2026-07-25 21:36:42 - root - INFO - Health check called
+2026-07-25 21:37:12 - root - INFO - Health check called
+2026-07-25 21:37:42 - root - INFO - Health check called
+2026-07-25 21:38:13 - root - INFO - Health check called
+2026-07-25 21:38:43 - root - INFO - Health check called
+2026-07-25 21:39:13 - root - INFO - Health check called
+2026-07-25 21:39:43 - root - INFO - Health check called
+2026-07-25 21:40:13 - root - INFO - Health check called
+2026-07-25 21:40:43 - root - INFO - Health check called
+2026-07-25 21:41:13 - root - INFO - Health check called
+2026-07-25 21:41:44 - root - INFO - Health check called
+2026-07-25 21:42:14 - root - INFO - Health check called
+2026-07-25 21:42:44 - root - INFO - Health check called
+2026-07-25 21:43:14 - root - INFO - Health check called
+2026-07-25 21:43:44 - root - INFO - Health check called
+2026-07-25 21:44:14 - root - INFO - Health check called
+2026-07-25 21:44:45 - root - INFO - Health check called
+2026-07-25 21:45:15 - root - INFO - Health check called
+2026-07-25 21:45:45 - root - INFO - Health check called
+2026-07-25 21:46:15 - root - INFO - Health check called
+2026-07-25 21:46:45 - root - INFO - Health check called
+2026-07-25 21:47:15 - root - INFO - Health check called
+2026-07-25 21:47:45 - root - INFO - Health check called
+2026-07-25 21:48:16 - root - INFO - Health check called
+2026-07-25 21:48:46 - root - INFO - Health check called
+2026-07-25 21:49:16 - root - INFO - Health check called
+2026-07-25 21:49:46 - root - INFO - Health check called
+2026-07-25 21:50:16 - root - INFO - Health check called
+2026-07-25 21:50:46 - root - INFO - Health check called
+2026-07-25 21:51:16 - root - INFO - Health check called
+2026-07-25 21:51:47 - root - INFO - Health check called
+2026-07-25 21:52:17 - root - INFO - Health check called
+2026-07-25 21:52:47 - root - INFO - Health check called
+2026-07-25 21:53:17 - root - INFO - Health check called
+2026-07-25 21:53:47 - root - INFO - Health check called
+2026-07-25 21:54:17 - root - INFO - Health check called
+2026-07-25 21:54:47 - root - INFO - Health check called
+2026-07-25 21:55:18 - root - INFO - Health check called
+2026-07-25 21:55:48 - root - INFO - Health check called
+2026-07-25 21:56:18 - root - INFO - Health check called
+2026-07-25 21:56:48 - root - INFO - Health check called
+2026-07-25 21:57:18 - root - INFO - Health check called
+2026-07-25 21:57:48 - root - INFO - Health check called
+2026-07-25 21:58:19 - root - INFO - Health check called
+2026-07-25 21:58:49 - root - INFO - Health check called
+2026-07-25 21:59:19 - root - INFO - Health check called
+2026-07-25 21:59:49 - root - INFO - Health check called
+2026-07-25 22:00:19 - root - INFO - Health check called
+2026-07-25 22:00:49 - root - INFO - Health check called
+2026-07-25 22:01:19 - root - INFO - Health check called
+2026-07-25 22:01:50 - root - INFO - Health check called
+2026-07-25 22:02:20 - root - INFO - Health check called
+2026-07-25 22:02:50 - root - INFO - Health check called
+2026-07-25 22:03:20 - root - INFO - Health check called
+2026-07-25 22:03:50 - root - INFO - Health check called
+2026-07-25 22:04:20 - root - INFO - Health check called
+2026-07-25 22:04:50 - root - INFO - Health check called
+2026-07-25 22:05:21 - root - INFO - Health check called
+2026-07-25 22:05:51 - root - INFO - Health check called
+2026-07-25 22:06:21 - root - INFO - Health check called
+2026-07-25 22:06:51 - root - INFO - Health check called
+2026-07-25 22:07:21 - root - INFO - Health check called
+2026-07-25 22:07:51 - root - INFO - Health check called
+2026-07-25 22:08:22 - root - INFO - Health check called
+2026-07-25 22:08:52 - root - INFO - Health check called
+2026-07-25 22:09:22 - root - INFO - Health check called
+2026-07-25 22:09:52 - root - INFO - Health check called
+2026-07-25 22:10:22 - root - INFO - Health check called
+2026-07-25 22:10:52 - root - INFO - Health check called
+2026-07-25 22:11:22 - root - INFO - Health check called
+2026-07-25 22:11:53 - root - INFO - Health check called
+2026-07-25 22:12:23 - root - INFO - Health check called
+2026-07-25 22:12:53 - root - INFO - Health check called
+2026-07-25 22:13:23 - root - INFO - Health check called
+2026-07-25 22:13:53 - root - INFO - Health check called
+2026-07-25 22:14:23 - root - INFO - Health check called
+2026-07-25 22:15:19 - root - INFO - Health check called
+2026-07-25 22:15:50 - root - INFO - Health check called
+2026-07-25 22:44:59 - root - INFO - Health check called
+2026-07-25 23:01:24 - root - INFO - Health check called
+2026-07-25 23:01:55 - root - INFO - Health check called
+2026-07-25 23:05:56 - root - INFO - Health check called
+2026-07-25 23:06:26 - root - INFO - Health check called
+2026-07-26 00:15:40 - root - INFO - Health check called
+2026-07-26 00:16:11 - root - INFO - Health check called
+2026-07-26 02:15:56 - root - INFO - Health check called
+2026-07-26 02:16:26 - root - INFO - Health check called
+2026-07-26 02:53:17 - root - INFO - Health check called
+2026-07-26 02:53:47 - root - INFO - Health check called
+2026-07-26 03:11:36 - root - INFO - Health check called
+2026-07-26 03:17:00 - root - INFO - Health check called
+2026-07-26 03:17:30 - root - INFO - Health check called
+2026-07-26 03:34:39 - root - INFO - Health check called
+2026-07-26 03:35:10 - root - INFO - Health check called
+2026-07-26 03:35:40 - root - INFO - Health check called
+2026-07-26 03:36:10 - root - INFO - Health check called
+2026-07-26 03:36:40 - root - INFO - Health check called
+2026-07-26 03:37:10 - root - INFO - Health check called
+2026-07-26 03:37:40 - root - INFO - Health check called
+2026-07-26 03:38:10 - root - INFO - Health check called
+2026-07-26 03:38:41 - root - INFO - Health check called
+2026-07-26 03:39:11 - root - INFO - Health check called
+2026-07-26 03:39:41 - root - INFO - Health check called
+2026-07-26 03:40:11 - root - INFO - Health check called
+2026-07-26 03:40:41 - root - INFO - Health check called
+2026-07-26 03:41:11 - root - INFO - Health check called
+2026-07-26 03:41:41 - root - INFO - Health check called
+2026-07-26 03:42:12 - root - INFO - Health check called
+2026-07-26 03:42:42 - root - INFO - Health check called
+2026-07-26 03:43:12 - root - INFO - Health check called
+2026-07-26 03:43:42 - root - INFO - Health check called
+2026-07-26 03:44:12 - root - INFO - Health check called
+2026-07-26 03:44:42 - root - INFO - Health check called
+2026-07-26 03:45:12 - root - INFO - Health check called
+2026-07-26 03:45:42 - root - INFO - Health check called
+2026-07-26 03:46:13 - root - INFO - Health check called
+2026-07-26 03:46:43 - root - INFO - Health check called
+2026-07-26 03:47:13 - root - INFO - Health check called
+2026-07-26 03:47:43 - root - INFO - Health check called
+2026-07-26 03:48:13 - root - INFO - Health check called
+2026-07-26 03:48:43 - root - INFO - Health check called
+2026-07-26 03:49:13 - root - INFO - Health check called
+2026-07-26 03:49:44 - root - INFO - Health check called
+2026-07-26 03:50:14 - root - INFO - Health check called
+2026-07-26 03:50:44 - root - INFO - Health check called
+2026-07-26 03:51:14 - root - INFO - Health check called
+2026-07-26 03:51:44 - root - INFO - Health check called
+2026-07-26 03:52:14 - root - INFO - Health check called
+2026-07-26 03:52:44 - root - INFO - Health check called
+2026-07-26 03:53:15 - root - INFO - Health check called
+2026-07-26 03:53:45 - root - INFO - Health check called
+2026-07-26 03:54:15 - root - INFO - Health check called
+2026-07-26 03:54:45 - root - INFO - Health check called
+2026-07-26 03:55:15 - root - INFO - Health check called
+2026-07-26 03:55:45 - root - INFO - Health check called
+2026-07-26 03:56:15 - root - INFO - Health check called
+2026-07-26 03:56:46 - root - INFO - Health check called
+2026-07-26 03:57:16 - root - INFO - Health check called
+2026-07-26 03:57:46 - root - INFO - Health check called
+2026-07-26 03:58:16 - root - INFO - Health check called
+2026-07-26 03:58:46 - root - INFO - Health check called
+2026-07-26 03:59:16 - root - INFO - Health check called
+2026-07-26 03:59:46 - root - INFO - Health check called
+2026-07-26 04:00:16 - root - INFO - Health check called
+2026-07-26 04:00:47 - root - INFO - Health check called
+2026-07-26 04:01:17 - root - INFO - Health check called
+2026-07-26 04:01:47 - root - INFO - Health check called
+2026-07-26 04:02:17 - root - INFO - Health check called
+2026-07-26 04:02:47 - root - INFO - Health check called
+2026-07-26 04:03:17 - root - INFO - Health check called
+2026-07-26 04:03:47 - root - INFO - Health check called
+2026-07-26 04:04:18 - root - INFO - Health check called
+2026-07-26 04:04:48 - root - INFO - Health check called
+2026-07-26 04:05:18 - root - INFO - Health check called
+2026-07-26 04:05:48 - root - INFO - Health check called
+2026-07-26 04:06:18 - root - INFO - Health check called
+2026-07-26 04:06:48 - root - INFO - Health check called
+2026-07-26 04:07:18 - root - INFO - Health check called
+2026-07-26 04:07:49 - root - INFO - Health check called
+2026-07-26 04:08:19 - root - INFO - Health check called
+2026-07-26 04:08:49 - root - INFO - Health check called
+2026-07-26 04:09:19 - root - INFO - Health check called
+2026-07-26 04:09:49 - root - INFO - Health check called
+2026-07-26 04:10:19 - root - INFO - Health check called
+2026-07-26 04:10:49 - root - INFO - Health check called
+2026-07-26 04:11:20 - root - INFO - Health check called
+2026-07-26 04:11:50 - root - INFO - Health check called
+2026-07-26 04:12:20 - root - INFO - Health check called
+2026-07-26 04:12:50 - root - INFO - Health check called
+2026-07-26 04:13:20 - root - INFO - Health check called
+2026-07-26 04:13:50 - root - INFO - Health check called
+2026-07-26 04:14:20 - root - INFO - Health check called
+2026-07-26 04:14:51 - root - INFO - Health check called
+2026-07-26 04:15:21 - root - INFO - Health check called
+2026-07-26 04:15:51 - root - INFO - Health check called
+2026-07-26 04:16:21 - root - INFO - Health check called
+2026-07-26 04:16:51 - root - INFO - Health check called
+2026-07-26 04:17:21 - root - INFO - Health check called
+2026-07-26 04:17:51 - root - INFO - Health check called
+2026-07-26 04:18:21 - root - INFO - Health check called
+2026-07-26 04:18:52 - root - INFO - Health check called
+2026-07-26 04:19:22 - root - INFO - Health check called
+2026-07-26 04:19:52 - root - INFO - Health check called
+2026-07-26 04:20:22 - root - INFO - Health check called
+2026-07-26 04:20:52 - root - INFO - Health check called
+2026-07-26 04:21:22 - root - INFO - Health check called
+2026-07-26 04:21:52 - root - INFO - Health check called
+2026-07-26 04:22:23 - root - INFO - Health check called
+2026-07-26 04:22:53 - root - INFO - Health check called
+2026-07-26 04:23:23 - root - INFO - Health check called
+2026-07-26 04:23:53 - root - INFO - Health check called
+2026-07-26 04:24:23 - root - INFO - Health check called
+2026-07-26 04:24:53 - root - INFO - Health check called
+2026-07-26 04:25:23 - root - INFO - Health check called
+2026-07-26 04:25:54 - root - INFO - Health check called
+2026-07-26 04:26:24 - root - INFO - Health check called
+2026-07-26 04:26:54 - root - INFO - Health check called
+2026-07-26 04:27:24 - root - INFO - Health check called
+2026-07-26 04:27:54 - root - INFO - Health check called
+2026-07-26 04:28:24 - root - INFO - Health check called
+2026-07-26 04:28:54 - root - INFO - Health check called
+2026-07-26 04:29:25 - root - INFO - Health check called
+2026-07-26 04:29:55 - root - INFO - Health check called
+2026-07-26 04:30:25 - root - INFO - Health check called
+2026-07-26 04:30:55 - root - INFO - Health check called
+2026-07-26 04:31:25 - root - INFO - Health check called
+2026-07-26 04:31:55 - root - INFO - Health check called
+2026-07-26 04:32:25 - root - INFO - Health check called
+2026-07-26 04:32:56 - root - INFO - Health check called
+2026-07-26 04:33:26 - root - INFO - Health check called
+2026-07-26 04:33:56 - root - INFO - Health check called
+2026-07-26 04:34:26 - root - INFO - Health check called
+2026-07-26 04:34:56 - root - INFO - Health check called
+2026-07-26 04:35:26 - root - INFO - Health check called
+2026-07-26 04:35:56 - root - INFO - Health check called
+2026-07-26 04:36:27 - root - INFO - Health check called
+2026-07-26 04:36:57 - root - INFO - Health check called
+2026-07-26 04:37:27 - root - INFO - Health check called
+2026-07-26 04:37:57 - root - INFO - Health check called
+2026-07-26 04:38:27 - root - INFO - Health check called
+2026-07-26 04:38:57 - root - INFO - Health check called
+2026-07-26 04:39:27 - root - INFO - Health check called
+2026-07-26 04:39:57 - root - INFO - Health check called
+2026-07-26 04:40:28 - root - INFO - Health check called
+2026-07-26 04:40:58 - root - INFO - Health check called
+2026-07-26 04:41:28 - root - INFO - Health check called
+2026-07-26 04:41:58 - root - INFO - Health check called
+2026-07-26 04:42:28 - root - INFO - Health check called
+2026-07-26 04:42:58 - root - INFO - Health check called
+2026-07-26 04:43:28 - root - INFO - Health check called
+2026-07-26 04:43:59 - root - INFO - Health check called
+2026-07-26 04:44:29 - root - INFO - Health check called
+2026-07-26 04:44:59 - root - INFO - Health check called
+2026-07-26 04:45:29 - root - INFO - Health check called
+2026-07-26 04:45:59 - root - INFO - Health check called
+2026-07-26 04:46:29 - root - INFO - Health check called
+2026-07-26 04:46:59 - root - INFO - Health check called
+2026-07-26 04:47:30 - root - INFO - Health check called
+2026-07-26 04:48:00 - root - INFO - Health check called
+2026-07-26 04:48:30 - root - INFO - Health check called
+2026-07-26 04:49:00 - root - INFO - Health check called
+2026-07-26 04:49:30 - root - INFO - Health check called
+2026-07-26 04:50:00 - root - INFO - Health check called
+2026-07-26 04:50:30 - root - INFO - Health check called
+2026-07-26 04:51:01 - root - INFO - Health check called
+2026-07-26 04:51:31 - root - INFO - Health check called
+2026-07-26 04:52:01 - root - INFO - Health check called
+2026-07-26 04:52:31 - root - INFO - Health check called
+2026-07-26 04:53:01 - root - INFO - Health check called
+2026-07-26 04:53:31 - root - INFO - Health check called
+2026-07-26 04:54:01 - root - INFO - Health check called
+2026-07-26 04:54:32 - root - INFO - Health check called
+2026-07-26 04:55:02 - root - INFO - Health check called
+2026-07-26 04:55:32 - root - INFO - Health check called
+2026-07-26 04:56:02 - root - INFO - Health check called
+2026-07-26 04:56:32 - root - INFO - Health check called
+2026-07-26 04:57:02 - root - INFO - Health check called
+2026-07-26 04:57:32 - root - INFO - Health check called
+2026-07-26 04:58:02 - root - INFO - Health check called
+2026-07-26 04:58:33 - root - INFO - Health check called
+2026-07-26 04:59:03 - root - INFO - Health check called
+2026-07-26 04:59:33 - root - INFO - Health check called
+2026-07-26 05:00:03 - root - INFO - Health check called
+2026-07-26 05:00:33 - root - INFO - Health check called
+2026-07-26 05:01:03 - root - INFO - Health check called
+2026-07-26 05:01:33 - root - INFO - Health check called
+2026-07-26 05:02:04 - root - INFO - Health check called
+2026-07-26 05:02:34 - root - INFO - Health check called
+2026-07-26 05:03:04 - root - INFO - Health check called
+2026-07-26 05:03:34 - root - INFO - Health check called
+2026-07-26 05:04:04 - root - INFO - Health check called
+2026-07-26 05:04:34 - root - INFO - Health check called
+2026-07-26 05:05:04 - root - INFO - Health check called
+2026-07-26 05:05:34 - root - INFO - Health check called
+2026-07-26 05:06:05 - root - INFO - Health check called
+2026-07-26 05:06:35 - root - INFO - Health check called
+2026-07-26 05:07:05 - root - INFO - Health check called
+2026-07-26 05:07:35 - root - INFO - Health check called
+2026-07-26 05:08:05 - root - INFO - Health check called
+2026-07-26 05:08:35 - root - INFO - Health check called
+2026-07-26 05:09:05 - root - INFO - Health check called
+2026-07-26 05:09:36 - root - INFO - Health check called
+2026-07-26 05:10:06 - root - INFO - Health check called
+2026-07-26 05:10:36 - root - INFO - Health check called
+2026-07-26 05:11:06 - root - INFO - Health check called
+2026-07-26 05:11:36 - root - INFO - Health check called
+2026-07-26 05:12:06 - root - INFO - Health check called
+2026-07-26 05:12:36 - root - INFO - Health check called
+2026-07-26 05:13:07 - root - INFO - Health check called
+2026-07-26 05:13:37 - root - INFO - Health check called
+2026-07-26 05:14:07 - root - INFO - Health check called
+2026-07-26 05:14:37 - root - INFO - Health check called
+2026-07-26 05:15:07 - root - INFO - Health check called
+2026-07-26 05:15:37 - root - INFO - Health check called
+2026-07-26 05:16:07 - root - INFO - Health check called
+2026-07-26 05:16:38 - root - INFO - Health check called
+2026-07-26 05:17:08 - root - INFO - Health check called
+2026-07-26 05:17:38 - root - INFO - Health check called
+2026-07-26 05:18:08 - root - INFO - Health check called
+2026-07-26 05:18:38 - root - INFO - Health check called
+2026-07-26 05:19:08 - root - INFO - Health check called
+2026-07-26 05:19:38 - root - INFO - Health check called
+2026-07-26 05:20:09 - root - INFO - Health check called
+2026-07-26 05:20:39 - root - INFO - Health check called
+2026-07-26 05:21:09 - root - INFO - Health check called
+2026-07-26 05:21:39 - root - INFO - Health check called
+2026-07-26 05:22:09 - root - INFO - Health check called
+2026-07-26 05:22:39 - root - INFO - Health check called
+2026-07-26 05:23:09 - root - INFO - Health check called
+2026-07-26 05:23:39 - root - INFO - Health check called
+2026-07-26 05:24:10 - root - INFO - Health check called
+2026-07-26 05:24:40 - root - INFO - Health check called
+2026-07-26 05:25:10 - root - INFO - Health check called
+2026-07-26 05:25:40 - root - INFO - Health check called
+2026-07-26 05:26:10 - root - INFO - Health check called
+2026-07-26 05:26:40 - root - INFO - Health check called
+2026-07-26 05:27:10 - root - INFO - Health check called
+2026-07-26 05:27:41 - root - INFO - Health check called
+2026-07-26 05:28:11 - root - INFO - Health check called
+2026-07-26 05:28:41 - root - INFO - Health check called
+2026-07-26 05:29:11 - root - INFO - Health check called
+2026-07-26 05:29:41 - root - INFO - Health check called
+2026-07-26 05:30:11 - root - INFO - Health check called
+2026-07-26 05:30:41 - root - INFO - Health check called
+2026-07-26 05:31:12 - root - INFO - Health check called
+2026-07-26 05:31:42 - root - INFO - Health check called
+2026-07-26 05:32:12 - root - INFO - Health check called
+2026-07-26 05:32:42 - root - INFO - Health check called
+2026-07-26 05:33:12 - root - INFO - Health check called
+2026-07-26 05:33:42 - root - INFO - Health check called
+2026-07-26 05:34:12 - root - INFO - Health check called
+2026-07-26 05:34:42 - root - INFO - Health check called
+2026-07-26 05:35:13 - root - INFO - Health check called
+2026-07-26 05:35:43 - root - INFO - Health check called
+2026-07-26 05:36:13 - root - INFO - Health check called
+2026-07-26 05:36:43 - root - INFO - Health check called
+2026-07-26 05:37:13 - root - INFO - Health check called
+2026-07-26 05:37:43 - root - INFO - Health check called
+2026-07-26 05:38:13 - root - INFO - Health check called
+2026-07-26 05:38:44 - root - INFO - Health check called
+2026-07-26 05:39:14 - root - INFO - Health check called
+2026-07-26 05:39:44 - root - INFO - Health check called
+2026-07-26 05:40:14 - root - INFO - Health check called
+2026-07-26 05:40:44 - root - INFO - Health check called
+2026-07-26 05:41:14 - root - INFO - Health check called
+2026-07-26 05:41:44 - root - INFO - Health check called
+2026-07-26 05:42:15 - root - INFO - Health check called
+2026-07-26 05:42:45 - root - INFO - Health check called
+2026-07-26 05:43:15 - root - INFO - Health check called
+2026-07-26 05:43:45 - root - INFO - Health check called
+2026-07-26 05:44:15 - root - INFO - Health check called
+2026-07-26 05:44:45 - root - INFO - Health check called
+2026-07-26 05:45:15 - root - INFO - Health check called
+2026-07-26 05:45:46 - root - INFO - Health check called
+2026-07-26 05:46:16 - root - INFO - Health check called
+2026-07-26 05:46:46 - root - INFO - Health check called
+2026-07-26 05:47:16 - root - INFO - Health check called
+2026-07-26 05:47:46 - root - INFO - Health check called
+2026-07-26 05:48:16 - root - INFO - Health check called
+2026-07-26 05:48:46 - root - INFO - Health check called
+2026-07-26 05:49:16 - root - INFO - Health check called
+2026-07-26 05:49:47 - root - INFO - Health check called
+2026-07-26 05:50:17 - root - INFO - Health check called
+2026-07-26 05:50:47 - root - INFO - Health check called
+2026-07-26 05:51:17 - root - INFO - Health check called
+2026-07-26 05:51:47 - root - INFO - Health check called
+2026-07-26 05:52:17 - root - INFO - Health check called
+2026-07-26 05:52:47 - root - INFO - Health check called
+2026-07-26 05:53:18 - root - INFO - Health check called
+2026-07-26 05:53:48 - root - INFO - Health check called
+2026-07-26 05:54:18 - root - INFO - Health check called
+2026-07-26 05:54:48 - root - INFO - Health check called
+2026-07-26 05:55:18 - root - INFO - Health check called
+2026-07-26 05:55:48 - root - INFO - Health check called
+2026-07-26 05:56:18 - root - INFO - Health check called
+2026-07-26 05:56:49 - root - INFO - Health check called
+2026-07-26 05:57:19 - root - INFO - Health check called
+2026-07-26 05:57:49 - root - INFO - Health check called
+2026-07-26 05:58:19 - root - INFO - Health check called
+2026-07-26 05:58:49 - root - INFO - Health check called
+2026-07-26 05:59:19 - root - INFO - Health check called
+2026-07-26 05:59:49 - root - INFO - Health check called
+2026-07-26 06:00:20 - root - INFO - Health check called
+2026-07-26 06:00:50 - root - INFO - Health check called
+2026-07-26 06:01:20 - root - INFO - Health check called
+2026-07-26 06:01:50 - root - INFO - Health check called
+2026-07-26 06:02:20 - root - INFO - Health check called
+2026-07-26 06:02:50 - root - INFO - Health check called
+2026-07-26 06:03:20 - root - INFO - Health check called
+2026-07-26 06:03:51 - root - INFO - Health check called
+2026-07-26 06:04:21 - root - INFO - Health check called
+2026-07-26 06:04:51 - root - INFO - Health check called
+2026-07-26 06:05:21 - root - INFO - Health check called
+2026-07-26 06:05:51 - root - INFO - Health check called
+2026-07-26 06:06:21 - root - INFO - Health check called
+2026-07-26 06:06:51 - root - INFO - Health check called
+2026-07-26 06:07:21 - root - INFO - Health check called
+2026-07-26 06:07:52 - root - INFO - Health check called
+2026-07-26 06:08:22 - root - INFO - Health check called
+2026-07-26 06:08:52 - root - INFO - Health check called
+2026-07-26 06:09:22 - root - INFO - Health check called
+2026-07-26 06:09:52 - root - INFO - Health check called
+2026-07-26 06:10:22 - root - INFO - Health check called
+2026-07-26 06:10:52 - root - INFO - Health check called
+2026-07-26 06:11:23 - root - INFO - Health check called
+2026-07-26 06:11:53 - root - INFO - Health check called
+2026-07-26 06:12:23 - root - INFO - Health check called
+2026-07-26 06:12:53 - root - INFO - Health check called
+2026-07-26 06:13:23 - root - INFO - Health check called
+2026-07-26 06:13:53 - root - INFO - Health check called
+2026-07-26 06:14:23 - root - INFO - Health check called
+2026-07-26 06:14:54 - root - INFO - Health check called
+2026-07-26 06:15:24 - root - INFO - Health check called
+2026-07-26 06:15:54 - root - INFO - Health check called
+2026-07-26 06:16:24 - root - INFO - Health check called
+2026-07-26 06:16:54 - root - INFO - Health check called
+2026-07-26 06:17:24 - root - INFO - Health check called
+2026-07-26 06:17:54 - root - INFO - Health check called
+2026-07-26 06:18:24 - root - INFO - Health check called
+2026-07-26 06:18:55 - root - INFO - Health check called
+2026-07-26 06:19:25 - root - INFO - Health check called
+2026-07-26 06:19:55 - root - INFO - Health check called
+2026-07-26 06:20:25 - root - INFO - Health check called
+2026-07-26 06:20:55 - root - INFO - Health check called
+2026-07-26 06:21:25 - root - INFO - Health check called
+2026-07-26 06:21:55 - root - INFO - Health check called
+2026-07-26 06:22:26 - root - INFO - Health check called
+2026-07-26 06:22:56 - root - INFO - Health check called
+2026-07-26 06:23:26 - root - INFO - Health check called
+2026-07-26 06:23:56 - root - INFO - Health check called
+2026-07-26 06:24:26 - root - INFO - Health check called
+2026-07-26 06:24:56 - root - INFO - Health check called
+2026-07-26 06:25:26 - root - INFO - Health check called
+2026-07-26 06:25:57 - root - INFO - Health check called
+2026-07-26 06:26:27 - root - INFO - Health check called
+2026-07-26 06:26:57 - root - INFO - Health check called
+2026-07-26 06:27:27 - root - INFO - Health check called
+2026-07-26 06:27:57 - root - INFO - Health check called
+2026-07-26 06:28:27 - root - INFO - Health check called
+2026-07-26 06:28:57 - root - INFO - Health check called
+2026-07-26 06:29:28 - root - INFO - Health check called
+2026-07-26 06:29:58 - root - INFO - Health check called
+2026-07-26 06:30:28 - root - INFO - Health check called
+2026-07-26 06:30:58 - root - INFO - Health check called
+2026-07-26 06:31:28 - root - INFO - Health check called
+2026-07-26 06:31:58 - root - INFO - Health check called
+2026-07-26 06:32:28 - root - INFO - Health check called
+2026-07-26 06:32:59 - root - INFO - Health check called
+2026-07-26 06:33:29 - root - INFO - Health check called
+2026-07-26 06:33:59 - root - INFO - Health check called
+2026-07-26 06:34:29 - root - INFO - Health check called
+2026-07-26 06:34:59 - root - INFO - Health check called
+2026-07-26 06:35:29 - root - INFO - Health check called
+2026-07-26 06:35:59 - root - INFO - Health check called
+2026-07-26 06:36:30 - root - INFO - Health check called
+2026-07-26 06:37:00 - root - INFO - Health check called
+2026-07-26 06:37:30 - root - INFO - Health check called
+2026-07-26 06:38:00 - root - INFO - Health check called
+2026-07-26 06:38:30 - root - INFO - Health check called
+2026-07-26 06:39:00 - root - INFO - Health check called
+2026-07-26 06:39:30 - root - INFO - Health check called
+2026-07-26 06:40:01 - root - INFO - Health check called
+2026-07-26 06:40:31 - root - INFO - Health check called
+2026-07-26 06:41:01 - root - INFO - Health check called
+2026-07-26 06:41:31 - root - INFO - Health check called
+2026-07-26 06:42:01 - root - INFO - Health check called
+2026-07-26 06:42:31 - root - INFO - Health check called
+2026-07-26 06:43:01 - root - INFO - Health check called
+2026-07-26 06:43:31 - root - INFO - Health check called
+2026-07-26 06:44:02 - root - INFO - Health check called
+2026-07-26 06:44:32 - root - INFO - Health check called
+2026-07-26 06:45:02 - root - INFO - Health check called
+2026-07-26 06:45:32 - root - INFO - Health check called
+2026-07-26 06:46:02 - root - INFO - Health check called
+2026-07-26 06:46:32 - root - INFO - Health check called
+2026-07-26 06:47:02 - root - INFO - Health check called
+2026-07-26 06:47:33 - root - INFO - Health check called
+2026-07-26 06:48:03 - root - INFO - Health check called
+2026-07-26 06:48:33 - root - INFO - Health check called
+2026-07-26 06:49:03 - root - INFO - Health check called
+2026-07-26 06:49:33 - root - INFO - Health check called
+2026-07-26 06:50:03 - root - INFO - Health check called
+2026-07-26 06:50:33 - root - INFO - Health check called
+2026-07-26 06:51:04 - root - INFO - Health check called
+2026-07-26 06:51:34 - root - INFO - Health check called
+2026-07-26 06:52:04 - root - INFO - Health check called
+2026-07-26 06:52:34 - root - INFO - Health check called
+2026-07-26 06:53:04 - root - INFO - Health check called
+2026-07-26 06:53:34 - root - INFO - Health check called
+2026-07-26 06:54:04 - root - INFO - Health check called
+2026-07-26 06:54:35 - root - INFO - Health check called
+2026-07-26 06:55:05 - root - INFO - Health check called
+2026-07-26 06:55:35 - root - INFO - Health check called
+2026-07-26 06:56:05 - root - INFO - Health check called
+2026-07-26 06:56:35 - root - INFO - Health check called
+2026-07-26 06:57:05 - root - INFO - Health check called
+2026-07-26 06:57:35 - root - INFO - Health check called
+2026-07-26 06:58:05 - root - INFO - Health check called
+2026-07-26 06:58:36 - root - INFO - Health check called
+2026-07-26 06:59:06 - root - INFO - Health check called
+2026-07-26 06:59:36 - root - INFO - Health check called
+2026-07-26 07:00:06 - root - INFO - Health check called
+2026-07-26 07:00:36 - root - INFO - Health check called
+2026-07-26 07:01:06 - root - INFO - Health check called
+2026-07-26 07:01:36 - root - INFO - Health check called
+2026-07-26 07:02:07 - root - INFO - Health check called
+2026-07-26 07:02:37 - root - INFO - Health check called
+2026-07-26 07:03:07 - root - INFO - Health check called
+2026-07-26 07:03:37 - root - INFO - Health check called
+2026-07-26 07:04:07 - root - INFO - Health check called
+2026-07-26 07:04:37 - root - INFO - Health check called
+2026-07-26 07:05:07 - root - INFO - Health check called
+2026-07-26 07:05:38 - root - INFO - Health check called
+2026-07-26 07:06:08 - root - INFO - Health check called
+2026-07-26 07:06:38 - root - INFO - Health check called
+2026-07-26 07:07:08 - root - INFO - Health check called
+2026-07-26 07:07:38 - root - INFO - Health check called
+2026-07-26 07:08:08 - root - INFO - Health check called
+2026-07-26 07:08:38 - root - INFO - Health check called
+2026-07-26 07:09:09 - root - INFO - Health check called
+2026-07-26 07:09:39 - root - INFO - Health check called
+2026-07-26 07:10:09 - root - INFO - Health check called
+2026-07-26 07:10:39 - root - INFO - Health check called
+2026-07-26 07:11:09 - root - INFO - Health check called
+2026-07-26 07:11:39 - root - INFO - Health check called
+2026-07-26 07:12:09 - root - INFO - Health check called
+2026-07-26 07:12:39 - root - INFO - Health check called
+2026-07-26 07:13:10 - root - INFO - Health check called
+2026-07-26 07:13:40 - root - INFO - Health check called
+2026-07-26 07:14:10 - root - INFO - Health check called
+2026-07-26 07:14:40 - root - INFO - Health check called
+2026-07-26 07:15:10 - root - INFO - Health check called
+2026-07-26 07:15:40 - root - INFO - Health check called
+2026-07-26 07:16:10 - root - INFO - Health check called
+2026-07-26 07:16:41 - root - INFO - Health check called
+2026-07-26 07:17:11 - root - INFO - Health check called
+2026-07-26 07:17:41 - root - INFO - Health check called
+2026-07-26 07:18:11 - root - INFO - Health check called
+2026-07-26 07:18:41 - root - INFO - Health check called
+2026-07-26 07:19:11 - root - INFO - Health check called
+2026-07-26 07:19:41 - root - INFO - Health check called
+2026-07-26 07:20:12 - root - INFO - Health check called
+2026-07-26 07:36:35 - root - INFO - Health check called
+2026-07-26 07:37:05 - root - INFO - Health check called
+2026-07-26 07:53:01 - root - INFO - Health check called
+2026-07-26 07:53:31 - root - INFO - Health check called
+2026-07-26 08:11:13 - root - INFO - Health check called
+2026-07-26 08:18:01 - root - INFO - Health check called
+2026-07-26 08:18:31 - root - INFO - Health check called
+2026-07-26 08:34:07 - root - INFO - Health check called
+2026-07-26 08:34:37 - root - INFO - Health check called
+2026-07-26 08:51:16 - root - INFO - Health check called
+2026-07-26 09:07:30 - root - INFO - Health check called
+2026-07-26 09:08:00 - root - INFO - Health check called
+2026-07-26 09:19:10 - root - INFO - Health check called
+2026-07-26 09:19:40 - root - INFO - Health check called
+2026-07-26 09:35:53 - root - INFO - Health check called
+2026-07-26 09:52:30 - root - INFO - Health check called
+2026-07-26 09:53:01 - root - INFO - Health check called
+2026-07-26 10:09:41 - root - INFO - Health check called
+2026-07-26 10:10:11 - root - INFO - Health check called
+2026-07-26 10:20:19 - root - INFO - Health check called
+2026-07-26 10:20:49 - root - INFO - Health check called
+2026-07-26 10:36:52 - root - INFO - Health check called
+2026-07-26 10:52:23 - root - INFO - Health check called
+2026-07-26 10:52:53 - root - INFO - Health check called
+2026-07-26 11:03:24 - root - INFO - Health check called
+2026-07-26 11:03:54 - root - INFO - Health check called
+2026-07-26 11:04:24 - root - INFO - Health check called
+2026-07-26 11:04:55 - root - INFO - Health check called
+2026-07-26 11:05:25 - root - INFO - Health check called
+2026-07-26 11:05:55 - root - INFO - Health check called
+2026-07-26 11:06:25 - root - INFO - Health check called
+2026-07-26 11:06:55 - root - INFO - Health check called
+2026-07-26 11:07:25 - root - INFO - Health check called
+2026-07-26 11:07:56 - root - INFO - Health check called
+2026-07-26 11:08:26 - root - INFO - Health check called
+2026-07-26 11:08:57 - root - INFO - Health check called
+2026-07-26 11:09:27 - root - INFO - Health check called
+2026-07-26 11:09:57 - root - INFO - Health check called
+2026-07-26 11:10:27 - root - INFO - Health check called
+2026-07-26 11:10:57 - root - INFO - Health check called
+2026-07-26 11:11:27 - root - INFO - Health check called
+2026-07-26 11:11:57 - root - INFO - Health check called
+2026-07-26 11:12:28 - root - INFO - Health check called
+2026-07-26 11:12:58 - root - INFO - Health check called
+2026-07-26 11:13:28 - root - INFO - Health check called
+2026-07-26 11:13:58 - root - INFO - Health check called
+2026-07-26 11:14:28 - root - INFO - Health check called
+2026-07-26 11:14:58 - root - INFO - Health check called
+2026-07-26 11:15:28 - root - INFO - Health check called
+2026-07-26 11:15:59 - root - INFO - Health check called
+2026-07-26 11:16:29 - root - INFO - Health check called
+2026-07-26 11:16:59 - root - INFO - Health check called
+2026-07-26 11:17:29 - root - INFO - Health check called
+2026-07-26 11:17:59 - root - INFO - Health check called
+2026-07-26 11:18:29 - root - INFO - Health check called
+2026-07-26 11:19:00 - root - INFO - Health check called
+2026-07-26 11:19:30 - root - INFO - Health check called
+2026-07-26 11:20:00 - root - INFO - Health check called
+2026-07-26 11:20:30 - root - INFO - Health check called
+2026-07-26 11:21:00 - root - INFO - Health check called
+2026-07-26 11:21:30 - root - INFO - Health check called
+2026-07-26 11:22:00 - root - INFO - Health check called
+2026-07-26 11:22:31 - root - INFO - Health check called
+2026-07-26 11:23:01 - root - INFO - Health check called
+2026-07-26 11:23:31 - root - INFO - Health check called
+2026-07-26 11:24:01 - root - INFO - Health check called
+2026-07-26 11:24:31 - root - INFO - Health check called
+2026-07-26 11:25:01 - root - INFO - Health check called
+2026-07-26 11:25:31 - root - INFO - Health check called
+2026-07-26 11:26:02 - root - INFO - Health check called
+2026-07-26 11:26:32 - root - INFO - Health check called
+2026-07-26 11:27:02 - root - INFO - Health check called
+2026-07-26 11:27:32 - root - INFO - Health check called
+2026-07-26 11:28:02 - root - INFO - Health check called
+2026-07-26 11:28:32 - root - INFO - Health check called
+2026-07-26 11:29:02 - root - INFO - Health check called
+2026-07-26 11:29:32 - root - INFO - Health check called
+2026-07-26 11:30:03 - root - INFO - Health check called
+2026-07-26 11:30:33 - root - INFO - Health check called
+2026-07-26 11:31:03 - root - INFO - Health check called
+2026-07-26 11:31:33 - root - INFO - Health check called
+2026-07-26 11:32:03 - root - INFO - Health check called
+2026-07-26 11:32:33 - root - INFO - Health check called
+2026-07-26 11:33:03 - root - INFO - Health check called
+2026-07-26 11:33:34 - root - INFO - Health check called
+2026-07-26 11:34:04 - root - INFO - Health check called
+2026-07-26 11:34:34 - root - INFO - Health check called
+2026-07-26 11:35:04 - root - INFO - Health check called
+2026-07-26 11:35:34 - root - INFO - Health check called
+2026-07-26 11:36:04 - root - INFO - Health check called
+2026-07-26 11:36:34 - root - INFO - Health check called
+2026-07-26 11:37:05 - root - INFO - Health check called
+2026-07-26 11:37:35 - root - INFO - Health check called
+2026-07-26 11:38:05 - root - INFO - Health check called
+2026-07-26 11:38:35 - root - INFO - Health check called
+2026-07-26 11:39:05 - root - INFO - Health check called
+2026-07-26 11:39:35 - root - INFO - Health check called
+2026-07-26 11:40:05 - root - INFO - Health check called
+2026-07-26 11:40:36 - root - INFO - Health check called
+2026-07-26 11:41:06 - root - INFO - Health check called
+2026-07-26 11:41:36 - root - INFO - Health check called
+2026-07-26 11:42:06 - root - INFO - Health check called
+2026-07-26 11:42:36 - root - INFO - Health check called
+2026-07-26 11:43:06 - root - INFO - Health check called
+2026-07-26 11:43:36 - root - INFO - Health check called
+2026-07-26 11:44:07 - root - INFO - Health check called
+2026-07-26 11:44:37 - root - INFO - Health check called
+2026-07-26 11:45:07 - root - INFO - Health check called
+2026-07-26 11:45:37 - root - INFO - Health check called
+2026-07-26 11:46:07 - root - INFO - Health check called
+2026-07-26 11:46:37 - root - INFO - Health check called
+2026-07-26 11:47:07 - root - INFO - Health check called
+2026-07-26 11:47:38 - root - INFO - Health check called
+2026-07-26 11:48:08 - root - INFO - Health check called
+2026-07-26 11:48:38 - root - INFO - Health check called
+2026-07-26 11:49:08 - root - INFO - Health check called
+2026-07-26 11:49:38 - root - INFO - Health check called
+2026-07-26 11:50:08 - root - INFO - Health check called
+2026-07-26 11:50:38 - root - INFO - Health check called
+2026-07-26 11:51:09 - root - INFO - Health check called
+2026-07-26 11:51:39 - root - INFO - Health check called
+2026-07-26 11:52:09 - root - INFO - Health check called
+2026-07-26 11:52:39 - root - INFO - Health check called
+2026-07-26 11:53:09 - root - INFO - Health check called
+2026-07-26 11:53:39 - root - INFO - Health check called
+2026-07-26 11:54:09 - root - INFO - Health check called
+2026-07-26 11:54:40 - root - INFO - Health check called
+2026-07-26 11:55:10 - root - INFO - Health check called
+2026-07-26 11:55:40 - root - INFO - Health check called
+2026-07-26 11:56:10 - root - INFO - Health check called
+2026-07-26 11:56:40 - root - INFO - Health check called
+2026-07-26 11:57:10 - root - INFO - Health check called
+2026-07-26 11:57:40 - root - INFO - Health check called
+2026-07-26 11:58:11 - root - INFO - Health check called
+2026-07-26 11:58:41 - root - INFO - Health check called
+2026-07-26 11:59:11 - root - INFO - Health check called
+2026-07-26 11:59:41 - root - INFO - Health check called
+2026-07-26 12:00:11 - root - INFO - Health check called
+2026-07-26 12:00:41 - root - INFO - Health check called
+2026-07-26 12:01:11 - root - INFO - Health check called
+2026-07-26 12:01:42 - root - INFO - Health check called
+2026-07-26 12:02:12 - root - INFO - Health check called
+2026-07-26 12:02:42 - root - INFO - Health check called
+2026-07-26 12:03:12 - root - INFO - Health check called
+2026-07-26 12:03:42 - root - INFO - Health check called
+2026-07-26 12:04:12 - root - INFO - Health check called
+2026-07-26 12:04:42 - root - INFO - Health check called
+2026-07-26 12:05:13 - root - INFO - Health check called
+2026-07-26 12:05:43 - root - INFO - Health check called
+2026-07-26 12:06:13 - root - INFO - Health check called
+2026-07-26 12:06:43 - root - INFO - Health check called
+2026-07-26 12:07:13 - root - INFO - Health check called
+2026-07-26 12:07:43 - root - INFO - Health check called
+2026-07-26 12:08:13 - root - INFO - Health check called
+2026-07-26 12:08:44 - root - INFO - Health check called
+2026-07-26 12:09:14 - root - INFO - Health check called
+2026-07-26 12:09:44 - root - INFO - Health check called
+2026-07-26 12:10:14 - root - INFO - Health check called
+2026-07-26 12:10:44 - root - INFO - Health check called
+2026-07-26 12:11:14 - root - INFO - Health check called
+2026-07-26 12:11:44 - root - INFO - Health check called
+2026-07-26 12:12:15 - root - INFO - Health check called
+2026-07-26 12:12:45 - root - INFO - Health check called
+2026-07-26 12:13:15 - root - INFO - Health check called
+2026-07-26 12:13:45 - root - INFO - Health check called
+2026-07-26 12:14:15 - root - INFO - Health check called
+2026-07-26 12:14:45 - root - INFO - Health check called
+2026-07-26 12:15:15 - root - INFO - Health check called
+2026-07-26 12:15:46 - root - INFO - Health check called
+2026-07-26 12:16:16 - root - INFO - Health check called
+2026-07-26 12:16:46 - root - INFO - Health check called
+2026-07-26 12:17:16 - root - INFO - Health check called
+2026-07-26 12:17:46 - root - INFO - Health check called
+2026-07-26 12:18:16 - root - INFO - Health check called
+2026-07-26 12:18:46 - root - INFO - Health check called
+2026-07-26 12:19:17 - root - INFO - Health check called
+2026-07-26 12:19:47 - root - INFO - Health check called
+2026-07-26 12:20:17 - root - INFO - Health check called
+2026-07-26 12:20:47 - root - INFO - Health check called
+2026-07-26 12:21:17 - root - INFO - Health check called
+2026-07-26 12:21:47 - root - INFO - Health check called
+2026-07-26 12:22:17 - root - INFO - Health check called
+2026-07-26 12:22:47 - root - INFO - Health check called
+2026-07-26 12:23:18 - root - INFO - Health check called
+2026-07-26 12:23:48 - root - INFO - Health check called
+2026-07-26 12:24:18 - root - INFO - Health check called
+2026-07-26 12:24:48 - root - INFO - Health check called
+2026-07-26 12:25:18 - root - INFO - Health check called
+2026-07-26 12:25:48 - root - INFO - Health check called
+2026-07-26 12:26:18 - root - INFO - Health check called
+2026-07-26 12:26:49 - root - INFO - Health check called
+2026-07-26 12:27:19 - root - INFO - Health check called
+2026-07-26 12:27:49 - root - INFO - Health check called
+2026-07-26 12:28:19 - root - INFO - Health check called
+2026-07-26 12:28:49 - root - INFO - Health check called
+2026-07-26 12:29:19 - root - INFO - Health check called
+2026-07-26 12:29:49 - root - INFO - Health check called
+2026-07-26 12:30:20 - root - INFO - Health check called
+2026-07-26 12:30:50 - root - INFO - Health check called
+2026-07-26 12:31:20 - root - INFO - Health check called
+2026-07-26 12:31:50 - root - INFO - Health check called
+2026-07-26 12:32:20 - root - INFO - Health check called
+2026-07-26 12:32:50 - root - INFO - Health check called
+2026-07-26 12:33:20 - root - INFO - Health check called
+2026-07-26 12:33:51 - root - INFO - Health check called
+2026-07-26 12:34:21 - root - INFO - Health check called
+2026-07-26 12:34:51 - root - INFO - Health check called
+2026-07-26 12:35:21 - root - INFO - Health check called
+2026-07-26 12:35:51 - root - INFO - Health check called
+2026-07-26 12:36:21 - root - INFO - Health check called
+2026-07-26 12:36:51 - root - INFO - Health check called
+2026-07-26 12:37:22 - root - INFO - Health check called
+2026-07-26 12:37:52 - root - INFO - Health check called
+2026-07-26 12:38:22 - root - INFO - Health check called
+2026-07-26 12:38:52 - root - INFO - Health check called
+2026-07-26 12:39:22 - root - INFO - Health check called
+2026-07-26 12:39:52 - root - INFO - Health check called
+2026-07-26 12:40:22 - root - INFO - Health check called
+2026-07-26 12:40:53 - root - INFO - Health check called
+2026-07-26 12:41:23 - root - INFO - Health check called
+2026-07-26 12:41:53 - root - INFO - Health check called
+2026-07-26 12:42:23 - root - INFO - Health check called
+2026-07-26 12:42:53 - root - INFO - Health check called
+2026-07-26 12:43:23 - root - INFO - Health check called
+2026-07-26 12:43:53 - root - INFO - Health check called
+2026-07-26 12:44:24 - root - INFO - Health check called
+2026-07-26 12:44:54 - root - INFO - Health check called
+2026-07-26 12:45:24 - root - INFO - Health check called
+2026-07-26 12:45:54 - root - INFO - Health check called
+2026-07-26 12:46:24 - root - INFO - Health check called
+2026-07-26 12:46:54 - root - INFO - Health check called
+2026-07-26 12:47:24 - root - INFO - Health check called
+2026-07-26 12:47:55 - root - INFO - Health check called
+2026-07-26 12:48:25 - root - INFO - Health check called
+2026-07-26 12:48:55 - root - INFO - Health check called
+2026-07-26 12:49:25 - root - INFO - Health check called
+2026-07-26 12:49:55 - root - INFO - Health check called
+2026-07-26 12:50:25 - root - INFO - Health check called
+2026-07-26 12:50:55 - root - INFO - Health check called
+2026-07-26 12:51:26 - root - INFO - Health check called
+2026-07-26 12:51:56 - root - INFO - Health check called
+2026-07-26 12:52:26 - root - INFO - Health check called
+2026-07-26 12:52:56 - root - INFO - Health check called
+2026-07-26 12:53:26 - root - INFO - Health check called
+2026-07-26 12:53:56 - root - INFO - Health check called
+2026-07-26 12:54:27 - root - INFO - Health check called
+2026-07-26 12:54:57 - root - INFO - Health check called
+2026-07-26 12:55:27 - root - INFO - Health check called
+2026-07-26 12:55:57 - root - INFO - Health check called
+2026-07-26 12:56:27 - root - INFO - Health check called
+2026-07-26 12:56:57 - root - INFO - Health check called
+2026-07-26 12:57:27 - root - INFO - Health check called
+2026-07-26 12:57:58 - root - INFO - Health check called
+2026-07-26 12:58:28 - root - INFO - Health check called
+2026-07-26 12:58:58 - root - INFO - Health check called
+2026-07-26 12:59:28 - root - INFO - Health check called
+2026-07-26 12:59:58 - root - INFO - Health check called
+2026-07-26 13:00:28 - root - INFO - Health check called
+2026-07-26 13:00:58 - root - INFO - Health check called
+2026-07-26 13:01:29 - root - INFO - Health check called
+2026-07-26 13:01:59 - root - INFO - Health check called
+2026-07-26 13:02:29 - root - INFO - Health check called
+2026-07-26 13:02:59 - root - INFO - Health check called
+2026-07-26 13:03:29 - root - INFO - Health check called
+2026-07-26 13:03:59 - root - INFO - Health check called
+2026-07-26 13:04:29 - root - INFO - Health check called
+2026-07-26 13:04:59 - root - INFO - Health check called
+2026-07-26 13:05:30 - root - INFO - Health check called
+2026-07-26 13:06:00 - root - INFO - Health check called
+2026-07-26 13:06:30 - root - INFO - Health check called
+2026-07-26 13:07:00 - root - INFO - Health check called
+2026-07-26 13:07:30 - root - INFO - Health check called
+2026-07-26 13:08:00 - root - INFO - Health check called
+2026-07-26 13:08:30 - root - INFO - Health check called
+2026-07-26 13:09:01 - root - INFO - Health check called
+2026-07-26 13:09:31 - root - INFO - Health check called
+2026-07-26 13:10:01 - root - INFO - Health check called
+2026-07-26 13:10:31 - root - INFO - Health check called
+2026-07-26 13:11:01 - root - INFO - Health check called
+2026-07-26 13:11:31 - root - INFO - Health check called
+2026-07-26 13:12:01 - root - INFO - Health check called
+2026-07-26 13:12:32 - root - INFO - Health check called
+2026-07-26 13:13:02 - root - INFO - Health check called
+2026-07-26 13:13:32 - root - INFO - Health check called
+2026-07-26 13:14:02 - root - INFO - Health check called
+2026-07-26 13:14:32 - root - INFO - Health check called
+2026-07-26 13:15:02 - root - INFO - Health check called
+2026-07-26 13:15:32 - root - INFO - Health check called
+2026-07-26 13:16:03 - root - INFO - Health check called
+2026-07-26 13:16:33 - root - INFO - Health check called
+2026-07-26 13:17:03 - root - INFO - Health check called
+2026-07-26 13:17:33 - root - INFO - Health check called
+2026-07-26 13:18:03 - root - INFO - Health check called
+2026-07-26 13:18:33 - root - INFO - Health check called
+2026-07-26 13:19:04 - root - INFO - Health check called
+2026-07-26 13:19:34 - root - INFO - Health check called
+2026-07-26 13:20:04 - root - INFO - Health check called
+2026-07-26 13:20:34 - root - INFO - Health check called
+2026-07-26 13:21:04 - root - INFO - Health check called
+2026-07-26 13:21:34 - root - INFO - Health check called
+2026-07-26 13:22:04 - root - INFO - Health check called
+2026-07-26 13:22:35 - root - INFO - Health check called
+2026-07-26 13:23:05 - root - INFO - Health check called
+2026-07-26 13:23:35 - root - INFO - Health check called
+2026-07-26 13:24:05 - root - INFO - Health check called
+2026-07-26 13:24:35 - root - INFO - Health check called
+2026-07-26 13:25:05 - root - INFO - Health check called
+2026-07-26 13:25:35 - root - INFO - Health check called
+2026-07-26 13:26:06 - root - INFO - Health check called
+2026-07-26 13:26:36 - root - INFO - Health check called
+2026-07-26 13:27:06 - root - INFO - Health check called
+2026-07-26 13:27:36 - root - INFO - Health check called
+2026-07-26 13:28:06 - root - INFO - Health check called
+2026-07-26 13:28:36 - root - INFO - Health check called
+2026-07-26 13:29:07 - root - INFO - Health check called
+2026-07-26 13:29:37 - root - INFO - Health check called
+2026-07-26 13:30:07 - root - INFO - Health check called
+2026-07-26 13:30:37 - root - INFO - Health check called
+2026-07-26 13:31:07 - root - INFO - Health check called
+2026-07-26 13:31:37 - root - INFO - Health check called
+2026-07-26 13:32:07 - root - INFO - Health check called
+2026-07-26 13:32:38 - root - INFO - Health check called
+2026-07-26 13:33:08 - root - INFO - Health check called
+2026-07-26 13:33:38 - root - INFO - Health check called
+2026-07-26 13:34:08 - root - INFO - Health check called
+2026-07-26 13:34:38 - root - INFO - Health check called
+2026-07-26 13:35:08 - root - INFO - Health check called
+2026-07-26 13:35:38 - root - INFO - Health check called
+2026-07-26 13:36:09 - root - INFO - Health check called
+2026-07-26 13:36:39 - root - INFO - Health check called
+2026-07-26 13:37:09 - root - INFO - Health check called
+2026-07-26 13:37:39 - root - INFO - Health check called
+2026-07-26 13:38:09 - root - INFO - Health check called
+2026-07-26 13:38:39 - root - INFO - Health check called
+2026-07-26 13:39:09 - root - INFO - Health check called
+2026-07-26 13:39:40 - root - INFO - Health check called
+2026-07-26 13:40:10 - root - INFO - Health check called
+2026-07-26 13:40:40 - root - INFO - Health check called
+2026-07-26 13:41:10 - root - INFO - Health check called
+2026-07-26 13:41:40 - root - INFO - Health check called
+2026-07-26 13:42:10 - root - INFO - Health check called
+2026-07-26 13:42:40 - root - INFO - Health check called
+2026-07-26 13:43:11 - root - INFO - Health check called
+2026-07-26 13:43:41 - root - INFO - Health check called
+2026-07-26 13:44:11 - root - INFO - Health check called
+2026-07-26 13:44:41 - root - INFO - Health check called
+2026-07-26 13:45:11 - root - INFO - Health check called
+2026-07-26 13:45:41 - root - INFO - Health check called
+2026-07-26 13:46:11 - root - INFO - Health check called
+2026-07-26 13:46:42 - root - INFO - Health check called
+2026-07-26 13:47:12 - root - INFO - Health check called
+2026-07-26 13:47:42 - root - INFO - Health check called
+2026-07-26 13:48:12 - root - INFO - Health check called
+2026-07-26 13:48:42 - root - INFO - Health check called
+2026-07-26 13:49:12 - root - INFO - Health check called
+2026-07-26 13:49:42 - root - INFO - Health check called
+2026-07-26 13:50:13 - root - INFO - Health check called
+2026-07-26 13:50:43 - root - INFO - Health check called
+2026-07-26 13:51:13 - root - INFO - Health check called
+2026-07-26 13:51:43 - root - INFO - Health check called
+2026-07-26 13:52:13 - root - INFO - Health check called
+2026-07-26 13:52:43 - root - INFO - Health check called
+2026-07-26 13:53:13 - root - INFO - Health check called
+2026-07-26 13:53:44 - root - INFO - Health check called
+2026-07-26 13:54:14 - root - INFO - Health check called
+2026-07-26 13:54:44 - root - INFO - Health check called
+2026-07-26 13:55:14 - root - INFO - Health check called
+2026-07-26 13:55:44 - root - INFO - Health check called
+2026-07-26 13:56:14 - root - INFO - Health check called
+2026-07-26 13:56:44 - root - INFO - Health check called
+2026-07-26 13:57:15 - root - INFO - Health check called
+2026-07-26 13:57:45 - root - INFO - Health check called
+2026-07-26 13:58:15 - root - INFO - Health check called
+2026-07-26 13:58:45 - root - INFO - Health check called
+2026-07-26 13:59:15 - root - INFO - Health check called
+2026-07-26 13:59:45 - root - INFO - Health check called
+2026-07-26 14:00:15 - root - INFO - Health check called
+2026-07-26 14:00:45 - root - INFO - Health check called
+2026-07-26 14:01:16 - root - INFO - Health check called
+2026-07-26 14:01:46 - root - INFO - Health check called
+2026-07-26 14:02:16 - root - INFO - Health check called
+2026-07-26 14:02:46 - root - INFO - Health check called
+2026-07-26 14:03:16 - root - INFO - Health check called
+2026-07-26 14:03:46 - root - INFO - Health check called
+2026-07-26 14:04:16 - root - INFO - Health check called
+2026-07-26 14:04:47 - root - INFO - Health check called
+2026-07-26 14:05:17 - root - INFO - Health check called
+2026-07-26 14:05:47 - root - INFO - Health check called
+2026-07-26 14:06:17 - root - INFO - Health check called
+2026-07-26 14:06:47 - root - INFO - Health check called
+2026-07-26 14:07:17 - root - INFO - Health check called
+2026-07-26 14:07:47 - root - INFO - Health check called
+2026-07-26 14:08:18 - root - INFO - Health check called
+2026-07-26 14:08:48 - root - INFO - Health check called
+2026-07-26 14:09:18 - root - INFO - Health check called
+2026-07-26 14:09:48 - root - INFO - Health check called
+2026-07-26 14:10:18 - root - INFO - Health check called
+2026-07-26 14:10:48 - root - INFO - Health check called
+2026-07-26 14:11:18 - root - INFO - Health check called
+2026-07-26 14:11:49 - root - INFO - Health check called
+2026-07-26 14:12:19 - root - INFO - Health check called
+2026-07-26 14:12:49 - root - INFO - Health check called
+2026-07-26 14:13:19 - root - INFO - Health check called
+2026-07-26 14:13:49 - root - INFO - Health check called
+2026-07-26 14:14:19 - root - INFO - Health check called
+2026-07-26 14:14:49 - root - INFO - Health check called
+2026-07-26 14:15:20 - root - INFO - Health check called
+2026-07-26 14:15:50 - root - INFO - Health check called
+2026-07-26 14:16:20 - root - INFO - Health check called
+2026-07-26 14:16:50 - root - INFO - Health check called
+2026-07-26 14:17:20 - root - INFO - Health check called
+2026-07-26 14:17:50 - root - INFO - Health check called
+2026-07-26 14:18:20 - root - INFO - Health check called
+2026-07-26 14:18:51 - root - INFO - Health check called
+2026-07-26 14:19:21 - root - INFO - Health check called
+2026-07-26 14:19:51 - root - INFO - Health check called
+2026-07-26 14:20:21 - root - INFO - Health check called
+2026-07-26 14:20:51 - root - INFO - Health check called
+2026-07-26 14:21:21 - root - INFO - Health check called
+2026-07-26 14:21:51 - root - INFO - Health check called
+2026-07-26 14:22:22 - root - INFO - Health check called
+2026-07-26 14:22:52 - root - INFO - Health check called
+2026-07-26 14:23:22 - root - INFO - Health check called
+2026-07-26 14:23:52 - root - INFO - Health check called
+2026-07-26 14:24:22 - root - INFO - Health check called
+2026-07-26 14:24:52 - root - INFO - Health check called
+2026-07-26 14:25:22 - root - INFO - Health check called
+2026-07-26 14:25:53 - root - INFO - Health check called
+2026-07-26 14:26:23 - root - INFO - Health check called
+2026-07-26 14:26:53 - root - INFO - Health check called
+2026-07-26 14:27:23 - root - INFO - Health check called
+2026-07-26 14:27:53 - root - INFO - Health check called
+2026-07-26 14:28:23 - root - INFO - Health check called
+2026-07-26 14:28:53 - root - INFO - Health check called
+2026-07-26 14:29:24 - root - INFO - Health check called
+2026-07-26 14:29:54 - root - INFO - Health check called
+2026-07-26 14:30:24 - root - INFO - Health check called
+2026-07-26 14:30:54 - root - INFO - Health check called
+2026-07-26 14:31:24 - root - INFO - Health check called
+2026-07-26 14:31:54 - root - INFO - Health check called
+2026-07-26 14:32:24 - root - INFO - Health check called
+2026-07-26 14:32:55 - root - INFO - Health check called
+2026-07-26 14:33:25 - root - INFO - Health check called
+2026-07-26 14:33:55 - root - INFO - Health check called
+2026-07-26 14:34:25 - root - INFO - Health check called
+2026-07-26 14:34:55 - root - INFO - Health check called
+2026-07-26 14:35:25 - root - INFO - Health check called
+2026-07-26 14:35:55 - root - INFO - Health check called
+2026-07-26 14:36:25 - root - INFO - Health check called
+2026-07-26 14:36:56 - root - INFO - Health check called
+2026-07-26 14:37:26 - root - INFO - Health check called
+2026-07-26 14:37:56 - root - INFO - Health check called
+2026-07-26 14:38:26 - root - INFO - Health check called
+2026-07-26 14:38:56 - root - INFO - Health check called
+2026-07-26 14:39:26 - root - INFO - Health check called
+2026-07-26 14:39:56 - root - INFO - Health check called
+2026-07-26 14:40:27 - root - INFO - Health check called
+2026-07-26 14:40:57 - root - INFO - Health check called
+2026-07-26 14:41:27 - root - INFO - Health check called
+2026-07-26 14:41:57 - root - INFO - Health check called
+2026-07-26 14:42:27 - root - INFO - Health check called
+2026-07-26 14:42:57 - root - INFO - Health check called
+2026-07-26 14:43:27 - root - INFO - Health check called
+2026-07-26 14:43:58 - root - INFO - Health check called
+2026-07-26 14:44:28 - root - INFO - Health check called
+2026-07-26 14:44:58 - root - INFO - Health check called
+2026-07-26 14:45:28 - root - INFO - Health check called
+2026-07-26 14:45:58 - root - INFO - Health check called
+2026-07-26 14:46:28 - root - INFO - Health check called
+2026-07-26 14:46:58 - root - INFO - Health check called
+2026-07-26 14:47:29 - root - INFO - Health check called
+2026-07-26 14:47:59 - root - INFO - Health check called
+2026-07-26 14:48:29 - root - INFO - Health check called
+2026-07-26 14:48:59 - root - INFO - Health check called
+2026-07-26 14:49:29 - root - INFO - Health check called
+2026-07-26 14:49:59 - root - INFO - Health check called
+2026-07-26 14:50:29 - root - INFO - Health check called
+2026-07-26 14:51:00 - root - INFO - Health check called
+2026-07-26 14:51:30 - root - INFO - Health check called
+2026-07-26 14:52:00 - root - INFO - Health check called
+2026-07-26 14:52:30 - root - INFO - Health check called
+2026-07-26 14:53:00 - root - INFO - Health check called
+2026-07-26 14:53:30 - root - INFO - Health check called
+2026-07-26 14:54:00 - root - INFO - Health check called
+2026-07-26 14:54:31 - root - INFO - Health check called
+2026-07-26 14:55:01 - root - INFO - Health check called
+2026-07-26 14:55:31 - root - INFO - Health check called
+2026-07-26 14:56:01 - root - INFO - Health check called
+2026-07-26 14:56:31 - root - INFO - Health check called
+2026-07-26 14:57:01 - root - INFO - Health check called
+2026-07-26 14:57:31 - root - INFO - Health check called
+2026-07-26 14:58:02 - root - INFO - Health check called
+2026-07-26 14:58:32 - root - INFO - Health check called
+2026-07-26 14:59:02 - root - INFO - Health check called
+2026-07-26 14:59:32 - root - INFO - Health check called
+2026-07-26 15:00:02 - root - INFO - Health check called
+2026-07-26 15:00:32 - root - INFO - Health check called
+2026-07-26 15:01:02 - root - INFO - Health check called
+2026-07-26 15:01:33 - root - INFO - Health check called
+2026-07-26 15:02:03 - root - INFO - Health check called
+2026-07-26 15:02:33 - root - INFO - Health check called
+2026-07-26 15:03:03 - root - INFO - Health check called
+2026-07-26 15:03:33 - root - INFO - Health check called
+2026-07-26 15:04:03 - root - INFO - Health check called
+2026-07-26 15:04:33 - root - INFO - Health check called
+2026-07-26 15:05:04 - root - INFO - Health check called
+2026-07-26 15:05:34 - root - INFO - Health check called
+2026-07-26 15:06:04 - root - INFO - Health check called
+2026-07-26 15:06:34 - root - INFO - Health check called
+2026-07-26 15:07:04 - root - INFO - Health check called
+2026-07-26 15:07:34 - root - INFO - Health check called
+2026-07-26 15:08:04 - root - INFO - Health check called
+2026-07-26 15:08:35 - root - INFO - Health check called
+2026-07-26 15:09:05 - root - INFO - Health check called
+2026-07-26 15:09:35 - root - INFO - Health check called
+2026-07-26 15:10:05 - root - INFO - Health check called
+2026-07-26 15:10:35 - root - INFO - Health check called
+2026-07-26 15:11:05 - root - INFO - Health check called
+2026-07-26 15:11:35 - root - INFO - Health check called
+2026-07-26 15:12:06 - root - INFO - Health check called
+2026-07-26 15:12:36 - root - INFO - Health check called
+2026-07-26 15:13:06 - root - INFO - Health check called
+2026-07-26 15:13:36 - root - INFO - Health check called
+2026-07-26 15:14:06 - root - INFO - Health check called
+2026-07-26 15:14:36 - root - INFO - Health check called
+2026-07-26 15:15:06 - root - INFO - Health check called
+2026-07-26 15:15:37 - root - INFO - Health check called
+2026-07-26 15:16:07 - root - INFO - Health check called
+2026-07-26 15:16:37 - root - INFO - Health check called
+2026-07-26 15:17:07 - root - INFO - Health check called
+2026-07-26 15:17:37 - root - INFO - Health check called
+2026-07-26 15:18:07 - root - INFO - Health check called
+2026-07-26 15:18:37 - root - INFO - Health check called
+2026-07-26 15:19:08 - root - INFO - Health check called
+2026-07-26 15:19:38 - root - INFO - Health check called
+2026-07-26 15:20:08 - root - INFO - Health check called
+2026-07-26 15:20:38 - root - INFO - Health check called
+2026-07-26 15:21:08 - root - INFO - Health check called
+2026-07-26 15:21:38 - root - INFO - Health check called
+2026-07-26 15:22:08 - root - INFO - Health check called
+2026-07-26 15:22:39 - root - INFO - Health check called
+2026-07-26 15:23:09 - root - INFO - Health check called
+2026-07-26 15:23:39 - root - INFO - Health check called
+2026-07-26 15:24:09 - root - INFO - Health check called
+2026-07-26 15:24:39 - root - INFO - Health check called
+2026-07-26 15:25:09 - root - INFO - Health check called
+2026-07-26 15:25:39 - root - INFO - Health check called
+2026-07-26 15:26:10 - root - INFO - Health check called
+2026-07-26 15:26:40 - root - INFO - Health check called
+2026-07-26 15:27:10 - root - INFO - Health check called
+2026-07-26 15:27:40 - root - INFO - Health check called
+2026-07-26 15:28:10 - root - INFO - Health check called
+2026-07-26 15:28:40 - root - INFO - Health check called
+2026-07-26 15:29:10 - root - INFO - Health check called
+2026-07-26 15:29:41 - root - INFO - Health check called
+2026-07-26 15:30:11 - root - INFO - Health check called
+2026-07-26 15:30:41 - root - INFO - Health check called
+2026-07-26 15:31:11 - root - INFO - Health check called
+2026-07-26 15:31:41 - root - INFO - Health check called
+2026-07-26 15:32:11 - root - INFO - Health check called
+2026-07-26 15:32:41 - root - INFO - Health check called
+2026-07-26 15:33:12 - root - INFO - Health check called
+2026-07-26 15:33:42 - root - INFO - Health check called
+2026-07-26 15:34:12 - root - INFO - Health check called
+2026-07-26 15:34:42 - root - INFO - Health check called
+2026-07-26 15:35:12 - root - INFO - Health check called
+2026-07-26 15:35:42 - root - INFO - Health check called
+2026-07-26 15:36:12 - root - INFO - Health check called
+2026-07-26 15:36:43 - root - INFO - Health check called
+2026-07-26 15:37:13 - root - INFO - Health check called
+2026-07-26 15:37:43 - root - INFO - Health check called
+2026-07-26 15:38:13 - root - INFO - Health check called
+2026-07-26 15:38:43 - root - INFO - Health check called
+2026-07-26 15:39:13 - root - INFO - Health check called
+2026-07-26 15:39:44 - root - INFO - Health check called
+2026-07-26 15:40:14 - root - INFO - Health check called
+2026-07-26 15:40:44 - root - INFO - Health check called
+2026-07-26 15:41:14 - root - INFO - Health check called
+2026-07-26 15:41:44 - root - INFO - Health check called
+2026-07-26 15:42:14 - root - INFO - Health check called
+2026-07-26 15:42:44 - root - INFO - Health check called
+2026-07-26 15:43:15 - root - INFO - Health check called
+2026-07-26 15:43:45 - root - INFO - Health check called
+2026-07-26 15:44:15 - root - INFO - Health check called
+2026-07-26 15:44:45 - root - INFO - Health check called
+2026-07-26 15:45:15 - root - INFO - Health check called
+2026-07-26 15:45:45 - root - INFO - Health check called
+2026-07-26 15:46:15 - root - INFO - Health check called
+2026-07-26 15:46:46 - root - INFO - Health check called
+2026-07-26 15:47:16 - root - INFO - Health check called
+2026-07-26 15:47:46 - root - INFO - Health check called
+2026-07-26 15:48:16 - root - INFO - Health check called
+2026-07-26 15:48:46 - root - INFO - Health check called
+2026-07-26 15:49:16 - root - INFO - Health check called
+2026-07-26 15:49:46 - root - INFO - Health check called
+2026-07-26 15:50:16 - root - INFO - Health check called
+2026-07-26 15:50:47 - root - INFO - Health check called
+2026-07-26 15:51:17 - root - INFO - Health check called
+2026-07-26 15:51:47 - root - INFO - Health check called
+2026-07-26 15:52:17 - root - INFO - Health check called
+2026-07-26 15:52:47 - root - INFO - Health check called
+2026-07-26 15:53:17 - root - INFO - Health check called
+2026-07-26 15:53:47 - root - INFO - Health check called
+2026-07-26 15:54:18 - root - INFO - Health check called
+2026-07-26 15:54:48 - root - INFO - Health check called
+2026-07-26 15:55:18 - root - INFO - Health check called
+2026-07-26 15:55:48 - root - INFO - Health check called
+2026-07-26 15:56:18 - root - INFO - Health check called
+2026-07-26 15:56:48 - root - INFO - Health check called
+2026-07-26 15:57:18 - root - INFO - Health check called
+2026-07-26 15:57:49 - root - INFO - Health check called
+2026-07-26 15:58:19 - root - INFO - Health check called
+2026-07-26 15:58:49 - root - INFO - Health check called
+2026-07-26 15:59:19 - root - INFO - Health check called
+2026-07-26 15:59:49 - root - INFO - Health check called
+2026-07-26 16:00:19 - root - INFO - Health check called
+2026-07-26 16:00:49 - root - INFO - Health check called
+2026-07-26 16:01:20 - root - INFO - Health check called
+2026-07-26 16:01:50 - root - INFO - Health check called
+2026-07-26 16:02:20 - root - INFO - Health check called
+2026-07-26 16:02:50 - root - INFO - Health check called
+2026-07-26 16:03:20 - root - INFO - Health check called
+2026-07-26 16:03:50 - root - INFO - Health check called
+2026-07-26 16:04:20 - root - INFO - Health check called
+2026-07-26 16:04:51 - root - INFO - Health check called
+2026-07-26 16:05:21 - root - INFO - Health check called
+2026-07-26 16:05:51 - root - INFO - Health check called
+2026-07-26 16:06:21 - root - INFO - Health check called
+2026-07-26 16:06:51 - root - INFO - Health check called
+2026-07-26 16:07:21 - root - INFO - Health check called
+2026-07-26 16:07:51 - root - INFO - Health check called
+2026-07-26 16:08:22 - root - INFO - Health check called
+2026-07-26 16:08:52 - root - INFO - Health check called
+2026-07-26 16:09:22 - root - INFO - Health check called
+2026-07-26 16:09:52 - root - INFO - Health check called
+2026-07-26 16:10:22 - root - INFO - Health check called
+2026-07-26 16:10:52 - root - INFO - Health check called
+2026-07-26 16:11:22 - root - INFO - Health check called
+2026-07-26 16:11:53 - root - INFO - Health check called
+2026-07-26 16:12:23 - root - INFO - Health check called
+2026-07-26 16:12:53 - root - INFO - Health check called
+2026-07-26 16:13:23 - root - INFO - Health check called
+2026-07-26 16:13:53 - root - INFO - Health check called
+2026-07-26 16:14:23 - root - INFO - Health check called
+2026-07-26 16:14:53 - root - INFO - Health check called
+2026-07-26 16:15:24 - root - INFO - Health check called
+2026-07-26 16:15:54 - root - INFO - Health check called
+2026-07-26 16:16:24 - root - INFO - Health check called
+2026-07-26 16:16:54 - root - INFO - Health check called
+2026-07-26 16:17:24 - root - INFO - Health check called
+2026-07-26 16:17:54 - root - INFO - Health check called
+2026-07-26 16:18:24 - root - INFO - Health check called
+2026-07-26 16:18:55 - root - INFO - Health check called
+2026-07-26 16:19:25 - root - INFO - Health check called
+2026-07-26 16:19:55 - root - INFO - Health check called
+2026-07-26 16:20:25 - root - INFO - Health check called
+2026-07-26 16:20:55 - root - INFO - Health check called
+2026-07-26 16:21:25 - root - INFO - Health check called
+2026-07-26 16:21:55 - root - INFO - Health check called
+2026-07-26 16:22:26 - root - INFO - Health check called
+2026-07-26 16:22:56 - root - INFO - Health check called
+2026-07-26 16:23:26 - root - INFO - Health check called
+2026-07-26 16:23:56 - root - INFO - Health check called
+2026-07-26 16:24:26 - root - INFO - Health check called
+2026-07-26 16:24:56 - root - INFO - Health check called
+2026-07-26 16:25:26 - root - INFO - Health check called
+2026-07-26 16:25:57 - root - INFO - Health check called
+2026-07-26 16:26:27 - root - INFO - Health check called
+2026-07-26 16:26:57 - root - INFO - Health check called
+2026-07-26 16:27:27 - root - INFO - Health check called
+2026-07-26 16:27:57 - root - INFO - Health check called
+2026-07-26 16:28:27 - root - INFO - Health check called
+2026-07-26 16:28:57 - root - INFO - Health check called
+2026-07-26 16:29:28 - root - INFO - Health check called
+2026-07-26 16:29:58 - root - INFO - Health check called
+2026-07-26 16:30:28 - root - INFO - Health check called
+2026-07-26 16:30:58 - root - INFO - Health check called
+2026-07-26 16:31:28 - root - INFO - Health check called
+2026-07-26 16:31:58 - root - INFO - Health check called
+2026-07-26 16:32:28 - root - INFO - Health check called
+2026-07-26 16:32:59 - root - INFO - Health check called
+2026-07-26 16:33:29 - root - INFO - Health check called
+2026-07-26 16:33:59 - root - INFO - Health check called
+2026-07-26 16:34:29 - root - INFO - Health check called
+2026-07-26 16:34:59 - root - INFO - Health check called
+2026-07-26 16:35:29 - root - INFO - Health check called
+2026-07-26 16:35:59 - root - INFO - Health check called
+2026-07-26 16:36:30 - root - INFO - Health check called
+2026-07-26 16:37:00 - root - INFO - Health check called
+2026-07-26 16:37:30 - root - INFO - Health check called
+2026-07-26 16:38:00 - root - INFO - Health check called
+2026-07-26 16:38:30 - root - INFO - Health check called
+2026-07-26 16:39:00 - root - INFO - Health check called
+2026-07-26 16:39:30 - root - INFO - Health check called
+2026-07-26 16:40:01 - root - INFO - Health check called
+2026-07-26 16:40:31 - root - INFO - Health check called
+2026-07-26 16:41:01 - root - INFO - Health check called
+2026-07-26 16:41:31 - root - INFO - Health check called
+2026-07-26 16:42:01 - root - INFO - Health check called
+2026-07-26 16:42:31 - root - INFO - Health check called
+2026-07-26 16:43:01 - root - INFO - Health check called
+2026-07-26 16:43:32 - root - INFO - Health check called
+2026-07-26 16:44:02 - root - INFO - Health check called
+2026-07-26 16:44:32 - root - INFO - Health check called
+2026-07-26 16:45:02 - root - INFO - Health check called
+2026-07-26 16:45:32 - root - INFO - Health check called
+2026-07-26 16:46:02 - root - INFO - Health check called
+2026-07-26 16:46:32 - root - INFO - Health check called
+2026-07-26 16:47:03 - root - INFO - Health check called
+2026-07-26 16:47:33 - root - INFO - Health check called
+2026-07-26 16:48:03 - root - INFO - Health check called
+2026-07-26 16:48:33 - root - INFO - Health check called
+2026-07-26 16:49:03 - root - INFO - Health check called
+2026-07-26 16:49:33 - root - INFO - Health check called
+2026-07-26 16:50:03 - root - INFO - Health check called
+2026-07-26 16:50:34 - root - INFO - Health check called
+2026-07-26 16:51:04 - root - INFO - Health check called
+2026-07-26 16:51:34 - root - INFO - Health check called
+2026-07-26 16:52:04 - root - INFO - Health check called
+2026-07-26 16:52:34 - root - INFO - Health check called
+2026-07-26 16:53:04 - root - INFO - Health check called
+2026-07-26 16:53:34 - root - INFO - Health check called
+2026-07-26 16:54:05 - root - INFO - Health check called
+2026-07-26 16:54:35 - root - INFO - Health check called
+2026-07-26 16:55:05 - root - INFO - Health check called
+2026-07-26 16:55:35 - root - INFO - Health check called
+2026-07-26 16:56:05 - root - INFO - Health check called
+2026-07-26 16:56:35 - root - INFO - Health check called
+2026-07-26 16:57:05 - root - INFO - Health check called
+2026-07-26 16:57:36 - root - INFO - Health check called
+2026-07-26 16:58:06 - root - INFO - Health check called
+2026-07-26 16:58:36 - root - INFO - Health check called
+2026-07-26 16:59:06 - root - INFO - Health check called
+2026-07-26 16:59:36 - root - INFO - Health check called
+2026-07-26 17:00:06 - root - INFO - Health check called
+2026-07-26 17:00:36 - root - INFO - Health check called
+2026-07-26 17:01:07 - root - INFO - Health check called
+2026-07-26 17:01:37 - root - INFO - Health check called
+2026-07-26 17:02:07 - root - INFO - Health check called
+2026-07-26 17:02:37 - root - INFO - Health check called
+2026-07-26 17:03:07 - root - INFO - Health check called
+2026-07-26 17:03:37 - root - INFO - Health check called
+2026-07-26 17:04:07 - root - INFO - Health check called
+2026-07-26 17:04:38 - root - INFO - Health check called
+2026-07-26 17:05:08 - root - INFO - Health check called
+2026-07-26 17:05:38 - root - INFO - Health check called
+2026-07-26 17:06:08 - root - INFO - Health check called
+2026-07-26 17:06:38 - root - INFO - Health check called
+2026-07-26 17:07:08 - root - INFO - Health check called
+2026-07-26 17:07:38 - root - INFO - Health check called
+2026-07-26 17:08:09 - root - INFO - Health check called
+2026-07-26 17:08:39 - root - INFO - Health check called
+2026-07-26 17:09:09 - root - INFO - Health check called
+2026-07-26 17:09:39 - root - INFO - Health check called
+2026-07-26 17:10:09 - root - INFO - Health check called
+2026-07-26 17:10:39 - root - INFO - Health check called
+2026-07-26 17:11:09 - root - INFO - Health check called
+2026-07-26 17:11:40 - root - INFO - Health check called
+2026-07-26 17:12:10 - root - INFO - Health check called
+2026-07-26 17:12:40 - root - INFO - Health check called
+2026-07-26 17:13:10 - root - INFO - Health check called
+2026-07-26 17:13:40 - root - INFO - Health check called
+2026-07-26 17:14:10 - root - INFO - Health check called
+2026-07-26 17:14:40 - root - INFO - Health check called
+2026-07-26 17:15:11 - root - INFO - Health check called
+2026-07-26 17:15:41 - root - INFO - Health check called
+2026-07-26 17:16:11 - root - INFO - Health check called
+2026-07-26 17:16:41 - root - INFO - Health check called
+2026-07-26 17:17:11 - root - INFO - Health check called
+2026-07-26 17:17:42 - root - INFO - Health check called
+2026-07-26 17:18:13 - root - INFO - Health check called
+2026-07-26 17:18:45 - root - INFO - Health check called
+2026-07-26 17:19:18 - root - INFO - Health check called
+2026-07-26 17:19:50 - root - INFO - Health check called
+2026-07-26 17:20:22 - root - INFO - Health check called
+2026-07-26 17:20:55 - root - INFO - Health check called
+2026-07-26 17:21:27 - root - INFO - Health check called
+2026-07-26 17:21:59 - root - INFO - Health check called
+2026-07-26 17:22:32 - root - INFO - Health check called
+2026-07-26 17:22:53 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 17:23:02 - root - INFO - Health check called
+2026-07-26 17:23:32 - root - INFO - Health check called
+2026-07-26 17:24:02 - root - INFO - Health check called
+2026-07-26 17:24:32 - root - INFO - Health check called
+2026-07-26 17:25:02 - root - INFO - Health check called
+2026-07-26 17:25:32 - root - INFO - Health check called
+2026-07-26 17:26:03 - root - INFO - Health check called
+2026-07-26 17:26:33 - root - INFO - Health check called
+2026-07-26 17:27:03 - root - INFO - Health check called
+2026-07-26 17:27:33 - root - INFO - Health check called
+2026-07-26 17:28:03 - root - INFO - Health check called
+2026-07-26 17:28:33 - root - INFO - Health check called
+2026-07-26 17:29:04 - root - INFO - Health check called
+2026-07-26 17:29:34 - root - INFO - Health check called
+2026-07-26 17:30:04 - root - INFO - Health check called
+2026-07-26 17:30:34 - root - INFO - Health check called
+2026-07-26 17:31:04 - root - INFO - Health check called
+2026-07-26 17:31:34 - root - INFO - Health check called
+2026-07-26 17:32:05 - root - INFO - Health check called
+2026-07-26 17:32:35 - root - INFO - Health check called
+2026-07-26 17:33:05 - root - INFO - Health check called
+2026-07-26 17:33:35 - root - INFO - Health check called
+2026-07-26 17:34:05 - root - INFO - Health check called
+2026-07-26 17:34:35 - root - INFO - Health check called
+2026-07-26 17:35:05 - root - INFO - Health check called
+2026-07-26 17:35:36 - root - INFO - Health check called
+2026-07-26 17:36:06 - root - INFO - Health check called
+2026-07-26 17:36:36 - root - INFO - Health check called
+2026-07-26 17:37:06 - root - INFO - Health check called
+2026-07-26 17:37:36 - root - INFO - Health check called
+2026-07-26 17:38:06 - root - INFO - Health check called
+2026-07-26 17:38:37 - root - INFO - Health check called
+2026-07-26 17:39:07 - root - INFO - Health check called
+2026-07-26 17:39:37 - root - INFO - Health check called
+2026-07-26 17:40:07 - root - INFO - Health check called
+2026-07-26 17:40:37 - root - INFO - Health check called
+2026-07-26 17:41:07 - root - INFO - Health check called
+2026-07-26 17:41:38 - root - INFO - Health check called
+2026-07-26 17:42:08 - root - INFO - Health check called
+2026-07-26 17:42:38 - root - INFO - Health check called
+2026-07-26 17:43:08 - root - INFO - Health check called
+2026-07-26 17:43:38 - root - INFO - Health check called
+2026-07-26 17:44:08 - root - INFO - Health check called
+2026-07-26 17:44:39 - root - INFO - Health check called
+2026-07-26 17:45:09 - root - INFO - Health check called
+2026-07-26 17:45:39 - root - INFO - Health check called
+2026-07-26 17:46:09 - root - INFO - Health check called
+2026-07-26 17:46:39 - root - INFO - Health check called
+2026-07-26 17:47:09 - root - INFO - Health check called
+2026-07-26 17:47:39 - root - INFO - Health check called
+2026-07-26 17:48:10 - root - INFO - Health check called
+2026-07-26 17:48:40 - root - INFO - Health check called
+2026-07-26 17:49:10 - root - INFO - Health check called
+2026-07-26 17:49:40 - root - INFO - Health check called
+2026-07-26 17:50:10 - root - INFO - Health check called
+2026-07-26 17:50:40 - root - INFO - Health check called
+2026-07-26 17:51:11 - root - INFO - Health check called
+2026-07-26 17:51:41 - root - INFO - Health check called
+2026-07-26 17:52:11 - root - INFO - Health check called
+2026-07-26 17:52:41 - root - INFO - Health check called
+2026-07-26 17:53:11 - root - INFO - Health check called
+2026-07-26 17:53:41 - root - INFO - Health check called
+2026-07-26 17:54:11 - root - INFO - Health check called
+2026-07-26 17:54:42 - root - INFO - Health check called
+2026-07-26 17:55:12 - root - INFO - Health check called
+2026-07-26 17:55:42 - root - INFO - Health check called
+2026-07-26 17:56:12 - root - INFO - Health check called
+2026-07-26 17:56:42 - root - INFO - Health check called
+2026-07-26 17:57:12 - root - INFO - Health check called
+2026-07-26 17:57:43 - root - INFO - Health check called
+2026-07-26 17:58:13 - root - INFO - Health check called
+2026-07-26 17:58:43 - root - INFO - Health check called
+2026-07-26 17:59:13 - root - INFO - Health check called
+2026-07-26 17:59:43 - root - INFO - Health check called
+2026-07-26 18:00:13 - root - INFO - Health check called
+2026-07-26 18:00:44 - root - INFO - Health check called
+2026-07-26 18:01:14 - root - INFO - Health check called
+2026-07-26 18:01:44 - root - INFO - Health check called
+2026-07-26 18:02:14 - root - INFO - Health check called
+2026-07-26 18:02:44 - root - INFO - Health check called
+2026-07-26 18:03:14 - root - INFO - Health check called
+2026-07-26 18:03:44 - root - INFO - Health check called
+2026-07-26 18:04:15 - root - INFO - Health check called
+2026-07-26 18:04:45 - root - INFO - Health check called
+2026-07-26 18:05:15 - root - INFO - Health check called
+2026-07-26 18:05:45 - root - INFO - Health check called
+2026-07-26 18:06:15 - root - INFO - Health check called
+2026-07-26 18:06:45 - root - INFO - Health check called
+2026-07-26 18:07:16 - root - INFO - Health check called
+2026-07-26 18:07:46 - root - INFO - Health check called
+2026-07-26 18:08:16 - root - INFO - Health check called
+2026-07-26 18:08:46 - root - INFO - Health check called
+2026-07-26 18:09:16 - root - INFO - Health check called
+2026-07-26 18:09:46 - root - INFO - Health check called
+2026-07-26 18:10:17 - root - INFO - Health check called
+2026-07-26 18:10:47 - root - INFO - Health check called
+2026-07-26 18:11:17 - root - INFO - Health check called
+2026-07-26 18:11:47 - root - INFO - Health check called
+2026-07-26 18:12:17 - root - INFO - Health check called
+2026-07-26 18:12:47 - root - INFO - Health check called
+2026-07-26 18:13:17 - root - INFO - Health check called
+2026-07-26 18:13:48 - root - INFO - Health check called
+2026-07-26 18:14:18 - root - INFO - Health check called
+2026-07-26 18:14:48 - root - INFO - Health check called
+2026-07-26 18:15:18 - root - INFO - Health check called
+2026-07-26 18:15:48 - root - INFO - Health check called
+2026-07-26 18:16:18 - root - INFO - Health check called
+2026-07-26 18:16:48 - root - INFO - Health check called
+2026-07-26 18:17:18 - root - INFO - Health check called
+2026-07-26 18:17:49 - root - INFO - Health check called
+2026-07-26 18:18:19 - root - INFO - Health check called
+2026-07-26 18:18:49 - root - INFO - Health check called
+2026-07-26 18:19:19 - root - INFO - Health check called
+2026-07-26 18:19:49 - root - INFO - Health check called
+2026-07-26 18:20:19 - root - INFO - Health check called
+2026-07-26 18:20:50 - root - INFO - Health check called
+2026-07-26 18:21:20 - root - INFO - Health check called
+2026-07-26 18:21:50 - root - INFO - Health check called
+2026-07-26 18:22:20 - root - INFO - Health check called
+2026-07-26 18:22:50 - root - INFO - Health check called
+2026-07-26 18:23:20 - root - INFO - Health check called
+2026-07-26 18:23:50 - root - INFO - Health check called
+2026-07-26 18:24:21 - root - INFO - Health check called
+2026-07-26 18:24:51 - root - INFO - Health check called
+2026-07-26 18:25:21 - root - INFO - Health check called
+2026-07-26 18:25:51 - root - INFO - Health check called
+2026-07-26 18:26:21 - root - INFO - Health check called
+2026-07-26 18:26:51 - root - INFO - Health check called
+2026-07-26 18:27:22 - root - INFO - Health check called
+2026-07-26 18:27:52 - root - INFO - Health check called
+2026-07-26 18:28:22 - root - INFO - Health check called
+2026-07-26 18:28:52 - root - INFO - Health check called
+2026-07-26 18:29:22 - root - INFO - Health check called
+2026-07-26 18:29:52 - root - INFO - Health check called
+2026-07-26 18:30:22 - root - INFO - Health check called
+2026-07-26 18:30:53 - root - INFO - Health check called
+2026-07-26 18:31:23 - root - INFO - Health check called
+2026-07-26 18:31:53 - root - INFO - Health check called
+2026-07-26 18:32:23 - root - INFO - Health check called
+2026-07-26 18:32:53 - root - INFO - Health check called
+2026-07-26 18:33:23 - root - INFO - Health check called
+2026-07-26 18:33:54 - root - INFO - Health check called
+2026-07-26 18:34:24 - root - INFO - Health check called
+2026-07-26 18:34:54 - root - INFO - Health check called
+2026-07-26 18:35:24 - root - INFO - Health check called
+2026-07-26 18:35:54 - root - INFO - Health check called
+2026-07-26 18:36:24 - root - INFO - Health check called
+2026-07-26 18:36:54 - root - INFO - Health check called
+2026-07-26 18:37:25 - root - INFO - Health check called
+2026-07-26 18:37:55 - root - INFO - Health check called
+2026-07-26 18:38:25 - root - INFO - Health check called
+2026-07-26 18:38:55 - root - INFO - Health check called
+2026-07-26 18:39:25 - root - INFO - Health check called
+2026-07-26 18:39:55 - root - INFO - Health check called
+2026-07-26 18:40:26 - root - INFO - Health check called
+2026-07-26 18:40:56 - root - INFO - Health check called
+2026-07-26 18:41:26 - root - INFO - Health check called
+2026-07-26 18:41:56 - root - INFO - Health check called
+2026-07-26 18:42:26 - root - INFO - Health check called
+2026-07-26 18:42:56 - root - INFO - Health check called
+2026-07-26 18:43:26 - root - INFO - Health check called
+2026-07-26 18:43:57 - root - INFO - Health check called
+2026-07-26 18:44:27 - root - INFO - Health check called
+2026-07-26 18:44:57 - root - INFO - Health check called
+2026-07-26 18:45:27 - root - INFO - Health check called
+2026-07-26 18:45:58 - root - INFO - Health check called
+2026-07-26 18:46:28 - root - INFO - Health check called
+2026-07-26 18:46:58 - root - INFO - Health check called
+2026-07-26 18:47:28 - root - INFO - Health check called
+2026-07-26 18:47:58 - root - INFO - Health check called
+2026-07-26 18:48:28 - root - INFO - Health check called
+2026-07-26 18:48:59 - root - INFO - Health check called
+2026-07-26 18:49:29 - root - INFO - Health check called
+2026-07-26 18:49:59 - root - INFO - Health check called
+2026-07-26 18:50:29 - root - INFO - Health check called
+2026-07-26 18:50:59 - root - INFO - Health check called
+2026-07-26 18:51:29 - root - INFO - Health check called
+2026-07-26 18:52:00 - root - INFO - Health check called
+2026-07-26 18:52:30 - root - INFO - Health check called
+2026-07-26 18:53:00 - root - INFO - Health check called
+2026-07-26 18:53:30 - root - INFO - Health check called
+2026-07-26 18:54:00 - root - INFO - Health check called
+2026-07-26 18:54:30 - root - INFO - Health check called
+2026-07-26 18:55:00 - root - INFO - Health check called
+2026-07-26 18:55:31 - root - INFO - Health check called
+2026-07-26 18:56:01 - root - INFO - Health check called
+2026-07-26 18:56:31 - root - INFO - Health check called
+2026-07-26 18:57:01 - root - INFO - Health check called
+2026-07-26 18:57:31 - root - INFO - Health check called
+2026-07-26 18:58:01 - root - INFO - Health check called
+2026-07-26 18:58:32 - root - INFO - Health check called
+2026-07-26 18:59:02 - root - INFO - Health check called
+2026-07-26 18:59:32 - root - INFO - Health check called
+2026-07-26 19:00:02 - root - INFO - Health check called
+2026-07-26 19:00:32 - root - INFO - Health check called
+2026-07-26 19:01:02 - root - INFO - Health check called
+2026-07-26 19:01:33 - root - INFO - Health check called
+2026-07-26 19:02:03 - root - INFO - Health check called
+2026-07-26 19:02:33 - root - INFO - Health check called
+2026-07-26 19:03:03 - root - INFO - Health check called
+2026-07-26 19:03:33 - root - INFO - Health check called
+2026-07-26 19:04:03 - root - INFO - Health check called
+2026-07-26 19:04:33 - root - INFO - Health check called
+2026-07-26 19:05:04 - root - INFO - Health check called
+2026-07-26 19:05:34 - root - INFO - Health check called
+2026-07-26 19:06:04 - root - INFO - Health check called
+2026-07-26 19:06:34 - root - INFO - Health check called
+2026-07-26 19:07:04 - root - INFO - Health check called
+2026-07-26 19:07:34 - root - INFO - Health check called
+2026-07-26 19:08:05 - root - INFO - Health check called
+2026-07-26 19:08:35 - root - INFO - Health check called
+2026-07-26 19:09:05 - root - INFO - Health check called
+2026-07-26 19:09:35 - root - INFO - Health check called
+2026-07-26 19:10:05 - root - INFO - Health check called
+2026-07-26 19:10:36 - root - INFO - Health check called
+2026-07-26 19:11:06 - root - INFO - Health check called
+2026-07-26 19:11:36 - root - INFO - Health check called
+2026-07-26 19:12:06 - root - INFO - Health check called
+2026-07-26 19:12:36 - root - INFO - Health check called
+2026-07-26 19:13:06 - root - INFO - Health check called
+2026-07-26 19:13:36 - root - INFO - Health check called
+2026-07-26 19:14:07 - root - INFO - Health check called
+2026-07-26 19:14:37 - root - INFO - Health check called
+2026-07-26 19:15:07 - root - INFO - Health check called
+2026-07-26 19:15:37 - root - INFO - Health check called
+2026-07-26 19:16:07 - root - INFO - Health check called
+2026-07-26 19:16:37 - root - INFO - Health check called
+2026-07-26 19:17:08 - root - INFO - Health check called
+2026-07-26 19:17:38 - root - INFO - Health check called
+2026-07-26 19:18:08 - root - INFO - Health check called
+2026-07-26 19:18:38 - root - INFO - Health check called
+2026-07-26 19:19:08 - root - INFO - Health check called
+2026-07-26 19:19:38 - root - INFO - Health check called
+2026-07-26 19:20:09 - root - INFO - Health check called
+2026-07-26 19:20:39 - root - INFO - Health check called
+2026-07-26 19:21:09 - root - INFO - Health check called
+2026-07-26 19:21:39 - root - INFO - Health check called
+2026-07-26 19:22:09 - root - INFO - Health check called
+2026-07-26 19:22:39 - root - INFO - Health check called
+2026-07-26 19:23:09 - root - INFO - Health check called
+2026-07-26 19:23:40 - root - INFO - Health check called
+2026-07-26 19:24:10 - root - INFO - Health check called
+2026-07-26 19:24:40 - root - INFO - Health check called
+2026-07-26 19:25:10 - root - INFO - Health check called
+2026-07-26 19:25:40 - root - INFO - Health check called
+2026-07-26 19:26:10 - root - INFO - Health check called
+2026-07-26 19:26:41 - root - INFO - Health check called
+2026-07-26 19:27:11 - root - INFO - Health check called
+2026-07-26 19:27:41 - root - INFO - Health check called
+2026-07-26 19:28:11 - root - INFO - Health check called
+2026-07-26 19:28:41 - root - INFO - Health check called
+2026-07-26 19:29:11 - root - INFO - Health check called
+2026-07-26 19:29:41 - root - INFO - Health check called
+2026-07-26 19:30:12 - root - INFO - Health check called
+2026-07-26 19:30:42 - root - INFO - Health check called
+2026-07-26 19:31:12 - root - INFO - Health check called
+2026-07-26 19:31:42 - root - INFO - Health check called
+2026-07-26 19:32:01 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 19:32:12 - root - INFO - Health check called
+2026-07-26 19:32:42 - root - INFO - Health check called
+2026-07-26 19:33:13 - root - INFO - Health check called
+2026-07-26 19:33:43 - root - INFO - Health check called
+2026-07-26 19:34:13 - root - INFO - Health check called
+2026-07-26 19:34:43 - root - INFO - Health check called
+2026-07-26 19:34:49 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 19:35:14 - root - INFO - Health check called
+2026-07-26 19:35:44 - root - INFO - Health check called
