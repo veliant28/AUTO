@@ -82,7 +82,7 @@ jobs:
       - name: Run tests
         run: |
           cd frontend
-          pnpm test -- --coverage
+          pnpm exec jest --coverage
 
   docker-build:
     needs: [backend-tests, frontend-tests]
