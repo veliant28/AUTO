@@ -11010,3 +11010,31 @@ WHERE return_requests.status = %(status_1)s ORDER BY return_requests.created_at 
 2026-07-26 19:34:49 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
 2026-07-26 19:35:14 - root - INFO - Health check called
 2026-07-26 19:35:44 - root - INFO - Health check called
+2026-07-26 19:36:14 - root - INFO - Health check called
+2026-07-26 19:36:24 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 19:36:38 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 19:36:44 - root - INFO - Health check called
+2026-07-26 19:37:14 - root - INFO - Health check called
+2026-07-26 19:37:44 - root - INFO - Health check called
+2026-07-26 19:38:15 - root - INFO - Health check called
+2026-07-26 19:38:45 - root - INFO - Health check called
+2026-07-26 19:39:15 - root - INFO - Health check called
+2026-07-26 19:39:45 - root - INFO - Health check called
+2026-07-26 19:40:15 - root - INFO - Health check called
+2026-07-26 19:40:45 - root - INFO - Health check called
+2026-07-26 19:41:16 - root - INFO - Health check called
+2026-07-26 19:41:46 - root - INFO - Health check called
+2026-07-26 19:42:14 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-26 19:42:16 - root - INFO - Health check called
+2026-07-26 19:42:46 - root - INFO - Health check called
+2026-07-26 19:43:16 - root - INFO - Health check called
+2026-07-26 19:43:46 - root - INFO - Health check called
+2026-07-26 19:44:08 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-26 19:44:11 - root - INFO - TELEGRAM_WEBHOOK_URL not set — skipping webhook registration
+2026-07-26 19:44:17 - root - INFO - Health check called
+2026-07-26 19:44:47 - root - INFO - Health check called
+2026-07-26 19:45:17 - root - INFO - Health check called
+2026-07-26 19:45:42 - app.api.v1.endpoints.users - INFO - MODIFIED get_garage called, has_new_code=True
+2026-07-26 19:45:47 - root - INFO - Health check called
+2026-07-26 19:46:17 - root - INFO - Health check called
+2026-07-26 19:46:48 - root - INFO - Health check called
