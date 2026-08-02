@@ -16,7 +16,7 @@ interface ChatStore {
   connect: (token: string) => void
   disconnect: () => void
   sendTyping: (chatId: number, isTyping: boolean) => void
-  sendMessage: (chatId: number, text: string) => void
+  sendMessage: (chatId: number, text: string, source?: string) => void
   subscribe: (chatId: number) => void
   setActiveChat: (id: number | null) => void
   _onMessage: ((data: any) => void) | null
@@ -139,8 +139,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       get().subscribe(id)
     }
   },
-
-  _onMessage: null,
 
   setOnMessage: (handler) => set({ _onMessage: handler }),
 

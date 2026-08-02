@@ -12,9 +12,15 @@ export function useAuth() {
 
   const getError = (err: any, key: string) => {
     const detail = err?.response?.data?.detail
-    if (detail?.toLowerCase().includes('already registered'))
+    if (
+      typeof detail === 'string' &&
+      detail.toLowerCase().includes('already registered')
+    )
       return t('email_exists')
-    if (detail?.toLowerCase().includes('invalid credentials'))
+    if (
+      typeof detail === 'string' &&
+      detail.toLowerCase().includes('invalid credentials')
+    )
       return t('login_error')
     return t(key)
   }

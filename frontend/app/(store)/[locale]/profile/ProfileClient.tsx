@@ -584,7 +584,9 @@ export default function ProfilePage() {
                   <SearchableSelect<NovaPoshtaLookupSettlement>
                     items={settlements}
                     isLoading={citiesLoading}
-                    value={deliveryCity}
+                    value={
+                      settlements.find((s) => s.label === deliveryCity) || null
+                    }
                     onChange={(item) => {
                       setDeliveryCity(item.label)
                       setNpCityRef(item.delivery_city_ref || item.ref)
@@ -642,7 +644,10 @@ export default function ProfilePage() {
                     <SearchableSelect<NovaPoshtaLookupWarehouse>
                       items={warehouses}
                       isLoading={warehousesLoading}
-                      value={deliveryWarehouse}
+                      value={
+                        warehouses.find((w) => w.label === deliveryWarehouse) ||
+                        null
+                      }
                       onChange={(item) => {
                         setDeliveryWarehouse(item.label)
                         setNpWarehouseRef(item.ref)
@@ -711,7 +716,9 @@ export default function ProfilePage() {
                       <SearchableSelect<NovaPoshtaLookupStreet>
                         items={streets}
                         isLoading={streetsLoading}
-                        value={npStreetLabel}
+                        value={
+                          streets.find((s) => s.label === npStreetLabel) || null
+                        }
                         onChange={(item) => {
                           setNpStreetRef(item.street_ref)
                           setNpStreetLabel(item.label)

@@ -468,7 +468,9 @@ export default function CheckoutPage() {
                     <SearchableSelect<NovaPoshtaLookupSettlement>
                       items={settlements}
                       isLoading={citiesLoading}
-                      value={field.value || ''}
+                      value={
+                        settlements.find((s) => s.label === field.value) || null
+                      }
                       onChange={(item) => {
                         field.onChange(item.label)
                         setNpRefs((prev) => ({
@@ -513,7 +515,10 @@ export default function CheckoutPage() {
                       <SearchableSelect<NovaPoshtaLookupWarehouse>
                         items={warehouses}
                         isLoading={warehousesLoading}
-                        value={field.value || ''}
+                        value={
+                          warehouses.find((w) => w.label === field.value) ||
+                          null
+                        }
                         onChange={(item) => {
                           field.onChange(item.label)
                           setNpRefs((prev) => ({
@@ -588,7 +593,11 @@ export default function CheckoutPage() {
                         <SearchableSelect<NovaPoshtaLookupStreet>
                           items={streets}
                           isLoading={streetsLoading}
-                          value={npRefs.delivery_street_label}
+                          value={
+                            streets.find(
+                              (s) => s.label === npRefs.delivery_street_label,
+                            ) || null
+                          }
                           onChange={(item) => {
                             field.onChange(item.label)
                             setNpRefs((prev) => ({

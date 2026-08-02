@@ -40,10 +40,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { format, startOfDay } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
-import type {
-  NovaPoshtaLookupTimeInterval,
-  NovaPoshtaLookupDeliveryDate,
-} from '@/lib/types/nova-poshta'
+import { toast } from '@/lib/toast'
 
 interface Props {
   serviceRef: string
@@ -331,11 +328,15 @@ export default function OrderWaybillServiceEditorSection({
             <Button
               type="button"
               variant="default"
-              onClick={() =>
+              onClick={() => {
+                if (!simpleValue.trim()) {
+                  toast.info(t('novaposhta_service_value_required'))
+                  return
+                }
                 onSave({
                   [simpleConfig.field]: simpleValue,
                 })
-              }
+              }}
             >
               {t('novaposhta_services_add')}
             </Button>

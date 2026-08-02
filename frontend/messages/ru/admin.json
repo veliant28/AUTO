@@ -816,6 +816,7 @@
   "novaposhta_service_number_of_floors_descent": "Этажей спуск",
   "novaposhta_service_forwarding_count": "Количество переадресаций",
   "novaposhta_service_red_box_barcode": "Штрихкод красной коробки",
+  "novaposhta_service_value_required": "Введите значение услуги",
   "novaposhta_service_time_interval": "Интервал доставки",
   "novaposhta_service_select_interval": "Выберите интервал",
   "novaposhta_service_delivery_date": "Дата доставки",

@@ -39,6 +39,7 @@ export interface ArticleItem {
   stock_total: number
   match_status: string
   attempts: number
+  last_attempt_at: string | null
 }
 
 export function normalizeAngle(angle: number): number {

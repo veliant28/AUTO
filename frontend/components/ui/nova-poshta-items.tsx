@@ -39,9 +39,7 @@ export function WarehouseListItem({
         <span>{item.label}</span>
       </div>
       <div className="text-xs text-muted-foreground mt-0.5">
-        {[item.address, isPostomat ? `${item.area}, ${item.region}` : '']
-          .filter(Boolean)
-          .join(' — ')}
+        {item.description || item.full_description}
       </div>
     </>
   )

@@ -431,7 +431,7 @@ export default function OrderWaybillModal({
 
       setForm({
         sender_profile_id: waybill.sender_profile_id,
-        delivery_type: 'warehouse',
+        delivery_type: waybill.recipient_street_ref ? 'address' : 'warehouse',
         payer_type: (waybill.payer_type as any) || 'Recipient',
         payment_method: (waybill.payment_method as any) || 'Cash',
         cargo_type: (waybill.cargo_type as any) || 'Parcel',
@@ -517,6 +517,7 @@ export default function OrderWaybillModal({
         service_params: (waybill.service_params as any) || {},
       })
       setThirdPersonRef(waybill.third_person_ref || '')
+      setRecipientCounterpartyType(waybill.recipient_counterparty_type || '')
       formInitialized.current = true
       lastValidatedCost.current = syncedCost
       // Restore city/address display (queries were reset in open-effect)
@@ -566,9 +567,13 @@ export default function OrderWaybillModal({
         recipient_house: orderData?.delivery_house || prev.recipient_house,
         recipient_apartment:
           orderData?.delivery_apartment || prev.recipient_apartment,
+        // Order delivery_type uses its own vocabulary (pickup/warehouse/courier);
+        // map it to the waybill's (warehouse/postomat/address)
         delivery_type:
-          (orderData?.delivery_type as 'warehouse' | 'postomat' | 'address') ||
-          prev.delivery_type,
+          orderData?.delivery_street_ref ||
+          orderData?.delivery_type === 'courier'
+            ? 'address'
+            : 'warehouse',
         // Auto-fill for new TTNs
         description: `${brandName} Автозапчасти`,
         ...(orderData?.order_number
@@ -1099,16 +1104,6 @@ export default function OrderWaybillModal({
 
   // ── Service editor handlers ────────────────────────────────────────────
 
-  const handleServiceEdit = useCallback(
-    (serviceRef: string, serviceName: string) => {
-      const params = form.service_params?.[serviceRef] || {}
-      setEditingServiceParams(params)
-      setEditingServiceRef(serviceRef)
-      setEditingServiceName(serviceName)
-    },
-    [form.service_params],
-  )
-
   const SERVICE_SYNC_FIELD_MAP: Record<string, Record<string, string>> = {
     AfterpaymentOnGoodsCost: {
       afterpayment_amount: 'afterpayment_amount',
@@ -1156,6 +1151,49 @@ export default function OrderWaybillModal({
       special_cargo: 'special_cargo',
     },
   }
+
+  // Top-level form values used as display fallbacks for simple services,
+  // e.g. the auto-filled order number for InfoRegClientBarcodes
+  const serviceParamFallbacks = useMemo(() => {
+    const fallbacks: Record<string, any> = {}
+    for (const mapping of Object.values(SERVICE_SYNC_FIELD_MAP)) {
+      for (const formField of Object.values(mapping)) {
+        const value = (form as Record<string, any>)[formField]
+        if (value !== undefined && value !== null && value !== '') {
+          fallbacks[formField] = value
+        }
+      }
+    }
+    return fallbacks
+  }, [form])
+
+  const handleServiceEdit = useCallback(
+    (serviceRef: string, serviceName: string) => {
+      const savedParams = form.service_params?.[serviceRef]
+      const params =
+        savedParams && Object.keys(savedParams).length > 0
+          ? savedParams
+          : // Seed simple-service params from top-level form fields, e.g.
+            // InfoRegClientBarcodes is auto-filled with the order number
+            (() => {
+              const seeded: Record<string, any> = {}
+              const mapping = SERVICE_SYNC_FIELD_MAP[serviceRef]
+              if (mapping) {
+                for (const [paramKey, formField] of Object.entries(mapping)) {
+                  const value = (form as Record<string, any>)[formField]
+                  if (value !== undefined && value !== null && value !== '') {
+                    seeded[paramKey] = value
+                  }
+                }
+              }
+              return seeded
+            })()
+      setEditingServiceParams(params)
+      setEditingServiceRef(serviceRef)
+      setEditingServiceName(serviceName)
+    },
+    [form],
+  )
 
   const handleServiceSave = useCallback(
     (params: Record<string, any>) => {
@@ -1321,6 +1359,7 @@ export default function OrderWaybillModal({
               >
                 {editingServiceRef ? (
                   <OrderWaybillServiceEditorSection
+                    key={editingServiceRef}
                     serviceRef={editingServiceRef}
                     serviceName={editingServiceName}
                     params={editingServiceParams}
@@ -1439,6 +1478,7 @@ export default function OrderWaybillModal({
                   onChange={handleFormChange}
                   initialServiceRefs={form.service_refs}
                   initialServiceParams={form.service_params}
+                  serviceParamFallbacks={serviceParamFallbacks}
                   onServiceEdit={handleServiceEdit}
                   editingServiceRef={editingServiceRef}
                   lastCanceledRef={lastCanceledRef}

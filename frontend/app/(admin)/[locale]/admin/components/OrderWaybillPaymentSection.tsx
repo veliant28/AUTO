@@ -51,6 +51,9 @@ interface Props {
   initialServiceRefs?: string[]
   /** Pre-loaded service params from the saved waybill */
   initialServiceParams?: Record<string, any>
+  /** Top-level form values as display fallbacks for simple services
+   *  (e.g. the auto-filled order number for InfoRegClientBarcodes) */
+  serviceParamFallbacks?: Record<string, any>
   /** Called when a parameterized service is added — triggers editor in column 2 */
   onServiceEdit?: (ref: string, name: string) => void
   /** Currently editing service ref — disables this section */
@@ -109,6 +112,7 @@ export default function OrderWaybillPaymentSection({
   onChange,
   initialServiceRefs = [],
   initialServiceParams = {},
+  serviceParamFallbacks = {},
   onServiceEdit,
   editingServiceRef = null,
   lastCanceledRef = null,
@@ -338,13 +342,6 @@ export default function OrderWaybillPaymentSection({
     NonCash: t('novaposhta_payment_noncash'),
   }
 
-  const additionalServices = [
-    { field: 'saturday_delivery', label: t('novaposhta_saturday_delivery') },
-    { field: 'local_express', label: t('novaposhta_local_express') },
-    { field: 'delivery_by_hand', label: t('novaposhta_delivery_by_hand') },
-    { field: 'special_cargo', label: t('novaposhta_special_cargo') },
-  ]
-
   // ── Payer / Payment validation rules ─────────────────────────────────────
   // Sender:    private person → Cash only;   FOP/Organization → Cash + NonCash
   // Recipient: PrivatePerson  → Cash only;   Organization     → Cash + NonCash
@@ -413,9 +410,9 @@ export default function OrderWaybillPaymentSection({
       ) {
         onChange('payer_type', 'ThirdPerson')
       } else {
-        // Try Sender or Recipient as fallback
+        // Try the other side (Sender/Recipient) as fallback
         const fallback: PayerType =
-          payerType === 'ThirdPerson' ? 'Sender' : 'Sender'
+          payerType === 'Sender' ? 'Recipient' : 'Sender'
         onChange('payer_type', fallback)
       }
     }
@@ -549,7 +546,10 @@ export default function OrderWaybillPaymentSection({
                 {/* Rows — grid with columns: checkbox | name | col1 | col2 */}
                 <div className="border rounded-md divide-y">
                   {selectedServices.map((item) => {
-                    const svcParams = initialServiceParams[item.ref] || {}
+                    const svcParams = {
+                      ...serviceParamFallbacks,
+                      ...(initialServiceParams[item.ref] || {}),
+                    }
                     let col1Label = '—'
                     let col2Label = '—'
                     if (item.ref === 'AfterpaymentOnGoodsCost') {
@@ -816,7 +816,7 @@ export default function OrderWaybillPaymentSection({
                         Number(priceData.redelivery_cost)
                       return apiTotal.toFixed(2)
                     }
-                    if (localPackagingCost > 0 || afterpaymentAmount) {
+                    if (localPackagingCost > 0) {
                       // Partial data: what we know so far
                       let total = 0
                       total += localPackagingCost

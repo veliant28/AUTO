@@ -816,6 +816,7 @@
   "novaposhta_service_number_of_floors_descent": "Floors to descend",
   "novaposhta_service_forwarding_count": "Forwarding count",
   "novaposhta_service_red_box_barcode": "Red box barcode",
+  "novaposhta_service_value_required": "Enter a service value",
   "novaposhta_service_time_interval": "Delivery time interval",
   "novaposhta_service_select_interval": "Select interval",
   "novaposhta_service_delivery_date": "Delivery date",
