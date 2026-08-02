@@ -12,6 +12,7 @@ Provides debounced searching for:
   - Delivery dates
 """
 import logging
+import re
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -51,6 +52,24 @@ from app.services.nova_poshta.constants import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Characters NP's searchSettlementStreets rejects ("StreetName has invalid
+# characters", code 20000500676): quotes, brackets, slashes, math/currency
+# symbols, unicode dashes etc. Real street names never contain them.
+_INVALID_STREET_CHARS = re.compile(r'''["'`()\[\]{}<>/\\|*&^%$#@!?=~+;,;:«»—–]''')
+
+
+def _normalize_street_query(query: str) -> str:
+    """Make a street query acceptable for the NP API.
+
+    NP expects only the street name: strip the house number part (after a
+    comma), drop characters the API rejects, and trim trailing dots/dashes.
+    """
+    # House number part (everything after the first comma)
+    name = query.split(",", 1)[0].strip() if "," in query else query.strip()
+    name = _INVALID_STREET_CHARS.sub("", name)
+    name = re.sub(r"\s+", " ", name).strip(" .-")
+    return name
 
 
 class NovaPoshtaLookupService:
@@ -142,11 +161,12 @@ class NovaPoshtaLookupService:
 
         The query may include a house number after a comma (e.g. "Хрещатик, 12").
         Nova Poshta API expects only the street name, so we strip everything
-        after the last comma.
+        after the last comma and sanitize invalid characters.
         """
         client = self._get_sender_client(sender_profile_id)
-        # Strip house number part (everything after the last comma)
-        street_name = query.rsplit(",", 1)[0].strip() if "," in query else query
+        street_name = _normalize_street_query(query)
+        if not street_name:
+            return []
         try:
             response = await client.call(
                 MODEL_ADDRESS_GENERAL,
@@ -158,7 +178,7 @@ class NovaPoshtaLookupService:
                 },
             )
         except NovaPoshtaApiError as e:
-            logger.warning("Street search failed: %s", e)
+            logger.warning("Street search failed for %r: %s", query, e)
             return []
 
         results: List[NovaPoshtaLookupStreet] = []

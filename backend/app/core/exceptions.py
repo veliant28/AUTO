@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from typing import Union
 import logging
@@ -77,6 +78,31 @@ async def nova_poshta_api_error_handler(request: Request, exc: NovaPoshtaApiErro
             "message": str(exc),
             "detail": str(exc),
             "severity": exc.severity,
+        },
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Convert pydantic 422 errors into a single readable string detail.
+
+    Without this handler FastAPI returns detail as a list of {type, loc, msg,
+    input, ctx} objects, which breaks frontend toasts that render detail directly.
+    """
+    messages = [
+        str(err.get("msg", "Invalid value"))
+        for err in exc.errors()
+        if err.get("msg")
+    ]
+    detail = "; ".join(messages) or "Validation error"
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status": "error",
+            "message": "Validation error",
+            "detail": detail,
         },
         headers={
             "Access-Control-Allow-Origin": request.headers.get("origin", "*"),

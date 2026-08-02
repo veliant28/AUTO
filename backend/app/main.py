@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +11,7 @@ from app.core.exceptions import (
     app_exception_handler,
     http_exception_handler,
     nova_poshta_api_error_handler,
+    validation_exception_handler,
 )
 from app.core.middleware import LoggingMiddleware, LocaleMiddleware
 from app.core.logger import logger
@@ -93,6 +95,7 @@ app.add_middleware(
 # Order: more specific → more general. HTTPException caught first via MRO lookup.
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(NovaPoshtaApiError, nova_poshta_api_error_handler)
 
 # Routes
