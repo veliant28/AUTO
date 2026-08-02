@@ -1,0 +1,910 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for components/ui/LiqPayStandaloneButton.tsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/ui</a> LiqPayStandaloneButton.tsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/16</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/7</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/6</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/13</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use client'
+&nbsp;
+import React, { useEffect, useState } from <span class="cstat-no" title="statement not covered" >'react'</span>
+import { Button } from <span class="cstat-no" title="statement not covered" >'@/components/ui/button'</span>
+&nbsp;
+const liqpayStyles = <span class="cstat-no" title="statement not covered" >`</span>
+  .liqpay-btn--inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .liqpay-btn--logo-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .liqpay-btn--spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: liqpay-spin 0.6s linear infinite;
+  }
+  @keyframes liqpay-spin {
+    to { transform: rotate(360deg); }
+  }
+`
+&nbsp;
+interface LiqPayStandaloneButtonProps {
+  onClick?: () =&gt; void
+  loading?: boolean
+  disabled?: boolean
+}
+&nbsp;
+const LiqPayLogoSvg = () =&gt; (
+  &lt;svg
+    width="130"
+    height="28"
+    viewBox="0 0 500 104"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  &gt;
+    &lt;g&gt;
+      {/* Цветная часть лого (градиенты) */}
+      &lt;g&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M420.99 80.3604L419.842 79.3764C417.054 76.9984 416.562 72.6524 419.104 69.8644L448.953 35.7522C451.331 32.9642 455.677 32.4722 458.465 35.0142L459.613 35.9982C462.401 38.3762 462.893 42.7222 460.351 45.5103L430.503 79.6224C428.125 82.4105 423.942 82.7385 420.99 80.3604Z"
+          fill="url(#lp-p0)"
+        /&gt;
+        &lt;path
+          opacity="0.4"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M444.934 41.6564L444.36 41.0004L439.768 46.2484L440.26 46.8224C448.132 54.6944 444.77 62.6485 442.966 65.4365L443.622 64.6985C444.688 63.4685 446.328 61.5825 448.05 59.5325C449.854 56.4164 452.397 49.0364 444.934 41.6564Z"
+          fill="url(#lp-p1)"
+        /&gt;
+        &lt;path
+          opacity="0.4"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M454.775 51.9062L456.005 50.5122C456.087 50.3482 456.251 50.1842 456.333 50.0202C455.021 51.4962 453.627 53.0542 452.315 54.6122C453.299 53.5462 454.119 52.6442 454.775 51.9062Z"
+          fill="url(#lp-p2)"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M460.515 36.8182L430.667 2.706C428.289 -0.0820141 423.943 -0.574017 421.155 1.968L420.007 2.952C417.219 5.33002 416.727 9.67604 419.269 12.4641L444.443 41.0002L445.017 41.6562C452.479 49.1183 449.937 56.4983 448.051 59.6143C449.527 57.8923 451.003 56.1703 452.397 54.6123C453.709 53.0543 455.103 51.4963 456.415 50.0203C457.727 48.5442 458.957 47.1502 459.777 46.2482C462.647 43.4602 463.057 39.6062 460.515 36.8182Z"
+          fill="url(#lp-p3)"
+        /&gt;
+      &lt;/g&gt;
+      &lt;g&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M458.874 80.3604L457.726 79.3764C454.938 76.9984 454.446 72.6524 456.988 69.8644L486.837 35.7522C489.215 32.9642 493.561 32.4722 496.349 35.0142L497.497 35.9982C500.285 38.3762 500.777 42.7222 498.235 45.5103L468.387 79.6224C466.008 82.4105 461.826 82.7385 458.874 80.3604Z"
+          fill="url(#lp-p4)"
+        /&gt;
+        &lt;path
+          opacity="0.4"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M483.147 41.3282L482.573 40.6722L477.981 45.9203L478.473 46.4943C486.345 54.3663 482.983 62.3204 481.179 65.1084L481.835 64.3704C482.901 63.1404 484.541 61.2544 486.263 59.2043C488.067 56.0883 490.609 48.7083 483.147 41.3282Z"
+          fill="url(#lp-p5)"
+        /&gt;
+        &lt;path
+          opacity="0.4"
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M492.577 51.9062L493.807 50.5122C493.889 50.3482 494.053 50.1842 494.135 50.0202C492.823 51.4962 491.429 53.0542 490.117 54.6122C491.101 53.5462 492.003 52.6442 492.577 51.9062Z"
+          fill="url(#lp-p6)"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M498.317 36.8182L468.468 2.706C466.09 -0.0820141 461.744 -0.574017 458.956 1.968L457.808 2.952C455.02 5.33002 454.528 9.67604 457.07 12.4641L482.244 41.0002L482.818 41.6562C490.28 49.1183 487.738 56.4983 485.852 59.6143C487.328 57.8923 488.804 56.1703 490.198 54.6123C491.51 53.0543 492.904 51.4963 494.216 50.0203C495.528 48.5442 496.759 47.1502 497.579 46.2482C500.449 43.4602 500.859 39.6062 498.317 36.8182Z"
+          fill="url(#lp-p7)"
+        /&gt;
+      &lt;/g&gt;
+      {/* Текст LiqPay (меняется с темой через currentColor) */}
+      &lt;g fill="currentColor"&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M1.80401 80.0324C0.656004 78.8844 0 77.1624 0 75.0304V7.54404C0 5.33003 0.656003 3.60802 2.05001 2.21401C3.44402 0.820005 5.16603 0.164001 7.38004 0.164001C9.59405 0.164001 11.5621 0.820005 12.8741 2.21401C14.2681 3.60802 14.9241 5.33003 14.9241 7.54404V69.7824H47.1503C51.7423 69.7824 54.1203 71.8324 54.1203 75.8504C54.1203 79.8684 51.7423 81.9184 47.1503 81.9184H6.97004C4.75603 81.9184 3.03402 81.2624 1.80401 80.0324Z"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M65.7644 80.5245C64.3704 79.1305 63.7144 77.3265 63.7144 75.0305V7.46213C63.7144 5.24812 64.3704 3.52611 65.7644 2.1321C67.1584 0.738096 68.8804 0.0820923 71.0944 0.0820923C73.3085 0.0820923 75.2765 0.738096 76.5885 2.1321C77.9825 3.52611 78.6385 5.24812 78.6385 7.46213V75.0305C78.6385 77.2445 77.9825 79.1305 76.5885 80.5245C75.1945 81.9185 73.3905 82.5745 71.0944 82.5745C68.9624 82.5745 67.1584 81.9185 65.7644 80.5245Z"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M163.919 97.2525C163.919 95.8585 163.427 94.5465 162.607 93.1525L158.507 87.0025C156.129 83.1485 153.259 80.5244 149.733 79.3764C156.539 76.3424 161.787 71.5864 165.395 65.0264C169.085 58.5483 170.889 50.5943 170.889 41.4922C170.889 33.0462 169.331 25.6661 166.215 19.4341C163.099 13.2841 158.671 8.44605 152.849 5.00203C147.109 1.72201 140.221 0 132.431 0C124.477 0 117.671 1.55801 111.848 5.00203C106.108 8.44605 101.598 13.2021 98.4824 19.4341C95.4484 25.7481 93.8084 33.0462 93.8084 41.4922C93.8084 49.8563 95.3664 57.2363 98.4824 63.5503C101.598 69.7004 106.026 74.5384 111.848 77.9824C117.671 81.2624 124.477 82.9845 132.431 82.9845C135.219 82.9845 137.433 83.4765 139.155 84.2965C140.877 85.1165 142.271 86.4285 143.337 88.2325L150.061 99.3845C150.881 100.615 151.947 101.599 153.095 102.255C154.325 102.911 155.637 103.239 157.031 103.239C158.835 103.239 160.475 102.583 161.869 101.517C163.263 100.451 163.919 98.9745 163.919 97.2525ZM156.047 41.3283C156.047 50.8403 153.915 58.2204 149.733 63.3864C145.551 68.5524 139.729 71.0944 132.267 71.0944C124.805 71.0944 118.901 68.5524 114.719 63.3864C110.537 58.2204 108.405 51.0043 108.405 41.3283C108.405 31.6522 110.537 24.4362 114.719 19.2702C118.901 14.1861 124.723 11.6441 132.267 11.6441C139.811 11.6441 145.551 14.1041 149.733 19.2702C153.915 24.4362 156.047 31.6522 156.047 41.3283Z"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M186.879 75.0304C186.879 77.3265 187.535 79.1305 188.929 80.5245C190.159 81.9185 192.045 82.5745 194.259 82.6565C196.555 82.6565 198.359 82.0005 199.753 80.6065C201.147 79.2945 201.803 77.4905 201.803 75.1124V50.3483H222.385C231.077 50.3483 237.801 48.2163 242.639 43.7883C247.477 39.4422 249.937 33.2922 249.937 25.5022C249.937 17.7121 247.477 11.5621 242.639 7.29807C237.801 2.87005 231.077 0.738037 222.385 0.738037H194.095C191.881 0.738037 190.159 1.39404 188.847 2.54205C187.535 3.77205 186.879 5.49406 186.879 7.70808V75.0304ZM235.833 25.6661C235.833 34.5222 230.667 39.0322 220.499 39.0322L201.803 38.9502V12.3001H220.499C230.667 12.3001 235.833 16.8101 235.833 25.6661Z"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M326.28 80.5244C327.674 79.2124 328.412 77.7364 328.412 76.0144C328.412 74.9484 328.166 74.0464 327.838 72.9804L295.94 4.67403C295.202 3.11602 294.136 1.96801 292.742 1.14801C291.348 0.410002 289.872 0 288.232 0C286.592 0 285.116 0.328002 283.722 1.14801C282.246 1.96801 281.18 3.19802 280.524 4.67403L248.707 72.9804C248.297 73.9644 248.051 75.0304 248.051 76.0144C248.051 77.8184 248.707 79.3764 250.183 80.5244C251.577 81.6724 253.299 82.3284 255.021 82.3284C256.333 82.3284 257.481 82.0004 258.547 81.3444C259.613 80.6884 260.433 79.7044 261.089 78.3104L268.06 62.8943H308.404L315.374 78.3104C315.948 79.6224 316.85 80.6884 317.916 81.3444C318.982 82.0004 320.212 82.3284 321.36 82.3284C323.246 82.3284 324.886 81.6724 326.28 80.5244ZM303.484 51.4143H273.061L288.232 17.3021L303.484 51.4143Z"
+        /&gt;
+        &lt;path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M385.812 0.164093C387.534 0.164093 389.092 0.820096 390.486 2.2141C391.88 3.60811 392.536 5.08412 392.536 7.05213C392.536 8.52814 391.962 10.0861 390.814 11.4802L364.656 43.3783V75.2765C364.656 77.6545 364 79.4585 362.606 80.8525C361.212 82.2465 359.49 82.8206 357.358 82.8206C355.144 82.8206 353.258 82.1645 351.864 80.8525C350.47 79.5405 349.814 77.7365 349.814 75.2765V43.3783L323.82 11.3982C322.672 10.0041 322.098 8.52814 322.098 6.97013C322.098 5.16612 322.754 3.52611 324.148 2.1321C325.542 0.738096 327.182 0.0820923 328.822 0.0820923C330.79 0.0820923 332.348 0.902097 333.742 2.62411L357.276 31.8163L380.728 2.62411C382.122 0.984097 383.844 0.164093 385.812 0.164093Z"
+        /&gt;
+      &lt;/g&gt;
+    &lt;/g&gt;
+    &lt;defs&gt;
+      &lt;linearGradient
+        id="lp-p0"
+        x1="430.313"
+        y1="91.0075"
+        x2="471.737"
+        y2="70.9233"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#1FADC3" /&gt;
+        &lt;stop offset="0.7072" stopColor="#36B98F" /&gt;
+      &lt;/linearGradient&gt;
+      &lt;linearGradient
+        id="lp-p1"
+        x1="444.859"
+        y1="58.7495"
+        x2="452.602"
+        y2="57.622"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#123F06" stopOpacity="0.01" /&gt;
+        &lt;stop offset="1" stopColor="#123F06" /&gt;
+      &lt;/linearGradient&gt;
+      &lt;radialGradient
+        id="lp-p2"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientUnits="userSpaceOnUse"
+        gradientTransform="translate(438.327 56.1693) scale(19.9933 22.8494)"
+      &gt;
+        &lt;stop offset="0.4185" stopColor="#123F06" stopOpacity="0.01" /&gt;
+        &lt;stop offset="1" stopColor="#123F06" /&gt;
+      &lt;/radialGradient&gt;
+      &lt;linearGradient
+        id="lp-p3"
+        x1="401.983"
+        y1="45.5139"
+        x2="452.22"
+        y2="62.8744"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#9FDB57" /&gt;
+        &lt;stop offset="1" stopColor="#71CA5E" /&gt;
+      &lt;/linearGradient&gt;
+      &lt;linearGradient
+        id="lp-p4"
+        x1="468.161"
+        y1="91.0283"
+        x2="509.585"
+        y2="70.9441"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#1FADC3" /&gt;
+        &lt;stop offset="0.7072" stopColor="#36B98F" /&gt;
+      &lt;/linearGradient&gt;
+      &lt;linearGradient
+        id="lp-p5"
+        x1="483.071"
+        y1="58.4214"
+        x2="490.814"
+        y2="57.2939"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#123F06" stopOpacity="0.01" /&gt;
+        &lt;stop offset="1" stopColor="#123F06" /&gt;
+      &lt;/linearGradient&gt;
+      &lt;radialGradient
+        id="lp-p6"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientUnits="userSpaceOnUse"
+        gradientTransform="translate(476.163 56.1693) scale(19.9933 22.8494)"
+      &gt;
+        &lt;stop offset="0.4185" stopColor="#123F06" stopOpacity="0.01" /&gt;
+        &lt;stop offset="1" stopColor="#123F06" /&gt;
+      &lt;/radialGradient&gt;
+      &lt;linearGradient
+        id="lp-p7"
+        x1="439.809"
+        y1="45.5289"
+        x2="490.046"
+        y2="62.8894"
+        gradientUnits="userSpaceOnUse"
+      &gt;
+        &lt;stop stopColor="#9FDB57" /&gt;
+        &lt;stop offset="1" stopColor="#71CA5E" /&gt;
+      &lt;/linearGradient&gt;
+    &lt;/defs&gt;
+  &lt;/svg&gt;
+)
+&nbsp;
+export default function <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >LiqPayStandaloneButton({</span></span>
+  onClick,
+  loading = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+  disabled = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+}: LiqPayStandaloneButtonProps) {
+  const [visible, setVisible] = <span class="cstat-no" title="statement not covered" >useState(false)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
+    const timer = <span class="cstat-no" title="statement not covered" >setTimeout(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etVisible(true), 1</span>00)</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>learTimeout(timer)</span></span>
+  }, [])
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
+    const styleEl = <span class="cstat-no" title="statement not covered" >document.createElement('style')</span>
+<span class="cstat-no" title="statement not covered" >    styleEl.textContent = liqpayStyles</span>
+<span class="cstat-no" title="statement not covered" >    document.head.appendChild(styleEl)</span>
+<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>tyleEl.remove()</span></span>
+  }, [])
+&nbsp;
+  return (
+    &lt;Button
+      className="h-[58px] min-w-[320px] w-full max-w-[320px] gap-2 overflow-visible"
+      onClick={onClick}
+      disabled={disabled || loading}
+      type="button"
+    &gt;
+      {loading ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >        &lt;span className="liqpay-btn--spinner" /&gt;</span>
+      ) : (
+        &lt;div className="liqpay-btn--inner"&gt;
+          &lt;div
+            className="liqpay-btn--logo-wrapper"
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 0.5s ease',
+            }}
+          &gt;
+            &lt;LiqPayLogoSvg /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/Button&gt;
+  )
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-26T17:13:00.256Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

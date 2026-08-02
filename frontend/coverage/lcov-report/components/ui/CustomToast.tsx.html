@@ -146,7 +146,16 @@
 <a name='L81'></a><a href='#L81'>81</a>
 <a name='L82'></a><a href='#L82'>82</a>
 <a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -195,32 +204,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -229,57 +219,91 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use client';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use client'
 &nbsp;
-import { X, CheckCircle, XCircle, Info, AlertTriangle } from <span class="cstat-no" title="statement not covered" >'lucide-react';</span>
-import { toast as sonnerToast } from <span class="cstat-no" title="statement not covered" >'sonner';</span>
+import { X, CheckCircle, XCircle, Info, AlertTriangle } from <span class="cstat-no" title="statement not covered" >'lucide-react'</span>
+import { toast as sonnerToast } from <span class="cstat-no" title="statement not covered" >'sonner'</span>
 &nbsp;
 const icons = <span class="cstat-no" title="statement not covered" >{</span>
   success: CheckCircle,
   error: XCircle,
   info: Info,
   warning: AlertTriangle,
-};
+}
 &nbsp;
 const styles = <span class="cstat-no" title="statement not covered" >{</span>
   success: {
-    bg: 'bg-green-600 dark:bg-green-500',
+    bg: 'bg-green-500',
     icon: 'text-white',
     actionBorder: 'border-white/40',
   },
   error: {
-    bg: 'bg-red-600 dark:bg-red-500',
+    bg: 'bg-red-500',
     icon: 'text-white',
     actionBorder: 'border-white/40',
   },
   warning: {
-    bg: 'bg-orange-500 dark:bg-orange-400',
+    bg: 'bg-orange-500',
     icon: 'text-white',
     actionBorder: 'border-white/40',
   },
   info: {
-    bg: 'bg-blue-500 dark:bg-blue-400',
+    bg: 'bg-blue-500',
     icon: 'text-white',
     actionBorder: 'border-white/40',
   },
-};
+}
 &nbsp;
 export interface ToastAction {
-  label: string;
-  onClick: () =&gt; void;
+  label: string
+  onClick: () =&gt; void
 }
 &nbsp;
 interface CustomToastProps {
-  id: string | number;
-  type: 'success' | 'error' | 'info' | 'warning';
-  title: string;
-  description?: string;
-  action?: ToastAction;
+  id: string | number
+  type: 'success' | 'error' | 'info' | 'warning'
+  title: string
+  description?: string
+  action?: ToastAction
 }
 &nbsp;
-export function <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >CustomToast({</span></span> id, type, title, description, action }: CustomToastProps) {
-  const Icon = <span class="cstat-no" title="statement not covered" >icons[type];</span>
-  const s = <span class="cstat-no" title="statement not covered" >styles[type];</span>
+export function <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >CustomToast({</span></span>
+  id,
+  type,
+  title,
+  description,
+  action,
+}: CustomToastProps) {
+  const Icon = <span class="cstat-no" title="statement not covered" >icons[type]</span>
+  const s = <span class="cstat-no" title="statement not covered" >styles[type]</span>
   return (
     &lt;div
       className={`relative flex items-start gap-3 py-4 pl-4 pr-6 rounded-lg border border-white/20 shadow-xl w-full ${s.bg} text-white`}
@@ -287,13 +311,16 @@ export function <span class="cstat-no" title="statement not covered" ><span clas
         translate: 'var(--x, 0) var(--y, 0)',
         scale: 'var(--scale, 1)',
         opacity: 'var(--opacity, 1)',
-        transition: 'translate 400ms cubic-bezier(0.21, 1.02, 0.73, 1), scale 400ms cubic-bezier(0.21, 1.02, 0.73, 1), opacity 400ms cubic-bezier(0.21, 1.02, 0.73, 1)',
+        transition:
+          'translate 400ms cubic-bezier(0.21, 1.02, 0.73, 1), scale 400ms cubic-bezier(0.21, 1.02, 0.73, 1), opacity 400ms cubic-bezier(0.21, 1.02, 0.73, 1)',
       }}
     &gt;
       &lt;Icon className={`w-5 h-5 mt-0.5 shrink-0 ${s.icon}`} /&gt;
       &lt;div className="flex-1 min-w-0"&gt;
         &lt;p className="text-sm font-medium"&gt;{title}&lt;/p&gt;
-        {<span class="branch-0 cbranch-no" title="branch not covered" >description &amp;&amp; &lt;</span>p className="text-sm opacity-80 mt-0.5"&gt;{description}&lt;/p&gt;}
+        {<span class="branch-0 cbranch-no" title="branch not covered" >description &amp;&amp; (</span>
+          &lt;p className="text-sm opacity-80 mt-0.5"&gt;{description}&lt;/p&gt;
+        )}
         {<span class="branch-0 cbranch-no" title="branch not covered" >action &amp;&amp; (</span>
           &lt;button
             onClick={action.onClick}
@@ -310,7 +337,7 @@ export function <span class="cstat-no" title="statement not covered" ><span clas
         &lt;X className="w-4 h-4" /&gt;
       &lt;/button&gt;
     &lt;/div&gt;
-  );
+  )
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -319,7 +346,7 @@ export function <span class="cstat-no" title="statement not covered" ><span clas
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-18T13:49:22.329Z
+                at 2026-07-26T17:13:00.256Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
