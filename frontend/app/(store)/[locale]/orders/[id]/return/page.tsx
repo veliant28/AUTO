@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useMessages, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import {
   ArrowLeft,
   RotateCcw,
@@ -56,6 +58,7 @@ function formatPhone(phone: string | null | undefined): string {
 
 export default function CreateReturnPage() {
   const [mounted, setMounted] = React.useState(false)
+  const timezone = useTimezoneStore((s) => s.timezone)
   React.useEffect(() => setMounted(true), [])
 
   const messages = useMessages()
@@ -198,12 +201,9 @@ export default function CreateReturnPage() {
     labelKey: 'order_pending',
     className: 'bg-gray-500 text-white',
   }
-  const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const date = formatDateTime(order.created_at, timezone, {
+    locale,
+    seconds: false,
   })
 
   return (
@@ -220,7 +220,11 @@ export default function CreateReturnPage() {
             size="lg"
             className="gap-2"
             onClick={handleSubmit}
-            disabled={submitMutation.isPending || visibleItems.length === 0 || cardInput.length < 16}
+            disabled={
+              submitMutation.isPending ||
+              visibleItems.length === 0 ||
+              cardInput.length < 16
+            }
           >
             {submitMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -287,26 +291,46 @@ export default function CreateReturnPage() {
 
               <Separator />
               <div className="space-y-2">
-                <h3 className="font-semibold text-base">{t('return_card_label')}</h3>
-                <InputOTP maxLength={16} value={cardInput} onChange={handleCardChange}>
+                <h3 className="font-semibold text-base">
+                  {t('return_card_label')}
+                </h3>
+                <InputOTP
+                  maxLength={16}
+                  value={cardInput}
+                  onChange={handleCardChange}
+                >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
                   </InputOTPGroup>
                   <InputOTPSeparator />
                   <InputOTPGroup>
-                    <InputOTPSlot index={4} className="w-7 h-8 text-xs" /><InputOTPSlot index={5} className="w-7 h-8 text-xs" /><InputOTPSlot index={6} className="w-7 h-8 text-xs" /><InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
                   </InputOTPGroup>
                   <InputOTPSeparator />
                   <InputOTPGroup>
-                    <InputOTPSlot index={8} className="w-7 h-8 text-xs" /><InputOTPSlot index={9} className="w-7 h-8 text-xs" /><InputOTPSlot index={10} className="w-7 h-8 text-xs" /><InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
                   </InputOTPGroup>
                   <InputOTPSeparator />
                   <InputOTPGroup>
-                    <InputOTPSlot index={12} className="w-7 h-8 text-xs" /><InputOTPSlot index={13} className="w-7 h-8 text-xs" /><InputOTPSlot index={14} className="w-7 h-8 text-xs" /><InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
                   </InputOTPGroup>
                 </InputOTP>
                 {cardInput.length > 0 && cardInput.length < 16 && (
-                  <p className="text-xs text-destructive">{t('return_card_required')}</p>
+                  <p className="text-xs text-destructive">
+                    {t('return_card_required')}
+                  </p>
                 )}
               </div>
 

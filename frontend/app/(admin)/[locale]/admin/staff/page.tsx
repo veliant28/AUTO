@@ -8,14 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { endOfMonth, endOfDay } from 'date-fns'
+import { useTimezoneStore } from '@/store/timezoneStore'
 import {
-  startOfDay,
-  subDays,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfDay,
-} from 'date-fns'
+  startOfDayInTz,
+  endOfDayInTz,
+  subDaysInTz,
+  startOfMonthInTz,
+  startOfYearInTz,
+} from '@/lib/dates'
 import BarChart from '@/components/charts/BarChart'
 import LineAreaChart from '@/components/charts/LineAreaChart'
 import DoughnutChart from '@/components/charts/DoughnutChart'
@@ -41,19 +42,25 @@ const ROLE_BADGE: Record<string, string> = {
 
 const PERIODS = ['day', 'week', 'month', 'year'] as const
 
-function getDateRange(period: string): { from: Date; to: Date } {
+function getDateRange(period: string, tz: string): { from: Date; to: Date } {
   const now = new Date()
   switch (period) {
     case 'day':
-      return { from: startOfDay(now), to: endOfDay(now) }
+      return { from: startOfDayInTz(tz, now), to: endOfDayInTz(tz, now) }
     case 'week':
-      return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) }
+      return {
+        from: startOfDayInTz(tz, subDaysInTz(tz, now, 7)),
+        to: endOfDayInTz(tz, now),
+      }
     case 'month':
-      return { from: startOfMonth(now), to: endOfDay(now) }
+      return { from: startOfMonthInTz(tz, now), to: endOfDayInTz(tz, now) }
     case 'year':
-      return { from: startOfYear(now), to: endOfDay(now) }
+      return { from: startOfYearInTz(tz, now), to: endOfDayInTz(tz, now) }
     default:
-      return { from: startOfDay(subDays(now, 30)), to: endOfDay(now) }
+      return {
+        from: startOfDayInTz(tz, subDaysInTz(tz, now, 30)),
+        to: endOfDayInTz(tz, now),
+      }
   }
 }
 
@@ -73,7 +80,8 @@ export function StaffPageContent() {
     { from: Date; to: Date } | undefined
   >()
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null)
-  const range = customRange || getDateRange(period)
+  const timezone = useTimezoneStore((s) => s.timezone)
+  const range = customRange || getDateRange(period, timezone)
 
   // Register global functions for TopBar buttons
   useEffect(() => {

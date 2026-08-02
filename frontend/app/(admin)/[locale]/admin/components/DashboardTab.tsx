@@ -23,7 +23,13 @@ import RadarChart from '@/components/charts/RadarChart'
 import KipTimer from '@/components/ui/KipTimer'
 import OrderDetailModal from './OrderDetailModal'
 import { toast } from '@/lib/toast'
-import { startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import {
+  startOfDayInTz,
+  endOfDayInTz,
+  subDaysInTz,
+  startOfMonthInTz,
+} from '@/lib/dates'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -61,6 +67,7 @@ const STATUS_ORDER = [
 export default function DashboardTab() {
   const { user, isAuthenticated } = useAuthStore()
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
 
   // ── Period filter state (synced with TopBar via window) ──────────
   const [period, setPeriod] = useState<string>('month')
@@ -70,17 +77,24 @@ export default function DashboardTab() {
 
   function getDateRange(period: string): { from: Date; to: Date } {
     const now = new Date()
+    const tz = timezone
     switch (period) {
       case 'day':
-        return { from: startOfDay(now), to: endOfDay(now) }
+        return { from: startOfDayInTz(tz, now), to: endOfDayInTz(tz, now) }
       case 'week':
-        return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) }
+        return {
+          from: startOfDayInTz(tz, subDaysInTz(tz, now, 7)),
+          to: endOfDayInTz(tz, now),
+        }
       case 'month':
-        return { from: startOfMonth(now), to: endOfDay(now) }
+        return { from: startOfMonthInTz(tz, now), to: endOfDayInTz(tz, now) }
       case 'year':
-        return { from: startOfDay(subDays(now, 365)), to: endOfDay(now) }
+        return {
+          from: startOfDayInTz(tz, subDaysInTz(tz, now, 365)),
+          to: endOfDayInTz(tz, now),
+        }
       default:
-        return { from: startOfMonth(now), to: endOfDay(now) }
+        return { from: startOfMonthInTz(tz, now), to: endOfDayInTz(tz, now) }
     }
   }
 

@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime, parseApiDate } from '@/lib/dates'
 import { useQuery } from '@tanstack/react-query'
 import {
   Gift,
@@ -31,6 +33,7 @@ const PAGE_SIZE = 10
 
 export default function LoyaltyClient() {
   const t = useTranslations('common')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const { isAuthenticated } = useAuthStore()
   const [page, setPage] = useState(1)
 
@@ -124,7 +127,9 @@ export default function LoyaltyClient() {
                   </thead>
                   <tbody>
                     {items.map((item: any) => {
-                      const expired = new Date(item.expires_at) < new Date()
+                      const expired =
+                        (parseApiDate(item.expires_at)?.getTime() ?? 0) <
+                        Date.now()
                       return (
                         <tr
                           key={item.id}
@@ -178,25 +183,25 @@ export default function LoyaltyClient() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 {item.used_at
-                                  ? `${t('loyalty_used_at')}: ${new Date(item.used_at + 'Z').toLocaleString()}`
+                                  ? `${t('loyalty_used_at')}: ${formatDateTime(item.used_at, timezone)}`
                                   : ''}
                                 {!item.used_at && expired
-                                  ? `${t('loyalty_expired_at')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                  ? `${t('loyalty_expired_at')}: ${formatDateTime(item.expires_at, timezone)}`
                                   : ''}
                                 {!item.used_at && !expired
-                                  ? `${t('loyalty_valid_until')}: ${new Date(item.expires_at + 'Z').toLocaleString()}`
+                                  ? `${t('loyalty_valid_until')}: ${formatDateTime(item.expires_at, timezone)}`
                                   : ''}
                               </TooltipContent>
                             </Tooltip>
                           </td>
                           <td className="p-3 text-sm text-muted-foreground">
-                            {new Date(item.created_at + 'Z').toLocaleString()}
+                            {formatDateTime(item.created_at, timezone)}
                           </td>
                           <td className="p-3">
                             <span
                               className={`text-sm ${expired ? 'text-red-500' : 'text-muted-foreground'}`}
                             >
-                              {new Date(item.expires_at + 'Z').toLocaleString()}
+                              {formatDateTime(item.expires_at, timezone)}
                             </span>
                           </td>
                         </tr>

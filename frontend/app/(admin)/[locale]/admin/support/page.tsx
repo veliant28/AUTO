@@ -28,15 +28,15 @@ import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
 import ChatWindow from '@/components/chat/ChatWindow'
 import ChatSidebar from '@/components/chat/ChatSidebar'
+import { format, endOfMonth, endOfDay } from 'date-fns'
+import { useTimezoneStore } from '@/store/timezoneStore'
 import {
-  format,
-  startOfDay,
-  subDays,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfDay,
-} from 'date-fns'
+  startOfDayInTz,
+  endOfDayInTz,
+  subDaysInTz,
+  startOfMonthInTz,
+  startOfYearInTz,
+} from '@/lib/dates'
 
 const PERIODS = ['day', 'week', 'month', 'year'] as const
 
@@ -64,19 +64,25 @@ interface Message {
   created_at: string
 }
 
-function getDateRange(period: string): { from: Date; to: Date } {
+function getDateRange(period: string, tz: string): { from: Date; to: Date } {
   const now = new Date()
   switch (period) {
     case 'day':
-      return { from: startOfDay(now), to: endOfDay(now) }
+      return { from: startOfDayInTz(tz, now), to: endOfDayInTz(tz, now) }
     case 'week':
-      return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) }
+      return {
+        from: startOfDayInTz(tz, subDaysInTz(tz, now, 7)),
+        to: endOfDayInTz(tz, now),
+      }
     case 'month':
-      return { from: startOfMonth(now), to: endOfDay(now) }
+      return { from: startOfMonthInTz(tz, now), to: endOfDayInTz(tz, now) }
     case 'year':
-      return { from: startOfYear(now), to: endOfDay(now) }
+      return { from: startOfYearInTz(tz, now), to: endOfDayInTz(tz, now) }
     default:
-      return { from: startOfDay(subDays(now, 30)), to: endOfDay(now) }
+      return {
+        from: startOfDayInTz(tz, subDaysInTz(tz, now, 30)),
+        to: endOfDayInTz(tz, now),
+      }
   }
 }
 
@@ -95,9 +101,15 @@ export default function SupportAdminPage() {
   const [search, setSearch] = useState('')
   const [resetKey, setResetKey] = useState(0)
 
+  const timezone = useTimezoneStore((s) => s.timezone)
   const range = useMemo(
-    () => customRange || getDateRange(period),
-    [period, customRange?.from?.getTime(), customRange?.to?.getTime()],
+    () => customRange || getDateRange(period, timezone),
+    [
+      period,
+      timezone,
+      customRange?.from?.getTime(),
+      customRange?.to?.getTime(),
+    ],
   )
 
   // Auth token for WebSocket

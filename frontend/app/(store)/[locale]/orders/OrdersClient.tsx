@@ -2,6 +2,8 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import { useMessages, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Package, ChevronRight, ArrowLeft, RotateCcw } from 'lucide-react'
@@ -62,6 +64,7 @@ export default function OrdersPage() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const messages = useMessages()
+  const timezone = useTimezoneStore((s) => s.timezone)
   const msgs = messages as Record<string, any>
   const t = (key: string) => msgs?.common?.[key] ?? key
   const locale = LOCALE_MAP[useLocale()] || 'ru-RU'
@@ -207,16 +210,10 @@ export default function OrdersPage() {
                     labelKey: 'order_pending',
                     className: 'bg-gray-500 text-white',
                   }
-                  const date = new Date(order.created_at + 'Z').toLocaleString(
+                  const date = formatDateTime(order.created_at, timezone, {
                     locale,
-                    {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    },
-                  )
+                    seconds: false,
+                  })
                   const summary = npSummaries[idx] ?? null
                   return (
                     <div

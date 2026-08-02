@@ -36,8 +36,15 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { ArticleItem } from './tecdocHelpers'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 
-export default function BatchTab({ t }: { t: (k: string) => string }) {
+export default function BatchTab({
+  t,
+}: {
+  t: (k: string, values?: Record<string, string | number | Date>) => string
+}) {
+  const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -354,7 +361,7 @@ export default function BatchTab({ t }: { t: (k: string) => string }) {
                     <td className="p-3 text-center text-sm">{a.attempts}</td>
                     <td className="p-3 text-sm text-muted-foreground">
                       {a.last_attempt_at
-                        ? new Date(a.last_attempt_at + 'Z').toLocaleString()
+                        ? formatDateTime(a.last_attempt_at, timezone)
                         : '—'}
                     </td>
                   </tr>

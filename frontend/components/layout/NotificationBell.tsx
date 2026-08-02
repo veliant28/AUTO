@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell, MessageCircle, ShoppingCart, RotateCcw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { parseApiDate } from '@/lib/dates'
 
 const ONE_HOUR = 60 * 60 * 1000
 const TWO_HOURS = 2 * ONE_HOUR
@@ -35,7 +36,7 @@ interface NotificationsData {
 
 function timeColor(createdAt: string | null): string {
   if (!createdAt) return 'bg-gray-500'
-  const diff = Date.now() - new Date(createdAt).getTime()
+  const diff = Date.now() - (parseApiDate(createdAt)?.getTime() ?? 0)
   if (diff < ONE_HOUR) return 'bg-green-500'
   if (diff < TWO_HOURS) return 'bg-orange-500'
   return 'bg-red-500'
@@ -48,7 +49,7 @@ function worstBadgeColor(
   let hasOrange = false
   for (const item of items) {
     if (!item.created_at) continue
-    const diff = Date.now() - new Date(item.created_at).getTime()
+    const diff = Date.now() - (parseApiDate(item.created_at)?.getTime() ?? 0)
     if (diff >= TWO_HOURS) return 'bg-red-500'
     if (diff >= ONE_HOUR) hasOrange = true
   }
@@ -57,7 +58,7 @@ function worstBadgeColor(
 
 function timeAgo(createdAt: string | null): string {
   if (!createdAt) return ''
-  const diff = Date.now() - new Date(createdAt).getTime()
+  const diff = Date.now() - (parseApiDate(createdAt)?.getTime() ?? 0)
   const mins = Math.floor(diff / 60000)
   if (mins < 60) return `${mins} мин`
   const hours = Math.floor(mins / 60)

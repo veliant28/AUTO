@@ -5,6 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { parseApiDate } from '@/lib/dates'
+import { useTimezoneStore } from '@/store/timezoneStore'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
 import TypingIndicator from './TypingIndicator'
@@ -94,31 +96,30 @@ export default function ChatWindow({
           )}
           {messages.map((msg, idx) => {
             // Add date divider if date changes
+            const tz = useTimezoneStore.getState().timezone
+            const fmtDay = (x: string) =>
+              parseApiDate(x)?.toLocaleDateString('en-CA', {
+                timeZone: tz,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }) ?? ''
             const showDateDivider =
               idx === 0 ||
-              new Date(
-                msg.created_at.endsWith('Z')
-                  ? msg.created_at
-                  : msg.created_at + 'Z',
-              ).toDateString() !==
-                new Date(
-                  messages[idx - 1].created_at.endsWith('Z')
-                    ? messages[idx - 1].created_at
-                    : messages[idx - 1].created_at + 'Z',
-                ).toDateString()
+              fmtDay(msg.created_at) !== fmtDay(messages[idx - 1].created_at)
             return (
               <div key={msg.id}>
                 {showDateDivider && (
                   <div className="flex items-center justify-center my-3">
                     <span className="text-sm text-muted-foreground/40 bg-background px-2">
-                      {new Date(
-                        msg.created_at.endsWith('Z')
-                          ? msg.created_at
-                          : msg.created_at + 'Z',
-                      ).toLocaleDateString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                      })}
+                      {parseApiDate(msg.created_at)?.toLocaleDateString(
+                        'ru-RU',
+                        {
+                          timeZone: useTimezoneStore.getState().timezone,
+                          day: 'numeric',
+                          month: 'long',
+                        },
+                      )}
                     </span>
                   </div>
                 )}

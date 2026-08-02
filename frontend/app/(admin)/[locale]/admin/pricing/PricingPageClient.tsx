@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime, parseApiDate } from '@/lib/dates'
 import {
   Select,
   SelectContent,
@@ -97,6 +99,7 @@ function EChart({
 
 export default function PricingPageClient() {
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const tc = useTranslations('common')
   const queryClient = useQueryClient()
   const { resolvedTheme } = useTheme()
@@ -333,7 +336,7 @@ export default function PricingPageClient() {
       formatter: (params: any) => {
         const snap = displayData[params[0].dataIndex]
         if (!snap) return ''
-        let html = `<div style="font-weight:600;margin-bottom:6px;color:${axisTextColor}">${new Date(snap.applied_at).toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })}</div>`
+        let html = `<div style="font-weight:600;margin-bottom:6px;color:${axisTextColor}">${formatDateTime(snap.applied_at, timezone, { locale: 'uk-UA' })}</div>`
         if (snap.general_margin != null) {
           html += `<div style="color:${axisTextColor};display:flex;align-items:center;gap:4px;margin-top:2px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22c55e"></span>${t('pricing_general')}: <b>${snap.general_margin}%</b></div>`
         }
@@ -359,18 +362,17 @@ export default function PricingPageClient() {
       axisLabel: {
         color: axisTextColor,
         formatter: (value: string) => {
-          const d = new Date(value)
-          return (
-            new Date(value).toLocaleDateString('uk-UA', {
-              timeZone: 'Europe/Kyiv',
-            }) +
-            '\n' +
-            new Date(value).toLocaleTimeString('uk-UA', {
-              timeZone: 'Europe/Kyiv',
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          )
+          const d = parseApiDate(value)
+          if (!d) return value
+          const datePart = d.toLocaleDateString('uk-UA', {
+            timeZone: timezone,
+          })
+          const timePart = d.toLocaleTimeString('uk-UA', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+          return datePart + '\n' + timePart
         },
       },
       axisLine: { lineStyle: { color: borderColor } },
@@ -546,27 +548,45 @@ export default function PricingPageClient() {
                           <InputOTP
                             maxLength={3}
                             value={digits.join('')}
-                            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                            onFocus={(
+                              e: React.FocusEvent<HTMLInputElement>,
+                            ) => {
                               const input = e.target as HTMLInputElement
                               const set0 = () => input.setSelectionRange(0, 0)
                               setTimeout(set0, 0)
                               setTimeout(set0, 100)
                             }}
-                            onPointerDown={(e: React.PointerEvent<HTMLInputElement>) => {
+                            onPointerDown={(
+                              e: React.PointerEvent<HTMLInputElement>,
+                            ) => {
                               const input = e.target as HTMLInputElement
                               setTimeout(() => input.setSelectionRange(0, 0), 0)
                             }}
-                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            onKeyDown={(
+                              e: React.KeyboardEvent<HTMLInputElement>,
+                            ) => {
                               if (e.key === 'Backspace') {
                                 e.preventDefault()
                                 const input = e.target as HTMLInputElement
-                                const pos = Math.min(2, input.selectionStart ?? 2)
+                                const pos = Math.min(
+                                  2,
+                                  input.selectionStart ?? 2,
+                                )
                                 // Use the digits for current value
                                 const currentVal = digits.join('')
-                                const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
-                                const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
+                                const newVal =
+                                  currentVal.substring(0, pos) +
+                                  '0' +
+                                  currentVal.substring(pos + 1)
+                                const padded = newVal
+                                  .slice(0, 3)
+                                  .padEnd(3, '0')
+                                  .split('')
                                 updateVal(padded)
-                                setTimeout(() => input.setSelectionRange(pos, pos), 0)
+                                setTimeout(
+                                  () => input.setSelectionRange(pos, pos),
+                                  0,
+                                )
                               }
                             }}
                             onChange={(val) => {
@@ -577,9 +597,18 @@ export default function PricingPageClient() {
                             containerClassName="[&_[data-input-otp]]:pointer-events-auto"
                           >
                             <InputOTPGroup>
-                              <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
-                              <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
-                              <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                              <InputOTPSlot
+                                index={0}
+                                className="w-7 h-8 text-xs"
+                              />
+                              <InputOTPSlot
+                                index={1}
+                                className="w-7 h-8 text-xs"
+                              />
+                              <InputOTPSlot
+                                index={2}
+                                className="w-7 h-8 text-xs"
+                              />
                             </InputOTPGroup>
                           </InputOTP>
                         </div>

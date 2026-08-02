@@ -28,6 +28,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { toast } from '@/lib/toast'
+import { useTimezoneStore } from '@/store/timezoneStore'
 import api from '@/lib/api'
 import dynamic from 'next/dynamic'
 import ChartErrorBoundary from '@/components/ChartErrorBoundary'
@@ -260,6 +261,7 @@ function statusBadge(
 
 export default function WorkersTab() {
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -476,8 +478,12 @@ export default function WorkersTab() {
       formatter: (params: any) => {
         const time = params[0]?.value?.[0]
         if (!time) return ''
-        const d = new Date(time)
-        const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+        const timeStr = new Date(time).toLocaleTimeString('uk-UA', {
+          timeZone: timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
         let html = `<div style="font-size:13px;font-weight:600;margin-bottom:4px">${timeStr}</div>`
         html += `<div>${t('workers_active')}: ${activeCount} / ${concurrency}</div>`
         if (activeSlots.length > 0) {
@@ -498,10 +504,13 @@ export default function WorkersTab() {
       max: windowEnd,
       axisLabel: {
         color: axisTextColor,
-        formatter: (v: number) => {
-          const d = new Date(v)
-          return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
-        },
+        formatter: (v: number) =>
+          new Date(v).toLocaleTimeString('uk-UA', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }),
       },
       axisLine: { lineStyle: { color: borderColor } },
     },

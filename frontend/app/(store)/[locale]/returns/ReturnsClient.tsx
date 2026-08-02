@@ -2,6 +2,8 @@
 
 import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import { useMessages, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
@@ -55,6 +57,7 @@ export default function ReturnsPage() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   const messages = useMessages()
+  const timezone = useTimezoneStore((s) => s.timezone)
   const msgs = messages as Record<string, any>
   const t = (key: string) => msgs?.common?.[key] ?? key
   const locale = LOCALE_MAP[useLocale()] || 'ru-RU'
@@ -70,30 +73,32 @@ export default function ReturnsPage() {
     return Number.isFinite(value) && value >= 1 ? Math.floor(value) : 1
   }, [searchParams])
 
-	  const { data, isLoading, refetch } = useQuery({
-	    queryKey: ['returns', page],
-	    queryFn: async () => {
-	      const { data } = await api.get('/returns', {
-	        params: { page, page_size: PAGE_SIZE },
-	      })
-	      return data as {
-	        items: any[]
-	        total: number
-	        page: number
-	        page_size: number
-	      }
-	    },
-	    enabled: isAuthenticated,
-	    refetchInterval: 10000,
-	  })
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['returns', page],
+    queryFn: async () => {
+      const { data } = await api.get('/returns', {
+        params: { page, page_size: PAGE_SIZE },
+      })
+      return data as {
+        items: any[]
+        total: number
+        page: number
+        page_size: number
+      }
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 10000,
+  })
 
-	  React.useEffect(() => {
-	    try {
-	      const channel = new BroadcastChannel('return-status')
-	      channel.onmessage = () => { refetch() }
-	      return () => channel.close()
-	    } catch {}
-	  }, [refetch])
+  React.useEffect(() => {
+    try {
+      const channel = new BroadcastChannel('return-status')
+      channel.onmessage = () => {
+        refetch()
+      }
+      return () => channel.close()
+    } catch {}
+  }, [refetch])
 
   const handlePageChange = useCallback(
     (nextPage: number) => {
@@ -181,16 +186,10 @@ export default function ReturnsPage() {
                   labelKey: 'return_pending',
                   className: 'bg-gray-500 text-white',
                 }
-                const date = new Date(ret.created_at + 'Z').toLocaleString(
+                const date = formatDateTime(ret.created_at, timezone, {
                   locale,
-                  {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  },
-                )
+                  seconds: false,
+                })
                 const ttnFormatted = ret.ttn_number
                   ? ret.ttn_number.replace(
                       /(\d{2})(\d{4})(\d{4})(\d{4})/,

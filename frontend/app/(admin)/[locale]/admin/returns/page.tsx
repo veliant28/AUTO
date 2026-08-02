@@ -73,6 +73,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { toast } from '@/lib/toast'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime, parseApiDate } from '@/lib/dates'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { RETURN_STATUS_LABELS } from '@/lib/constants'
@@ -88,6 +90,7 @@ interface AdminReturnItem {
   part_name: string
   brand: string | null
   sku: string | null
+  image_url: string | null
   quantity: number
   max_quantity: number
   price: number
@@ -146,6 +149,7 @@ interface AdminReturnDetail {
   return_delivery_city: string | null
   return_delivery_warehouse: string | null
   ttn_number: string | null
+  bank_card: string | null
   status: string
   total_refund: number
   admin_notes: string | null
@@ -211,6 +215,7 @@ export default function AdminReturnsPage() {
   const [deleteTarget, setDeleteTarget] = useState<AdminReturn | null>(null)
   const [editCard, setEditCard] = useState('')
 
+  const timezone = useTimezoneStore((s) => s.timezone)
   const localeKey = useMemo(() => {
     try {
       const p = window.location.pathname.match(/^\/(ru|ua|en)/)?.[1]
@@ -221,13 +226,7 @@ export default function AdminReturnsPage() {
   }, [])
 
   const formatDate = (d: string) =>
-    new Date(d + 'Z').toLocaleString(localeKey, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    formatDateTime(d, timezone, { locale: localeKey, seconds: false })
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-returns', statusFilter, page, search],
@@ -265,7 +264,9 @@ export default function AdminReturnsPage() {
     if (!viewReturnId) return
     try {
       const channel = new BroadcastChannel('return-status')
-      channel.onmessage = () => { refetchDetail() }
+      channel.onmessage = () => {
+        refetchDetail()
+      }
       return () => channel.close()
     } catch {}
   }, [viewReturnId, refetchDetail])
@@ -450,10 +451,11 @@ export default function AdminReturnsPage() {
     }
 
     // Sort by created_at descending
-    events.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
+    events.sort((a, b) => {
+      const ta = parseApiDate(a.created_at)?.getTime() ?? 0
+      const tb = parseApiDate(b.created_at)?.getTime() ?? 0
+      return tb - ta
+    })
     return events
   }, [returnDetail])
 
@@ -514,7 +516,9 @@ export default function AdminReturnsPage() {
       payload.delivery_warehouse = editRecipient.delivery_warehouse
     }
     // Card changed
-    const cardChanged = editCard.replace(/\s/g, '') !== (returnDetail.bank_card || '').replace(/\s/g, '')
+    const cardChanged =
+      editCard.replace(/\s/g, '') !==
+      (returnDetail.bank_card || '').replace(/\s/g, '')
     if (cardChanged && editCard.replace(/\s/g, '').length >= 16) {
       payload.bank_card = editCard.replace(/\s/g, '')
     }
@@ -965,8 +969,15 @@ export default function AdminReturnsPage() {
                                         )
                                     }
                                     if (ev.type === 'card_update') {
-                                      const m = ev.details.match(/номер карты[^:]*:\s*(.+)$/)
-                                      if (m) return <>{t('return_card_updated')}: {m[1]}</>
+                                      const m = ev.details.match(
+                                        /номер карты[^:]*:\s*(.+)$/,
+                                      )
+                                      if (m)
+                                        return (
+                                          <>
+                                            {t('return_card_updated')}: {m[1]}
+                                          </>
+                                        )
                                     }
                                     return <>{ev.details}</>
                                   })()}
@@ -1190,8 +1201,8 @@ export default function AdminReturnsPage() {
                                 ₴
                               </span>
                             </div>
+                          </div>
                         </div>
-                      </div>
 
                         <div className="border rounded-lg p-4 flex-1 flex flex-col min-h-0">
                           <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
@@ -1412,41 +1423,97 @@ export default function AdminReturnsPage() {
                   <div className="flex items-center gap-2">
                     {editMode ? (
                       <>
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">Номер карты:</span>
-                        <InputOTP maxLength={16} value={editCard} onChange={handleCardChange}>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                          Номер карты:
+                        </span>
+                        <InputOTP
+                          maxLength={16}
+                          value={editCard}
+                          onChange={handleCardChange}
+                        >
                           <InputOTPGroup>
-                            <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={0}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={1}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={2}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={3}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={4} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={5} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={6} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={4}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={5}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={6}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={7}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={8} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={9} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={10} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={8}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={9}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={10}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={11}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={12} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={13} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={14} className="w-7 h-8 text-xs" />
-                            <InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={12}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={13}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={14}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={15}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                         </InputOTP>
                       </>
                     ) : returnDetail?.bank_card ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
                         <CreditCard className="w-4 h-4" />
-                        <span className="font-mono">{maskCard(returnDetail.bank_card)}</span>
+                        <span className="font-mono">
+                          {maskCard(returnDetail.bank_card)}
+                        </span>
                       </div>
                     ) : null}
                   </div>

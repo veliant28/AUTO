@@ -42,6 +42,7 @@ import { Checkbox as CheckboxUI } from '@/components/ui/checkbox'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { useTimezoneStore } from '@/store/timezoneStore'
 import FalconLogo from '@/components/ui/FalconLogo'
 
 const TZS = [
@@ -64,6 +65,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient()
   const [brandName, setBrandName] = React.useState('')
   const [timezone, setTimezone] = React.useState('Europe/Kiev')
+  const setStoreTimezone = useTimezoneStore((s) => s.setTimezone)
 
   // SMTP fields
   const [resendApiKey, setResendApiKey] = React.useState('')
@@ -190,7 +192,10 @@ export default function SettingsPage() {
 
   React.useEffect(() => {
     if (data?.brand_name) setBrandName(data.brand_name)
-    if (data?.timezone) setTimezone(data.timezone)
+    if (data?.timezone) {
+      setTimezone(data.timezone)
+      setStoreTimezone(data.timezone)
+    }
     if (data?.email_from) setEmailFrom(data.email_from)
     if (data?.email_from_name) setEmailFromName(data.email_from_name)
     if (data?.resend_api_key_masked) {
@@ -335,7 +340,11 @@ export default function SettingsPage() {
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
-      queryClient.setQueryData(['public-settings'], { brand_name: brandName })
+      queryClient.setQueryData(['public-settings'], {
+        brand_name: brandName,
+        timezone,
+      })
+      setStoreTimezone(timezone)
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] })
       toast.success(t('settings_saved'))
     },

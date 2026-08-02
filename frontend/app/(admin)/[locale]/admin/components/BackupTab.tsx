@@ -39,6 +39,8 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { format } from 'date-fns'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime, parseApiDate } from '@/lib/dates'
 import dynamic from 'next/dynamic'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
@@ -175,6 +177,7 @@ interface BackupRecord {
 
 export default function BackupTab() {
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const { user, isAuthenticated } = useAuthStore()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -317,18 +320,22 @@ export default function BackupTab() {
       const dateStr = format(d, 'dd.MM')
       const dayBackups = completedBackups.filter((b) => {
         if (!b.created_at) return false
-        const bd = new Date(b.created_at)
-        return (
-          bd.getDate() === d.getDate() &&
-          bd.getMonth() === d.getMonth() &&
-          bd.getFullYear() === d.getFullYear()
-        )
+        const bd = parseApiDate(b.created_at)
+        if (!bd) return false
+        const fmt = (x: Date) =>
+          new Intl.DateTimeFormat('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).format(x)
+        return fmt(bd) === fmt(d)
       })
       const totalSize = dayBackups.reduce((sum, b) => sum + b.file_size, 0)
       days.push({ date: dateStr, size: totalSize, count: dayBackups.length })
     }
     return days
-  }, [completedBackups])
+  }, [completedBackups, timezone])
 
   const textColor = isDark ? '#e5e7eb' : '#64748b'
   const gridColor = isDark ? '#1e293b' : '#f1f5f9'
@@ -496,10 +503,10 @@ export default function BackupTab() {
                     >
                       <td className="p-3 whitespace-nowrap text-muted-foreground">
                         {rec.created_at
-                          ? new Date(rec.created_at + 'Z').toLocaleString(
-                              'uk-UA',
-                              { timeZone: 'Europe/Kyiv', hour12: false },
-                            )
+                          ? formatDateTime(rec.created_at, timezone, {
+                              locale: 'uk-UA',
+                              seconds: false,
+                            })
                           : '—'}
                       </td>
                       <td className="p-3 font-mono text-sm truncate max-w-[300px]">
@@ -600,10 +607,9 @@ export default function BackupTab() {
                   {t('backup_date')}:
                 </span>{' '}
                 {deleteTarget.created_at
-                  ? format(
-                      new Date(deleteTarget.created_at),
-                      'dd.MM.yyyy HH:mm',
-                    )
+                  ? formatDateTime(deleteTarget.created_at, timezone, {
+                      seconds: false,
+                    })
                   : '—'}
               </p>
               <p>

@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, User, ScrollText, Unlock, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -61,6 +63,7 @@ export default function StatsModal({
   banId,
 }: StatsModalProps) {
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-protection-stats', banId],
@@ -154,17 +157,7 @@ export default function StatsModal({
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {data.ban?.banned_at
-                      ? new Date(data.ban.banned_at + 'Z').toLocaleString(
-                          'ru-RU',
-                          {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          },
-                        )
+                      ? formatDateTime(data.ban.banned_at, timezone)
                       : '—'}
                   </p>
                 </div>

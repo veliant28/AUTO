@@ -17,6 +17,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { formatPhone } from '@/components/ui/PhoneInput'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -64,17 +66,8 @@ function statusColor(code: string): string {
 
 // ─── Формат даты ────────────────────────────────────────────────────
 
-function formatDate(dt: string | null): string {
-  if (!dt) return '—'
-  const d = new Date(dt)
-  return d.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+function formatDate(dt: string | null, timezone: string): string {
+  return formatDateTime(dt, timezone)
 }
 
 // ═════════════════════════════════════════════════════════════════════
@@ -83,6 +76,7 @@ function formatDate(dt: string | null): string {
 
 export default function WaybillsPage() {
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const [viewWaybillId, setViewWaybillId] = useState<number | null>(null)
@@ -179,7 +173,7 @@ export default function WaybillsPage() {
       columnHelper.accessor('created_at', {
         header: t('novaposhta_created_at'),
         size: 170,
-        cell: (info) => formatDate(info.getValue()),
+        cell: (info) => formatDate(info.getValue(), timezone),
       }),
 
       // ── Дата получения / отказа ────────────────────────────────
@@ -192,7 +186,7 @@ export default function WaybillsPage() {
           if (row.original.is_deleted && row.original.deleted_at) {
             return (
               <span className="text-red-600">
-                {formatDate(row.original.deleted_at)}
+                {formatDate(row.original.deleted_at, timezone)}
               </span>
             )
           }
@@ -201,7 +195,7 @@ export default function WaybillsPage() {
           if (deliveredCodes.includes(row.original.status_code)) {
             return (
               <span className="text-green-600">
-                {formatDate(row.original.updated_at)}
+                {formatDate(row.original.updated_at, timezone)}
               </span>
             )
           }
@@ -232,7 +226,7 @@ export default function WaybillsPage() {
         ),
       }),
     ],
-    [t],
+    [t, timezone],
   )
 
   // ── Table instance ──────────────────────────────────────────────

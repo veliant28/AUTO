@@ -61,6 +61,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import {
   getReceipt as getCheckboxReceipt,
@@ -180,18 +182,10 @@ interface OrderDetailModalProps {
 }
 
 function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr + 'Z')
-    return d.toLocaleString(LOCALE_MAP.ru, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return dateStr
-  }
+  return formatDateTime(dateStr, useTimezoneStore.getState().timezone, {
+    locale: LOCALE_MAP.ru,
+    seconds: false,
+  })
 }
 
 export default function OrderDetailModal({
@@ -201,6 +195,7 @@ export default function OrderDetailModal({
 }: OrderDetailModalProps) {
   const t = useTranslations('admin')
   const queryClient = useQueryClient()
+  const timezone = useTimezoneStore((s) => s.timezone)
 
   const [editMode, setEditMode] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -634,16 +629,10 @@ export default function OrderDetailModal({
                                 {ev.user_name || t('system_actor')}
                               </span>
                               <span className="text-sm text-muted-foreground">
-                                {new Date(ev.created_at + 'Z').toLocaleString(
-                                  localeKey,
-                                  {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  },
-                                )}
+                                {formatDateTime(ev.created_at, timezone, {
+                                  locale: localeKey,
+                                  seconds: false,
+                                })}
                               </span>
                             </div>
                             <div className="text-muted-foreground pl-1">
@@ -846,21 +835,28 @@ export default function OrderDetailModal({
                     <div className="border rounded-lg p-4 flex flex-col h-full">
                       <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                         <User className="w-5 h-5" /> {t('recipient_data')}
-                        {orderDetail && (() => {
-                          const idx = orderDetail.user_success_index
-                          const totalOrders = orderDetail.user_total_orders
-                          const badgeColor = totalOrders === 0
-                            ? 'bg-gray-500'
-                            : idx >= 70 ? 'bg-green-500'
-                            : idx >= 30 ? 'bg-yellow-500'
-                            : idx >= 1 ? 'bg-orange-500'
-                            : 'bg-red-500'
-                          return (
-                            <Badge className={`${badgeColor} text-white border-0 text-sm ml-auto`}>
-                              {idx}%
-                            </Badge>
-                          )
-                        })()}
+                        {orderDetail &&
+                          (() => {
+                            const idx = orderDetail.user_success_index
+                            const totalOrders = orderDetail.user_total_orders
+                            const badgeColor =
+                              totalOrders === 0
+                                ? 'bg-gray-500'
+                                : idx >= 70
+                                  ? 'bg-green-500'
+                                  : idx >= 30
+                                    ? 'bg-yellow-500'
+                                    : idx >= 1
+                                      ? 'bg-orange-500'
+                                      : 'bg-red-500'
+                            return (
+                              <Badge
+                                className={`${badgeColor} text-white border-0 text-sm ml-auto`}
+                              >
+                                {idx}%
+                              </Badge>
+                            )
+                          })()}
                       </h4>
                       <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
                         <div className="grid gap-1">
@@ -1353,7 +1349,7 @@ export default function OrderDetailModal({
                             </h4>
                             <PaymentBadge
                               orderId={orderDetail!.id}
-                              paymentMethod={orderDetail!.payment_method}
+                              paymentMethod={orderDetail!.payment_method ?? ''}
                               t={t}
                             />
                           </div>

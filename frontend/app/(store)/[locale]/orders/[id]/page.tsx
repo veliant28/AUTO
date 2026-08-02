@@ -4,6 +4,8 @@ import React from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useMessages, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import { ArrowLeft, Package, FileText, Loader2, CreditCard } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
@@ -60,6 +62,7 @@ const LOCALE_MAP: Record<string, string> = {
 
 export default function OrderDetailPage() {
   useOrderSync()
+  const timezone = useTimezoneStore((s) => s.timezone)
   const [mounted, setMounted] = React.useState(false)
   const [receiptLoading, setReceiptLoading] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
@@ -87,7 +90,11 @@ export default function OrderDetailPage() {
 
   const messages = useMessages()
   const msgs = messages as Record<string, any>
-  const t = (key: string) => msgs?.common?.[key] ?? key
+  const t = (key: string, values?: Record<string, string>) => {
+    const msg = msgs?.common?.[key] ?? key
+    if (!values) return msg
+    return msg.replace(/\{(\w+)\}/g, (_, k) => values[k] ?? `{${k}}`)
+  }
   const params = useParams()
   const orderId = params.id
   const { isAuthenticated } = useAuthStore()
@@ -162,12 +169,9 @@ export default function OrderDetailPage() {
     labelKey: 'order_pending',
     className: 'bg-gray-500 text-white',
   }
-  const date = new Date(order.created_at + 'Z').toLocaleString(locale, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const date = formatDateTime(order.created_at, timezone, {
+    locale,
+    seconds: false,
   })
 
   const deliveryLabelKey = DELIVERY_LABELS[order.delivery_type]
@@ -443,7 +447,7 @@ function PaymentActions({
   payment: any
   paymentMethod: string
   paymentLabel: string
-  t: (key: string) => string
+  t: (key: string, values?: Record<string, string>) => string
 }) {
   const [payLoading, setPayLoading] = React.useState(false)
 

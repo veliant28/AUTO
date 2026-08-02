@@ -49,6 +49,8 @@ import {
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 
 const supplierColors: Record<string, string> = {
   UTR: 'bg-red-500 text-white',
@@ -304,6 +306,7 @@ function AddToOrderDropdown({
 export default function AdminProductsPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -618,9 +621,10 @@ export default function AdminProductsPage() {
                                       </div>
                                       <div className="leading-tight">
                                         {o.updated_at
-                                          ? new Date(
-                                              o.updated_at + 'Z',
-                                            ).toLocaleString()
+                                          ? formatDateTime(
+                                              o.updated_at,
+                                              timezone,
+                                            )
                                           : '—'}
                                       </div>
                                     </div>

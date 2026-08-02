@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useMessages, useLocale } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import {
   ArrowLeft,
   RotateCcw,
@@ -58,6 +60,7 @@ export default function ReturnDetailPage() {
   React.useEffect(() => setMounted(true), [])
 
   const messages = useMessages()
+  const timezone = useTimezoneStore((s) => s.timezone)
   const msgs = messages as Record<string, any>
   const t = (key: string) => msgs?.common?.[key] ?? key
   const params = useParams()
@@ -169,14 +172,16 @@ export default function ReturnDetailPage() {
       })
       return data
     },
-	    onSuccess: () => {
-	      setEditCardMode(false)
-	      toast.success(t('return_card_saved'))
-	      refetch()
-	      try {
-	        new BroadcastChannel('return-status').postMessage({ returnId: Number(returnId) })
-	      } catch {}
-	    },
+    onSuccess: () => {
+      setEditCardMode(false)
+      toast.success(t('return_card_saved'))
+      refetch()
+      try {
+        new BroadcastChannel('return-status').postMessage({
+          returnId: Number(returnId),
+        })
+      } catch {}
+    },
     onError: (err: any) => {
       toast.error(err?.response?.data?.detail || t('error'))
     },
@@ -291,12 +296,9 @@ export default function ReturnDetailPage() {
     labelKey: 'return_pending',
     className: 'bg-gray-500 text-white',
   }
-  const date = new Date(ret.created_at + 'Z').toLocaleString(locale, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const date = formatDateTime(ret.created_at, timezone, {
+    locale,
+    seconds: false,
   })
 
   return (
@@ -344,68 +346,224 @@ export default function ReturnDetailPage() {
               <Separator />
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-base">{t('return_total')}</h3>
+                  <h3 className="font-semibold text-base">
+                    {t('return_total')}
+                  </h3>
                   <p className="text-3xl font-bold">{fmt(totalRefund)} ₴</p>
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-base">{t('return_card_label')}</h3>
+                  <h3 className="font-semibold text-base">
+                    {t('return_card_label')}
+                  </h3>
                   <div className="flex items-center gap-2">
                     {editCardMode || !ret.bank_card ? (
                       <>
-                        <InputOTP maxLength={16} value={cardInput} onChange={handleCardChange}>
+                        <InputOTP
+                          maxLength={16}
+                          value={cardInput}
+                          onChange={handleCardChange}
+                        >
                           <InputOTPGroup>
-                            <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={0}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={1}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={2}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={3}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={4} className="w-7 h-8 text-xs" /><InputOTPSlot index={5} className="w-7 h-8 text-xs" /><InputOTPSlot index={6} className="w-7 h-8 text-xs" /><InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={4}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={5}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={6}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={7}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={8} className="w-7 h-8 text-xs" /><InputOTPSlot index={9} className="w-7 h-8 text-xs" /><InputOTPSlot index={10} className="w-7 h-8 text-xs" /><InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={8}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={9}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={10}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={11}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={12} className="w-7 h-8 text-xs" /><InputOTPSlot index={13} className="w-7 h-8 text-xs" /><InputOTPSlot index={14} className="w-7 h-8 text-xs" /><InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={12}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={13}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={14}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={15}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                         </InputOTP>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="icon" onClick={() => cardMutation.mutate(cardInput)} disabled={cardMutation.isPending || cardInput.replace(/\s/g, '').length < 16}>
-                              {cardMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            <Button
+                              size="icon"
+                              onClick={() => cardMutation.mutate(cardInput)}
+                              disabled={
+                                cardMutation.isPending ||
+                                cardInput.replace(/\s/g, '').length < 16
+                              }
+                            >
+                              {cardMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Save className="w-4 h-4" />
+                              )}
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>{t('return_card_save')}</TooltipContent>
+                          <TooltipContent>
+                            {t('return_card_save')}
+                          </TooltipContent>
                         </Tooltip>
                       </>
                     ) : (
                       <>
-                        <InputOTP maxLength={16} value={(cardInput || ret.bank_card || '').replace(/^(\d{4})\d{8}(\d{4})$/, '$1********$2')} onChange={() => {}} disabled containerClassName="bg-muted/30 rounded-md">
+                        <InputOTP
+                          maxLength={16}
+                          value={(cardInput || ret.bank_card || '').replace(
+                            /^(\d{4})\d{8}(\d{4})$/,
+                            '$1********$2',
+                          )}
+                          onChange={() => {}}
+                          disabled
+                          containerClassName="bg-muted/30 rounded-md"
+                        >
                           <InputOTPGroup>
-                            <InputOTPSlot index={0} className="w-7 h-8 text-xs" /><InputOTPSlot index={1} className="w-7 h-8 text-xs" /><InputOTPSlot index={2} className="w-7 h-8 text-xs" /><InputOTPSlot index={3} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={0}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={1}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={2}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={3}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={4} className="w-7 h-8 text-xs" /><InputOTPSlot index={5} className="w-7 h-8 text-xs" /><InputOTPSlot index={6} className="w-7 h-8 text-xs" /><InputOTPSlot index={7} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={4}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={5}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={6}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={7}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={8} className="w-7 h-8 text-xs" /><InputOTPSlot index={9} className="w-7 h-8 text-xs" /><InputOTPSlot index={10} className="w-7 h-8 text-xs" /><InputOTPSlot index={11} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={8}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={9}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={10}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={11}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                           <InputOTPSeparator />
                           <InputOTPGroup>
-                            <InputOTPSlot index={12} className="w-7 h-8 text-xs" /><InputOTPSlot index={13} className="w-7 h-8 text-xs" /><InputOTPSlot index={14} className="w-7 h-8 text-xs" /><InputOTPSlot index={15} className="w-7 h-8 text-xs" />
+                            <InputOTPSlot
+                              index={12}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={13}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={14}
+                              className="w-7 h-8 text-xs"
+                            />
+                            <InputOTPSlot
+                              index={15}
+                              className="w-7 h-8 text-xs"
+                            />
                           </InputOTPGroup>
                         </InputOTP>
                         {ret.status === 'pending' && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => setEditCardMode(true)}>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => setEditCardMode(true)}
+                              >
                                 <Pencil className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>{t('return_card_edit')}</TooltipContent>
+                            <TooltipContent>
+                              {t('return_card_edit')}
+                            </TooltipContent>
                           </Tooltip>
                         )}
                       </>

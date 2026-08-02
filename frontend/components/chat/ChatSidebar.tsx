@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatPhone } from '@/components/ui/PhoneInput'
+import { useTimezoneStore } from '@/store/timezoneStore'
 
 interface Chat {
   id: number
@@ -60,7 +61,11 @@ function formatTime(dateStr?: string): string {
   if (mins < 60) return `${mins} мин`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours} ч`
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('ru-RU', {
+    timeZone: useTimezoneStore.getState().timezone,
+    day: 'numeric',
+    month: 'short',
+  })
 }
 
 const Skeleton = () => (

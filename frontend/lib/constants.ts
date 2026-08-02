@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   VEHICLE: 'vehicle-storage',
   LAST_ORDER_CHECK: 'lastOrderCheck',
   FAVORITES: 'favorites-storage',
+  TIMEZONE: 'timezone-storage',
 } as const
 
 // Validation

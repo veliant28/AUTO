@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getAvatarUrl } from '@/lib/avatar'
 import { useTranslations } from 'next-intl'
+import { useTimezoneStore } from '@/store/timezoneStore'
 
 interface MessageProps {
   id: number
@@ -45,7 +46,11 @@ function formatTime(dateStr: string): string {
   if (mins < 60) return `${mins} мин назад`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours} ч назад`
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('ru-RU', {
+    timeZone: useTimezoneStore.getState().timezone,
+    day: 'numeric',
+    month: 'short',
+  })
 }
 
 export default function ChatMessage({

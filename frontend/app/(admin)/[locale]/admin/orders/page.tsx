@@ -78,6 +78,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 import api from '@/lib/api'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import {
@@ -284,9 +286,9 @@ export default function AdminOrdersPage() {
         updateMutation.mutate({
           promocode_code: promoInput,
           discount_amount: data.discount_amount || 0,
-          original_total: orderDetail.total,
+          original_total: orderDetail?.total,
           total: Math.max(
-            (orderDetail.total || 0) - (data.discount_amount || 0),
+            (orderDetail?.total || 0) - (data.discount_amount || 0),
             0,
           ),
         })
@@ -313,6 +315,7 @@ export default function AdminOrdersPage() {
     onError: () => toast.error(t('promo_error')),
   })
 
+  const timezone = useTimezoneStore((s) => s.timezone)
   const localeKey = useMemo(() => {
     try {
       const p = window.location.pathname.match(/^\/(ru|ua|en)/)?.[1]
@@ -354,13 +357,7 @@ export default function AdminOrdersPage() {
   }, [])
 
   const formatDate = (d: string) =>
-    new Date(d + 'Z').toLocaleString(localeKey, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    formatDateTime(d, timezone, { locale: localeKey, seconds: false })
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-orders', statusFilter, page, search],
@@ -527,7 +524,7 @@ export default function AdminOrdersPage() {
 
   const removePromocodeMutation = useMutation({
     mutationFn: async () => {
-      const newTotal = orderDetail.original_total || orderDetail.total
+      const newTotal = orderDetail?.original_total || orderDetail?.total
       await api.put(`/admin/orders/${viewOrderId}`, {
         promocode_code: null,
         discount_amount: 0,
@@ -662,7 +659,8 @@ export default function AdminOrdersPage() {
       }),
       columnHelper.accessor('created_at', {
         header: t('order_date'),
-        cell: (info) => new Date(info.getValue() + 'Z').toLocaleString(),
+        cell: (info) =>
+          formatDateTime(info.getValue(), timezone, { seconds: false }),
       }),
       columnHelper.display({
         id: 'ttn',

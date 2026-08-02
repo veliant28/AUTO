@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React from 'react'
+import { useTranslations } from 'next-intl'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Loader2,
   Clock,
@@ -15,22 +15,33 @@ import {
   XCircle,
   RotateCcw,
   AlertTriangle,
-} from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/lib/toast';
-import { novaPoshtaApi } from '@/lib/api/nova-poshta';
-import type { OrderNovaPoshtaWaybillResponse, WaybillTrackingEvent } from '@/lib/types/nova-poshta';
+} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { toast } from '@/lib/toast'
+import { novaPoshtaApi } from '@/lib/api/nova-poshta'
+import type {
+  OrderNovaPoshtaWaybillResponse,
+  WaybillTrackingEvent,
+} from '@/lib/types/nova-poshta'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface Props {
-  orderId: number;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  orderId: number
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -38,11 +49,14 @@ interface Props {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function getStatusGroup(code: string): {
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
+  icon: React.ReactNode
+  color: string
+  bgColor: string
 } {
-  const groups: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
+  const groups: Record<
+    string,
+    { icon: React.ReactNode; color: string; bgColor: string }
+  > = {
     created: {
       icon: <Package className="w-4 h-4" />,
       color: 'text-blue-600',
@@ -73,46 +87,56 @@ function getStatusGroup(code: string): {
       color: 'text-red-600',
       bgColor: 'bg-red-100',
     },
-  };
+  }
 
   // Simple grouping logic matching backend catalog
-  if (['101', '102', '104', '1'].includes(code)) return groups.created;
+  if (['101', '102', '104', '1'].includes(code)) return groups.created
   if (['103', '105', '107', '118', '119', '200', '2', '3', '5'].includes(code))
-    return groups.in_transit;
-  if (['106', '108', '110', '4', '6'].includes(code)) return groups.arrived;
-  if (['111', '112', '113', '114', '201', '7', '10'].includes(code)) return groups.delivered;
-  if (['117', '123', '124', '125', '9'].includes(code)) return groups.returned;
-  if (['109', '115', '116', '120', '121', '122', '8'].includes(code)) return groups.error;
+    return groups.in_transit
+  if (['106', '108', '110', '4', '6'].includes(code)) return groups.arrived
+  if (['111', '112', '113', '114', '201', '7', '10'].includes(code))
+    return groups.delivered
+  if (['117', '123', '124', '125', '9'].includes(code)) return groups.returned
+  if (['109', '115', '116', '120', '121', '122', '8'].includes(code))
+    return groups.error
 
-  return groups.in_transit;
+  return groups.in_transit
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Component
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange }: Props) {
-  const t = useTranslations('admin');
-  const queryClient = useQueryClient();
+export default function OrderWaybillTrackingModal({
+  orderId,
+  open,
+  onOpenChange,
+}: Props) {
+  const t = useTranslations('admin')
+  const timezone = useTimezoneStore((s) => s.timezone)
+  const queryClient = useQueryClient()
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ['np-waybill', orderId],
-    queryFn: () => novaPoshtaApi.getOrderWaybillDetail(orderId).then((r) => r.data),
+    queryFn: () =>
+      novaPoshtaApi.getOrderWaybillDetail(orderId).then((r) => r.data),
     enabled: open,
-  });
+  })
 
   const syncMutation = useMutation({
-    mutationFn: () => novaPoshtaApi.syncOrderWaybillStatus(orderId).then((r) => r.data),
+    mutationFn: () =>
+      novaPoshtaApi.syncOrderWaybillStatus(orderId).then((r) => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] });
-      queryClient.invalidateQueries({ queryKey: ['np-summary', orderId] });
-      toast.success(t('novaposhta_waybill_sync'));
+      queryClient.invalidateQueries({ queryKey: ['np-waybill', orderId] })
+      queryClient.invalidateQueries({ queryKey: ['np-summary', orderId] })
+      toast.success(t('novaposhta_waybill_sync'))
     },
-    onError: (err: any) => toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
-  });
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
+  })
 
-  const waybill = detail?.waybill;
-  const events: WaybillTrackingEvent[] = waybill?.tracking_events || [];
+  const waybill = detail?.waybill
+  const events: WaybillTrackingEvent[] = waybill?.tracking_events || []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,9 +192,9 @@ export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange 
             ) : (
               <div className="relative space-y-0">
                 {events.map((event, index) => {
-                  const group = getStatusGroup(event.status_code);
-                  const isLast = index === events.length - 1;
-                  const isFirst = index === 0;
+                  const group = getStatusGroup(event.status_code)
+                  const isLast = index === events.length - 1
+                  const isFirst = index === 0
 
                   return (
                     <div key={index} className="flex gap-4 pb-6 relative">
@@ -189,11 +213,16 @@ export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange 
                       {/* Content */}
                       <div className="flex-1 min-w-0 pt-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-sm font-medium ${group.color}`}>
+                          <span
+                            className={`text-sm font-medium ${group.color}`}
+                          >
                             {event.status_text || `Код ${event.status_code}`}
                           </span>
                           {isFirst && (
-                            <Badge variant="secondary" className="text-[10px] h-5">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] h-5"
+                            >
                               {t('novaposhta_waybill_sync')}
                             </Badge>
                           )}
@@ -208,7 +237,7 @@ export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange 
 
                         {event.event_at && (
                           <div className="text-xs text-muted-foreground mt-0.5">
-                            {new Date(event.event_at).toLocaleString()}
+                            {formatDateTime(event.event_at, timezone)}
                           </div>
                         )}
 
@@ -219,7 +248,7 @@ export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange 
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -235,5 +264,5 @@ export default function OrderWaybillTrackingModal({ orderId, open, onOpenChange 
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

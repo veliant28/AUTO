@@ -2,6 +2,8 @@
 
 import { Clock } from 'lucide-react'
 import type { WaybillTrackingEvent } from '@/lib/types/nova-poshta'
+import { useTimezoneStore } from '@/store/timezoneStore'
+import { formatDateTime } from '@/lib/dates'
 
 export default function WaybillTrackingTimeline({
   t,
@@ -10,6 +12,7 @@ export default function WaybillTrackingTimeline({
   t: (key: string) => string
   events: WaybillTrackingEvent[]
 }) {
+  const timezone = useTimezoneStore((s) => s.timezone)
   if (events.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
@@ -39,7 +42,7 @@ export default function WaybillTrackingTimeline({
               </div>
               {event.event_at && (
                 <div className="text-sm text-muted-foreground">
-                  {new Date(event.event_at).toLocaleString()}
+                  {formatDateTime(event.event_at, timezone)}
                 </div>
               )}
             </div>
