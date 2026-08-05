@@ -6,10 +6,114 @@ from app.core.db import get_db
 from app.models.support import ChatConversation, ChatMessage, SenderRole, ChatStatus
 from app.api.v1.endpoints.auth import verify_token
 from app.services.ws_manager import manager
+from app.services import presence_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _get_client_ip(websocket: WebSocket) -> str | None:
+    """IP из X-Forwarded-For (первое значение), как в ProtectionMiddleware."""
+    forwarded = websocket.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if websocket.client:
+        return websocket.client.host
+    return None
+
+
+def _identity_error(db: Session, client_ip: str | None, user_id: int | None) -> str | None:
+    """Причина отклонения подключения: бан, удалённый или деактивированный аккаунт."""
+    if presence_service.check_ban(db, client_ip, user_id):
+        return "Banned"
+    if user_id is not None:
+        from app.models import User
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.is_active:
+            return "Invalid token"
+    return None
+
+
+@router.websocket("/ws/presence")
+async def websocket_presence(
+    websocket: WebSocket,
+    token: str = Query(""),
+    session_id: str = Query(""),
+):
+    """WebSocket presence-канал для мониторинга онлайн-клиентов.
+
+    Аутентификация: token (для зарегистрированных) и/или session_id (для анонимов).
+    Клиент шлёт {"type": "heartbeat"} каждые ~30 сек — сообщения не лимитируются
+    ProtectionMiddleware (он не перехватывает WS), но бан проверяется и на
+    подключении, и в каждом heartbeat.
+    """
+    user_id = None
+    if token:
+        try:
+            user_id = verify_token(token)["user_id"]
+        except Exception:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
+    session_id = (session_id or "").strip()
+    if len(session_id) > 64:
+        await websocket.close(code=4001, reason="Invalid session")
+        return
+    if user_id is None and not session_id:
+        await websocket.close(code=4001, reason="Missing identity")
+        return
+
+    client_ip = _get_client_ip(websocket)
+
+    # Проверка бана и валидности аккаунта до подключения (middleware WS не защищает)
+    db: Session = next(get_db())
+    try:
+        error = _identity_error(db, client_ip, user_id)
+        if error:
+            await websocket.close(code=4403 if error == "Banned" else 4001, reason=error)
+            return
+        key = await presence_service.mark_online(user_id, session_id, client_ip)
+        session_row = presence_service.create_session(db, user_id, session_id, client_ip)
+    finally:
+        db.close()
+
+    if not key:
+        await websocket.close(code=4001, reason="Missing identity")
+        return
+
+    await websocket.accept()
+
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if data.get("type") != "heartbeat":
+                continue
+            # Перепроверка бана и аккаунта на каждом heartbeat — кикаем
+            # забаненных и удалённых/деактивированных клиентов
+            db = next(get_db())
+            try:
+                error = _identity_error(db, client_ip, user_id)
+                if error:
+                    await websocket.close(code=4403 if error == "Banned" else 4001, reason=error)
+                    return
+            finally:
+                db.close()
+            await presence_service.touch(key)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.error(f"Presence websocket error: {e}")
+    finally:
+        await presence_service.mark_offline(key)
+        db = next(get_db())
+        try:
+            presence_service.close_session(db, session_row.id)
+        finally:
+            db.close()
 
 
 @router.websocket("/ws/chat")

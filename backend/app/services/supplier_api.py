@@ -132,7 +132,14 @@ class GPLAPIClient(SupplierAPIClient):
         except Exception as e:
             return SupplierAuthResult(success=False, message=f"Error: {str(e)}")
 
-    def fetch_all_prices(self, token: str) -> list:
+    def fetch_all_prices(self, token: str, progress_cb=None) -> list:
+        """
+        Fetch all price pages from the GPL API.
+
+        progress_cb: optional callable(percent: int) invoked after each
+        successful page, with percent in 0..24 (the import task clamps and
+        maps it to its own progress range).
+        """
         import time
         all_items = []
         page = 1
@@ -151,7 +158,10 @@ class GPLAPIClient(SupplierAPIClient):
                     if not items:
                         return all_items
                     all_items.extend(items)
-                    if page >= data.get("last_page", 1):
+                    last_page = data.get("last_page", 1) or 1
+                    if progress_cb:
+                        progress_cb(max(0, min(24, int(page / last_page * 24))))
+                    if page >= last_page:
                         return all_items
                     page += 1
                     last_err = None

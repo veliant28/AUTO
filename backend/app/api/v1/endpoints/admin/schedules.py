@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import json
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.models import User
@@ -136,7 +137,19 @@ async def run_schedule_now(
     db.refresh(pimport)
 
     from app.workers.tasks.import_tasks import process_price_import
-    process_price_import.delay(pimport.id)
+    try:
+        process_price_import.delay(pimport.id)
+    except Exception as e:
+        # Broker unavailable — the import will never be picked up; fail it
+        # explicitly so the schedule row doesn't hang in "waiting" forever.
+        pimport.status = "failed"
+        pimport.error_message = json.dumps({
+            "code": "broker_unavailable",
+            "params": {"error": str(e)[:200]},
+        }, ensure_ascii=False)
+        pimport.finished_at = datetime.utcnow()
+        db.commit()
+        raise HTTPException(status_code=503, detail=f"Import queue unavailable: {e}")
 
     s.last_import_id = pimport.id
     s.last_run_at = datetime.utcnow()

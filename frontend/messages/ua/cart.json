@@ -5,5 +5,6 @@
   "summary_items": "Товари",
   "summary_total": "Разом",
   "items_count": "шт",
-  "checkout": "Оформити замовлення"
+  "checkout": "Оформити замовлення",
+  "sync_error": "Не вдалося синхронізувати кошик"
 }

@@ -33,6 +33,13 @@ export class ApiClient {
         const lang = document.documentElement.lang || 'ru'
         config.headers['Accept-Language'] = lang
       }
+      // Anonymous visitor identity (monitor: presence/views/cart sync)
+      if (typeof window !== 'undefined') {
+        const sessionId = localStorage.getItem(STORAGE_KEYS.SESSION)
+        if (sessionId) {
+          config.headers['X-Session-ID'] = sessionId
+        }
+      }
       return config
     })
 

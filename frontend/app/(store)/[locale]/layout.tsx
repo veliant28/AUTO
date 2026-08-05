@@ -9,6 +9,7 @@ import type { Metadata } from 'next'
 import SettingsHydrate from '@/components/layout/SettingsHydrate'
 import FooterHydrate from '@/components/layout/FooterHydrate'
 import HtmlLangSetter from '@/components/layout/HtmlLangSetter'
+import PresenceClient from '@/components/PresenceClient'
 import { QueryClient, dehydrate } from '@tanstack/react-query'
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -137,6 +138,7 @@ export default async function RootLayout(props: any) {
           <Providers dehydratedState={dehydratedState}>
             <SettingsHydrate brandName={brandName} />
             <FooterHydrate locale={locale} data={footerData} />
+            <PresenceClient />
             <Toaster position="bottom-right" offset={{ right: '48px' }} />
             <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
               <Header />

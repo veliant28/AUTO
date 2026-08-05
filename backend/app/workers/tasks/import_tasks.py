@@ -1,5 +1,5 @@
 from celery import shared_task
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from app.workers import celery_app
 from app.core.db import SessionLocal, TecDocSessionLocal
@@ -131,7 +131,13 @@ def _get_client(supplier: str, db) -> tuple:
     return None, None
 
 
-@celery_app.task(bind=True, name="process_price_import")
+@celery_app.task(
+    bind=True,
+    name="process_price_import",
+    acks_late=True,
+    soft_time_limit=3 * 60 * 60,
+    time_limit=3 * 60 * 60 + 300,
+)
 def process_price_import(self, import_id: int):
     db = SessionLocal()
     try:
@@ -175,7 +181,13 @@ def process_price_import(self, import_id: int):
             LOG("GPL: fetching prices from API...")
             gpl_client = GPLAPIClient(client.config)
             set_stage(pi, db, "Загрузка цен с GPL API")
-            items = gpl_client.fetch_all_prices(token)
+            # Progress 0→24 during the fetch: keeps the UI bar alive and lets
+            # the stale-import watchdog distinguish a working fetch from a
+            # lost worker (updated_at bumps on every set_progress commit).
+            items = gpl_client.fetch_all_prices(
+                token,
+                progress_cb=lambda pct: set_progress(pi, db, min(24, pct)),
+            )
             LOG(f"GPL: fetched {len(items)} items")
             set_progress(pi, db, 25)
 
@@ -381,6 +393,31 @@ def scheduler_tick(self):
         schedules = db.query(ImportSchedule).filter(ImportSchedule.enabled == True).all()
         now_utc = datetime.utcnow()
         now_tz = now_utc.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+
+        # Watchdog: fail imports stuck too long — in_queue never picked up by a
+        # worker (broker/worker down), or processing without progress updates
+        # (worker lost mid-run; Celery acks_late redelivery is the primary
+        # recovery, this is a backstop so the schedule row unblocks).
+        stale_queue_cutoff = now_utc - timedelta(minutes=30)
+        stale_run_cutoff = now_utc - timedelta(minutes=120)
+        stuck = db.query(PriceImport).filter(
+            PriceImport.status.in_(["processing", "in_queue"])
+        ).all()
+        for pi in stuck:
+            reason = None
+            if pi.status == "in_queue" and pi.created_at < stale_queue_cutoff:
+                reason = "never_picked_up"
+            elif pi.status == "processing" and (pi.updated_at or pi.created_at) < stale_run_cutoff:
+                reason = "no_progress_heartbeat"
+            if reason:
+                LOG(f"Watchdog: failing stale import #{pi.id} ({pi.supplier}, {pi.status}) — {reason}")
+                pi.status = "failed"
+                pi.error_message = json.dumps({
+                    "code": "stale_import",
+                    "params": {"reason": reason},
+                }, ensure_ascii=False)
+                pi.finished_at = now_utc
+        db.commit()
 
         for s in schedules:
             try:

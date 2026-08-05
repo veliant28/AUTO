@@ -84,6 +84,7 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import PresenceClient from '@/components/PresenceClient'
 
 const LOCALES = ['ru', 'en', 'ua']
 
@@ -119,6 +120,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   const adminTabs = [
     { key: 'dashboard', label: ta('workers_tab_dashboard') },
+    { key: 'monitor', label: ta('monitor_title') },
     { key: 'staff', label: ta('staff_title') },
     { key: 'protection', label: ta('protection_title') },
     { key: 'backup', label: ta('backup_title') },
@@ -229,6 +231,23 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     }, 200)
     return () => clearInterval(id)
   }, [])
+
+  // Monitor TopBar state (календарь: одна дата / сброс в realtime)
+  const [monitorDate, setMonitorDate] = useState<Date | undefined>(undefined)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      if (win.__monitorDate) {
+        const d = new Date(win.__monitorDate)
+        setMonitorDate((prev) =>
+          prev && prev.getTime() === d.getTime() ? prev : d,
+        )
+      } else if (monitorDate) {
+        setMonitorDate(undefined)
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [monitorDate])
 
   // Backup TopBar state
   const [backupTime, setBackupTime] = useState('02:00')
@@ -514,6 +533,54 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </Tooltip>
             </div>
           )}
+        {isAdmin && (searchParams.get('tab') || 'dashboard') === 'monitor' && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="icon"
+                  variant={monitorDate ? 'default' : 'outline'}
+                >
+                  {monitorDate ? (
+                    <span className="text-xs font-bold">
+                      {format(monitorDate, 'dd')}
+                    </span>
+                  ) : (
+                    <CalendarDays className="w-4 h-4" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  navLayout="around"
+                  selected={monitorDate}
+                  onSelect={(d) =>
+                    (window as any).__monitorSetDate?.(d ?? undefined)
+                  }
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+            {monitorDate && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => {
+                      ;(window as any).__monitorSetDate?.(undefined)
+                      toast.info(ta('monitor_realtime_back'))
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('monitor_reset')}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
         {isAdmin &&
           (searchParams.get('tab') || 'dashboard') === 'protection' && (
             <div className="border-r pr-2 self-stretch flex items-center gap-1">
@@ -1024,10 +1091,16 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     const input = e.target as HTMLInputElement
                     const pos = Math.min(2, input.selectionStart ?? 2)
                     const currentVal = pricingOtpDigits.join('')
-                    const newVal = currentVal.substring(0, pos) + '0' + currentVal.substring(pos + 1)
+                    const newVal =
+                      currentVal.substring(0, pos) +
+                      '0' +
+                      currentVal.substring(pos + 1)
                     const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
                     setPricingOtpDigits(padded)
-                    const num = Math.min(100, Math.max(0, Number(padded.join(''))))
+                    const num = Math.min(
+                      100,
+                      Math.max(0, Number(padded.join(''))),
+                    )
                     ;(window as any).__pricingSetGeneralMargin?.(num)
                     setTimeout(() => input.setSelectionRange(pos, pos), 0)
                   }
@@ -1036,7 +1109,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   const raw = val.replace(/\D/g, '')
                   const padded = raw.padEnd(3, '0').split('')
                   setPricingOtpDigits(padded)
-                  const num = Math.min(100, Math.max(0, Number(padded.join(''))))
+                  const num = Math.min(
+                    100,
+                    Math.max(0, Number(padded.join(''))),
+                  )
                   ;(window as any).__pricingSetGeneralMargin?.(num)
                 }}
               >
@@ -1347,6 +1423,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-muted/10">
+      <PresenceClient />
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"

@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.core.db import get_db
 from app.models import CartItem, Part, SupplierOffer, Supplier
-from app.schemas.cart_schemas import CartItemSchema, CartAddSchema, CartUpdateSchema
-from app.api.v1.endpoints.auth import get_current_user
+from app.schemas.cart_schemas import CartItemSchema, CartAddSchema, CartUpdateSchema, CartSyncSchema
+from app.api.v1.endpoints.auth import get_current_user, get_optional_user
 
 router = APIRouter()
 
@@ -64,6 +64,51 @@ async def add_to_cart(
     
     db.commit()
     return {"message": "Item added to cart"}
+
+@router.post("/sync")
+async def sync_cart(
+    data: CartSyncSchema,
+    request: Request,
+    user_id: Optional[int] = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
+    """Полная замена корзины клиента.
+
+    Зарегистрированный пользователь — по токену, аноним — по X-Session-ID.
+    Используется фронтом для мониторинга корзин в админке (таб «Монитор»).
+    """
+    session_id = (request.headers.get("X-Session-ID") or "").strip()
+    if user_id is None and not session_id:
+        raise HTTPException(401, "Missing identity")
+    if len(session_id) > 64:
+        raise HTTPException(400, "Invalid session id")
+
+    # Проверяем товары (как в /add)
+    for item in data.items:
+        part = db.query(Part).filter(Part.id == item.part_id).first()
+        if not part:
+            raise HTTPException(404, f"Product {item.part_id} not found")
+        if not part.is_active:
+            raise HTTPException(400, f"Product {item.part_id} is deactivated")
+
+    # Полная замена корзины клиента
+    if user_id is not None:
+        db.query(CartItem).filter(CartItem.user_id == user_id).delete()
+    else:
+        db.query(CartItem).filter(CartItem.session_id == session_id).delete()
+
+    for item in data.items:
+        db.add(CartItem(
+            user_id=user_id,
+            session_id=None if user_id is not None else session_id,
+            part_id=item.part_id,
+            quantity=item.quantity,
+            supplier_offer_id=item.supplier_offer_id,
+        ))
+
+    db.commit()
+    return {"message": "Cart synced", "count": len(data.items)}
+
 
 @router.put("/{item_id}")
 async def update_cart_item(

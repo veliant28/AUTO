@@ -42,8 +42,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const hostname = window.location.hostname
-    // Backend WebSocket is exposed on port 8080 (Docker maps 8080->8000)
-    const url = `${protocol}//${hostname}:8080/api/v1/ws/chat?token=${token}`
+    // Same-origin: Next.js dev-прокси (`/api/v1/*` в rewrites) туннелирует
+    // и WebSocket-апгрейды — работает и в docker-деплое, и локально
+    const url = `${protocol}//${hostname}/api/v1/ws/chat?token=${token}`
 
     const ws = new WebSocket(url)
 

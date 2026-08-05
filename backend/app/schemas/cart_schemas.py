@@ -23,3 +23,7 @@ class CartAddSchema(BaseModel):
 
 class CartUpdateSchema(BaseModel):
     quantity: int
+
+class CartSyncSchema(BaseModel):
+    """Полное содержимое корзины для замены на сервере."""
+    items: List[CartAddSchema] = []

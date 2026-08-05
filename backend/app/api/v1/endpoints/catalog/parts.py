@@ -1,15 +1,61 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+import logging
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, text as sa_text
 from typing import List, Optional
 from app.core.db import get_db, get_tecdoc_db
 from app.models import VehicleBrand, VehicleModel, VehicleModification, PartCategory, Part, PartApplicability, Supplier, SupplierOffer
+from app.models.presence import ProductView
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
 from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse
 from app.services.sync_service import sync_service
 from app.services.catalog_utils import best_offer, part_to_result
+from app.api.v1.endpoints.auth import get_optional_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+VIEW_HISTORY_LIMIT = 100
+
+
+def _record_product_view(db: Session, user_id, session_id, part_id, offer_id) -> None:
+    """Записать просмотр товара (до 100 последних на клиента).
+
+    Никогда не роняет запрос детальной страницы — ошибки только логируются.
+    """
+    try:
+        session_id = (session_id or "").strip()
+        if len(session_id) > 64:
+            return
+        if user_id is None and not session_id:
+            return
+        db.add(ProductView(
+            user_id=user_id,
+            session_id=None if user_id is not None else session_id,
+            part_id=part_id,
+            supplier_offer_id=offer_id,
+            viewed_at=datetime.utcnow(),
+        ))
+        db.commit()
+        # Прунинг: оставляем только последние 100 просмотров клиента
+        base = db.query(ProductView.id)
+        if user_id is not None:
+            base = base.filter(ProductView.user_id == user_id)
+        else:
+            base = base.filter(ProductView.session_id == session_id)
+        old_ids = [
+            r[0] for r in base.order_by(
+                ProductView.viewed_at.desc(), ProductView.id.desc()
+            ).offset(VIEW_HISTORY_LIMIT).all()
+        ]
+        if old_ids:
+            db.query(ProductView).filter(ProductView.id.in_(old_ids)).delete(synchronize_session=False)
+            db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to record product view (part={part_id}): {e}")
+        db.rollback()
 
 
 @router.get("/makes", response_model=List[BrandSchema])
@@ -168,6 +214,8 @@ async def get_part_applicability(
 @router.get("/parts/{article}/details")
 async def get_part_details(
     article: str,
+    request: Request,
+    user_id: Optional[int] = Depends(get_optional_user),
     db: Session = Depends(get_db),
     tecdoc_db: Session = Depends(get_tecdoc_db),
 ):
@@ -203,6 +251,11 @@ async def get_part_details(
                 "supplier_offer_id": best["supplier_offer_id"],
                 "currency": best["currency"],
             }
+        # Монитор: фиксируем просмотр товара (поставщик/цена — на момент просмотра)
+        _record_product_view(
+            db, user_id, request.headers.get("X-Session-ID"),
+            part.id, best["supplier_offer_id"] if best else None,
+        )
 
     info_data = None
     images = []

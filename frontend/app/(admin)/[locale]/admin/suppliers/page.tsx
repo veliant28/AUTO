@@ -152,22 +152,22 @@ function TokenBadge({
 
   if (
     data?.token_status === 'expired' ||
-	    (secondsLeft === 0 && data?.token_status)
-	  ) {
-	    return (
-	      <Tooltip>
-	        <TooltipTrigger asChild>
-	          <Button
-	            variant="outline"
-	            size="icon"
-	            className="h-10 w-10 text-red-500 border-red-300"
-	            onClick={onRefresh}
-	          >
-	            <RefreshCw className="w-4 h-4" />
-	          </Button>
-	        </TooltipTrigger>
-	        <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
-	      </Tooltip>
+    (secondsLeft === 0 && data?.token_status)
+  ) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 text-red-500 border-red-300"
+            onClick={onRefresh}
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
+      </Tooltip>
     )
   }
 
@@ -450,6 +450,7 @@ function ScheduleSection() {
           : t('settings_schedule_disabled', { supplier: vars.supplier }),
       )
     },
+    onError: () => toast.error(t('settings_schedule_toggle_error')),
   })
 
   const timeMutation = useMutation({
@@ -464,6 +465,7 @@ function ScheduleSection() {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['admin-schedules'] }),
+    onError: () => toast.error(t('settings_schedule_time_error')),
   })
 
   const runMutation = useMutation({
@@ -474,6 +476,7 @@ function ScheduleSection() {
       toast.success(t('settings_schedule_run_success', { supplier }))
       queryClient.invalidateQueries({ queryKey: ['admin-schedules'] })
     },
+    onError: () => toast.error(t('settings_schedule_run_error')),
   })
 
   if (isLoading || !schedules) {
@@ -808,16 +811,22 @@ function ScheduleRow({
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={onRun}
-                disabled={!s.enabled || s.schedule_status === 'in_progress'}
-              >
-                <Play className="w-4 h-4" />
-              </Button>
+              <span className="inline-flex">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={onRun}
+                  disabled={!s.enabled || s.schedule_status === 'in_progress'}
+                >
+                  <Play className="w-4 h-4" />
+                </Button>
+              </span>
             </TooltipTrigger>
-            <TooltipContent>{t('settings_schedule_run')}</TooltipContent>
+            <TooltipContent>
+              {s.schedule_status === 'in_progress'
+                ? t('settings_schedule_run_in_progress')
+                : t('settings_schedule_run')}
+            </TooltipContent>
           </Tooltip>
         </div>
       </td>

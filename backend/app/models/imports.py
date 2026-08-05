@@ -39,6 +39,7 @@ class PriceImport(Base):
     external_id = Column(String, nullable=True)
     external_token = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     finished_at = Column(DateTime, nullable=True)
 
 

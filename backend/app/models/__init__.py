@@ -21,6 +21,7 @@ from .payments import PaymentTransaction
 from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from .protection import BanRecord, ProtectionEvent, Whitelist
 from .backup import BackupRecord
+from .presence import PresenceSession, ProductView
 
 __all__ = [
     "Base", 
@@ -47,4 +48,5 @@ __all__ = [
     "ChatConversation", "ChatMessage", "ChatStatus", "SenderRole",
     "BanRecord", "ProtectionEvent", "Whitelist",
     "BackupRecord",
+    "PresenceSession", "ProductView",
 ]
