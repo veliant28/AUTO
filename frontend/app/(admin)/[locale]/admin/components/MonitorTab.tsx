@@ -41,24 +41,25 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
 const PAGE_SIZE = 50
 
-const REGISTERED_GROUPS = ['retail', 'b2b', 'operator', 'manager', 'admin']
-const ALL_GROUPS = [...REGISTERED_GROUPS, 'anon']
+// 5 ролей + анонимы — все группы и в карточках, и в графике
+const ALL_GROUPS = ['retail', 'b2b', 'operator', 'manager', 'admin', 'anon']
 
 const GROUP_META: Record<
   string,
   { icon: any; bg: string; iconColor: string; color: string }
 > = {
+  // Цвета соответствуют бейджам ролей (ROLE_BADGE_COLORS); аноним — фиолетовый
   retail: {
     icon: Users,
-    bg: 'bg-blue-100 dark:bg-blue-900/30',
-    iconColor: 'text-blue-600',
-    color: '#3b82f6',
+    bg: 'bg-gray-100 dark:bg-gray-900/30',
+    iconColor: 'text-gray-600',
+    color: '#6b7280',
   },
   b2b: {
     icon: Briefcase,
-    bg: 'bg-cyan-100 dark:bg-cyan-900/30',
-    iconColor: 'text-cyan-600',
-    color: '#06b6d4',
+    bg: 'bg-green-100 dark:bg-green-900/30',
+    iconColor: 'text-green-600',
+    color: '#22c55e',
   },
   operator: {
     icon: UserCog,
@@ -68,9 +69,9 @@ const GROUP_META: Record<
   },
   manager: {
     icon: UserRound,
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-    iconColor: 'text-purple-600',
-    color: '#a855f7',
+    bg: 'bg-blue-100 dark:bg-blue-900/30',
+    iconColor: 'text-blue-600',
+    color: '#3b82f6',
   },
   admin: {
     icon: Crown,
@@ -80,9 +81,9 @@ const GROUP_META: Record<
   },
   anon: {
     icon: UserX,
-    bg: 'bg-green-100 dark:bg-green-900/30',
-    iconColor: 'text-green-600',
-    color: '#22c55e',
+    bg: 'bg-purple-100 dark:bg-purple-900/30',
+    iconColor: 'text-purple-600',
+    color: '#a855f7',
   },
 }
 
@@ -216,7 +217,7 @@ export default function MonitorTab() {
 
   const chartOption = useMemo(() => {
     const hours = chart.data?.hours ?? []
-    const series = REGISTERED_GROUPS.map((g) => ({
+    const series = ALL_GROUPS.map((g) => ({
       name: t(g),
       type: 'line' as const,
       smooth: true,
@@ -238,7 +239,7 @@ export default function MonitorTab() {
           const hour = hours[params?.[0]?.dataIndex]
           if (!hour) return ''
           const lines = [`<b>${params[0].axisValue}</b>`]
-          for (const g of REGISTERED_GROUPS) {
+          for (const g of ALL_GROUPS) {
             const slot = hour.groups[g]
             if (!slot || slot.count === 0) continue
             const names = slot.clients
@@ -261,7 +262,7 @@ export default function MonitorTab() {
         },
       },
       legend: {
-        data: REGISTERED_GROUPS.map((g) => t(g)),
+        data: ALL_GROUPS.map((g) => t(g)),
         textStyle: { color: axisTextColor },
         top: 0,
       },
@@ -404,7 +405,7 @@ export default function MonitorTab() {
                 <div className="min-w-0 flex-1">
                   <p className="text-2xl font-bold">{count}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {g === 'anon' ? t('monitor_anonymous') : t(g)}
+                    {t(g)}
                   </p>
                 </div>
               </CardContent>

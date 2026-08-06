@@ -62,7 +62,8 @@ export default function ProductClient({ article }: { article: string }) {
     addItem({
       id: `cart-${article}-${Date.now()}`,
       part_id: data?.part?.id ?? 0,
-      article,
+      // URL-параметр может быть SKU (ссылки ведут на /catalog/{sku||article})
+      article: data?.part?.article || article,
       part_name: data?.info?.name || data?.part?.name || article,
       quantity: 1,
       price: data?.price?.price ?? null,
@@ -251,7 +252,7 @@ export default function ProductClient({ article }: { article: string }) {
                 </Badge>
               )}
               <span className="text-sm font-mono text-muted-foreground">
-                {article}
+                {data?.part?.article || article}
               </span>
             </div>
             {data?.part?.sku && (

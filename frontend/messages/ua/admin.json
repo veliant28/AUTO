@@ -79,6 +79,7 @@
   "operator": "Оператор",
   "manager": "Менеджер",
   "admin": "Адміністратор",
+  "anon": "Анонім",
   "phone_placeholder": "+38 (0XX) XXX-XX-XX",
   "order_pending": "Очікує",
   "order_confirmed": "Підтверджено",
@@ -1043,9 +1044,9 @@
   "monitor_cart_items": "{count, plural, one {# товар} few {# товари} many {# товарів} other {# товара}}",
   "monitor_cart_summary": "Разом",
   "monitor_refreshed": "Дані оновлено",
-  "monitor_email": "Email",
   "monitor_full_name": "ПІБ",
   "monitor_delivery_street": "Вулиця",
   "monitor_delivery_house": "Будинок",
-  "monitor_delivery_apartment": "Кв."
+  "monitor_delivery_apartment": "Кв.",
+  "monitor_personal_data": "Особисті дані"
 }

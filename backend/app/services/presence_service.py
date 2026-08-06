@@ -6,6 +6,7 @@ WS-сообщения (heartbeat) не проходят через ProtectionMid
 """
 import json
 import logging
+import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
@@ -51,6 +52,7 @@ def client_key_parts(key: str) -> tuple:
 def _payload(user_id: Optional[int], session_id: Optional[str], ip: Optional[str]) -> dict:
     now = datetime.utcnow().isoformat()
     return {
+        "conn_id": uuid.uuid4().hex,
         "user_id": user_id,
         "session_id": session_id,
         "ip": ip,
@@ -59,30 +61,51 @@ def _payload(user_id: Optional[int], session_id: Optional[str], ip: Optional[str
     }
 
 
-async def mark_online(user_id: Optional[int], session_id: Optional[str], ip: Optional[str]) -> Optional[str]:
+async def mark_online(user_id: Optional[int], session_id: Optional[str], ip: Optional[str]) -> Optional[tuple]:
+    """Регистрирует присутствие, возвращает (client_key, conn_id)."""
     key = client_key(user_id, session_id)
     if not key:
         return None
     r = await redis_client.get_client()
-    await r.hset(PRESENCE_ONLINE_KEY, key, json.dumps(_payload(user_id, session_id, ip)))
-    await r.expire(PRESENCE_ONLINE_KEY, PRESENCE_TTL_SECONDS)
-    return key
-
-
-async def touch(key: str) -> None:
-    """Обновить last_seen по heartbeat (без записи в БД)."""
-    r = await redis_client.get_client()
-    raw = await r.hget(PRESENCE_ONLINE_KEY, key)
-    if raw is None:
-        return
-    payload = json.loads(raw)
-    payload["last_seen"] = datetime.utcnow().isoformat()
+    payload = _payload(user_id, session_id, ip)
     await r.hset(PRESENCE_ONLINE_KEY, key, json.dumps(payload))
     await r.expire(PRESENCE_ONLINE_KEY, PRESENCE_TTL_SECONDS)
+    return key, payload["conn_id"]
 
 
-async def mark_offline(key: str) -> None:
+async def touch(key: str, user_id: Optional[int], session_id: Optional[str], ip: Optional[str]) -> None:
+    """Обновить last_seen. Если ключ пропал (гонка HDEL/HSET при реконнекте)
+    или протух — восстанавливаем: соединение живо, присутствие должно жить."""
     r = await redis_client.get_client()
+    raw = await r.hget(PRESENCE_ONLINE_KEY, key)
+    now = datetime.utcnow().isoformat()
+    if raw is not None:
+        try:
+            payload = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            payload = {}
+        payload["last_seen"] = now
+        await r.hset(PRESENCE_ONLINE_KEY, key, json.dumps(payload))
+    else:
+        payload = _payload(user_id, session_id, ip)
+        payload["last_seen"] = now
+        await r.hset(PRESENCE_ONLINE_KEY, key, json.dumps(payload))
+    await r.expire(PRESENCE_ONLINE_KEY, PRESENCE_TTL_SECONDS)
+
+
+async def mark_offline(key: str, conn_id: Optional[str] = None) -> None:
+    """Снять присутствие. Если conn_id указан и в Redis уже запись другого
+    (нового) соединения того же клиента — не удаляем её."""
+    r = await redis_client.get_client()
+    if conn_id:
+        raw = await r.hget(PRESENCE_ONLINE_KEY, key)
+        if raw is not None:
+            try:
+                payload = json.loads(raw)
+            except (json.JSONDecodeError, TypeError):
+                payload = {}
+            if payload.get("conn_id") != conn_id:
+                return
     await r.hdel(PRESENCE_ONLINE_KEY, key)
 
 

@@ -79,6 +79,7 @@
   "operator": "Оператор",
   "manager": "Менеджер",
   "admin": "Администратор",
+  "anon": "Аноним",
   "phone_placeholder": "+38 (0XX) XXX-XX-XX",
   "order_pending": "Ожидает",
   "order_confirmed": "Подтвержден",
@@ -1043,9 +1044,9 @@
   "monitor_cart_items": "{count, plural, one {# товар} few {# товара} many {# товаров} other {# товара}}",
   "monitor_cart_summary": "Итого",
   "monitor_refreshed": "Данные обновлены",
-  "monitor_email": "Email",
   "monitor_full_name": "ФИО",
   "monitor_delivery_street": "Улица",
   "monitor_delivery_house": "Дом",
-  "monitor_delivery_apartment": "Кв."
+  "monitor_delivery_apartment": "Кв.",
+  "monitor_personal_data": "Личные данные"
 }

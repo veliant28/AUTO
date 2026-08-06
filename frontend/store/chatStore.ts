@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { STORAGE_KEYS } from '@/lib/constants'
+import { wsBaseUrl } from '@/lib/wsUrl'
 
 interface TypingUser {
   userId: number
@@ -40,11 +41,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       } catch {}
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const hostname = window.location.hostname
-    // Same-origin: Next.js dev-прокси (`/api/v1/*` в rewrites) туннелирует
-    // и WebSocket-апгрейды — работает и в docker-деплое, и локально
-    const url = `${protocol}//${hostname}/api/v1/ws/chat?token=${token}`
+    // Тот же бэкенд, что и HTTP API (lib/wsUrl.ts) — браузер ходит напрямую
+    const url = `${wsBaseUrl()}/ws/chat?token=${token}`
 
     const ws = new WebSocket(url)
 

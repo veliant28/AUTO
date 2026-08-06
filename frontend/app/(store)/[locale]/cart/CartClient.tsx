@@ -1,22 +1,37 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, Gift, Check, Loader2 } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { useCartStore } from '@/store/cartStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { toast } from '@/lib/toast';
-import { getBrandColor, getBrandInitial } from '@/lib/brand';
-import api from '@/lib/api';
+import React, { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import {
+  ShoppingCart,
+  Trash2,
+  Minus,
+  Plus,
+  ArrowLeft,
+  Gift,
+  Check,
+  Loader2,
+} from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { useCartStore } from '@/store/cartStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@/components/ui/tooltip'
+import { toast } from '@/lib/toast'
+import { getBrandColor, getBrandInitial } from '@/lib/brand'
+import api from '@/lib/api'
 
-const fmt = (n: number) => new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n);
+const fmt = (n: number) =>
+  new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
 
 function CartSkeleton() {
   return (
@@ -64,49 +79,83 @@ function CartSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function CartPage() {
-  const t = useTranslations('common');
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, replaceItems } = useCartStore();
-  const [mounted, setMounted] = useState(false);
+  const t = useTranslations('common')
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    totalItems,
+    totalPrice,
+    replaceItems,
+  } = useCartStore()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
-  // Migrate old cart items without brand/sku: fetch from catalog API
-  const migrationRun = useRef(false);
+  // Migrate old cart items: без бренда/sku, либо артикул = SKU (баг: в article
+  // попадал URL-параметр, который мог быть SKU). Подтягиваем данные из каталога.
+  const migrationRun = useRef(false)
   useEffect(() => {
-    if (migrationRun.current || items.length === 0) return;
-    const todo = items.filter((i) => (!i.brand || !i.sku) && i.article);
+    if (migrationRun.current || items.length === 0) return
+    const todo = items.filter(
+      (i) =>
+        i.article && (!i.brand || !i.sku || (i.sku && i.article === i.sku)),
+    )
     if (todo.length === 0) {
-      migrationRun.current = true;
-      return;
+      migrationRun.current = true
+      return
     }
     Promise.all(
       todo.map(async (item) => {
         try {
-          const res = await api.get('/catalog/search', { params: { q: item.article, limit: 1 } });
-          const product = Array.isArray(res.data) ? res.data[0] : (res.data as any)?.items?.[0];
-          if (product) return { article: item.article, brand: product.brand, sku: product.sku || null };
+          const res = await api.get('/catalog/search', {
+            params: { q: item.article, limit: 1 },
+          })
+          const product = Array.isArray(res.data)
+            ? res.data[0]
+            : (res.data as any)?.items?.[0]
+          if (product)
+            return {
+              article: item.article,
+              brand: product.brand,
+              sku: product.sku || null,
+              realArticle: product.article || null,
+            }
         } catch {}
-        return null;
-      })
+        return null
+      }),
     ).then((results) => {
-      migrationRun.current = true;
-      const updates = results.filter(Boolean) as { article: string; brand?: string; sku?: string | null }[];
+      migrationRun.current = true
+      const updates = results.filter(Boolean) as {
+        article: string
+        brand?: string
+        sku?: string | null
+        realArticle?: string | null
+      }[]
       if (updates.length > 0) {
         replaceItems(
           items.map((item) => {
-            const found = updates.find((u) => u.article === item.article);
-            return found ? { ...item, brand: found.brand ?? item.brand, sku: found.sku ?? item.sku } : item;
-          })
-        );
+            const found = updates.find((u) => u.article === item.article)
+            return found
+              ? {
+                  ...item,
+                  article: found.realArticle || item.article,
+                  brand: found.brand ?? item.brand,
+                  sku: found.sku ?? item.sku,
+                }
+              : item
+          }),
+        )
       }
-    });
-  }, [items]);
+    })
+  }, [items])
 
   const [promoInput, setPromoInput] = useState('')
   const promocode = useCartStore((s) => s.promocode)
@@ -117,7 +166,11 @@ export default function CartPage() {
     mutationFn: async (code: string) => {
       const { data } = await api.post('/loyalty/validate', {
         code,
-        items: items.map((i) => ({ part_id: i.part_id, price: i.price, quantity: i.quantity })),
+        items: items.map((i) => ({
+          part_id: i.part_id,
+          price: i.price,
+          quantity: i.quantity,
+        })),
       })
       return data
     },
@@ -128,27 +181,42 @@ export default function CartPage() {
         toast.success(t('promo_applied'))
         setPromoInput('')
       } else {
-        toast.info(t(data.message === 'Promocode not found' ? 'promo_not_found' : 
-          data.message === 'Promocode is inactive' ? 'promo_inactive' :
-          data.message === 'Promocode expired' ? 'promo_expired' :
-          data.message === 'Promocode already used' ? 'promo_used' :
-          data.message === 'Promocode belongs to another user' ? 'promo_wrong_user' :
-          data.message))
+        toast.info(
+          t(
+            data.message === 'Promocode not found'
+              ? 'promo_not_found'
+              : data.message === 'Promocode is inactive'
+                ? 'promo_inactive'
+                : data.message === 'Promocode expired'
+                  ? 'promo_expired'
+                  : data.message === 'Promocode already used'
+                    ? 'promo_used'
+                    : data.message === 'Promocode belongs to another user'
+                      ? 'promo_wrong_user'
+                      : data.message,
+          ),
+        )
       }
     },
     onError: (err: any) => {
-      console.error('Promo error:', err?.response?.status, err?.response?.data, err?.message)
+      console.error(
+        'Promo error:',
+        err?.response?.status,
+        err?.response?.data,
+        err?.message,
+      )
       toast.error(t('promo_error'))
     },
   })
 
   if (!mounted) {
-    return <CartSkeleton />;
+    return <CartSkeleton />
   }
 
-  const linkPath = typeof window !== 'undefined'
-    ? (localStorage.getItem('cartReturnPath') || '/')
-    : '/';
+  const linkPath =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('cartReturnPath') || '/'
+      : '/'
 
   if (items.length === 0) {
     return (
@@ -169,7 +237,7 @@ export default function CartPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -179,9 +247,19 @@ export default function CartPage() {
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-7 h-7 text-primary" />
             <h1 className="text-3xl font-bold">{t('cart')}</h1>
-            <Badge variant="secondary" className="text-sm px-1.5">{totalItems()} {t('pcs')}</Badge>
+            <Badge variant="secondary" className="text-sm px-1.5">
+              {totalItems()} {t('pcs')}
+            </Badge>
           </div>
-          <Button variant="outline" size="lg" className="gap-2" onClick={() => { clearCart(); toast.info(t('cart_cleared')); }}>
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-2"
+            onClick={() => {
+              clearCart()
+              toast.info(t('cart_cleared'))
+            }}
+          >
             <Trash2 className="w-4 h-4" /> {t('clear_cart')}
           </Button>
         </div>
@@ -189,33 +267,42 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => {
-              const itemTotalPrice = (item.price || 0) * item.quantity;
+              const itemTotalPrice = (item.price || 0) * item.quantity
 
               const handleDecrease = () => {
                 if (item.quantity <= 1) {
-                  removeItem(item.id);
-                  toast.success(t('removed_from_cart'));
+                  removeItem(item.id)
+                  toast.success(t('removed_from_cart'))
                 } else {
-                  updateQuantity(item.id, item.quantity - 1);
-                  toast.success(t('quantity_updated'));
+                  updateQuantity(item.id, item.quantity - 1)
+                  toast.success(t('quantity_updated'))
                 }
-              };
+              }
 
               const handleIncrease = () => {
-                updateQuantity(item.id, item.quantity + 1);
-                toast.success(t('quantity_updated'));
-              };
+                updateQuantity(item.id, item.quantity + 1)
+                toast.success(t('quantity_updated'))
+              }
 
               const handleRemove = () => {
-                removeItem(item.id);
-                toast.success(t('removed_from_cart'));
-              };
+                removeItem(item.id)
+                toast.success(t('removed_from_cart'))
+              }
 
               return (
-                <div key={item.id} className="flex gap-4 p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors">
-                  <div className={`aspect-square w-[120px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(item.brand)}`}>
+                <div
+                  key={item.id}
+                  className="flex gap-4 p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+                >
+                  <div
+                    className={`aspect-square w-[120px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center bg-gradient-to-br ${getBrandColor(item.brand)}`}
+                  >
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.part_name} className="absolute inset-0 w-full h-full object-cover" />
+                      <img
+                        src={item.image_url}
+                        alt={item.part_name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                     ) : (
                       <span className="text-4xl font-bold text-white/40 select-none">
                         {getBrandInitial(item.brand)}
@@ -226,29 +313,47 @@ export default function CartPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          {item.supplier_name && (
-                            <Badge variant="secondary" className="text-sm px-1.5">{item.supplier_name}</Badge>
+                          {item.brand && (
+                            <Badge
+                              variant="secondary"
+                              className="text-sm px-1.5"
+                            >
+                              {item.brand}
+                            </Badge>
                           )}
-                          <span className="text-sm font-mono text-muted-foreground">{item.article}</span>
+                          <span className="text-sm font-mono text-muted-foreground">
+                            {item.article}
+                          </span>
                         </div>
-                        <p className="font-medium text-sm line-clamp-2">{item.part_name}</p>
+                        <p className="font-medium text-sm line-clamp-2">
+                          {item.part_name}
+                        </p>
                       </div>
                       <div className="flex items-center shrink-0">
                         {item.sku && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge className="bg-blue-500 text-white border-0 text-sm px-1.5 cursor-pointer mr-10">{item.sku}</Badge>
+                              <Badge className="bg-blue-500 text-white border-0 text-sm px-1.5 cursor-pointer mr-10">
+                                {item.sku}
+                              </Badge>
                             </TooltipTrigger>
                             <TooltipContent>{t('sku')}</TooltipContent>
                           </Tooltip>
                         )}
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="destructive" size="icon" className="h-10 w-10 shrink-0" onClick={handleRemove}>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="h-10 w-10 shrink-0"
+                              onClick={handleRemove}
+                            >
                               <Trash2 className="w-5 h-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">{t('remove')}</TooltipContent>
+                          <TooltipContent side="bottom">
+                            {t('remove')}
+                          </TooltipContent>
                         </Tooltip>
                       </div>
                     </div>
@@ -257,23 +362,41 @@ export default function CartPage() {
                       <div className="flex items-center gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={handleDecrease}>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={handleDecrease}
+                            >
                               <Minus className="w-3.5 h-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">{t('decrease_quantity')}</TooltipContent>
+                          <TooltipContent side="bottom">
+                            {t('decrease_quantity')}
+                          </TooltipContent>
                         </Tooltip>
-                        <span className="w-8 text-center font-medium tabular-nums">{item.quantity}</span>
+                        <span className="w-8 text-center font-medium tabular-nums">
+                          {item.quantity}
+                        </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={handleIncrease}>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={handleIncrease}
+                            >
                               <Plus className="w-3.5 h-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom">{t('increase_quantity')}</TooltipContent>
+                          <TooltipContent side="bottom">
+                            {t('increase_quantity')}
+                          </TooltipContent>
                         </Tooltip>
                         {item.price && (
-                          <span className="text-sm text-muted-foreground ml-2">× {fmt(item.price)} ₴</span>
+                          <span className="text-sm text-muted-foreground ml-2">
+                            × {fmt(item.price)} ₴
+                          </span>
                         )}
                       </div>
                       <p className="font-semibold text-base">
@@ -282,7 +405,7 @@ export default function CartPage() {
                     </div>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
 
@@ -292,18 +415,28 @@ export default function CartPage() {
               <Separator />
               <div className="space-y-2 text-base">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('items_label')}</span>
-                  <span className="font-medium">{totalItems()} {t('pcs')}</span>
+                  <span className="text-muted-foreground">
+                    {t('items_label')}
+                  </span>
+                  <span className="font-medium">
+                    {totalItems()} {t('pcs')}
+                  </span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>{t('discount_label')}</span>
-                    <span className="font-semibold">-{fmt(discountAmount)} ₴</span>
+                    <span className="font-semibold">
+                      -{fmt(discountAmount)} ₴
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('total_label')}:</span>
-                  <span className="font-bold text-2xl">{fmt(totalPrice())} ₴</span>
+                  <span className="text-muted-foreground">
+                    {t('total_label')}:
+                  </span>
+                  <span className="font-bold text-2xl">
+                    {fmt(totalPrice())} ₴
+                  </span>
                 </div>
               </div>
               {!promocode ? (
@@ -312,7 +445,9 @@ export default function CartPage() {
                     placeholder={t('promo_placeholder')}
                     value={promoInput}
                     maxLength={10}
-                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setPromoInput(e.target.value.toUpperCase())
+                    }
                     className="h-10 text-sm uppercase"
                   />
                   <Tooltip>
@@ -321,7 +456,9 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="h-10 w-10 shrink-0"
-                        disabled={promoInput.length < 10 || applyPromo.isPending}
+                        disabled={
+                          promoInput.length < 10 || applyPromo.isPending
+                        }
                         onClick={() => applyPromo.mutate(promoInput)}
                       >
                         {applyPromo.isPending ? (
@@ -338,7 +475,9 @@ export default function CartPage() {
                 <div className="flex gap-2">
                   <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm">
                     <Check className="w-4 h-4 text-green-600 shrink-0 mr-2" />
-                    <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">{promocode}</span>
+                    <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">
+                      {promocode}
+                    </span>
                   </div>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -357,7 +496,11 @@ export default function CartPage() {
               )}
               <Separator />
               <Separator />
-              <Button className="w-full gap-2 bg-green-500 text-white hover:bg-green-600" size="lg" asChild>
+              <Button
+                className="w-full gap-2 bg-green-500 text-white hover:bg-green-600"
+                size="lg"
+                asChild
+              >
                 <Link href="/checkout">{t('checkout')}</Link>
               </Button>
               <Link href={linkPath} className="block">
@@ -370,5 +513,5 @@ export default function CartPage() {
         </div>
       </div>
     </TooltipProvider>
-  );
+  )
 }

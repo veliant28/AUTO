@@ -6,11 +6,14 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, case, func
 
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
-from app.models import User, Role, SiteSettings, Part, SupplierOffer, Supplier, CartItem
+from app.models import (
+    User, Role, SiteSettings, Part, SupplierOffer, Supplier, CartItem,
+    Order, OrderStatus, ReturnRequest, ReturnStatus,
+)
 from app.models.presence import PresenceSession, ProductView
 from app.services import presence_service
 from app.schemas.monitor_schemas import (
@@ -133,6 +136,36 @@ def _group_of(user_id: Optional[int], user_map: Dict[int, Dict]) -> str:
     info = user_map.get(user_id)
     role = info["role"] if info else None
     return role if role in presence_service.REGISTERED_GROUPS else "anon"
+
+
+def _client_success_stats(db: Session, user_id: int) -> Tuple[int, int]:
+    """Индекс успешности клиента + число заказов (как в admin/users.py).
+
+    success_index = доля «удержанной» выручки: (доставлено − возвраты) / всего.
+    """
+    delivered_total, cancelled_total, delivered_count, cancelled_count = db.query(
+        func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)),
+        func.sum(case((Order.status == OrderStatus.CANCELLED, Order.total), else_=0)),
+        func.sum(case((Order.status == OrderStatus.DELIVERED, 1), else_=0)),
+        func.sum(case((Order.status == OrderStatus.CANCELLED, 1), else_=0)),
+    ).filter(Order.user_id == user_id).one()
+    delivered_total = float(delivered_total or 0)
+    cancelled_total = float(cancelled_total or 0)
+    total_orders = int((delivered_count or 0) + (cancelled_count or 0))
+    refunded = (
+        db.query(func.sum(ReturnRequest.total_refund))
+        .filter(
+            ReturnRequest.user_id == user_id,
+            ReturnRequest.status == ReturnStatus.COMPLETED,
+        )
+        .scalar()
+        or 0
+    )
+    total_value = delivered_total + cancelled_total
+    if total_value == 0:
+        return 0, total_orders
+    retained = max(delivered_total - float(refunded), 0)
+    return round((retained / total_value) * 100), total_orders
 
 
 def _session_client_key(row: PresenceSession) -> Optional[str]:
@@ -379,6 +412,9 @@ def _load_profile(db: Session, client_key: str) -> Tuple[Dict, Optional[User]]:
         "client_id": client_key,
         "is_anonymous": user is None,
         "name": _display_name(user) if user else None,
+        "last_name": user.last_name if user else None,
+        "first_name": user.first_name if user else None,
+        "middle_name": user.middle_name if user else None,
         "email": user.email if user else None,
         "phone": user.phone if user else None,
         "role": user.role.name if user and user.role else None,
@@ -388,7 +424,13 @@ def _load_profile(db: Session, client_key: str) -> Tuple[Dict, Optional[User]]:
         "last_seen": (last.last_seen or last.first_seen).isoformat() if last else None,
         "ip": last.ip if last else None,
         "delivery": None,
+        "success_index": None,
+        "total_orders": None,
     }
+    if user:
+        info["success_index"], info["total_orders"] = _client_success_stats(
+            db, user.id
+        )
     if user:
         info["delivery"] = {
             "delivery_type": user.delivery_type,

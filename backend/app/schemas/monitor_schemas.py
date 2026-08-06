@@ -61,6 +61,9 @@ class MonitorProfile(BaseModel):
     client_id: str
     is_anonymous: bool
     name: Optional[str]
+    last_name: Optional[str]
+    first_name: Optional[str]
+    middle_name: Optional[str]
     email: Optional[str]
     phone: Optional[str]
     role: Optional[str]
@@ -70,6 +73,8 @@ class MonitorProfile(BaseModel):
     last_seen: Optional[str]
     ip: Optional[str]
     delivery: Optional[MonitorDelivery]
+    success_index: Optional[int]
+    total_orders: Optional[int]
 
 
 class MonitorViewItem(BaseModel):

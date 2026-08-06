@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
@@ -11,6 +12,24 @@ from app.services import presence_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Серверный keepalive: интервал продления присутствия, пока WS жив.
+PRESENCE_KEEPALIVE_SECONDS = 30
+
+
+async def _presence_keepalive(websocket: WebSocket, key: str, user_id, session_id, client_ip) -> None:
+    """Продлевает присутствие в Redis, пока соединение открыто.
+
+    Браузер отвечает на protocol-ping автоматически (без JS-таймеров),
+    поэтому фоновая вкладка с троттлингом heartbeat'ов не «умирает»:
+    живо соединение — живо присутствие.
+    """
+    try:
+        while True:
+            await asyncio.sleep(PRESENCE_KEEPALIVE_SECONDS)
+            await presence_service.touch(key, user_id, session_id, client_ip)
+    except asyncio.CancelledError:
+        pass
 
 
 def _get_client_ip(websocket: WebSocket) -> str | None:
@@ -47,7 +66,13 @@ async def websocket_presence(
     Клиент шлёт {"type": "heartbeat"} каждые ~30 сек — сообщения не лимитируются
     ProtectionMiddleware (он не перехватывает WS), но бан проверяется и на
     подключении, и в каждом heartbeat.
+
+    Соединение принимаем сразу, а отклонения отправляем close-фреймом
+    (4001/4403 с причиной) — иначе браузер видит провал рукопожатия (код 1006
+    без reason) и не может отличить «токен невалиден» от обрыва сети.
     """
+    await websocket.accept()
+
     user_id = None
     if token:
         try:
@@ -65,24 +90,26 @@ async def websocket_presence(
 
     client_ip = _get_client_ip(websocket)
 
-    # Проверка бана и валидности аккаунта до подключения (middleware WS не защищает)
+    # Проверка бана и валидности аккаунта до регистрации присутствия
     db: Session = next(get_db())
     try:
         error = _identity_error(db, client_ip, user_id)
         if error:
             await websocket.close(code=4403 if error == "Banned" else 4001, reason=error)
             return
-        key = await presence_service.mark_online(user_id, session_id, client_ip)
+        online = await presence_service.mark_online(user_id, session_id, client_ip)
         session_row = presence_service.create_session(db, user_id, session_id, client_ip)
     finally:
         db.close()
 
-    if not key:
+    if not online:
         await websocket.close(code=4001, reason="Missing identity")
         return
+    key, conn_id = online
 
-    await websocket.accept()
-
+    keepalive_task = asyncio.create_task(
+        _presence_keepalive(websocket, key, user_id, session_id, client_ip)
+    )
     try:
         while True:
             raw = await websocket.receive_text()
@@ -102,13 +129,14 @@ async def websocket_presence(
                     return
             finally:
                 db.close()
-            await presence_service.touch(key)
+            await presence_service.touch(key, user_id, session_id, client_ip)
     except WebSocketDisconnect:
         pass
     except Exception as e:
         logger.error(f"Presence websocket error: {e}")
     finally:
-        await presence_service.mark_offline(key)
+        keepalive_task.cancel()
+        await presence_service.mark_offline(key, conn_id)
         db = next(get_db())
         try:
             presence_service.close_session(db, session_row.id)

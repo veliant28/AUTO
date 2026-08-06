@@ -79,6 +79,7 @@
   "operator": "Operator",
   "manager": "Manager",
   "admin": "Administrator",
+  "anon": "Anonymous",
   "phone_placeholder": "+38 (0XX) XXX-XX-XX",
   "order_pending": "Pending",
   "order_confirmed": "Confirmed",
@@ -1043,9 +1044,9 @@
   "monitor_cart_items": "{count, plural, one {# item} other {# items}}",
   "monitor_cart_summary": "Total",
   "monitor_refreshed": "Data refreshed",
-  "monitor_email": "Email",
   "monitor_full_name": "Full name",
   "monitor_delivery_street": "Street",
   "monitor_delivery_house": "House",
-  "monitor_delivery_apartment": "Apt."
+  "monitor_delivery_apartment": "Apt.",
+  "monitor_personal_data": "Personal data"
 }
