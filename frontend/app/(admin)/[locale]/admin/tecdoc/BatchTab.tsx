@@ -38,6 +38,7 @@ import api from '@/lib/api'
 import { ArticleItem } from './tecdocHelpers'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 export default function BatchTab({
   t,
@@ -46,6 +47,7 @@ export default function BatchTab({
 }) {
   const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
+  const reqPerm = useRequirePerm()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [status, setStatus] = useState('')
@@ -220,7 +222,10 @@ export default function BatchTab({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => batchStart.mutate()}
+                onClick={() => {
+                  if (!reqPerm('tecdoc.sync')) return
+                  batchStart.mutate()
+                }}
                 disabled={batchStart.isPending}
               >
                 {batchStart.isPending ? (
@@ -262,7 +267,10 @@ export default function BatchTab({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => batchStartSelected.mutate()}
+                onClick={() => {
+                  if (!reqPerm('tecdoc.sync')) return
+                  batchStartSelected.mutate()
+                }}
                 disabled={batchStartSelected.isPending || selected.size === 0}
               >
                 {batchStartSelected.isPending ? (

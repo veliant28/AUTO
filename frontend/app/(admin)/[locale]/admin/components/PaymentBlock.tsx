@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
@@ -52,6 +53,7 @@ export default function PaymentBlock({
   paymentMethod: string
 }) {
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
 
   const {
     data: tx,
@@ -66,6 +68,7 @@ export default function PaymentBlock({
   const [initLoading, setInitLoading] = useState<string | null>(null)
 
   const handleCancelInvoice = async () => {
+    if (!reqPerm('payments.view')) return
     try {
       await cancelInvoice(orderId)
       toast.success('Инвойс отозван')
@@ -77,6 +80,7 @@ export default function PaymentBlock({
   }
 
   const handleInitPayment = async (method: string) => {
+    if (!reqPerm('payments.view')) return
     setInitLoading(method)
     try {
       const result = await initPayment(orderId, method)

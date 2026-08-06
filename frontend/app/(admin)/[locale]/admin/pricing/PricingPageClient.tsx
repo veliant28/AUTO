@@ -46,6 +46,7 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useTheme } from '@wrksz/themes/client'
 import * as echarts from 'echarts'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 interface CategoryRule {
   category_id: number
@@ -99,6 +100,7 @@ function EChart({
 
 export default function PricingPageClient() {
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const timezone = useTimezoneStore((s) => s.timezone)
   const tc = useTranslations('common')
   const queryClient = useQueryClient()
@@ -261,8 +263,14 @@ export default function PricingPageClient() {
   })
 
   useEffect(() => {
-    ;(window as any).__applyPricing = () => applyMargins.mutate()
-    ;(window as any).__savePricing = () => saveAll.mutate()
+    ;(window as any).__applyPricing = () => {
+      if (!reqPerm('pricing.apply')) return
+      applyMargins.mutate()
+    }
+    ;(window as any).__savePricing = () => {
+      if (!reqPerm('pricing.edit')) return
+      saveAll.mutate()
+    }
     ;(window as any).__pricingTaskStatus = taskStatus
     ;(window as any).__pricingOtpDigits = otpDigits
     ;(window as any).__pricingSetGeneralMargin = setGeneralMargin

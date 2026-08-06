@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 export default function ManualTab({ t }: { t: (k: string) => string }) {
   const [article, setArticle] = useState('')
@@ -32,6 +33,7 @@ export default function ManualTab({ t }: { t: (k: string) => string }) {
   )
   const [brandFilter, setBrandFilter] = useState('')
   const [modelFilter, setModelFilter] = useState('')
+  const reqPerm = useRequirePerm()
 
   const doSearch = async () => {
     if (!article.trim()) return
@@ -251,7 +253,10 @@ export default function ManualTab({ t }: { t: (k: string) => string }) {
                       <div
                         key={item.id}
                         className="flex items-center justify-between p-2 hover:bg-muted/30 border-b last:border-0 text-xs cursor-pointer"
-                        onClick={() => doBind(item.id)}
+                        onClick={() => {
+                          if (!reqPerm('tecdoc.sync')) return
+                          doBind(item.id)
+                        }}
                       >
                         <span>
                           {item.article} · {item.brand || '—'} ·{' '}

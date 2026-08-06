@@ -69,6 +69,7 @@ import {
   getReceiptLink as getCheckboxReceiptLink,
 } from '@/lib/api/checkbox'
 import { useAuthStore } from '@/store/authStore'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
@@ -196,6 +197,7 @@ export default function OrderDetailModal({
   const t = useTranslations('admin')
   const queryClient = useQueryClient()
   const timezone = useTimezoneStore((s) => s.timezone)
+  const reqPerm = useRequirePerm()
 
   const [editMode, setEditMode] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -752,9 +754,11 @@ export default function OrderDetailModal({
                                             variant="destructive"
                                             size="icon"
                                             className="shrink-0"
-                                            onClick={() =>
+                                            onClick={() => {
+                                              if (!reqPerm('orders.delete'))
+                                                return
                                               deleteItemMutation.mutate(item.id)
-                                            }
+                                            }}
                                             disabled={
                                               deleteItemMutation.isPending
                                             }
@@ -1467,6 +1471,7 @@ export default function OrderDetailModal({
                         variant="outline"
                         className="gap-1.5"
                         onClick={async () => {
+                          if (!reqPerm('checkbox.view')) return
                           try {
                             const receipt = await getCheckboxReceipt(
                               orderDetail!.id,

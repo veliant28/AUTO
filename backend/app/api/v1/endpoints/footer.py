@@ -5,7 +5,7 @@ from app.core.db import get_db
 from app.models.footer import FooterContent
 from app.models import User
 from app.schemas.footer_schemas import FooterResponse, FooterUpdate
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 
 router = APIRouter()
 
@@ -22,13 +22,13 @@ async def get_footer(locale: str = "ru", db: Session = Depends(get_db)):
     return FooterResponse(locale=entry.locale, data=entry.data)
 
 @router.get("/admin/footer", response_model=List[FooterResponse])
-async def get_all_footer(current_user: User = Depends(require_role("admin")), db: Session = Depends(get_db)):
+async def get_all_footer(current_user: User = Depends(require_permission("footer.edit")), db: Session = Depends(get_db)):
     """Получить содержимое подвала для всех локалей."""
     entries = db.query(FooterContent).all()
     return [FooterResponse(locale=e.locale, data=e.data) for e in entries]
 
 @router.put("/admin/footer/{locale}", response_model=FooterResponse)
-async def update_footer(locale: str, body: FooterUpdate, current_user: User = Depends(require_role("admin")), db: Session = Depends(get_db)):
+async def update_footer(locale: str, body: FooterUpdate, current_user: User = Depends(require_permission("footer.edit")), db: Session = Depends(get_db)):
     """Обновить содержимое подвала для указанной локали."""
     if locale not in LOCALES:
         raise HTTPException(400, f"Invalid locale: {locale}")

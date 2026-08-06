@@ -17,6 +17,7 @@ from app.schemas.auth_schemas import (
 )
 from app.models import User, Role, PasswordReset, OAuthAccount
 from app.models.protection import BanRecord, Whitelist, ProtectionEvent
+from app.services.permission_service import role_permission_codenames
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +110,7 @@ async def register(data: RegisterSchema, request: Request, db: Session = Depends
     db.commit()
     db.refresh(user)
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=data.email)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), permissions=role_permission_codenames(db, user.role_id), avatar_index=user.avatar_index, email=data.email)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -162,7 +163,7 @@ async def login(data: LoginSchema, request: Request, db: Session = Depends(get_d
         db.commit()
         raise HTTPException(401, "Invalid credentials")
     access_token = create_token(user.id)
-    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), avatar_index=user.avatar_index, email=data.email)
+    return TokenResponse(access_token=access_token, user_id=user.id, role=get_user_role(user), permissions=role_permission_codenames(db, user.role_id), avatar_index=user.avatar_index, email=data.email)
 
 
 @router.post("/forgot-password")

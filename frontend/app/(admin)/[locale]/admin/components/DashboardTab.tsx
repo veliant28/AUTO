@@ -1,4 +1,5 @@
 'use client'
+import { can } from '@/lib/permissions'
 
 import React, { useEffect, useRef, useState } from 'react'
 import {
@@ -138,7 +139,7 @@ export default function DashboardTab() {
       const { data } = await api.get('/admin/dashboard', { params })
       return data
     },
-    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    enabled: can(user, 'dashboard.view'),
     refetchInterval: 30000,
   })
 
@@ -150,7 +151,7 @@ export default function DashboardTab() {
       })
       return data
     },
-    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    enabled: can(user, 'dashboard.view'),
     refetchInterval: 30000,
   })
   const orders = ordersData?.items || []

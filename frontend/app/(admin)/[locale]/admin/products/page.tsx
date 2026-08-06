@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
@@ -306,6 +308,7 @@ function AddToOrderDropdown({
 export default function AdminProductsPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
@@ -400,7 +403,7 @@ export default function AdminProductsPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'products.view')) return null
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0
 
@@ -647,7 +650,10 @@ export default function AdminProductsPage() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => openEdit(item)}
+                                  onClick={() => {
+                                    if (!reqPerm('products.edit')) return
+                                    openEdit(item)
+                                  }}
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </Button>
@@ -659,7 +665,10 @@ export default function AdminProductsPage() {
                                 <Button
                                   variant="destructive"
                                   size="icon"
-                                  onClick={() => setDeleteTarget(item)}
+                                  onClick={() => {
+                                    if (!reqPerm('products.delete')) return
+                                    setDeleteTarget(item)
+                                  }}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -934,9 +943,10 @@ export default function AdminProductsPage() {
             </Button>
             <Button
               className="gap-2"
-              onClick={() =>
+              onClick={() => {
+                if (!reqPerm('products.edit')) return
                 updateMutation.mutate({ id: editProduct.id, data: editForm })
-              }
+              }}
               disabled={updateMutation.isPending}
             >
               {updateMutation.isPending ? (

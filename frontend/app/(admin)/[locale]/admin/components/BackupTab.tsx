@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
@@ -177,6 +179,7 @@ interface BackupRecord {
 
 export default function BackupTab() {
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const timezone = useTimezoneStore((s) => s.timezone)
   const { user, isAuthenticated } = useAuthStore()
   const { resolvedTheme } = useTheme()
@@ -197,7 +200,7 @@ export default function BackupTab() {
       const { data } = await api.get('/admin/backups')
       return data
     },
-    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    enabled: can(user, 'backup.view'),
     refetchInterval: 10000,
   })
 
@@ -208,7 +211,7 @@ export default function BackupTab() {
       const { data } = await api.get('/admin/backups/config')
       return data
     },
-    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    enabled: can(user, 'backup.view'),
   })
 
   useEffect(() => {
@@ -221,9 +224,11 @@ export default function BackupTab() {
   useEffect(() => {
     const win = window as any
     win.__triggerBackup = () => {
+      if (!reqPerm('backup.run')) return
       runBackupMutation.mutate()
     }
     win.__saveBackupConfig = () => {
+      if (!reqPerm('backup.config')) return
       saveConfigMutation.mutate({ run_at_time: backupTime })
     }
     win.__setBackupTime = (t: string) => setBackupTime(t)
@@ -274,6 +279,7 @@ export default function BackupTab() {
   // Download backup with auth
   const downloadBackup = useCallback(
     async (id: number, filename: string) => {
+      if (!reqPerm('backup.download')) return
       try {
         const response = await api.get(`/admin/backups/${id}/download`, {
           responseType: 'blob',
@@ -423,7 +429,7 @@ export default function BackupTab() {
     ],
   }
 
-  if (!user || !['admin', 'manager'].includes(user?.role ?? '')) return null
+  if (!can(user, 'backup.view')) return null
 
   return (
     <div className="space-y-6">
@@ -553,7 +559,10 @@ export default function BackupTab() {
                                   <Button
                                     variant="destructive"
                                     size="icon"
-                                    onClick={() => setDeleteTarget(rec)}
+                                    onClick={() => {
+                                      if (!reqPerm('backup.delete')) return
+                                      setDeleteTarget(rec)
+                                    }}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>

@@ -1,4 +1,5 @@
 'use client'
+import { can } from '@/lib/permissions'
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
@@ -130,7 +131,7 @@ export function StaffPageContent() {
       const { data } = await api.get('/admin/staff/stats', { params })
       return data
     },
-    enabled: isAuthenticated && ['admin', 'manager'].includes(user?.role ?? ''),
+    enabled: can(user, 'staff.view'),
     refetchInterval: 30000,
   })
 

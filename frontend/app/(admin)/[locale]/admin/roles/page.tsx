@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
@@ -62,14 +64,10 @@ interface Role {
 
 const columnHelper = createColumnHelper<Role>()
 
-function hasRole(user: { role: string } | null, ...roles: string[]) {
-  if (!user) return false
-  return roles.includes(user.role)
-}
-
 export default function AdminRolesPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
   const [editRole, setEditRole] = useState<Role | null>(null)
@@ -265,7 +263,7 @@ export default function AdminRolesPage() {
     getCoreRowModel: getCoreRowModel(),
   })
 
-  if (!hasRole(user, 'admin')) {
+  if (!can(user, 'roles.view')) {
     return null
   }
 
@@ -338,7 +336,10 @@ export default function AdminRolesPage() {
             </div>
             <Button
               className="w-full"
-              onClick={() => createMutation.mutate(form)}
+              onClick={() => {
+                if (!reqPerm('roles.create')) return
+                createMutation.mutate(form)
+              }}
               disabled={createMutation.isPending || !form.name}
             >
               {createMutation.isPending ? (
@@ -472,9 +473,10 @@ export default function AdminRolesPage() {
               </div>
               <Button
                 className="w-full"
-                onClick={() =>
+                onClick={() => {
+                  if (!reqPerm('roles.edit')) return
                   updateMutation.mutate({ id: editRole.id, payload: form })
-                }
+                }}
                 disabled={updateMutation.isPending || !form.name}
               >
                 {updateMutation.isPending ? (
@@ -530,7 +532,10 @@ export default function AdminRolesPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate(deleteTarget!.id)}
+              onClick={() => {
+                if (!reqPerm('roles.delete')) return
+                deleteMutation.mutate(deleteTarget!.id)
+              }}
               disabled={
                 deleteMutation.isPending || (deleteTarget?.is_system ?? false)
               }

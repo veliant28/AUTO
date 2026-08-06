@@ -62,6 +62,8 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import api from '@/lib/api'
 import { toast } from '@/lib/toast'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getAvatarUrl, getInitials } from '@/lib/avatar'
@@ -119,12 +121,20 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     isAdmin && (searchParams.get('tab') || 'dashboard') === 'staff'
 
   const adminTabs = [
-    { key: 'dashboard', label: ta('workers_tab_dashboard') },
-    { key: 'monitor', label: ta('monitor_title') },
-    { key: 'staff', label: ta('staff_title') },
-    { key: 'protection', label: ta('protection_title') },
-    { key: 'backup', label: ta('backup_title') },
-    { key: 'workers', label: ta('workers_title') },
+    {
+      key: 'dashboard',
+      label: ta('workers_tab_dashboard'),
+      perm: 'dashboard.view',
+    },
+    { key: 'monitor', label: ta('monitor_title'), perm: 'monitor.view' },
+    { key: 'staff', label: ta('staff_title'), perm: 'staff.view' },
+    {
+      key: 'protection',
+      label: ta('protection_title'),
+      perm: 'protection.view',
+    },
+    { key: 'backup', label: ta('backup_title'), perm: 'backup.view' },
+    { key: 'workers', label: ta('workers_title'), perm: 'workers.view' },
   ]
 
   const pageMeta: Record<string, { icon: any; titleKey: string }> = {
@@ -164,6 +174,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     null,
   )
   const [refreshing, setRefreshing] = useState(false)
+  const reqPerm = useRequirePerm()
   const [restartDialogOpen, setRestartDialogOpen] = useState(false)
   const [restartCounts, setRestartCounts] = useState({ active: 0, reserved: 0 })
   useEffect(() => {
@@ -415,28 +426,30 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             )
           })}
         {isAdmin &&
-          adminTabs.map((t) => {
-            const active = (searchParams.get('tab') || 'dashboard') === t.key
-            return (
-              <button
-                key={t.key}
-                onClick={() => {
-                  const params = new URLSearchParams(searchParams.toString())
-                  params.set('tab', t.key)
-                  router.replace(`${pathname}?${params.toString()}`, {
-                    scroll: false,
-                  })
-                }}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-                  active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-              >
-                {t.label.toUpperCase()}
-              </button>
-            )
-          })}
+          adminTabs
+            .filter((tb) => can(user, tb.perm))
+            .map((t) => {
+              const active = (searchParams.get('tab') || 'dashboard') === t.key
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams.toString())
+                    params.set('tab', t.key)
+                    router.replace(`${pathname}?${params.toString()}`, {
+                      scroll: false,
+                    })
+                  }}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {t.label.toUpperCase()}
+                </button>
+              )
+            })}
         {isFooter &&
           LOCALES.map((loc) => (
             <button
@@ -1238,6 +1251,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <Button
               variant="destructive"
               onClick={() => {
+                if (!reqPerm('workers.restart')) return
                 setRestartDialogOpen(false)
                 restartMutation.mutate()
               }}
@@ -1287,7 +1301,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!hasRole(user, 'admin', 'manager')) {
+  if (!hasRole(user, 'admin', 'manager', 'operator')) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/10 p-6">
         <Card className="max-w-md w-full">
@@ -1315,109 +1329,109 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       href: '/admin',
       icon: LayoutDashboard,
       label: t('dashboard_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'dashboard.view',
     },
     {
       href: '/admin/orders',
       icon: ShoppingCart,
       label: t('orders_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'orders.view',
     },
     {
       href: '/admin/loyalty',
       icon: Gift,
       label: t('loyalty_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'loyalty.view',
     },
     {
       href: '/admin/waybills',
       icon: ScanBarcode,
       label: t('waybills_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'waybills.view',
     },
     {
       href: '/admin/support',
       icon: MessageSquare,
       label: t('support_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'support.view',
     },
     {
       href: '/admin/products',
       icon: Package,
       label: t('products_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'products.view',
     },
     {
       href: '/admin/brands',
       icon: Tag,
       label: t('brands_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'brands.view',
     },
     {
       href: '/admin/categories',
       icon: FolderTree,
       label: t('categories_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'categories.view',
     },
     {
       href: '/admin/catalog',
       icon: Car,
       label: t('catalog_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'catalog.view',
     },
     {
       href: '/admin/pricing',
       icon: TrendingUp,
       label: t('pricing_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'pricing.view',
     },
     {
       href: '/admin/users',
       icon: Users,
       label: t('users_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'users.view',
     },
     {
       href: '/admin/roles',
       icon: Shield,
       label: t('roles_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'roles.view',
     },
     {
       href: '/admin/tecdoc',
       icon: Database,
       label: t('tecdoc_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'tecdoc.view',
     },
     {
       href: '/admin/import',
       icon: FileDown,
       label: t('import_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'imports.view',
     },
     {
       href: '/admin/settings',
       icon: Settings,
       label: t('settings_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'settings.edit',
     },
     {
       href: '/admin/suppliers',
       icon: Truck,
       label: t('suppliers_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'suppliers.view',
     },
     {
       href: '/admin/protection',
       icon: ShieldAlert,
       label: t('protection_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'protection.view',
     },
     {
       href: '/admin/footer',
       icon: FileText,
       label: t('footer_title'),
-      roles: ['admin', 'manager', 'operator'],
+      perm: 'footer.edit',
     },
   ]
 
@@ -1459,7 +1473,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
         <nav className="flex flex-col gap-1 p-4">
           {navItems
-            .filter((item) => hasRole(user, ...item.roles))
+            .filter((item) => can(user, item.perm))
             .map((item) => {
               const isActive =
                 item.href === '/admin'

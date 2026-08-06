@@ -32,6 +32,7 @@ import {
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 interface Category {
   id: number
@@ -46,6 +47,7 @@ const columnHelper = createColumnHelper<Category>()
 export default function CategoriesPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const [hydrated, setHydrated] = useState(false)
 
@@ -310,7 +312,10 @@ export default function CategoriesPage() {
               {t('cancel')}
             </Button>
             <Button
-              onClick={() => createMutation.mutate(form)}
+              onClick={() => {
+                if (!reqPerm('categories.create')) return
+                createMutation.mutate(form)
+              }}
               disabled={createMutation.isPending || !form.name}
             >
               {createMutation.isPending ? (
@@ -518,9 +523,10 @@ export default function CategoriesPage() {
                 {t('cancel')}
               </Button>
               <Button
-                onClick={() =>
+                onClick={() => {
+                  if (!reqPerm('categories.edit')) return
                   updateMutation.mutate({ id: editTarget.id, payload: form })
-                }
+                }}
                 disabled={updateMutation.isPending || !form.name}
               >
                 {updateMutation.isPending ? (
@@ -570,7 +576,10 @@ export default function CategoriesPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate(deleteTarget!.id)}
+              onClick={() => {
+                if (!reqPerm('categories.delete')) return
+                deleteMutation.mutate(deleteTarget!.id)
+              }}
               disabled={deleteMutation.isPending}
               className="gap-2"
             >

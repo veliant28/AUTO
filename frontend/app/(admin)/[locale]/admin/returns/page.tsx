@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
@@ -200,6 +202,7 @@ function formatPhone(phone: string | null | undefined): string {
 export default function AdminReturnsPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
@@ -242,7 +245,7 @@ export default function AdminReturnsPage() {
         page_size: number
       }
     },
-    enabled: !!user && ['admin', 'manager', 'operator'].includes(user.role),
+    enabled: can(user, 'returns.view'),
   })
 
   const {
@@ -630,7 +633,10 @@ export default function AdminReturnsPage() {
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => setDeleteTarget(row.original)}
+                  onClick={() => {
+                    if (!reqPerm('returns.delete')) return
+                    setDeleteTarget(row.original)
+                  }}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -661,7 +667,7 @@ export default function AdminReturnsPage() {
     pageCount: Math.ceil((data?.total || 0) / 20),
   })
 
-  if (!user || !['admin', 'manager', 'operator'].includes(user.role)) {
+  if (!can(user, 'returns.view')) {
     return null
   }
 
@@ -1412,7 +1418,10 @@ export default function AdminReturnsPage() {
                         <Button
                           variant="outline"
                           className="gap-2"
-                          onClick={enterEditMode}
+                          onClick={() => {
+                            if (!reqPerm('returns.edit')) return
+                            enterEditMode()
+                          }}
                         >
                           <Pencil className="w-4 h-4" /> {t('edit_order')}
                         </Button>

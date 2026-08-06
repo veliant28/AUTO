@@ -11,6 +11,7 @@ class UserCreate(UserBase):
 class UserSchema(UserBase):
     id: int
     role: str = 'retail'
+    permissions: List[str] = []
     is_active: bool = True
     phone: Optional[str] = None
     last_name: Optional[str] = None

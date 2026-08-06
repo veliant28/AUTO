@@ -8,16 +8,18 @@ from app.schemas.user_schemas import UserSchema, ProfileUpdate, ChangePasswordSc
 from app.services.user_service import user_service
 from app.models import User, UserGarage, VehicleModification, VehicleModel, VehicleBrand
 from app.api.v1.endpoints.auth import get_current_user
+from app.services.permission_service import role_permission_codenames
 
 router = APIRouter()
 
 
-def _user_to_schema(user: User) -> UserSchema:
+def _user_to_schema(user: User, db: Session) -> UserSchema:
     return UserSchema(
         id=user.id,
         email=user.email,
         full_name=user.full_name,
         role=user.role.name,
+        permissions=role_permission_codenames(db, user.role_id),
         is_active=user.is_active,
         phone=user.phone,
         last_name=user.last_name,
@@ -45,7 +47,7 @@ async def get_me(user_id: int = Depends(get_current_user), db: Session = Depends
     user = user_service.get_user_profile(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _user_to_schema(user)
+    return _user_to_schema(user, db)
 
 
 @router.put("/me", response_model=UserSchema)
@@ -59,7 +61,7 @@ async def update_me(data: ProfileUpdate, user_id: int = Depends(get_current_user
         setattr(user, key, value)
     db.commit()
     db.refresh(user)
-    return _user_to_schema(user)
+    return _user_to_schema(user, db)
 
 
 @router.post("/change-password")

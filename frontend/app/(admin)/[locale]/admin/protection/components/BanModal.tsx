@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 interface UserResult {
   id: number
@@ -86,6 +87,7 @@ export default function BanModal({
   onSuccess,
 }: BanModalProps) {
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const searchRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -210,6 +212,7 @@ export default function BanModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!reqPerm('protection.ban')) return
     if (!searchQuery.trim()) return
     if (!reason.trim()) {
       toast.warning(t('protection_ban_reason_required'))

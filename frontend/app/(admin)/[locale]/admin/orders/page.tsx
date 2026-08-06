@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
@@ -216,6 +218,7 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
 export default function AdminOrdersPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
@@ -373,7 +376,7 @@ export default function AdminOrdersPage() {
         page_size: number
       }
     },
-    enabled: !!user && ['admin', 'manager', 'operator'].includes(user.role),
+    enabled: can(user, 'orders.view'),
   })
 
   // ── NP waybill summaries for the TTN column ───────────────────────────────
@@ -715,8 +718,10 @@ export default function AdminOrdersPage() {
                 <Button
                   variant="destructive"
                   size="icon"
-                  disabled={user?.role !== 'admin'}
-                  onClick={() => setDeleteTarget(row.original)}
+                  onClick={() => {
+                    if (!reqPerm('orders.delete')) return
+                    setDeleteTarget(row.original)
+                  }}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -747,7 +752,7 @@ export default function AdminOrdersPage() {
     pageCount: Math.ceil((data?.total || 0) / 20),
   })
 
-  if (!user || !['admin', 'manager', 'operator'].includes(user.role)) {
+  if (!can(user, 'orders.view')) {
     return null
   }
 

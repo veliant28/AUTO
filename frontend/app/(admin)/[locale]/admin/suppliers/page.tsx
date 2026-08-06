@@ -44,6 +44,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useTimezone, formatDate } from '@/hooks/useTimezone'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 const supplierMeta: Record<string, { label: string; color: string }> = {
   GPL: { label: 'GPL', color: 'bg-orange-500' },
@@ -181,6 +182,7 @@ function TokenBadge({
 
 function SupplierCard({ supplier }: { supplier: string }) {
   const ta = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const meta = supplierMeta[supplier] || {
     label: supplier,
@@ -289,7 +291,10 @@ function SupplierCard({ supplier }: { supplier: string }) {
           </div>
           <TokenBadge
             supplier={supplier}
-            onRefresh={() => refreshMutation.mutate()}
+            onRefresh={() => {
+              if (!reqPerm('suppliers.edit')) return
+              refreshMutation.mutate()
+            }}
           />
         </div>
         {config?.api_url && (
@@ -357,7 +362,10 @@ function SupplierCard({ supplier }: { supplier: string }) {
               </div>
             </div>
             <Button
-              onClick={() => authMutation.mutate()}
+              onClick={() => {
+                if (!reqPerm('suppliers.edit')) return
+                authMutation.mutate()
+              }}
               disabled={authMutation.isPending || !login}
               className="w-full gap-2"
             >

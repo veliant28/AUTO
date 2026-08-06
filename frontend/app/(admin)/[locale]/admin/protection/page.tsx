@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
@@ -90,6 +92,7 @@ const roleBadgeColors: Record<string, string> = {
 
 export default function ProtectionPage() {
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -212,7 +215,7 @@ export default function ProtectionPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'protection.view')) return null
 
   return (
     <div className="p-6">
@@ -419,9 +422,11 @@ export default function ProtectionPage() {
                                           variant="outline"
                                           size="icon"
                                           className="text-green-600 hover:text-green-700"
-                                          onClick={() =>
+                                          onClick={() => {
+                                            if (!reqPerm('protection.unban'))
+                                              return
                                             unbanMutation.mutate(item.id)
-                                          }
+                                          }}
                                           disabled={unbanMutation.isPending}
                                         >
                                           <Unlock className="w-4 h-4" />
@@ -437,11 +442,13 @@ export default function ProtectionPage() {
                                           variant="outline"
                                           size="icon"
                                           className="text-blue-600 hover:text-blue-700"
-                                          onClick={() =>
+                                          onClick={() => {
+                                            if (!reqPerm('protection.edit'))
+                                              return
                                             addWhitelistMutation.mutate(
                                               item.email,
                                             )
-                                          }
+                                          }}
                                           disabled={
                                             addWhitelistMutation.isPending
                                           }
@@ -530,9 +537,10 @@ export default function ProtectionPage() {
                                   <Button
                                     variant="destructive"
                                     size="icon"
-                                    onClick={() =>
+                                    onClick={() => {
+                                      if (!reqPerm('protection.edit')) return
                                       removeWhitelistMutation.mutate(item.id)
-                                    }
+                                    }}
                                     disabled={removeWhitelistMutation.isPending}
                                   >
                                     <Trash2 className="w-4 h-4" />

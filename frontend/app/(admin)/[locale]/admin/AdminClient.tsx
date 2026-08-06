@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
+import { can } from '@/lib/permissions'
 import { useTranslations } from 'next-intl'
 import dynamic from 'next/dynamic'
 import DashboardTab from './components/DashboardTab'
@@ -38,12 +39,14 @@ export default function AdminPage() {
 
   return (
     <div className="p-6">
-      {tab === 'dashboard' && <DashboardTab />}
-      {tab === 'monitor' && <MonitorTab />}
-      {tab === 'staff' && <StaffPageContent />}
-      {tab === 'protection' && <ProtectionDashboard />}
-      {tab === 'backup' && <BackupTab />}
-      {tab === 'workers' && <WorkersTab />}
+      {tab === 'dashboard' && can(user, 'dashboard.view') && <DashboardTab />}
+      {tab === 'monitor' && can(user, 'monitor.view') && <MonitorTab />}
+      {tab === 'staff' && can(user, 'staff.view') && <StaffPageContent />}
+      {tab === 'protection' && can(user, 'protection.view') && (
+        <ProtectionDashboard />
+      )}
+      {tab === 'backup' && can(user, 'backup.view') && <BackupTab />}
+      {tab === 'workers' && can(user, 'workers.view') && <WorkersTab />}
     </div>
   )
 }

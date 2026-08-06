@@ -115,9 +115,18 @@ def upgrade() -> None:
         sa.text("INSERT INTO role_permissions (role_id, permission_id) VALUES (4, 72)")
     )
 
+    # ── Guard: вставляем только существующие permission id ────────────────
+    # На свежей БД permission 18/19 (tecdoc) на этом этапе могут отсутствовать —
+    # иначе INSERT role_permissions упадёт по внешнему ключу.
+    existing_ids = {
+        row[0] for row in conn.execute(sa.text("SELECT id FROM permissions")).fetchall()
+    }
+    operator_ids = [pid for pid in OPERATOR_PERMS if pid in existing_ids]
+    manager_ids = [pid for pid in MANAGER_PERMS if pid in existing_ids]
+
     # ── 2. Replace operator (role 3) permissions ────────────────────────────
     conn.execute(sa.text("DELETE FROM role_permissions WHERE role_id = 3"))
-    for pid in OPERATOR_PERMS:
+    for pid in operator_ids:
         conn.execute(
             sa.text("INSERT INTO role_permissions (role_id, permission_id) VALUES (3, :pid)"),
             {"pid": pid},
@@ -125,7 +134,7 @@ def upgrade() -> None:
 
     # ── 3. Replace manager (role 4) permissions ─────────────────────────────
     conn.execute(sa.text("DELETE FROM role_permissions WHERE role_id = 4"))
-    for pid in MANAGER_PERMS:
+    for pid in manager_ids:
         conn.execute(
             sa.text("INSERT INTO role_permissions (role_id, permission_id) VALUES (4, :pid)"),
             {"pid": pid},

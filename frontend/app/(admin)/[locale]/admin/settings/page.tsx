@@ -1,5 +1,6 @@
 'use client'
 
+import { can } from '@/lib/permissions'
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -368,6 +369,8 @@ export default function SettingsPage() {
       toast.error(msg || t('settings_test_email_error'))
     },
   })
+
+  if (!can(user, 'settings.edit')) return null
 
   return (
     <div className="p-6">

@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
@@ -80,6 +82,7 @@ function formatBytes(bytes: number | null | undefined): string {
 export default function ImportPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
+  const reqPerm = useRequirePerm()
   const tz = useTimezone()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
@@ -218,7 +221,7 @@ export default function ImportPage() {
     return item.error_message
   }
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'imports.view')) return null
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0
   const supplierLabel = t('import_supplier')
@@ -394,9 +397,10 @@ export default function ImportPage() {
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    onClick={() =>
+                                    onClick={() => {
+                                      if (!reqPerm('imports.create')) return
                                       promoteMutation.mutate(item.id)
-                                    }
+                                    }}
                                     disabled={promoteMutation.isPending}
                                   >
                                     <RefreshCw className="w-4 h-4" />
@@ -428,7 +432,10 @@ export default function ImportPage() {
                               <Button
                                 variant="destructive"
                                 size="icon"
-                                onClick={() => setDeleteTarget(item)}
+                                onClick={() => {
+                                  if (!reqPerm('imports.delete')) return
+                                  setDeleteTarget(item)
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -607,7 +614,10 @@ export default function ImportPage() {
               {t('cancel')}
             </Button>
             <Button
-              onClick={() => exportRequestMutation.mutate()}
+              onClick={() => {
+                if (!reqPerm('imports.create')) return
+                exportRequestMutation.mutate()
+              }}
               disabled={!exportSupplier || exportRequestMutation.isPending}
               className="gap-2"
             >

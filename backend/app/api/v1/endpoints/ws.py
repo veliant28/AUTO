@@ -99,6 +99,9 @@ async def websocket_presence(
             return
         online = await presence_service.mark_online(user_id, session_id, client_ip)
         session_row = presence_service.create_session(db, user_id, session_id, client_ip)
+        # id запоминаем до db.close() — после закрытия сессии обращение к
+        # session_row.id падает с DetachedInstanceError
+        session_row_id = session_row.id if session_row else None
         # IP-история: каждый заход = +1 к visits (хранится 2 года)
         key = presence_service.client_key(user_id, session_id)
         if key:
@@ -143,7 +146,8 @@ async def websocket_presence(
         await presence_service.mark_offline(key, conn_id)
         db = next(get_db())
         try:
-            presence_service.close_session(db, session_row.id)
+            if session_row_id:
+                presence_service.close_session(db, session_row_id)
         finally:
             db.close()
 

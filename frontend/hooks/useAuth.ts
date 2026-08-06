@@ -35,6 +35,7 @@ export function useAuth() {
         id: res.user_id,
         email: variables.email,
         role: res.role,
+        permissions: res.permissions || [],
         full_name: '',
         avatar_index: res.avatar_index,
       })
@@ -59,6 +60,7 @@ export function useAuth() {
         id: res.user_id,
         email: variables.email,
         role: res.role,
+        permissions: res.permissions || [],
         full_name: '',
         first_name: res.first_name || '',
         avatar_index: res.avatar_index,
@@ -103,6 +105,7 @@ export function useAuth() {
         id: res.user_id,
         email: res.email || '',
         role: res.role,
+        permissions: res.permissions || [],
         full_name: '',
         first_name: res.email || '',
         avatar_index: res.avatar_index,

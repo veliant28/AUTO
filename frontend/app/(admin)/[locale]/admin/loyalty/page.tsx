@@ -1,4 +1,5 @@
 'use client'
+import { can } from '@/lib/permissions'
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
@@ -241,7 +242,7 @@ export default function LoyaltyPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'loyalty.view')) return null
 
   const totalPages = listData ? Math.ceil(listData.total / 10) : 0
   const items = listData?.items || []

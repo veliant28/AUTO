@@ -1,4 +1,5 @@
 'use client'
+import { can } from '@/lib/permissions'
 
 import React, { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
@@ -109,7 +110,7 @@ export default function FooterPage() {
     />
   )
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'footer.edit')) return null
 
   return (
     <div className="p-6">

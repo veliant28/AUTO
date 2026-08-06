@@ -1,4 +1,5 @@
 'use client'
+import { can } from '@/lib/permissions'
 
 import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
@@ -181,7 +182,7 @@ export default function AdminCatalogPage() {
     )
   }
 
-  if (!user || user.role !== 'admin') return null
+  if (!can(user, 'catalog.view')) return null
 
   const totalPages = itemsData ? Math.ceil(itemsData.total / pageSize) : 0
 

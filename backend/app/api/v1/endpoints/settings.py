@@ -4,7 +4,7 @@ from app.core.db import get_db
 from app.models.settings import SiteSettings
 from app.models import User
 from app.schemas.settings_schemas import SettingsResponse, SettingsUpdate, EmailTestRequest
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.services.crypto_util import encrypt_password, decrypt_password
 
 router = APIRouter()
@@ -148,7 +148,7 @@ async def get_public_settings(db: Session = Depends(get_db)):
 
 @router.get("/admin/settings", response_model=SettingsResponse)
 async def get_admin_settings(
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("settings.edit")),
     db: Session = Depends(get_db),
 ):
     """Получить настройки сайта для админа."""
@@ -159,7 +159,7 @@ async def get_admin_settings(
 @router.put("/admin/settings", response_model=SettingsResponse)
 async def update_settings(
     body: SettingsUpdate,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("settings.edit")),
     db: Session = Depends(get_db),
 ):
     """Обновить настройки сайта."""
@@ -252,7 +252,7 @@ async def get_google_client_id(db: Session = Depends(get_db)):
 @router.post("/admin/settings/test-email")
 async def test_email_settings(
     body: EmailTestRequest,
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("settings.edit")),
     db: Session = Depends(get_db),
 ):
     """Отправить тестовое письмо для проверки настроек SMTP/Resend."""

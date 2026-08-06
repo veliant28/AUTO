@@ -11,9 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/lib/toast'
 import { toast as sonnerToast } from 'sonner'
 import api from '@/lib/api'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 export default function SettingsTab({ t }: { t: (k: string) => string }) {
   const queryClient = useQueryClient()
+  const reqPerm = useRequirePerm()
   const [apiUrl, setApiUrl] = useState('')
   const [dbHost, setDbHost] = useState('')
   const [dbName, setDbName] = useState('')
@@ -168,7 +170,10 @@ export default function SettingsTab({ t }: { t: (k: string) => string }) {
         <div className="flex gap-2 pt-2">
           <Button
             variant="outline"
-            onClick={() => testMutation.mutate()}
+            onClick={() => {
+              if (!reqPerm('tecdoc.settings')) return
+              testMutation.mutate()
+            }}
             disabled={testMutation.isPending}
             className="gap-2"
           >
@@ -180,7 +185,10 @@ export default function SettingsTab({ t }: { t: (k: string) => string }) {
             {t('tecdoc_settings_test')}
           </Button>
           <Button
-            onClick={() => saveMutation.mutate()}
+            onClick={() => {
+              if (!reqPerm('tecdoc.settings')) return
+              saveMutation.mutate()
+            }}
             disabled={saveMutation.isPending}
             className="gap-2"
           >

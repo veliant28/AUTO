@@ -1,4 +1,6 @@
 'use client'
+import { can } from '@/lib/permissions'
+import { useRequirePerm } from '@/hooks/useRequirePerm'
 
 import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
@@ -161,15 +163,11 @@ function RatingCell({
 
 const columnHelper = createColumnHelper<AdminUser>()
 
-function hasRole(user: { role: string } | null, ...roles: string[]) {
-  if (!user) return false
-  return roles.includes(user.role)
-}
-
 export default function AdminUsersPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
   const tc = useTranslations('common')
+  const reqPerm = useRequirePerm()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
@@ -392,7 +390,7 @@ export default function AdminUsersPage() {
     pageCount: Math.ceil((data?.total || 0) / 20),
   })
 
-  if (!hasRole(user, 'admin')) {
+  if (!can(user, 'users.view')) {
     return null
   }
 
@@ -483,7 +481,10 @@ export default function AdminUsersPage() {
             </div>
             <Button
               className="w-full"
-              onClick={() => createMutation.mutate(form)}
+              onClick={() => {
+                if (!reqPerm('users.create')) return
+                createMutation.mutate(form)
+              }}
               disabled={createMutation.isPending}
             >
               {t('create_user')}
@@ -674,9 +675,10 @@ export default function AdminUsersPage() {
               </div>
               <Button
                 className="w-full"
-                onClick={() =>
+                onClick={() => {
+                  if (!reqPerm('users.edit')) return
                   updateMutation.mutate({ id: editUser.id, payload: form })
-                }
+                }}
                 disabled={updateMutation.isPending}
               >
                 {t('edit_user')}
@@ -727,7 +729,10 @@ export default function AdminUsersPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => deleteMutation.mutate(deleteTarget!.id)}
+              onClick={() => {
+                if (!reqPerm('users.delete')) return
+                deleteMutation.mutate(deleteTarget!.id)
+              }}
               disabled={deleteMutation.isPending}
               className="gap-2"
             >
