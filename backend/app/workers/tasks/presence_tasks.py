@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import delete
 from app.core.db import SessionLocal
 from app.core.config import settings
-from app.models.presence import PresenceSession, ProductView
+from app.models.presence import PresenceSession, ProductView, ClientIp
 from app.models.cart import CartItem
 from app.services import presence_service
 from app.workers import celery_app
@@ -79,6 +79,7 @@ def cleanup_presence_logs():
     """Удаляет старые сессии присутствия, просмотры товаров и анонимные корзины."""
     cutoff = datetime.utcnow() - timedelta(days=presence_service.PRESENCE_HISTORY_DAYS)
     cart_cutoff = datetime.utcnow() - timedelta(days=presence_service.ANON_CART_RETENTION_DAYS)
+    ip_cutoff = datetime.utcnow() - timedelta(days=presence_service.CLIENT_IP_HISTORY_DAYS)
 
     db = SessionLocal()
     try:
@@ -94,10 +95,14 @@ def cleanup_presence_logs():
                 CartItem.created_at < cart_cutoff,
             )
         )
+        ips = db.execute(
+            delete(ClientIp).where(ClientIp.last_seen < ip_cutoff)
+        )
         db.commit()
         logger.info(
             f"Presence log cleanup: sessions={sessions.rowcount}, "
-            f"views={views.rowcount}, anon_carts={carts.rowcount}"
+            f"views={views.rowcount}, anon_carts={carts.rowcount}, "
+            f"client_ips={ips.rowcount}"
         )
     except Exception as e:
         db.rollback()

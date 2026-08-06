@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search, CalendarDays, MessageSquare } from 'lucide-react'
@@ -91,6 +92,9 @@ export default function SupportAdminPage() {
   const { user, isAuthenticated } = useAuthStore()
   const queryClient = useQueryClient()
   const chatStore = useChatStore()
+  const searchParams = useSearchParams()
+  // Чат, открытый из уведомления: ?id=N (может быть вне периода/фильтров)
+  const urlChatId = searchParams.get('id')
 
   // Filters
   const [period, setPeriod] = useState<string>('month')
@@ -120,7 +124,7 @@ export default function SupportAdminPage() {
     return ''
   })
 
-  // Build query params
+  // Build query params (include_id — чат из уведомления показываем всегда)
   const queryParams = useMemo(() => {
     const params: Record<string, string> = {
       period,
@@ -129,8 +133,9 @@ export default function SupportAdminPage() {
     }
     if (statusFilter) params.status = statusFilter
     if (search.trim()) params.search = search.trim()
+    if (urlChatId) params.include_id = urlChatId
     return params
-  }, [period, range, statusFilter, search])
+  }, [period, range, statusFilter, search, urlChatId])
 
   // Chats list
   const { data: chats = [], isLoading: chatsLoading } = useQuery({
@@ -166,6 +171,14 @@ export default function SupportAdminPage() {
       return () => chatStore.disconnect()
     }
   }, [isAuthenticated, authToken])
+
+  // Открыть чат по ссылке из уведомления (?id=N) — даже если он вне фильтров
+  useEffect(() => {
+    if (isAuthenticated && urlChatId) {
+      chatStore.setActiveChat(Number(urlChatId))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   // Subscribe to active chat
   useEffect(() => {

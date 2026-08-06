@@ -40,3 +40,6 @@ frontend/playwright-report/
 backend/logs/
 backend/media/
 bin/
+
+# ZCode agent artifacts
+.zcode/

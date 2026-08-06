@@ -43,8 +43,10 @@ def _promocode_to_response(p: Promocode) -> PromocodeResponse:
         user_email = p.user.email
 
     issued_by_name = None
+    issued_by_role = None
     if p.issued_by:
         issued_by_name = ' '.join(filter(None, [p.issued_by.last_name, p.issued_by.first_name]))
+        issued_by_role = p.issued_by.role.name if p.issued_by.role else None
 
     return PromocodeResponse(
         id=p.id,
@@ -58,6 +60,7 @@ def _promocode_to_response(p: Promocode) -> PromocodeResponse:
         reason=p.reason,
         issued_by_id=p.issued_by_id,
         issued_by_name=issued_by_name,
+        issued_by_role=issued_by_role,
         expires_at=p.expires_at,
         used_at=p.used_at,
         is_active=p.is_active,
@@ -76,7 +79,8 @@ async def list_promocodes(
 ):
     """List promocodes with pagination, search, and staff filter."""
     query = db.query(Promocode).options(
-        joinedload(Promocode.user), joinedload(Promocode.issued_by)
+        joinedload(Promocode.user),
+        joinedload(Promocode.issued_by).joinedload(User.role),
     )
 
     if search:

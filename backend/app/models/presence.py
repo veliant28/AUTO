@@ -1,7 +1,28 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .vehicles import Base
+
+
+class ClientIp(Base):
+    """IP-адреса клиента (ключ u{user_id} / s{session_id}).
+
+    Один заход на сайт (WS-коннект) = +1 к visits. Хранится долго (2 года),
+    в отличие от presence_sessions (ретеншн 90 дней).
+    """
+
+    __tablename__ = "client_ips"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    client_key = Column(String(80), nullable=False, index=True)
+    ip = Column(String(64), nullable=False)
+    first_seen = Column(DateTime, nullable=False, default=func.now())
+    last_seen = Column(DateTime, nullable=False, default=func.now())
+    visits = Column(Integer, nullable=False, default=1)
+
+    __table_args__ = (
+        UniqueConstraint("client_key", "ip", name="uq_client_ips_key_ip"),
+    )
 
 
 class PresenceSession(Base):

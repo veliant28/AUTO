@@ -15,6 +15,7 @@ class PromocodeResponse(BaseModel):
     reason: str
     issued_by_id: int
     issued_by_name: Optional[str] = None
+    issued_by_role: Optional[str] = None
     expires_at: datetime
     used_at: Optional[datetime] = None
     is_active: bool = True

@@ -19,6 +19,7 @@ import {
   Trash2,
   AlertTriangle,
   Loader2,
+  Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,6 +42,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from '@/lib/toast'
+import ClientDetailModal from '../components/ClientDetailModal'
 import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput'
 import {
   Tooltip,
@@ -174,6 +176,7 @@ export default function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editUser, setEditUser] = useState<AdminUser | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
+  const [viewClientKey, setViewClientKey] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     email: '',
@@ -275,7 +278,13 @@ export default function AdminUsersPage() {
     }),
     columnHelper.accessor('full_name', {
       header: tc('name_label'),
-      cell: (info) => info.getValue() || '—',
+      cell: (info) => {
+        const u = info.row.original
+        const composed = [u.last_name, u.first_name, u.middle_name]
+          .filter(Boolean)
+          .join(' ')
+        return composed || u.full_name || '—'
+      },
     }),
     columnHelper.accessor('email', {
       header: 'Email',
@@ -325,6 +334,13 @@ export default function AdminUsersPage() {
       size: 120,
       cell: ({ row }) => (
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setViewClientKey(`u${row.original.id}`)}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
           <Button
             variant="outline"
             size="icon"
@@ -725,6 +741,12 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ClientDetailModal
+        clientKey={viewClientKey}
+        open={!!viewClientKey}
+        onOpenChange={(open) => !open && setViewClientKey(null)}
+      />
     </div>
   )
 }

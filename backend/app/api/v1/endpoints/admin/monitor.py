@@ -12,9 +12,11 @@ from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.models import (
     User, Role, SiteSettings, Part, SupplierOffer, Supplier, CartItem,
-    Order, OrderStatus, ReturnRequest, ReturnStatus,
+    Order, OrderItem, OrderStatus, ReturnRequest, ReturnItem, ReturnStatus,
+    OrderNovaPoshtaWaybill,
 )
-from app.models.presence import PresenceSession, ProductView
+from app.models.presence import PresenceSession, ProductView, ClientIp
+from app.models.loyalty import Promocode
 from app.services import presence_service
 from app.schemas.monitor_schemas import (
     MonitorClientsResponse,
@@ -26,7 +28,21 @@ from app.schemas.monitor_schemas import (
     MonitorViewItem,
     MonitorCartResponse,
     MonitorCartItem,
+    MonitorIndexResponse,
+    MonitorIndexSlice,
+    MonitorOrderItem,
+    MonitorOrderListResponse,
+    MonitorReturnItem,
+    MonitorReturnListResponse,
+    MonitorIpItem,
+    MonitorIpListResponse,
+    MonitorVisitDay,
+    MonitorVisitsResponse,
+    MonitorLoyaltyResponse,
+    MonitorLoyaltyStatsMonth,
+    MonitorLoyaltyStatsResponse,
 )
+from app.api.v1.endpoints.admin.loyalty import _promocode_to_response
 
 logger = logging.getLogger(__name__)
 
@@ -138,10 +154,11 @@ def _group_of(user_id: Optional[int], user_map: Dict[int, Dict]) -> str:
     return role if role in presence_service.REGISTERED_GROUPS else "anon"
 
 
-def _client_success_stats(db: Session, user_id: int) -> Tuple[int, int]:
-    """Индекс успешности клиента + число заказов (как в admin/users.py).
+def _client_index_stats(db: Session, user_id: int) -> Dict:
+    """Полная статистика клиента для индекса успешности.
 
     success_index = доля «удержанной» выручки: (доставлено − возвраты) / всего.
+    Возвраты делятся на полные (total_refund >= суммы заказа) и частичные.
     """
     delivered_total, cancelled_total, delivered_count, cancelled_count = db.query(
         func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)),
@@ -152,20 +169,54 @@ def _client_success_stats(db: Session, user_id: int) -> Tuple[int, int]:
     delivered_total = float(delivered_total or 0)
     cancelled_total = float(cancelled_total or 0)
     total_orders = int((delivered_count or 0) + (cancelled_count or 0))
-    refunded = (
-        db.query(func.sum(ReturnRequest.total_refund))
+
+    refunded_full = 0.0
+    refunded_partial = 0.0
+    full_count = 0
+    partial_count = 0
+    # Возвраты считаем по APPROVED и COMPLETED (approved = деньги возвращены,
+    # completed = оформлен до конца); pending/rejected — не возвраты.
+    refund_rows = (
+        db.query(ReturnRequest.total_refund, Order.total)
+        .join(Order, Order.id == ReturnRequest.order_id)
         .filter(
             ReturnRequest.user_id == user_id,
-            ReturnRequest.status == ReturnStatus.COMPLETED,
+            ReturnRequest.status.in_(
+                [ReturnStatus.APPROVED, ReturnStatus.COMPLETED]
+            ),
         )
-        .scalar()
-        or 0
+        .all()
     )
+    for refund, order_total in refund_rows:
+        refund = float(refund or 0)
+        order_total = float(order_total or 0)
+        if refund >= order_total:
+            refunded_full += refund
+            full_count += 1
+        else:
+            refunded_partial += refund
+            partial_count += 1
+
+    refunded = refunded_full + refunded_partial
     total_value = delivered_total + cancelled_total
     if total_value == 0:
-        return 0, total_orders
-    retained = max(delivered_total - float(refunded), 0)
-    return round((retained / total_value) * 100), total_orders
+        success_index = 0
+    else:
+        retained = max(delivered_total - refunded, 0)
+        success_index = round((retained / total_value) * 100)
+
+    return {
+        "success_index": success_index,
+        "total_orders": total_orders,
+        "delivered_total": delivered_total,
+        "delivered_count": int(delivered_count or 0),
+        "cancelled_total": cancelled_total,
+        "cancelled_count": int(cancelled_count or 0),
+        "refunded_full": refunded_full,
+        "full_count": full_count,
+        "refunded_partial": refunded_partial,
+        "partial_count": partial_count,
+    }
 
 
 def _session_client_key(row: PresenceSession) -> Optional[str]:
@@ -428,9 +479,9 @@ def _load_profile(db: Session, client_key: str) -> Tuple[Dict, Optional[User]]:
         "total_orders": None,
     }
     if user:
-        info["success_index"], info["total_orders"] = _client_success_stats(
-            db, user.id
-        )
+        stats = _client_index_stats(db, user.id)
+        info["success_index"] = stats["success_index"]
+        info["total_orders"] = stats["total_orders"]
     if user:
         info["delivery"] = {
             "delivery_type": user.delivery_type,
@@ -525,3 +576,303 @@ async def monitor_client_cart(
             supplier_name=offer.supplier.name if offer and offer.supplier else None,
         ))
     return MonitorCartResponse(items=result, total=len(result))
+
+
+@router.get("/monitor/clients/{client_key}/index", response_model=MonitorIndexResponse)
+async def monitor_client_index(
+    client_key: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Статистика индекса успешности клиента (доли доната)."""
+    user_id, _session = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorIndexResponse(success_index=None, total_orders=None, slices=[])
+
+    stats = _client_index_stats(db, user_id)
+    slices = [
+        MonitorIndexSlice(key="delivered", value=stats["delivered_total"], count=stats["delivered_count"]),
+        MonitorIndexSlice(key="cancelled", value=stats["cancelled_total"], count=stats["cancelled_count"]),
+        MonitorIndexSlice(key="returned_full", value=stats["refunded_full"], count=stats["full_count"]),
+        MonitorIndexSlice(key="returned_partial", value=stats["refunded_partial"], count=stats["partial_count"]),
+    ]
+    return MonitorIndexResponse(
+        success_index=stats["success_index"],
+        total_orders=stats["total_orders"],
+        slices=slices,
+    )
+
+
+@router.get("/monitor/clients/{client_key}/orders", response_model=MonitorOrderListResponse)
+async def monitor_client_orders(
+    client_key: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Заказы клиента (ленивая подгрузка). ТТН — одним запросом, без N+1."""
+    user_id, _session = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorOrderListResponse(items=[], total=0, page=page, page_size=page_size)
+
+    base = db.query(Order).filter(Order.user_id == user_id)
+    total = base.count()
+    orders = (
+        base.order_by(Order.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    order_ids = [o.id for o in orders]
+
+    item_counts = dict(
+        db.query(OrderItem.order_id, func.count(OrderItem.id))
+        .filter(OrderItem.order_id.in_(order_ids))
+        .group_by(OrderItem.order_id)
+        .all()
+    )
+    # ТТН: активная (is_deleted=False) новейшая, иначе последняя — как waybill_service
+    waybills = (
+        db.query(OrderNovaPoshtaWaybill)
+        .filter(OrderNovaPoshtaWaybill.order_id.in_(order_ids))
+        .order_by(OrderNovaPoshtaWaybill.is_deleted.asc(), OrderNovaPoshtaWaybill.id.desc())
+        .all()
+    )
+    ttn_map: Dict[int, dict] = {}
+    for wb in waybills:
+        if wb.order_id not in ttn_map:
+            ttn_map[wb.order_id] = {
+                "np_number": wb.np_number,
+                "exists": True,
+                "is_deleted": wb.is_deleted,
+            }
+
+    items = [
+        MonitorOrderItem(
+            order_number=o.order_number,
+            status=o.status.value,
+            total=float(o.total or 0),
+            items_count=item_counts.get(o.id, 0),
+            created_at=o.created_at.isoformat(),
+            ttn=ttn_map.get(o.id),
+        )
+        for o in orders
+    ]
+    return MonitorOrderListResponse(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/monitor/clients/{client_key}/returns", response_model=MonitorReturnListResponse)
+async def monitor_client_returns(
+    client_key: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Возвраты клиента (ленивая подгрузка)."""
+    user_id, _session = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorReturnListResponse(items=[], total=0, page=page, page_size=page_size)
+
+    base = db.query(ReturnRequest).filter(ReturnRequest.user_id == user_id)
+    total = base.count()
+    returns = (
+        base.order_by(ReturnRequest.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    ids = [r.id for r in returns]
+
+    item_counts = dict(
+        db.query(ReturnItem.return_request_id, func.count(ReturnItem.id))
+        .filter(ReturnItem.return_request_id.in_(ids))
+        .group_by(ReturnItem.return_request_id)
+        .all()
+    )
+    order_ids = [r.order_id for r in returns if r.order_id]
+    order_map: Dict[int, str] = {}
+    if order_ids:
+        order_map = {
+            o.id: o.order_number
+            for o in db.query(Order).filter(Order.id.in_(order_ids)).all()
+        }
+
+    items = [
+        MonitorReturnItem(
+            return_number=r.return_number,
+            order_number=order_map.get(r.order_id),
+            status=r.status.value,
+            total_refund=float(r.total_refund or 0),
+            items_count=item_counts.get(r.id, 0),
+            created_at=r.created_at.isoformat(),
+            ttn_number=r.ttn_number,
+        )
+        for r in returns
+    ]
+    return MonitorReturnListResponse(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/monitor/clients/{client_key}/ips", response_model=MonitorIpListResponse)
+async def monitor_client_ips(
+    client_key: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Все IP клиента (по частоте). Звёзды топ-5 стабильны при пагинации."""
+    user_id, session_id = _parse_client_key(client_key)
+    q = db.query(ClientIp)
+    if user_id is not None:
+        q = q.filter(ClientIp.client_key == f"u{user_id}")
+    else:
+        q = q.filter(ClientIp.client_key == f"s{session_id}")
+    all_rows = q.all()
+
+    # Умная сортировка:
+    # 1) топ-5 самых частых (избранные, со звёздами) — всегда в самом верху,
+    #    между собой по частоте;
+    # 2) остальные — по дате последней сессии (новые сверху); 6-й по частоте
+    #    встаёт среди них по своей дате.
+    top_ips = {
+        r.ip
+        for r in sorted(all_rows, key=lambda r: r.visits, reverse=True)[:5]
+    }
+    favorites = sorted(
+        (r for r in all_rows if r.ip in top_ips),
+        key=lambda r: r.visits,
+        reverse=True,
+    )
+    rest = sorted(
+        (r for r in all_rows if r.ip not in top_ips),
+        key=lambda r: r.last_seen,
+        reverse=True,
+    )
+    ordered = favorites + rest
+
+    total = len(ordered)
+    start = (page - 1) * page_size
+    items = [
+        MonitorIpItem(
+            ip=r.ip,
+            visits=r.visits,
+            first_seen=r.first_seen.isoformat(),
+            last_seen=r.last_seen.isoformat(),
+            is_top=r.ip in top_ips,
+        )
+        for r in ordered[start:start + page_size]
+    ]
+    return MonitorIpListResponse(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/monitor/clients/{client_key}/visits", response_model=MonitorVisitsResponse)
+async def monitor_client_visits(
+    client_key: str,
+    days: int = Query(7, ge=1, le=31),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Посещения за последние N суток (в tz админки): каждая сессия = заход."""
+    user_id, session_id = _parse_client_key(client_key)
+    tz = _get_admin_tz(db)
+    now = datetime.utcnow()
+
+    q = db.query(PresenceSession.first_seen)
+    if user_id is not None:
+        q = q.filter(PresenceSession.user_id == user_id)
+    else:
+        q = q.filter(PresenceSession.session_id == session_id)
+    sessions = q.filter(
+        PresenceSession.first_seen >= now - timedelta(days=days + 1)
+    ).all()
+
+    counts = {}
+    for (first_seen,) in sessions:
+        local = first_seen.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+        counts[local.strftime("%Y-%m-%d")] = counts.get(local.strftime("%Y-%m-%d"), 0) + 1
+
+    result = []
+    for offset in range(days - 1, -1, -1):
+        day_start = (now - timedelta(days=offset)).replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
+        result.append(MonitorVisitDay(
+            date=day_start.strftime("%Y-%m-%d"),
+            count=counts.get(day_start.strftime("%Y-%m-%d"), 0),
+        ))
+    return MonitorVisitsResponse(days=result)
+
+
+@router.get("/monitor/clients/{client_key}/loyalty", response_model=MonitorLoyaltyResponse)
+async def monitor_client_loyalty(
+    client_key: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Промокоды клиента с пагинацией (для анонимной сессии — пусто)."""
+    user_id, _session_id = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorLoyaltyResponse(
+            items=[], total=0, page=page, page_size=page_size
+        )
+
+    q = (
+        db.query(Promocode)
+        .options(
+            joinedload(Promocode.user),
+            joinedload(Promocode.issued_by).joinedload(User.role),
+        )
+        .filter(Promocode.user_id == user_id)
+    )
+    total = q.count()
+    items = (
+        q.order_by(Promocode.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return MonitorLoyaltyResponse(
+        items=[_promocode_to_response(p) for p in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get("/monitor/clients/{client_key}/loyalty-stats", response_model=MonitorLoyaltyStatsResponse)
+async def monitor_client_loyalty_stats(
+    client_key: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Выдача промокодов клиенту по месяцам за 12 месяцев (всегда 12 записей)."""
+    user_id, _session_id = _parse_client_key(client_key)
+
+    now = datetime.utcnow()
+    buckets = {}
+    for i in range(11, -1, -1):
+        y, m = now.year, now.month - i
+        while m <= 0:
+            m += 12
+            y -= 1
+        buckets[f"{y:04d}-{m:02d}"] = 0
+
+    if user_id is not None:
+        year, month = map(int, next(iter(buckets)).split("-"))
+        since = datetime(year, month, 1)
+        rows = db.query(Promocode.created_at).filter(
+            Promocode.user_id == user_id,
+            Promocode.created_at >= since,
+        ).all()
+        for (created_at,) in rows:
+            key = f"{created_at.year:04d}-{created_at.month:02d}"
+            if key in buckets:
+                buckets[key] += 1
+
+    months = [MonitorLoyaltyStatsMonth(month=k, count=v) for k, v in buckets.items()]
+    return MonitorLoyaltyStatsResponse(
+        months=months,
+        total=sum(v for v in buckets.values()),
+    )

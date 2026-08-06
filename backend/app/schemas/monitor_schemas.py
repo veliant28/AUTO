@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 
+from app.schemas.loyalty_schemas import PromocodeResponse
+
 
 class MonitorClientItem(BaseModel):
     """Строка таблицы монитора (онлайн или архив)."""
@@ -110,4 +112,98 @@ class MonitorCartItem(BaseModel):
 
 class MonitorCartResponse(BaseModel):
     items: List[MonitorCartItem]
+    total: int
+
+
+class MonitorIndexSlice(BaseModel):
+    key: str
+    value: float
+    count: int
+
+
+class MonitorIndexResponse(BaseModel):
+    success_index: Optional[int]
+    total_orders: Optional[int]
+    slices: List[MonitorIndexSlice]
+
+
+class MonitorOrderTtn(BaseModel):
+    np_number: Optional[str]
+    exists: bool = False
+    is_deleted: bool = False
+
+
+class MonitorOrderItem(BaseModel):
+    order_number: str
+    status: str
+    total: float
+    items_count: int
+    created_at: str
+    ttn: Optional[MonitorOrderTtn]
+
+
+class MonitorOrderListResponse(BaseModel):
+    items: List[MonitorOrderItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class MonitorReturnItem(BaseModel):
+    return_number: str
+    order_number: Optional[str]
+    status: str
+    total_refund: float
+    items_count: int
+    created_at: str
+    ttn_number: Optional[str]
+
+
+class MonitorReturnListResponse(BaseModel):
+    items: List[MonitorReturnItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class MonitorIpItem(BaseModel):
+    ip: str
+    visits: int
+    first_seen: str
+    last_seen: str
+    is_top: bool = False
+
+
+class MonitorIpListResponse(BaseModel):
+    items: List[MonitorIpItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class MonitorVisitDay(BaseModel):
+    date: str
+    count: int
+
+
+class MonitorVisitsResponse(BaseModel):
+    days: List[MonitorVisitDay]
+
+
+class MonitorLoyaltyResponse(BaseModel):
+    """Промокоды, выданные клиенту (для модалки клиента)."""
+    items: List[PromocodeResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class MonitorLoyaltyStatsMonth(BaseModel):
+    month: str  # 'YYYY-MM'
+    count: int
+
+
+class MonitorLoyaltyStatsResponse(BaseModel):
+    """Выдача промокодов по месяцам за 12 месяцев (всегда 12 записей)."""
+    months: List[MonitorLoyaltyStatsMonth]
     total: int

@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.core.redis_client import redis_client
-from app.models.presence import PresenceSession
+from app.models.presence import PresenceSession, ClientIp
 from app.models.protection import BanRecord
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,8 @@ PRESENCE_GRACE_SECONDS = 90
 PRESENCE_HISTORY_DAYS = 90
 # Сколько храним анонимные корзины.
 ANON_CART_RETENTION_DAYS = 30
+# Сколько храним IP-историю клиентов.
+CLIENT_IP_HISTORY_DAYS = 730
 # Лимит имён в один час графика (дальше фронт показывает "+N").
 CHART_NAMES_LIMIT = 20
 # Группы в фиксированном порядке (последняя — анонимы).
@@ -152,6 +154,30 @@ def close_session(db: Session, session_id_row: int) -> None:
         return
     row.offline_at = datetime.utcnow()
     row.is_online = False
+    db.commit()
+
+
+def record_client_ip(db: Session, client_key: str, ip: Optional[str]) -> None:
+    """Upsert IP-истории: каждый заход на сайт (WS-коннект) = +1 к visits."""
+    if not ip:
+        return
+    row = (
+        db.query(ClientIp)
+        .filter(ClientIp.client_key == client_key, ClientIp.ip == ip)
+        .first()
+    )
+    now = datetime.utcnow()
+    if row:
+        row.visits += 1
+        row.last_seen = now
+    else:
+        db.add(ClientIp(
+            client_key=client_key,
+            ip=ip,
+            first_seen=now,
+            last_seen=now,
+            visits=1,
+        ))
     db.commit()
 
 

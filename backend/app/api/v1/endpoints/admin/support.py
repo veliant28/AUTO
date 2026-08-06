@@ -83,10 +83,15 @@ def list_chats(
     period: str = Query("month"),
     from_date: Optional[str] = Query(None),
     to_date: Optional[str] = Query(None),
+    include_id: Optional[int] = Query(None),
     admin: User = Depends(require_permission("support.view")),
     db: Session = Depends(get_db),
 ):
-    """List all support chats with filters."""
+    """List all support chats with filters.
+
+    include_id — чат, который нужно показать всегда (например, открытый из
+    уведомления), даже если он вне периода/статуса/поиска. Идёт первым.
+    """
     query = db.query(ChatConversation)
 
     # Filter by status
@@ -114,7 +119,20 @@ def list_chats(
         )
 
     chats = query.order_by(desc(ChatConversation.updated_at)).all()
-    return [_chat_to_out(c) for c in chats]
+
+    result = []
+    if include_id:
+        forced = (
+            db.query(ChatConversation)
+            .filter(ChatConversation.id == include_id)
+            .first()
+        )
+        if forced:
+            result.append(_chat_to_out(forced))
+            chats = [c for c in chats if c.id != forced.id]
+
+    result.extend(_chat_to_out(c) for c in chats)
+    return result
 
 
 @router.get("/chats/{chat_id}", response_model=ChatConversationDetail)
@@ -139,6 +157,11 @@ def get_chat_detail(
         id=chat.id,
         ticket_number=chat.ticket_number,
         user_id=chat.user_id,
+        user_name=(
+            chat.user.full_name
+            or f"{chat.user.first_name or ''} {chat.user.last_name or ''}".strip()
+            or chat.user.email
+        ) if chat.user else None,
         status=chat.status.value,
         assigned_to=chat.assigned_to,
         created_at=chat.created_at,

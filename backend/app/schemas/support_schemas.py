@@ -43,6 +43,7 @@ class ChatConversationDetail(BaseModel):
     id: int
     ticket_number: Optional[str] = None
     user_id: int
+    user_name: Optional[str] = None
     status: str
     assigned_to: Optional[int] = None
     created_at: datetime

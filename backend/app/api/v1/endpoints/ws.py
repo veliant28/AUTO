@@ -99,6 +99,10 @@ async def websocket_presence(
             return
         online = await presence_service.mark_online(user_id, session_id, client_ip)
         session_row = presence_service.create_session(db, user_id, session_id, client_ip)
+        # IP-история: каждый заход = +1 к visits (хранится 2 года)
+        key = presence_service.client_key(user_id, session_id)
+        if key:
+            presence_service.record_client_ip(db, key, client_ip)
     finally:
         db.close()
 
