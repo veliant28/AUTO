@@ -18,7 +18,7 @@ def auto_clockout():
     """Авто-выход: сотрудник забыл зафиксировать выход.
 
     Если есть открытая сессия (вход без выхода) и конец смены (из настроек)
-    + 15 минут уже наступил — закрываем её временем «конец смены + 15 минут»
+    + 15 минут уже наступил — закрываем её фактическим временем закрытия
     (auto_clock_out=True). Часы в табеле всё равно обрезаются до окна из настроек.
     """
     db = SessionLocal()
@@ -61,7 +61,8 @@ def auto_clockout():
             end_utc = end_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
             close_at = end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
             if now_utc >= close_at:
-                sess.clock_out_at = close_at
+                # Время выхода — по факту (момент закрытия), не «конец смены + 15»
+                sess.clock_out_at = now_utc
                 sess.auto_clock_out = True
                 closed += 1
 

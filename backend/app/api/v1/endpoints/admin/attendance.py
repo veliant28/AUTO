@@ -113,7 +113,12 @@ def _worked_minutes(
 
 
 def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s: SiteSettings, tz: ZoneInfo, now_utc: datetime) -> None:
-    """Ленивое авто-закрытие: вход есть, выхода нет, а конец смены + 15 мин уже прошёл."""
+    """Ленивое авто-закрытие: вход есть, выхода нет, а конец смены + 15 мин уже прошёл.
+
+    Время выхода ставим по факту (момент закрытия), а не «конец смены + 15 минут»:
+    если сотрудник зашёл поздно (после грации), выходить «в прошлом» некорректно.
+    Часы в табеле всё равно обрезаются до рабочего окна из настроек.
+    """
     changed = False
     for sess in sessions:
         if sess.clock_out_at is not None:
@@ -124,7 +129,7 @@ def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s:
             continue
         close_at = end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
         if now_utc >= close_at:
-            sess.clock_out_at = close_at
+            sess.clock_out_at = now_utc
             sess.auto_clock_out = True
             changed = True
     if changed:
