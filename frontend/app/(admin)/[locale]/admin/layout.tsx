@@ -818,31 +818,35 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         )}
         {isTimesheet && (
           <div className="border-r pr-2 self-stretch flex items-center gap-1">
-            <Select
-              value={timesheetEmployeeId ? String(timesheetEmployeeId) : 'all'}
-              onValueChange={(v) =>
-                (window as any).__timesheetSetEmployee?.(
-                  v === 'all' ? null : Number(v),
-                )
-              }
-            >
-              <SelectTrigger className="w-[200px] h-9">
-                <SelectValue placeholder={ta('timesheet_employee')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {ta('timesheet_all_employees')}
-                </SelectItem>
-                {(timesheetData?.users || []).map((u) => (
-                  <SelectItem key={u.user_id} value={String(u.user_id)}>
-                    {[u.last_name, u.first_name].filter(Boolean).join(' ') ||
-                      u.full_name ||
-                      u.email ||
-                      `#${u.user_id}`}
+            {user?.role !== 'operator' && (
+              <Select
+                value={
+                  timesheetEmployeeId ? String(timesheetEmployeeId) : 'all'
+                }
+                onValueChange={(v) =>
+                  (window as any).__timesheetSetEmployee?.(
+                    v === 'all' ? null : Number(v),
+                  )
+                }
+              >
+                <SelectTrigger className="w-[200px] h-9">
+                  <SelectValue placeholder={ta('timesheet_employee')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {ta('timesheet_all_employees')}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  {(timesheetData?.users || []).map((u) => (
+                    <SelectItem key={u.user_id} value={String(u.user_id)}>
+                      {[u.last_name, u.first_name].filter(Boolean).join(' ') ||
+                        u.full_name ||
+                        u.email ||
+                        `#${u.user_id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Popover>
               <PopoverTrigger asChild>
                 <Button

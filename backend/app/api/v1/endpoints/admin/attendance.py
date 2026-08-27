@@ -312,15 +312,22 @@ async def attendance_timesheet(
     for day in range(1, calendar.monthrange(y, m)[1] + 1):
         days.append(f"{y:04d}-{m:02d}-{day:02d}")
 
+    # Видимость табеля по роли: админ — все, менеджер — менеджеры и операторы,
+    # оператор — только себя
     users_q = (
         db.query(User)
         .join(Role, User.role_id == Role.id)
-        .filter(User.is_active.is_(True), Role.name.in_(STAFF_ROLE_NAMES))
-        .order_by(User.id)
+        .filter(User.is_active.is_(True))
     )
+    if current_user.role.name == "admin":
+        users_q = users_q.filter(Role.name.in_(STAFF_ROLE_NAMES))
+    elif current_user.role.name == "manager":
+        users_q = users_q.filter(Role.name.in_(("manager", "operator")))
+    else:
+        users_q = users_q.filter(User.id == current_user.id)
     if user_id:
         users_q = users_q.filter(User.id == user_id)
-    users = users_q.all()
+    users = users_q.order_by(User.id).all()
 
     user_ids = [u.id for u in users]
     sessions = (
