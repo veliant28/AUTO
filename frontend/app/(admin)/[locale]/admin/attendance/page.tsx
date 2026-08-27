@@ -167,7 +167,7 @@ export default function AttendancePage() {
               <span>{formatDate(info.getValue())}</span>
               {rec.auto_clock_out && (
                 <Badge
-                  className="border-0 text-xs bg-gray-400 text-white"
+                  className="border-0 text-sm bg-gray-400 text-white"
                   variant="default"
                 >
                   {t('attendance_auto')}
