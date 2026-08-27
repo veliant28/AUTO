@@ -38,6 +38,13 @@ class SettingsResponse(BaseModel):
     has_telegram_bot_token: bool = False
     telegram_bot_token_masked: Optional[str] = None
 
+    # Work-time tracking (фиксация рабочего времени)
+    work_start_time: str = "09:00"
+    work_end_time: str = "18:00"
+    track_admin: bool = False
+    track_manager: bool = False
+    track_operator: bool = False
+
 class SettingsUpdate(BaseModel):
     brand_name: Optional[str] = None
     timezone: Optional[str] = None
@@ -66,6 +73,13 @@ class SettingsUpdate(BaseModel):
     # Telegram
     telegram_bot_token: Optional[str] = None
     telegram_chat_id: Optional[str] = None
+
+    # Work-time tracking (фиксация рабочего времени)
+    work_start_time: Optional[str] = None
+    work_end_time: Optional[str] = None
+    track_admin: Optional[bool] = None
+    track_manager: Optional[bool] = None
+    track_operator: Optional[bool] = None
 
 class EmailTestRequest(BaseModel):
     to_email: str

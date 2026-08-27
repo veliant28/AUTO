@@ -24,6 +24,7 @@ import app.workers.tasks.chat_cleanup_tasks  # noqa: F401
 import app.workers.tasks.backup_tasks  # noqa: F401
 import app.workers.tasks.price_cleanup_tasks  # noqa: F401
 import app.workers.tasks.presence_tasks  # noqa: F401
+import app.workers.tasks.attendance_tasks  # noqa: F401
 
 celery_app.conf.beat_schedule = {
     'scheduler-tick': {
@@ -49,6 +50,10 @@ celery_app.conf.beat_schedule = {
     'cleanup-presence-logs': {
         'task': 'cleanup_presence_logs',
         'schedule': 86400.0,
+    },
+    'auto-clockout': {
+        'task': 'auto_clockout',
+        'schedule': 60.0,
     },
 }
 

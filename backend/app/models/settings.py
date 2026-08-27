@@ -41,3 +41,10 @@ class SiteSettings(Base):
 
     # Backup schedule
     backup_run_at_time = Column(String, nullable=False, default="02:00")
+
+    # Work-time tracking (фиксация рабочего времени)
+    work_start_time = Column(String, nullable=False, default="09:00")
+    work_end_time = Column(String, nullable=False, default="18:00")
+    track_admin = Column(Boolean, nullable=False, default=False, server_default=text('false'))
+    track_manager = Column(Boolean, nullable=False, default=False, server_default=text('false'))
+    track_operator = Column(Boolean, nullable=False, default=False, server_default=text('false'))

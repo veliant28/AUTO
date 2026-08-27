@@ -24,6 +24,7 @@ from app.api.v1.endpoints.admin.protection import router as protection_router
 from app.api.v1.endpoints.admin.backup import router as backup_router
 from app.api.v1.endpoints.admin.notifications import router as notifications_router
 from app.api.v1.endpoints.admin.monitor import router as monitor_router
+from app.api.v1.endpoints.admin.attendance import router as attendance_router
 
 admin_router = APIRouter()
 
@@ -52,5 +53,6 @@ admin_router.include_router(protection_router, tags=["Protection"])
 admin_router.include_router(backup_router, tags=["Backup"])
 admin_router.include_router(notifications_router, tags=["Notifications"])
 admin_router.include_router(monitor_router, tags=["Monitor"])
+admin_router.include_router(attendance_router, tags=["Attendance"])
 
 __all__ = ["admin_router"]

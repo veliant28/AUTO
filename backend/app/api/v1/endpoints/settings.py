@@ -122,6 +122,12 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         telegram_chat_id=s.telegram_chat_id,
         has_telegram_bot_token=bool(s.telegram_bot_token_encrypted),
         telegram_bot_token_masked=_mask_telegram_token(s, decrypt_password),
+        # Work-time tracking
+        work_start_time=s.work_start_time or "09:00",
+        work_end_time=s.work_end_time or "18:00",
+        track_admin=bool(s.track_admin),
+        track_manager=bool(s.track_manager),
+        track_operator=bool(s.track_operator),
     )
 
 
@@ -235,6 +241,17 @@ async def update_settings(
             s.telegram_bot_token_encrypted = None
     if body.telegram_chat_id is not None:
         s.telegram_chat_id = body.telegram_chat_id or None
+    # Work-time tracking
+    if body.work_start_time is not None:
+        s.work_start_time = body.work_start_time
+    if body.work_end_time is not None:
+        s.work_end_time = body.work_end_time
+    if body.track_admin is not None:
+        s.track_admin = body.track_admin
+    if body.track_manager is not None:
+        s.track_manager = body.track_manager
+    if body.track_operator is not None:
+        s.track_operator = body.track_operator
     db.commit()
     db.refresh(s)
     return _build_settings_response(s)

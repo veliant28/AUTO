@@ -22,6 +22,7 @@ from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
 from .protection import BanRecord, ProtectionEvent, Whitelist
 from .backup import BackupRecord
 from .presence import PresenceSession, ProductView, ClientIp
+from .attendance import AttendanceSession
 
 __all__ = [
     "Base", 
@@ -49,4 +50,5 @@ __all__ = [
     "BanRecord", "ProtectionEvent", "Whitelist",
     "BackupRecord",
     "PresenceSession", "ProductView", "ClientIp",
+    "AttendanceSession",
 ]

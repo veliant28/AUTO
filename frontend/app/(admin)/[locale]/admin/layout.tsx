@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, Suspense } from 'react'
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -38,9 +38,19 @@ import {
   MessageSquare,
   ShieldAlert,
   CalendarDays,
+  ClipboardList,
+  CalendarClock,
+  Timer,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   InputOTP,
   InputOTPGroup,
@@ -64,7 +74,7 @@ import api from '@/lib/api'
 import { toast } from '@/lib/toast'
 import { can } from '@/lib/permissions'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getAvatarUrl, getInitials } from '@/lib/avatar'
 import { Card, CardContent } from '@/components/ui/card'
@@ -87,6 +97,9 @@ import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import PresenceClient from '@/components/PresenceClient'
+import AttendanceGuard from '@/components/AttendanceGuard'
+import { TimePicker } from '@/components/ui/TimePicker'
+import { formatDate } from '@/hooks/useTimezone'
 
 const LOCALES = ['ru', 'en', 'ua']
 
@@ -111,6 +124,8 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isProtection = pathname.includes('/admin/protection')
   const isImport = pathname.includes('/admin/import')
   const isPricing = pathname.includes('/admin/pricing')
+  const isAttendance = pathname.includes('/admin/attendance')
+  const isTimesheet = pathname.includes('/admin/timesheet')
   const isAdmin =
     pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname)
   const isOrders = pathname.includes('/admin/orders')
@@ -159,6 +174,8 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/novaposhta': { icon: Truck, titleKey: 'novaposhta_title' },
     '/admin/staff': { icon: Users, titleKey: 'staff_title' },
     '/admin/support': { icon: MessageSquare, titleKey: 'support_title' },
+    '/admin/attendance': { icon: CalendarClock, titleKey: 'attendance_title' },
+    '/admin/timesheet': { icon: ClipboardList, titleKey: 'timesheet_title' },
   }
 
   const pageMetaEntries = Object.entries(pageMeta).sort(
@@ -262,21 +279,6 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   // Backup TopBar state
   const [backupTime, setBackupTime] = useState('02:00')
-  const [backupTimeOpen, setBackupTimeOpen] = useState(false)
-  const backupHoursRef = useRef<HTMLDivElement>(null)
-  const backupMinutesRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (backupTimeOpen) {
-      requestAnimationFrame(() => {
-        backupHoursRef.current
-          ?.querySelector<HTMLButtonElement>('[data-selected]')
-          ?.scrollIntoView({ block: 'start', behavior: 'instant' })
-        backupMinutesRef.current
-          ?.querySelector<HTMLButtonElement>('[data-selected]')
-          ?.scrollIntoView({ block: 'start', behavior: 'instant' })
-      })
-    }
-  }, [backupTimeOpen])
   useEffect(() => {
     const id = setInterval(() => {
       const win = window as any
@@ -284,6 +286,170 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     }, 200)
     return () => clearInterval(id)
   }, [])
+
+  // Work-time tracking (кнопка входа/выхода в топ-баре)
+  const { data: settings } = useQuery({
+    // Отдельный ключ: 'public-settings' резервируют другие хуки (brandName/timezone)
+    // со staleTime 60s, и их кэш может содержать только {brand_name}
+    queryKey: ['attendance-settings'],
+    queryFn: async () => {
+      const { data } = await api.get('/settings')
+      return data as {
+        brand_name: string
+        timezone: string
+        work_start_time: string
+        work_end_time: string
+        track_admin: boolean
+        track_manager: boolean
+        track_operator: boolean
+      }
+    },
+  })
+
+  const trackKey =
+    user?.role === 'admin'
+      ? 'track_admin'
+      : user?.role === 'manager'
+        ? 'track_manager'
+        : user?.role === 'operator'
+          ? 'track_operator'
+          : null
+  const trackingEnabled = trackKey
+    ? !!settings?.[trackKey as keyof typeof settings]
+    : false
+
+  const { data: todayAttendance } = useQuery({
+    queryKey: ['attendance-today'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/attendance/today')
+      return data as {
+        sessions: {
+          clock_in_at: string | null
+          clock_out_at: string | null
+          auto_clock_out: boolean
+        }[]
+        open_session: {
+          clock_in_at: string | null
+          clock_out_at: string | null
+          auto_clock_out: boolean
+        } | null
+      }
+    },
+    refetchInterval: 30000,
+    enabled: trackingEnabled && !!user,
+  })
+
+  const clockMutation = useMutation({
+    mutationFn: async (action: 'clock-in' | 'clock-out') => {
+      const { data } = await api.post(`/admin/attendance/${action}`)
+      return data
+    },
+    onSuccess: (data: any, action) => {
+      queryClient.setQueryData(['attendance-today'], data)
+      // Если открыта страница «Фиксация» — обновляем таблицу сразу
+      queryClient.invalidateQueries({ queryKey: ['admin-attendance-records'] })
+      const rec =
+        action === 'clock-in' ? data?.open_session : data?.sessions?.at(-1)
+      if (action === 'clock-in') {
+        toast.success(
+          ta('attendance_clock_in_success', {
+            time: formatDate(rec?.clock_in_at),
+          }),
+        )
+      } else {
+        toast.success(
+          ta('attendance_clock_out_success', {
+            time: formatDate(rec?.clock_out_at),
+          }),
+        )
+      }
+    },
+    onError: () => toast.error(ta('attendance_clock_error')),
+  })
+
+  const openSession = todayAttendance?.open_session ?? null
+  const clockedIn = !!openSession
+
+  // Календарь на странице «Фиксация» (просмотр по дням)
+  const [attendanceDate, setAttendanceDate] = useState<Date | undefined>(
+    undefined,
+  )
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      if (win.__attendanceDate) {
+        const d = new Date(win.__attendanceDate)
+        setAttendanceDate((prev) =>
+          prev && prev.getTime() === d.getTime() ? prev : d,
+        )
+      } else if (attendanceDate) {
+        setAttendanceDate(undefined)
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [attendanceDate])
+
+  // Календарь на странице «Табель» (выбор месяца и года)
+  const [timesheetMonth, setTimesheetMonth] = useState<Date | undefined>(
+    undefined,
+  )
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      if (win.__timesheetMonth) {
+        const d = new Date(win.__timesheetMonth)
+        setTimesheetMonth((prev) =>
+          prev && prev.getTime() === d.getTime() ? prev : d,
+        )
+      } else if (timesheetMonth) {
+        setTimesheetMonth(undefined)
+      }
+    }, 200)
+    return () => clearInterval(id)
+  }, [timesheetMonth])
+
+  // Селект сотрудника на странице «Табель» (состояние живёт в странице)
+  const [timesheetEmployeeId, setTimesheetEmployeeId] = useState<number | null>(
+    null,
+  )
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      setTimesheetEmployeeId((prev) => {
+        const cur = win.__timesheetEmployee ?? null
+        return cur === prev ? prev : cur
+      })
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  const timesheetMonthKey = useMemo(() => {
+    if (!timesheetMonth) {
+      const now = new Date()
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    }
+    return `${timesheetMonth.getFullYear()}-${String(timesheetMonth.getMonth() + 1).padStart(2, '0')}`
+  }, [timesheetMonth])
+
+  // Данные табеля нужны топ-бару для списка сотрудников (общий кэш со страницей)
+  const { data: timesheetData } = useQuery({
+    queryKey: ['admin-timesheet', timesheetMonthKey],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/attendance/timesheet', {
+        params: { month: timesheetMonthKey },
+      })
+      return data as {
+        users: {
+          user_id: number
+          full_name: string | null
+          first_name: string | null
+          last_name: string | null
+          email: string | null
+        }[]
+      }
+    },
+    enabled: isTimesheet && can(user, 'attendance.view'),
+  })
 
   const tecdocTabs = [
     { key: 'dashboard', label: ta('tecdoc_dashboard') },
@@ -326,6 +492,14 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               {ta(meta.titleKey)}
             </h1>
           </div>
+        )}
+        {isTimesheet && settings && (
+          <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">
+            {ta('timesheet_work_hours', {
+              start: settings.work_start_time,
+              end: settings.work_end_time,
+            })}
+          </span>
         )}
         {isTecDoc &&
           tecdocTabs.map((t) => {
@@ -594,6 +768,126 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             )}
           </div>
         )}
+        {isAttendance && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="icon"
+                  variant={attendanceDate ? 'default' : 'outline'}
+                >
+                  {attendanceDate ? (
+                    <span className="text-xs font-bold">
+                      {format(attendanceDate, 'dd')}
+                    </span>
+                  ) : (
+                    <CalendarDays className="w-4 h-4" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  navLayout="around"
+                  selected={attendanceDate}
+                  onSelect={(d) =>
+                    (window as any).__attendanceSetDate?.(d ?? undefined)
+                  }
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+            {attendanceDate && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => {
+                      ;(window as any).__attendanceSetDate?.(undefined)
+                      toast.info(ta('attendance_reset_date'))
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('attendance_reset')}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
+        {isTimesheet && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+            <Select
+              value={timesheetEmployeeId ? String(timesheetEmployeeId) : 'all'}
+              onValueChange={(v) =>
+                (window as any).__timesheetSetEmployee?.(
+                  v === 'all' ? null : Number(v),
+                )
+              }
+            >
+              <SelectTrigger className="w-[200px] h-9">
+                <SelectValue placeholder={ta('timesheet_employee')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {ta('timesheet_all_employees')}
+                </SelectItem>
+                {(timesheetData?.users || []).map((u) => (
+                  <SelectItem key={u.user_id} value={String(u.user_id)}>
+                    {[u.last_name, u.first_name].filter(Boolean).join(' ') ||
+                      u.full_name ||
+                      u.email ||
+                      `#${u.user_id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="icon"
+                  variant={timesheetMonth ? 'default' : 'outline'}
+                >
+                  <span className="text-xs font-bold">
+                    {format(timesheetMonth ?? new Date(), 'LLL', {
+                      locale: ru,
+                    })
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  navLayout="around"
+                  defaultMonth={timesheetMonth}
+                  onMonthChange={(m) =>
+                    (window as any).__timesheetSetMonth?.(m)
+                  }
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+            {timesheetMonth && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => {
+                      ;(window as any).__timesheetSetMonth?.(undefined)
+                      toast.info(ta('timesheet_reset_month'))
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('timesheet_reset')}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
         {isAdmin &&
           (searchParams.get('tab') || 'dashboard') === 'protection' && (
             <div className="border-r pr-2 self-stretch flex items-center gap-1">
@@ -759,85 +1053,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         )}
         {isAdmin && (searchParams.get('tab') || 'dashboard') === 'backup' && (
           <div className="border-r pr-2 self-stretch flex items-center gap-2">
-            <Popover open={backupTimeOpen} onOpenChange={setBackupTimeOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-24 font-normal text-center cursor-pointer gap-1 text-base"
-                >
-                  <span className="flex-1">{backupTime}</span>
-                  <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-fit p-2"
-                align="center"
-                sideOffset={4}
-              >
-                <div className="flex gap-1">
-                  <div
-                    ref={backupHoursRef}
-                    className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                  >
-                    {Array.from({ length: 24 }, (_, i) =>
-                      String(i).padStart(2, '0'),
-                    ).map((h) => (
-                      <button
-                        key={h}
-                        type="button"
-                        data-selected={
-                          h === backupTime.split(':')[0] || undefined
-                        }
-                        className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
-                          h === backupTime.split(':')[0]
-                            ? 'bg-primary text-primary-foreground font-medium'
-                            : 'hover:bg-accent text-foreground'
-                        }`}
-                        onClick={() => {
-                          ;(window as any).__setBackupTime?.(
-                            `${h}:${backupTime.split(':')[1]}`,
-                          )
-                          setBackupTimeOpen(false)
-                        }}
-                      >
-                        {h}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="w-px bg-border self-stretch" />
-                  <div
-                    ref={backupMinutesRef}
-                    className="flex flex-col gap-0.5 max-h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-                  >
-                    {Array.from({ length: 60 }, (_, i) =>
-                      String(i).padStart(2, '0'),
-                    ).map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        data-selected={
-                          m === backupTime.split(':')[1] || undefined
-                        }
-                        className={`px-3 py-1 text-sm rounded-md cursor-pointer transition-colors ${
-                          m === backupTime.split(':')[1]
-                            ? 'bg-primary text-primary-foreground font-medium'
-                            : 'hover:bg-accent text-foreground'
-                        }`}
-                        onClick={() => {
-                          ;(window as any).__setBackupTime?.(
-                            `${backupTime.split(':')[0]}:${m}`,
-                          )
-                          setBackupTimeOpen(false)
-                        }}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <TimePicker
+              value={backupTime}
+              onChange={(v) => (window as any).__setBackupTime?.(v)}
+            />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1194,6 +1413,38 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <span className="hidden sm:inline">{brandName}</span>
         </Link>
         <div className="border-l pl-2 flex items-center gap-1">
+          {trackingEnabled && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  disabled={clockMutation.isPending}
+                  className={
+                    clockedIn
+                      ? ''
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                  }
+                  variant={clockedIn ? 'destructive' : undefined}
+                  onClick={() =>
+                    clockMutation.mutate(clockedIn ? 'clock-out' : 'clock-in')
+                  }
+                >
+                  {clockMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : clockedIn ? (
+                    <Clock className="w-4 h-4 animate-pulse" />
+                  ) : (
+                    <Timer className="w-4 h-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {clockedIn
+                  ? ta('attendance_clock_out')
+                  : ta('attendance_clock_in')}
+              </TooltipContent>
+            </Tooltip>
+          )}
           <LanguageSwitcher />
           <Avatar className="h-8 w-8 ring-2 ring-border">
             <AvatarImage
@@ -1274,7 +1525,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, setUser } = useAuthStore()
   const t = useTranslations('admin')
   const tc = useTranslations('common')
   const brandName = useBrandName()
@@ -1285,6 +1536,23 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     b2b: 'bg-green-500 text-white',
     retail: 'bg-gray-500 text-white',
   }
+
+  // Свежие права с бэкенда: сессия могла быть создана до выдачи новых
+  // пермишенов (например, attendance.view), и в localStorage лежит старый
+  // список — без этого сайдбар и страницы не появляются до повторного логина.
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let cancelled = false
+    api
+      .get('/users/me')
+      .then(({ data }) => {
+        if (!cancelled) setUser(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, setUser])
   const userRole = user?.role || ''
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -1433,6 +1701,18 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       label: t('footer_title'),
       perm: 'footer.edit',
     },
+    {
+      href: '/admin/timesheet',
+      icon: ClipboardList,
+      label: t('timesheet_title'),
+      perm: 'attendance.view',
+    },
+    {
+      href: '/admin/attendance',
+      icon: CalendarClock,
+      label: t('attendance_sidebar'),
+      perm: 'attendance.view',
+    },
   ]
 
   return (
@@ -1446,7 +1726,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:bottom-auto lg:h-screen lg:self-start lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -1471,7 +1751,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex flex-col gap-1 p-4 overflow-y-auto max-h-[calc(100vh-4rem)]">
           {navItems
             .filter((item) => can(user, item.perm))
             .map((item) => {
@@ -1502,7 +1782,9 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         <Suspense fallback={null}>
           <TopBar onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
-        <main className="flex-1 w-full">{children}</main>
+        <main className="flex-1 w-full">
+          <AttendanceGuard>{children}</AttendanceGuard>
+        </main>
       </div>
     </div>
   )

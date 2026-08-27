@@ -16,9 +16,12 @@ import {
   Receipt,
   Building2,
   Wallet,
+  Clock,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { TimePicker } from '@/components/ui/TimePicker'
+import { Switch } from '@/components/ui/switch'
 import {
   Tooltip,
   TooltipTrigger,
@@ -120,6 +123,13 @@ export default function SettingsPage() {
   const [telegramChatId, setTelegramChatId] = React.useState('')
   const [hasTelegramBotToken, setHasTelegramBotToken] = React.useState(false)
 
+  // Work-time tracking fields
+  const [workStartTime, setWorkStartTime] = React.useState('09:00')
+  const [workEndTime, setWorkEndTime] = React.useState('18:00')
+  const [trackAdmin, setTrackAdmin] = React.useState(false)
+  const [trackManager, setTrackManager] = React.useState(false)
+  const [trackOperator, setTrackOperator] = React.useState(false)
+
   // When eye closed – show all stars; when open – show partial mask with visible edges
   const telegramTokenDisplay = showTelegramToken
     ? telegramBotToken
@@ -159,6 +169,11 @@ export default function SettingsPage() {
         telegram_chat_id: string | null
         has_telegram_bot_token: boolean
         telegram_bot_token_masked: string | null
+        work_start_time: string
+        work_end_time: string
+        track_admin: boolean
+        track_manager: boolean
+        track_operator: boolean
       }
     },
     enabled: !!user,
@@ -297,6 +312,13 @@ export default function SettingsPage() {
     } else {
       setTelegramChatId('')
     }
+    // Work-time tracking
+    if (data?.work_start_time) setWorkStartTime(data.work_start_time)
+    if (data?.work_end_time) setWorkEndTime(data.work_end_time)
+    if (data?.track_admin !== undefined) setTrackAdmin(data.track_admin)
+    if (data?.track_manager !== undefined) setTrackManager(data.track_manager)
+    if (data?.track_operator !== undefined)
+      setTrackOperator(data.track_operator)
   }, [data])
 
   const isKeyUnchanged = resendApiKey === savedKeyMask
@@ -338,13 +360,28 @@ export default function SettingsPage() {
       if (!isTelegramTokenUnchanged)
         payload.telegram_bot_token = telegramBotToken
       if (telegramChatId) payload.telegram_chat_id = telegramChatId
+      // Work-time tracking
+      payload.work_start_time = workStartTime
+      payload.work_end_time = workEndTime
+      payload.track_admin = trackAdmin
+      payload.track_manager = trackManager
+      payload.track_operator = trackOperator
       await api.put('/admin/settings', payload)
     },
     onSuccess: () => {
-      queryClient.setQueryData(['public-settings'], {
+      const attendanceSettings = {
         brand_name: brandName,
         timezone,
-      })
+        work_start_time: workStartTime,
+        work_end_time: workEndTime,
+        track_admin: trackAdmin,
+        track_manager: trackManager,
+        track_operator: trackOperator,
+      }
+      queryClient.setQueryData(['public-settings'], attendanceSettings)
+      // Кнопка фиксации и guard в лейауте читают этот ключ — обновляем сразу,
+      // чтобы кнопка появилась/редирект сработал без перезагрузки
+      queryClient.setQueryData(['attendance-settings'], attendanceSettings)
       setStoreTimezone(timezone)
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] })
       toast.success(t('settings_saved'))
@@ -1017,6 +1054,95 @@ export default function SettingsPage() {
                     placeholder={t('telegram_chat_id_placeholder')}
                     className="font-mono text-sm"
                   />
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Work-time tracking Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              {t('settings_worktime_title')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings_worktime_desc')}</TooltipContent>
+              </Tooltip>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('settings_worktime_start')}
+                    </label>
+                    <TimePicker
+                      value={workStartTime}
+                      onChange={setWorkStartTime}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('settings_worktime_end')}
+                    </label>
+                    <TimePicker value={workEndTime} onChange={setWorkEndTime} />
+                  </div>
+                </div>
+                <div className="rounded-lg border p-4 space-y-3">
+                  <p className="text-sm text-muted-foreground uppercase tracking-wide">
+                    {t('settings_worktime_groups')}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-sm font-medium cursor-pointer"
+                      htmlFor="worktime-admin"
+                    >
+                      {t('admin')}
+                    </label>
+                    <Switch
+                      id="worktime-admin"
+                      checked={trackAdmin}
+                      onCheckedChange={setTrackAdmin}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-sm font-medium cursor-pointer"
+                      htmlFor="worktime-manager"
+                    >
+                      {t('manager')}
+                    </label>
+                    <Switch
+                      id="worktime-manager"
+                      checked={trackManager}
+                      onCheckedChange={setTrackManager}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-sm font-medium cursor-pointer"
+                      htmlFor="worktime-operator"
+                    >
+                      {t('operator')}
+                    </label>
+                    <Switch
+                      id="worktime-operator"
+                      checked={trackOperator}
+                      onCheckedChange={setTrackOperator}
+                    />
+                  </div>
                 </div>
               </>
             )}

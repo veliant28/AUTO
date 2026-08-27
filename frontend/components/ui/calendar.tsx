@@ -41,7 +41,9 @@ function Calendar({
         weeks: 'flex flex-col',
         week: 'flex w-full mt-2',
         day: cn(
-          'group relative p-0 text-center text-sm',
+          // w-8/h-8 фиксируют размер ячейки: без mode v10 рендерит дни текстом
+          // (не кнопками) — без размера числа «съезжают» и календарь ниже ростом
+          'group relative p-0 text-center text-sm w-8 h-8 flex items-center justify-center',
           props.mode === 'range'
             ? '[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md'
             : '',
