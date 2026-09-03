@@ -1146,6 +1146,7 @@
   "settings_worktime_auto_clockout_desc": "Open sessions will be closed automatically at the chosen time — hours will appear in the timesheet.",
   "settings_worktime_auto_clockout_default": "By default: shift end + 15 minutes ({time})",
   "settings_worktime_auto_clockout_reset": "Back to default (shift end + 15 minutes)",
+  "settings_worktime_auto_clockout_too_early": "Auto clock-out cannot be earlier than the shift end. Reset to default: shift end + 15 minutes ({time})",
   "settings_worktime_groups": "Tracking for groups",
   "workers_task_auto_clockout": "Attendance: auto clock-out",
   "pagination_prev": "Prev",

@@ -1146,6 +1146,7 @@
   "settings_worktime_auto_clockout_desc": "Открытые сессии закроются автоматически в выбранное время — часы попадут в табель.",
   "settings_worktime_auto_clockout_default": "По умолчанию: конец смены + 15 минут ({time})",
   "settings_worktime_auto_clockout_reset": "Вернуть по умолчанию (конец смены + 15 минут)",
+  "settings_worktime_auto_clockout_too_early": "Авто-фикс выхода не может быть раньше конца смены. Установлено по умолчанию: конец смены + 15 минут ({time})",
   "settings_worktime_groups": "Фиксация для групп",
   "workers_task_auto_clockout": "Фиксация: автовыход",
   "pagination_prev": "Назад",

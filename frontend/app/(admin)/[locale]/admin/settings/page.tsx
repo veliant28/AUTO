@@ -71,6 +71,12 @@ function addMinutesToHM(hm: string, minutes: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }
 
+/** 'HH:MM' → минуты от полуночи */
+function minutesOfHM(hm: string): number {
+  const [h, m] = (hm || '00:00').split(':').map(Number)
+  return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m)
+}
+
 export default function SettingsPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
@@ -346,6 +352,28 @@ export default function SettingsPage() {
   const isTelegramTokenUnchanged = telegramBotToken === savedTelegramTokenMask
   // Пока автофиксация не задана — показываем значение по умолчанию (конец + 15)
   const defaultAutoClockout = addMinutesToHM(workEndTime, 15)
+  // Анти-спам синего тоста при повторных попытках выбрать раннее время
+  const lastRejectRef = React.useRef(0)
+
+  // Авто-фикс выхода не может быть раньше конца смены: синий тост + сброс
+  // на «конец смены + 15 минут»
+  const handleAutoClockoutChange = (v: string) => {
+    const endMinutes = minutesOfHM(workEndTime)
+    if (minutesOfHM(v) < endMinutes) {
+      const nowTs = Date.now()
+      if (nowTs - lastRejectRef.current > 2000) {
+        lastRejectRef.current = nowTs
+        toast.info(
+          t('settings_worktime_auto_clockout_too_early', {
+            time: defaultAutoClockout,
+          }),
+        )
+      }
+      setAutoClockoutTime(null)
+      return
+    }
+    setAutoClockoutTime(v)
+  }
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -1126,7 +1154,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-1.5">
                       <TimePicker
                         value={autoClockoutTime || defaultAutoClockout}
-                        onChange={(v) => setAutoClockoutTime(v)}
+                        onChange={handleAutoClockoutChange}
                         tooltip={`${t('settings_worktime_auto_clockout_desc')} ${t(
                           'settings_worktime_auto_clockout_default',
                           {
