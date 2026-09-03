@@ -488,6 +488,11 @@ export default function TimesheetPage() {
                           const highlight = canEdit && (hasManual || hasPending)
 
                           let cellClass = 'p-1.5 text-center align-middle'
+                          if (isEditing) {
+                            // Инпут рисуем поверх ячейки (absolute) — он не участвует
+                            // в лейауте таблицы и не может растянуть колонку
+                            cellClass += ' relative'
+                          }
                           if (highlight) {
                             cellClass += ' bg-amber-200/60'
                             if (hasPending) {
@@ -526,7 +531,7 @@ export default function TimesheetPage() {
                                   }
                                 }}
                                 onBlur={() => setEditingKey(null)}
-                                className="w-full min-w-0 h-7 px-0.5 text-center font-mono text-xs"
+                                className="absolute inset-0 h-full w-full min-w-0 bg-transparent px-1 text-center font-mono text-xs focus-visible:outline-none focus-visible:ring-0"
                               />
                             )
                           } else {
