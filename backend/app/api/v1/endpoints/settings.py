@@ -119,6 +119,8 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         # NovaPay
         has_novapay_private_key=bool(s.novapay_private_key_encrypted),
         novapay_private_key_masked=_mask_generic_key(s, "novapay_private_key_encrypted", decrypt_password),
+        novapay_public_key=s.novapay_public_key,
+        novapay_is_test=bool(s.novapay_is_test) if s.novapay_is_test is not None else True,
         novapay_merchant_id=s.novapay_merchant_id,
         # Telegram
         telegram_chat_id=s.telegram_chat_id,
@@ -229,6 +231,10 @@ async def update_settings(
         else:
             s.liqpay_private_key_encrypted = None
     # NovaPay
+    if body.novapay_public_key is not None:
+        s.novapay_public_key = body.novapay_public_key or None
+    if body.novapay_is_test is not None:
+        s.novapay_is_test = body.novapay_is_test
     if body.novapay_merchant_id is not None:
         s.novapay_merchant_id = body.novapay_merchant_id or None
     if body.novapay_private_key is not None:

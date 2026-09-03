@@ -1,25 +1,29 @@
 """
-NovaPay payment provider.
+NovaPay Internet Acquiring provider (official API).
 
-Documentation: https://novapay.readme.io/reference/acquiring
+Docs: https://novapay.readme.io/reference/acquiring-requests
+Base:  test https://api-qecom.novapay.ua / prod https://api-ecom.novapay.ua
 
-API base: https://api.novapay.ua/v1
+Flow (per docs):
+  1. POST {base}/v1/session   — create session  (client_phone is required,
+     callback_url = где ждать постбек, success_url/fail_url — куда вернуть клиента)
+  2. POST {base}/v1/payment   — add payment to the session (amount in UAH,
+     float, e.g. 100.25; response contains the payment `url` to redirect client)
+  3. NovaPay POSTs postbacks to callback_url; they are signed by NovaPay with
+     their private RSA key — merchant verifies with NovaPay's PUBLIC key over
+     the RAW request body, signature header `x-sign-v2`.
+  4. POST {base}/v1/get-status — session status check.
 
-Auth: RSA-SHA256 signature (X-Sign header) with merchant private key.
-
-Flow:
-  1. POST /api/v1/session/create — create payment session → returns payment URL
-  2. User pays on NovaPay page
-  3. NovaPay sends postback (callback) with status updates
-  4. POST /api/v1/session/status — check session status
+Every outbound request carries header x-sign = base64(RSA-SHA256 signature of
+the raw JSON body) made with the merchant's private key.
 """
 import base64
-import hashlib
 import json
 import logging
 from typing import Optional
+
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 import httpx
@@ -32,120 +36,119 @@ logger = logging.getLogger(__name__)
 NOVAPAY_API_URL_TEST = "https://api-qecom.novapay.ua"
 NOVAPAY_API_URL_PROD = "https://api-ecom.novapay.ua"
 
-# Error codes mapping
-NOVAPAY_ERROR_CODES = {
-    "AUTH_001": "Помилка авторизації. Невірний підпис",
-    "AUTH_002": "Термін дії ключа минув",
-    "VALID_001": "Невірний формат запиту",
-    "VALID_002": "Обов'язкове поле відсутнє",
-    "SESS_001": "Сесію не знайдено",
-    "SESS_002": "Сесія вже завершена",
-    "SESS_003": "Сесія прострочена",
-    "SESS_004": "Не можна додати платіж до завершеної сесії",
-    "PAY_001": "Платіж не знайдено",
-    "PAY_002": "Платіж вже оплачено",
-    "PAY_003": "Сума перевищує доступну",
-    "HOLD_001": "Блокування не знайдено",
-    "HOLD_002": "Блокування вже підтверджено",
-    "HOLD_003": "Блокування прострочено",
-    "CARD_001": "Картку не підтримано",
-    "CARD_002": "Недостатньо коштів",
-    "CARD_003": "Платіж відхилено банком",
+# Заголовок подписи постбеков от NovaPay (отличается от x-sign исходящих запросов)
+NOVAPAY_POSTBACK_SIGN_HEADER = "x-sign-v2"
+
+# Статусы сессий из https://novapay.readme.io/reference/session-statuses
+NOVAPAY_STATUS_MAP = {
+    "created": "pending",
+    "processing": "pending",
+    "holded": "pending",
+    "hold_confirmed": "pending",  # блокировка подтверждена — списание ещё не прошло
+    "processing_hold_completion": "pending",
+    "processing_void": "pending",
+    "paid": "paid",
+    "failed": "failed",
+    "voided": "refunded",
+    "expired": "expired",
 }
 
 
 def _load_private_key(pem_str: str) -> RSAPrivateKey:
     """Load RSA private key from PEM string."""
     try:
-        key = serialization.load_pem_private_key(
-            pem_str.encode("utf-8") if not pem_str.startswith("-----") else pem_str.encode("utf-8"),
-            password=None,
-        )
+        key = serialization.load_pem_private_key(pem_str.encode("utf-8"), password=None)
         if not isinstance(key, RSAPrivateKey):
             raise PaymentProviderError("NovaPay: invalid private key type")
         return key
+    except PaymentProviderError:
+        raise
     except Exception as e:
         raise PaymentProviderError(f"NovaPay: failed to load private key: {e}", provider="novapay")
 
 
-def _sign_body(body: dict, private_key_pem: str) -> str:
-    """
-    Sign request body with RSA-SHA256.
+def _load_public_key(pem_str: str):
+    """Load RSA public key from PEM string."""
+    try:
+        return serialization.load_pem_public_key(pem_str.encode("utf-8"))
+    except Exception as e:
+        raise PaymentProviderError(f"NovaPay: failed to load public key: {e}", provider="novapay")
 
-    Algorithm:
-      1. Serialize body to JSON (compact, no extra spaces)
-      2. SHA-256 hash
-      3. Sign with RSA private key
-      4. Base64 encode
-    """
-    key = _load_private_key(private_key_pem)
-    body_str = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
-    signature = key.sign(
-        body_str.encode("utf-8"),
-        padding.PKCS1v15(),
-        hashes.SHA256(),
-    )
+
+def _rsa_sign(pem_str: str, raw_body: bytes) -> str:
+    """base64(RSA-SHA256 signature) of the raw request/postback body."""
+    key = _load_private_key(pem_str)
+    signature = key.sign(raw_body, padding.PKCS1v15(), hashes.SHA256())
     return base64.b64encode(signature).decode()
+
+
+def _rsa_verify(pem_str: str, raw_body: bytes, signature: str) -> bool:
+    """Verify RSA-SHA256 signature (NovaPay public key) over the raw body."""
+    try:
+        key = _load_public_key(pem_str)
+        key.verify(
+            base64.b64decode(signature),
+            raw_body,
+            padding.PKCS1v15(),
+            hashes.SHA256(),
+        )
+        return True
+    except Exception:
+        return False
 
 
 class NovaPayPaymentProvider(BasePaymentProvider):
     """
-    NovaPay acquiring API.
-    Uses RSA-SHA256 signature for authentication (X-Sign header).
-
-    API base (test): https://api-qecom.novapay.ua
-    API base (prod): https://api-ecom.novapay.ua
-
-    Docs: https://novapay.readme.io/reference/acquiring
+    NovaPay Internet Acquiring (official /v1 API).
     """
 
     provider_code = "novapay"
 
-    def __init__(self, merchant_id: int, private_key_pem: str, is_test: bool = True):
+    def __init__(
+        self,
+        merchant_id: int,
+        private_key_pem: str,
+        is_test: bool = True,
+        public_key_pem: str = "",
+    ):
         self.merchant_id = merchant_id
         self.private_key_pem = private_key_pem
+        self.public_key_pem = public_key_pem
         self.base_url = NOVAPAY_API_URL_TEST if is_test else NOVAPAY_API_URL_PROD
 
-    def _headers(self, body: dict) -> dict:
-        signature = _sign_body(body, self.private_key_pem)
+    def _headers(self, raw_body: bytes) -> dict:
         return {
-            "X-Sign": signature,
+            "X-Sign": _rsa_sign(self.private_key_pem, raw_body),
             "Content-Type": "application/json",
         }
 
-    def _map_error(self, error_code: str) -> str:
-        """Map NovaPay error code to human-readable message."""
-        return NOVAPAY_ERROR_CODES.get(error_code, f"Помилка NovaPay: {error_code}")
-
     async def _request(self, method: str, path: str, payload: dict) -> dict:
         url = f"{self.base_url}{path}"
-        headers = self._headers(payload)
+        # Подпись считается по сырому телу — используем ровно те же байты,
+        # которые отправляем на сервер
+        raw_body = json.dumps(
+            payload, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+        headers = self._headers(raw_body)
         logger.debug("NovaPay %s %s", method, url)
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(30)) as client:
-                resp = await client.request(method, url, headers=headers, json=payload)
+                resp = await client.request(method, url, headers=headers, content=raw_body)
                 resp.raise_for_status()
                 data = resp.json()
         except httpx.HTTPStatusError as e:
-            detail = ""
-            try:
-                err_json = e.response.json()
-                error_code = err_json.get("error", "") or err_json.get("error_code", "")
-                if error_code:
-                    detail = self._map_error(error_code)
-                else:
-                    detail = str(err_json)
-            except Exception:
-                detail = str(e)
-            raise PaymentProviderError(detail, provider="novapay", status_code=e.response.status_code)
+            raise PaymentProviderError(
+                f"NovaPay HTTP {e.response.status_code}: {e.response.text[:300]}",
+                provider="novapay",
+                status_code=e.response.status_code,
+            )
         except httpx.RequestError as e:
             raise PaymentProviderError(f"NovaPay HTTP error: {e}", provider="novapay")
 
         if isinstance(data, dict):
-            error_code = data.get("error") or data.get("error_code", "")
-            if error_code:
-                raise PaymentProviderError(self._map_error(error_code), provider="novapay")
-
+            err = data.get("error") or data.get("error_code") or data.get("message")
+            if err:
+                raise PaymentProviderError(f"NovaPay: {err}", provider="novapay")
         return data
 
     async def create_payment(
@@ -156,54 +159,54 @@ class NovaPayPaymentProvider(BasePaymentProvider):
         return_url: str = "",
         **kwargs,
     ) -> PaymentResult:
-        """
-        Create NovaPay session → returns payment URL.
-
-        Steps:
-          1. POST /session/create — create session
-          2. POST /session/{id}/add-payment — add payment with amount
-        """
-        # Amount in kopecks
-        amount_kopecks = int(round(amount * 100))
+        """NovaPay flow: create session → add payment → return payment URL."""
         order_ref = f"order-{order_id}"
+        webhook_url = kwargs.get("webhook_url", "")
 
-        # Step 1: Create session
+        # 1) Сессия: client_phone обязателен, callback_url — куда придёт постбек
         session_payload = {
-            "merchant_id": self.merchant_id,
-            "metadata": {
-                "order_id": str(order_id),
-            },
-            "client_first_name": kwargs.get("client_first_name", ""),
-            "client_last_name": kwargs.get("client_last_name", ""),
-            "client_phone": kwargs.get("client_phone", ""),
-            "result_url": return_url,
-            "postback_url": kwargs.get("webhook_url", ""),
+            "merchant_id": str(self.merchant_id),
+            "client_first_name": kwargs.get("client_first_name") or "",
+            "client_last_name": kwargs.get("client_last_name") or "",
+            "client_phone": kwargs.get("client_phone") or "",
+            "metadata": {"order_id": str(order_id)},
         }
+        if webhook_url:
+            session_payload["callback_url"] = webhook_url
+        if return_url:
+            session_payload["success_url"] = return_url
+            session_payload["fail_url"] = return_url
+            session_payload["success_redirect_timeout"] = 5
 
-        session = await self._request("POST", "/session/create", session_payload)
+        session = await self._request("POST", "/v1/session", session_payload)
         session_id = session.get("id", "")
-
         if not session_id:
-            raise PaymentProviderError("NovaPay: no session_id in response", provider="novapay")
+            raise PaymentProviderError(
+                "NovaPay: no session id in /v1/session response", provider="novapay"
+            )
 
-        payment_url = session.get("url") or session.get("payment_url", "")
-
-        # Step 2: Add payment to session
+        # 2) Платёж: amount — float в гривнах (как в доках, пример 100.25)
+        amount_uah = round(float(amount), 2)
         payment_payload = {
-            "merchant_id": self.merchant_id,
+            "merchant_id": str(self.merchant_id),
             "session_id": session_id,
             "external_id": order_ref,
-            "amount": amount_kopecks,
+            "amount": amount_uah,
             "products": [
                 {
                     "count": 1,
-                    "price": amount_kopecks,
-                    "description": description or f"Order #{order_id}",
+                    "price": amount_uah,
+                    "description": (description or f"Order #{order_id}")[:255],
                 }
             ],
         }
+        payment = await self._request("POST", "/v1/payment", payment_payload)
 
-        await self._request("POST", f"/session/{session_id}/add-payment", payment_payload)
+        payment_url = payment.get("url") or payment.get("payment_url") or ""
+        if not payment_url:
+            raise PaymentProviderError(
+                "NovaPay: no payment url in /v1/payment response", provider="novapay"
+            )
 
         return PaymentResult(
             tx_id=session_id,
@@ -212,64 +215,56 @@ class NovaPayPaymentProvider(BasePaymentProvider):
 
     async def process_webhook(self, data: dict) -> PaymentStatusResult:
         """
-        Process NovaPay postback.
+        Verify and process a NovaPay postback.
 
-        Statuses:
-          created → pending
-          processing → pending
-          holded → pending (funds blocked, need confirmation)
-          paid → paid
-          failed → failed
-          voided → refunded
-          expired → expired
-          hold_confirmed → paid
+        `data` must contain the RAW request body ('raw', bytes) and the
+        signature header ('signature', x-sign-v2) — the signature is computed
+        over the raw body and must be verified BEFORE parsing the JSON.
+        Optionally 'payload' holds the already-decoded JSON.
         """
-        status = data.get("status", "")
-        session_id = data.get("id", "")
+        raw_body = data.get("raw")
+        signature = (data.get("signature") or "").strip()
 
-        status_map = {
-            "created": "pending",
-            "processing": "pending",
-            "holded": "pending",
-            "hold_confirmed": "paid",
-            "paid": "paid",
-            "failed": "failed",
-            "voided": "refunded",
-            "expired": "expired",
-            "processing_hold_completion": "pending",
-            "processing_void": "pending",
-        }
-        mapped_status = status_map.get(status, "pending")
+        if not isinstance(raw_body, (bytes, bytearray)) or not signature:
+            raise PaymentProviderError(
+                "NovaPay postback: missing raw body or signature", provider="novapay"
+            )
+
+        if not self.public_key_pem:
+            raise PaymentProviderError(
+                "NovaPay postback: public key is not configured", provider="novapay"
+            )
+        if not _rsa_verify(self.public_key_pem, bytes(raw_body), signature):
+            raise PaymentProviderError("NovaPay postback: invalid signature", provider="novapay")
+
+        try:
+            payload = data.get("payload")
+            if payload is None:
+                payload = json.loads(bytes(raw_body).decode("utf-8"))
+        except Exception as e:
+            raise PaymentProviderError(f"NovaPay postback: decode error: {e}", provider="novapay")
+
+        status = str(payload.get("status", ""))
+        session_id = str(payload.get("id") or payload.get("session_id") or "")
 
         return PaymentStatusResult(
-            status=mapped_status,
+            status=NOVAPAY_STATUS_MAP.get(status, "pending"),
             provider_tx_id=session_id,
-            raw=data,
+            raw=payload,
         )
 
     async def check_status(self, provider_tx_id: str) -> PaymentStatusResult:
-        """Check session status with NovaPay API."""
+        """Check session status via POST {base}/v1/get-status."""
         payload = {
-            "merchant_id": self.merchant_id,
+            "merchant_id": str(self.merchant_id),
             "session_id": provider_tx_id,
         }
-        result = await self._request("POST", "/session/status", payload)
+        result = await self._request("POST", "/v1/get-status", payload)
 
-        status = result.get("status", "")
-        status_map = {
-            "created": "pending",
-            "processing": "pending",
-            "holded": "pending",
-            "hold_confirmed": "paid",
-            "paid": "paid",
-            "failed": "failed",
-            "voided": "refunded",
-            "expired": "expired",
-        }
-        mapped_status = status_map.get(status, "pending")
-
+        status = str(result.get("status", ""))
+        session_id = str(result.get("id") or provider_tx_id)
         return PaymentStatusResult(
-            status=mapped_status,
-            provider_tx_id=provider_tx_id,
+            status=NOVAPAY_STATUS_MAP.get(status, "pending"),
+            provider_tx_id=session_id,
             raw=result,
         )

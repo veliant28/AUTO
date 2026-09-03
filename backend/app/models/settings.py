@@ -34,6 +34,10 @@ class SiteSettings(Base):
     # NovaPay
     novapay_merchant_id = Column(String, nullable=True)
     novapay_private_key_encrypted = Column(Text, nullable=True)
+    # Публичный ключ NovaPay — для проверки подписи постбеков (x-sign-v2)
+    novapay_public_key = Column(Text, nullable=True)
+    # True = тестовая среда api-qecom.novapay.ua, False = прод api-ecom
+    novapay_is_test = Column(Boolean, nullable=False, default=True, server_default=text('true'))
 
     # Telegram notifications
     telegram_bot_token_encrypted = Column(Text, nullable=True)

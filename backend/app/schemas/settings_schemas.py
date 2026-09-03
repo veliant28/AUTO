@@ -31,6 +31,8 @@ class SettingsResponse(BaseModel):
     # NovaPay
     has_novapay_private_key: bool = False
     novapay_private_key_masked: Optional[str] = None
+    novapay_public_key: Optional[str] = None
+    novapay_is_test: bool = True
     novapay_merchant_id: Optional[str] = None
 
     # Telegram
@@ -70,6 +72,8 @@ class SettingsUpdate(BaseModel):
     # NovaPay
     novapay_merchant_id: Optional[str] = None
     novapay_private_key: Optional[str] = None
+    novapay_public_key: Optional[str] = None
+    novapay_is_test: Optional[bool] = None
 
     # Telegram
     telegram_bot_token: Optional[str] = None

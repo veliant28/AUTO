@@ -82,7 +82,13 @@ class PaymentService:
                 raise PaymentSettingsError("NovaPay not configured")
             merchant_id = int(settings.novapay_merchant_id)
             private_key = decrypt_password(settings.novapay_private_key_encrypted)
-            return NovaPayPaymentProvider(merchant_id, private_key, is_test=True)
+            is_test = bool(settings.novapay_is_test) if settings.novapay_is_test is not None else True
+            return NovaPayPaymentProvider(
+                merchant_id,
+                private_key,
+                is_test=is_test,
+                public_key_pem=settings.novapay_public_key or "",
+            )
 
         else:
             raise PaymentValidationError(f"Unknown payment method: {method}")
@@ -195,6 +201,9 @@ class PaymentService:
                 webhook_url=webhook_url,
                 language=language,
                 items=items,
+                client_first_name=order.first_name or "",
+                client_last_name=order.last_name or "",
+                client_phone=order.phone or "",
             )
         except PaymentError:
             raise
@@ -239,7 +248,13 @@ class PaymentService:
         elif provider_code == "novapay":
             merchant_id = int(settings.novapay_merchant_id) if settings.novapay_merchant_id else 0
             private_key = decrypt_password(settings.novapay_private_key_encrypted) if settings.novapay_private_key_encrypted else ""
-            provider = NovaPayPaymentProvider(merchant_id, private_key)
+            is_test = bool(settings.novapay_is_test) if settings.novapay_is_test is not None else True
+            provider = NovaPayPaymentProvider(
+                merchant_id,
+                private_key,
+                is_test=is_test,
+                public_key_pem=settings.novapay_public_key or "",
+            )
         else:
             logger.warning("Unknown webhook provider: %s", provider_code)
             return None
@@ -281,6 +296,32 @@ class PaymentService:
             if raw.get("currency") not in (None, "", "UAH"):
                 logger.warning("LiqPay webhook currency mismatch: %s", raw.get("currency"))
                 return None
+
+        # NovaPay: сверяем metadata.order_id и сумму платежей из постбека
+        if provider_code == "novapay" and raw:
+            meta_order = (raw.get("metadata") or {}).get("order_id")
+            if meta_order is not None and str(meta_order) != str(tx.order_id):
+                logger.warning(
+                    "NovaPay postback order_id mismatch: %s != %s", meta_order, tx.order_id
+                )
+                return None
+            amounts = []
+            payments = raw.get("payments")
+            if isinstance(payments, list):
+                amounts = [p.get("amount") for p in payments if p.get("amount") is not None]
+            elif raw.get("amount") is not None:
+                amounts = [raw.get("amount")]
+            if amounts:
+                try:
+                    total = sum(Decimal(str(a)) for a in amounts)
+                except Exception:
+                    total = Decimal(0)
+                if total != Decimal(str(tx.amount)):
+                    logger.warning(
+                        "NovaPay postback amount mismatch: %s != %s (order %s)",
+                        total, tx.amount, tx.order_id,
+                    )
+                    return None
 
         # Идемпотентность: повторный колбэк с тем же статусом ничего не меняет
         meta = dict(tx.meta or {})

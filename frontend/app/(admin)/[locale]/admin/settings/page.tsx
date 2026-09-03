@@ -128,6 +128,8 @@ export default function SettingsPage() {
   // NovaPay fields
   const [novapayMerchantId, setNovapayMerchantId] = React.useState('')
   const [novapayPrivateKey, setNovapayPrivateKey] = React.useState('')
+  const [novapayPublicKey, setNovapayPublicKey] = React.useState('')
+  const [novapayIsTest, setNovapayIsTest] = React.useState(true)
   const [showNovapayKey, setShowNovapayKey] = React.useState(false)
   const [hasNovapayPrivateKey, setHasNovapayPrivateKey] = React.useState(false)
 
@@ -183,6 +185,8 @@ export default function SettingsPage() {
         liqpay_private_key_masked: string | null
         has_novapay_private_key: boolean
         novapay_private_key_masked: string | null
+        novapay_public_key: string | null
+        novapay_is_test: boolean
         novapay_merchant_id: string | null
         telegram_chat_id: string | null
         has_telegram_bot_token: boolean
@@ -398,6 +402,8 @@ export default function SettingsPage() {
       if (!isLiqpayPrivateUnchanged)
         payload.liqpay_private_key = liqpayPrivateKey
       // NovaPay
+      payload.novapay_public_key = novapayPublicKey
+      payload.novapay_is_test = novapayIsTest
       if (novapayMerchantId) payload.novapay_merchant_id = novapayMerchantId
       if (!isNovapayKeyUnchanged)
         payload.novapay_private_key = novapayPrivateKey
@@ -1005,6 +1011,21 @@ export default function SettingsPage() {
               </div>
             ) : (
               <>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t('settings_novapay_is_test')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings_novapay_is_test_desc')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="novapay-test"
+                    checked={novapayIsTest}
+                    onCheckedChange={setNovapayIsTest}
+                  />
+                </div>
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">
                     {t('settings_novapay_merchant_id')}
@@ -1039,6 +1060,18 @@ export default function SettingsPage() {
                       )}
                     </button>
                   </div>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_novapay_public_key')}
+                  </label>
+                  <textarea
+                    value={novapayPublicKey}
+                    onChange={(e) => setNovapayPublicKey(e.target.value)}
+                    placeholder={t('settings_novapay_public_key_placeholder')}
+                    rows={4}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs resize-y placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
                 </div>
               </>
             )}
