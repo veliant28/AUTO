@@ -582,8 +582,9 @@ export default function TimesheetPage() {
                                 // Полностью показываем ячейку в области прокрутки,
                                 // чтобы редактор не оказался под sticky-колонкой
                                 // или у нижней кромки таблицы
+                                const cell = e.currentTarget
                                 requestAnimationFrame(() =>
-                                  e.currentTarget.scrollIntoView({
+                                  cell?.scrollIntoView({
                                     block: 'nearest',
                                     inline: 'nearest',
                                   }),
