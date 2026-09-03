@@ -41,6 +41,7 @@ class ChatMessage(Base):
     sender_role = Column(SAEnum(SenderRole, name="senderrole", create_type=False), nullable=False)
     message = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    edited_at = Column(DateTime, nullable=True)
 
     conversation = relationship("ChatConversation", back_populates="messages")
     sender = relationship("User", foreign_keys=[sender_id], lazy="joined")

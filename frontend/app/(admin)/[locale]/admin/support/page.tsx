@@ -29,8 +29,11 @@ import { useAuthStore } from '@/store/authStore'
 import { useChatStore } from '@/store/chatStore'
 import ChatWindow from '@/components/chat/ChatWindow'
 import ChatSidebar from '@/components/chat/ChatSidebar'
+import { toast } from '@/lib/toast'
+import { can } from '@/lib/permissions'
 import { format, endOfMonth, endOfDay } from 'date-fns'
 import { useTimezoneStore } from '@/store/timezoneStore'
+import { useTimezone } from '@/hooks/useTimezone'
 import {
   startOfDayInTz,
   endOfDayInTz,
@@ -63,6 +66,7 @@ interface Message {
   sender_group?: string
   message: string
   created_at: string
+  edited_at?: string | null
 }
 
 function getDateRange(period: string, tz: string): { from: Date; to: Date } {
@@ -106,6 +110,8 @@ export default function SupportAdminPage() {
   const [resetKey, setResetKey] = useState(0)
 
   const timezone = useTimezoneStore((s) => s.timezone)
+  // Sync with the admin-settings timezone (backend wins) for chat timestamps
+  useTimezone()
   const range = useMemo(
     () => customRange || getDateRange(period, timezone),
     [
@@ -199,6 +205,11 @@ export default function SupportAdminPage() {
         })
         queryClient.invalidateQueries({ queryKey: ['admin-support-chats'] })
       }
+      if (data.type === 'message_updated') {
+        queryClient.invalidateQueries({
+          queryKey: ['admin-support-messages', data.chat_id],
+        })
+      }
       if (data.type === 'status_changed') {
         queryClient.invalidateQueries({ queryKey: ['admin-support-chats'] })
       }
@@ -244,6 +255,40 @@ export default function SupportAdminPage() {
       }
     },
     [chatStore.activeChatId],
+  )
+
+  const canEditMessages = can(user, 'support.edit')
+
+  // Правка сообщения из нижнего поля ввода: обновляем текст и метку edited_at
+  const handleEditMessage = useCallback(
+    async (id: number, text: string) => {
+      try {
+        const { data } = await api.patch(`/admin/support/messages/${id}`, {
+          message: text,
+        })
+        toast.success(t('support_msg_updated'))
+        if (chatStore.activeChatId) {
+          queryClient.setQueryData<Message[]>(
+            ['admin-support-messages', chatStore.activeChatId],
+            (prev) =>
+              prev?.map((m) =>
+                m.id === id
+                  ? {
+                      ...m,
+                      message: (data as any)?.message ?? text,
+                      edited_at: (data as any)?.edited_at ?? null,
+                    }
+                  : m,
+              ) ?? prev,
+          )
+        }
+      } catch {
+        toast.error(t('support_msg_update_error'))
+        // Кидаем дальше, чтобы режим правки в ChatWindow не закрылся
+        throw new Error('edit failed')
+      }
+    },
+    [chatStore.activeChatId, queryClient, t],
   )
 
   const activeChat = chats.find((c: Chat) => c.id === chatStore.activeChatId)
@@ -400,6 +445,9 @@ export default function SupportAdminPage() {
                       ? 'Чат закрыт'
                       : 'Напишите ответ... (Enter для отправки)'
                   }
+                  canEditMessages={canEditMessages}
+                  onEditMessage={handleEditMessage}
+                  chatKey={chatStore.activeChatId ?? null}
                   className="h-full"
                 />
               </CardContent>

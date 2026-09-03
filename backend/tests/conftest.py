@@ -77,7 +77,7 @@ def admin_role(db):
         "suppliers.view", "suppliers.create", "suppliers.edit", "suppliers.delete",
         "protection.view", "protection.ban", "protection.unban", "protection.edit",
         "imports.view", "imports.create", "imports.delete", "imports.edit",
-        "support.view", "support.reply",
+        "support.view", "support.reply", "support.edit",
         "backup.view", "backup.run", "backup.download", "backup.config", "backup.delete",
         "workers.view", "workers.restart",
         "staff.view",
@@ -85,13 +85,23 @@ def admin_role(db):
         "waybills.view", "waybills.print",
         "returns.view", "returns.edit_status", "returns.delete", "returns.edit",
         "checkbox.view", "payments.view",
+        "attendance.view", "attendance.edit",
     ]
-    for i, codename in enumerate(all_perms, start=1):
-        perm = Permission(id=i, codename=codename, description="", group_name="")
-        db.add(perm)
-        db.flush()
-        rp = RolePermission(role_id=role.id, permission_id=perm.id)
-        db.add(rp)
+    existing = {p.codename: p for p in db.query(Permission).all()}
+    for codename in all_perms:
+        perm = existing.get(codename)
+        if perm is None:
+            perm = Permission(codename=codename, description="", group_name="")
+            db.add(perm)
+            db.flush()
+            existing[codename] = perm
+        bound = (
+            db.query(RolePermission)
+            .filter_by(role_id=role.id, permission_id=perm.id)
+            .first()
+        )
+        if bound is None:
+            db.add(RolePermission(role_id=role.id, permission_id=perm.id))
     db.commit()
     return role
 

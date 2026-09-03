@@ -13,6 +13,7 @@ class ChatMessageOut(BaseModel):
     sender_avatar_index: Optional[int] = None
     message: str
     created_at: datetime
+    edited_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -68,6 +69,10 @@ class UpdateStatusRequest(BaseModel):
 
 class AssignRequest(BaseModel):
     assigned_to: Optional[int] = None
+
+
+class EditMessageRequest(BaseModel):
+    message: str
 
 
 class WSMessage(BaseModel):

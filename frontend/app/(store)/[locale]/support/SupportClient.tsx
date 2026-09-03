@@ -29,6 +29,7 @@ import {
 import { useChatStore } from '@/store/chatStore'
 import ChatWindow from '@/components/chat/ChatWindow'
 import ChatSidebar from '@/components/chat/ChatSidebar'
+import { useTimezone } from '@/hooks/useTimezone'
 
 interface Chat {
   id: number
@@ -51,6 +52,7 @@ interface Message {
   sender_group?: string
   message: string
   created_at: string
+  edited_at?: string | null
 }
 
 export default function SupportClient() {
@@ -60,6 +62,8 @@ export default function SupportClient() {
   const { user, isAuthenticated } = useAuthStore()
   const queryClient = useQueryClient()
   const chatStore = useChatStore()
+  // Keep the chat timezone in sync with the admin settings (backend wins)
+  useTimezone()
   const [createOpen, setCreateOpen] = useState(false)
   const [initialMessage, setInitialMessage] = useState('')
   const [creating, setCreating] = useState(false)
@@ -139,6 +143,11 @@ export default function SupportClient() {
           queryKey: ['chat-messages', data.chat_id],
         })
         queryClient.invalidateQueries({ queryKey: ['my-chats'] })
+      }
+      if (data.type === 'message_updated') {
+        queryClient.invalidateQueries({
+          queryKey: ['chat-messages', data.chat_id],
+        })
       }
       if (data.type === 'status_changed') {
         queryClient.invalidateQueries({ queryKey: ['my-chats'] })

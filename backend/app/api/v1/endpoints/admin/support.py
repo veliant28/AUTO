@@ -13,6 +13,7 @@ from app.schemas.support_schemas import (
     ChatMessageOut,
     UpdateStatusRequest,
     AssignRequest,
+    EditMessageRequest,
 )
 from app.models import User
 from app.services.ws_manager import manager
@@ -58,6 +59,7 @@ def _msg_to_out(m: ChatMessage) -> ChatMessageOut:
         sender_avatar_index=sender.avatar_index,
         message=m.message,
         created_at=m.created_at,
+        edited_at=m.edited_at,
     )
 
 
@@ -168,6 +170,60 @@ def get_chat_detail(
         updated_at=chat.updated_at,
         messages=[_msg_to_out(m) for m in messages],
     )
+
+
+@router.patch("/messages/{message_id}", response_model=ChatMessageOut)
+async def edit_message(
+    message_id: int,
+    req: EditMessageRequest,
+    admin: User = Depends(require_permission("support.edit")),
+    db: Session = Depends(get_db),
+):
+    """Редактировать текст сообщения, отправленного из админки.
+
+    Сообщения клиентов (включая написанные администрацией с витрины,
+    sender_role='user') не редактируются. Правка рассылается подписчикам
+    чата по WebSocket (type='message_updated').
+    """
+    msg = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(404, "Message not found")
+
+    if msg.sender_role != SenderRole.ADMIN:
+        raise HTTPException(400, "Only messages sent from the admin panel can be edited")
+
+    text = (req.message or "").strip()
+    if not text:
+        raise HTTPException(400, "Message text cannot be empty")
+    if len(text) > 4000:
+        raise HTTPException(400, "Message is too long (max 4000 characters)")
+
+    msg.message = text
+    msg.edited_at = datetime.utcnow()
+    db.commit()
+    db.refresh(msg)
+
+    out = _msg_to_out(msg)
+    # Та же форма, что у new_message в ws.py, + edited_at
+    sender = msg.sender
+    sender_name = out.sender_name or f"{sender.first_name or ''} {sender.last_name or ''}".strip() or sender.full_name or sender.email
+    msg_data = {
+        "id": out.id,
+        "conversation_id": out.conversation_id,
+        "sender_id": out.sender_id,
+        "sender_role": out.sender_role,
+        "sender_name": sender_name,
+        "sender_group": sender.role.name if sender.role else None,
+        "sender_avatar_index": sender.avatar_index,
+        "message": out.message,
+        "created_at": out.created_at.isoformat() if out.created_at else None,
+        "edited_at": out.edited_at.isoformat() if out.edited_at else None,
+    }
+    await manager.broadcast_to_chat(
+        msg.conversation_id,
+        {"type": "message_updated", "chat_id": msg.conversation_id, "message": msg_data},
+    )
+    return out
 
 
 @router.patch("/chats/{chat_id}/status")

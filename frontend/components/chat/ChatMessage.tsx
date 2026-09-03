@@ -2,8 +2,16 @@
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getAvatarUrl } from '@/lib/avatar'
+import { formatMessageTime } from '@/lib/dates'
 import { useTranslations } from 'next-intl'
 import { useTimezoneStore } from '@/store/timezoneStore'
 
@@ -17,6 +25,12 @@ interface MessageProps {
   senderAvatarIndex?: number | null
   createdAt: string
   currentUserId: number
+  /** Разрешено ли редактировать (право support.edit, только админ-сообщения) */
+  editable?: boolean
+  editedAt?: string | null
+  /** Сообщение сейчас редактируется в нижнем поле ввода */
+  isEditingTarget?: boolean
+  onEditRequest?: (id: number) => void
 }
 
 const roleBadgeColors: Record<string, string> = {
@@ -37,23 +51,8 @@ function getInitials(name?: string): string {
     .slice(0, 2)
 }
 
-function formatTime(dateStr: string): string {
-  const d = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'только что'
-  if (mins < 60) return `${mins} мин назад`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours} ч назад`
-  return d.toLocaleDateString('ru-RU', {
-    timeZone: useTimezoneStore.getState().timezone,
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 export default function ChatMessage({
+  id,
   message,
   senderId,
   senderRole,
@@ -62,8 +61,14 @@ export default function ChatMessage({
   senderAvatarIndex,
   createdAt,
   currentUserId,
+  editable = false,
+  editedAt = null,
+  isEditingTarget = false,
+  onEditRequest,
 }: MessageProps) {
   const isMine = senderRole === 'admin'
+  const canEditBubble = editable && senderRole === 'admin'
+  const timezone = useTimezoneStore((s) => s.timezone)
   const avatarUrl = getAvatarUrl(senderAvatarIndex, senderName)
   const badgeColor =
     roleBadgeColors[senderGroup || ''] || 'bg-gray-500 text-white'
@@ -109,13 +114,41 @@ export default function ChatMessage({
             isMine
               ? 'bg-primary text-primary-foreground rounded-tr-sm'
               : 'bg-muted rounded-tl-sm',
+            isEditingTarget && 'ring-2 ring-ring/70',
           )}
         >
           {message}
         </div>
-        <span className="text-xs text-muted-foreground/60 mt-0.5">
-          {formatTime(createdAt)}
-        </span>
+        <div
+          className={cn(
+            'flex items-center gap-1.5 mt-0.5',
+            isMine ? 'flex-row-reverse' : 'flex-row',
+          )}
+        >
+          <span className="text-xs text-muted-foreground/60">
+            {formatMessageTime(createdAt, timezone)}
+          </span>
+          {editedAt && (
+            <span className="text-[10px] text-muted-foreground/50 italic">
+              {t('support_msg_edited')}
+            </span>
+          )}
+          {canEditBubble && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground"
+                  onClick={() => onEditRequest?.(id)}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('support_msg_edit')}</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </div>
     </div>
   )

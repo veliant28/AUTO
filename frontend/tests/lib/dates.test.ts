@@ -1,6 +1,7 @@
 import {
   parseApiDate,
   formatDateTime,
+  formatMessageTime,
   startOfDayInTz,
   endOfDayInTz,
   startOfMonthInTz,
@@ -57,6 +58,54 @@ describe('formatDateTime', () => {
 
   it('returns dash for missing values', () => {
     expect(formatDateTime(null, 'Europe/Kiev')).toBe('—')
+  })
+})
+
+describe('formatMessageTime', () => {
+  // Fixed "now" so tests don't depend on the machine clock.
+  // 2026-09-03 14:00 UTC = 17:00 in Kyiv (summer, UTC+3).
+  const NOW = new Date('2026-09-03T14:00:00Z')
+
+  it('shows "только что" for messages younger than a minute', () => {
+    expect(formatMessageTime('2026-09-03T13:59:40Z', 'Europe/Kiev', NOW)).toBe(
+      'только что',
+    )
+  })
+
+  it('keeps relative minutes below one hour', () => {
+    expect(formatMessageTime('2026-09-03T13:01:00Z', 'Europe/Kiev', NOW)).toBe(
+      '59 мин назад',
+    )
+  })
+
+  it('shows the clock time in the configured tz for today messages older than an hour', () => {
+    // 12:00 UTC = 15:00 in Kyiv
+    expect(formatMessageTime('2026-09-03T12:00:00Z', 'Europe/Kiev', NOW)).toBe(
+      '15:00',
+    )
+  })
+
+  it('renders the raw UTC clock when the timezone is UTC', () => {
+    expect(formatMessageTime('2026-09-03T12:00:00Z', 'UTC', NOW)).toBe('12:00')
+  })
+
+  it('shows short date + time for earlier days', () => {
+    // 2026-09-02 11:30 UTC = 2026-09-02 14:30 in Kyiv
+    expect(formatMessageTime('2026-09-02T11:30:00Z', 'Europe/Kiev', NOW)).toBe(
+      '2 сент., 14:30',
+    )
+  })
+
+  it('adds the year when it differs from the current one in the tz', () => {
+    // 2025-12-31 10:00 UTC = 2025-12-31 12:00 in Kyiv
+    expect(formatMessageTime('2025-12-31T10:00:00Z', 'Europe/Kiev', NOW)).toBe(
+      '31 дек. 2025, 12:00',
+    )
+  })
+
+  it('returns empty string for missing values', () => {
+    expect(formatMessageTime(null, 'Europe/Kiev', NOW)).toBe('')
+    expect(formatMessageTime('', 'Europe/Kiev', NOW)).toBe('')
   })
 })
 

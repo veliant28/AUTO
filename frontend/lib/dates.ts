@@ -204,3 +204,42 @@ export function formatKyivDateTime(
 ): string {
   return formatDateTime(dt, 'Europe/Kiev', { locale })
 }
+
+/**
+ * Chat label shown under a message bubble: relative while the message is
+ * younger than an hour, then the exact send time in `timezone` — clock time
+ * for today's messages, short date + time for earlier days (the year is
+ * added only when it differs from the current one in `timezone`).
+ */
+export function formatMessageTime(
+  dt: string | null | undefined,
+  timezone: string,
+  now: Date = new Date(),
+): string {
+  const d = parseApiDate(dt)
+  if (!d || isNaN(d.getTime())) return ''
+  const ageMs = now.getTime() - d.getTime()
+  if (ageMs < 60_000) return 'только что'
+  if (ageMs < 3_600_000) return `${Math.floor(ageMs / 60_000)} мин назад`
+
+  const time = d.toLocaleTimeString('ru-RU', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const sent = partsInTz(timezone, d)
+  const current = partsInTz(timezone, now)
+  const sameDay =
+    sent.year === current.year &&
+    sent.month === current.month &&
+    sent.day === current.day
+  if (sameDay) return time
+
+  const date = d.toLocaleDateString('ru-RU', {
+    timeZone: timezone,
+    day: 'numeric',
+    month: 'short',
+  })
+  const year = sent.year !== current.year ? ` ${sent.year}` : ''
+  return `${date}${year}, ${time}`
+}

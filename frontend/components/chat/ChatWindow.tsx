@@ -21,6 +21,7 @@ interface Message {
   sender_avatar_index?: number | null
   message: string
   created_at: string
+  edited_at?: string | null
 }
 
 interface ChatWindowProps {
@@ -33,6 +34,11 @@ interface ChatWindowProps {
   showTyping?: boolean
   disabled?: boolean
   className?: string
+  /** Редактирование админ-сообщений (право support.edit) */
+  canEditMessages?: boolean
+  onEditMessage?: (id: number, text: string) => void | Promise<void>
+  /** Ключ активного чата — сбрасывает незавершённую правку при переключении */
+  chatKey?: number | string | null
 }
 
 export default function ChatWindow({
@@ -45,10 +51,49 @@ export default function ChatWindow({
   showTyping,
   disabled,
   className,
+  canEditMessages = false,
+  onEditMessage,
+  chatKey,
 }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const prevMessagesLength = useRef(messages.length)
+  const timezone = useTimezoneStore((s) => s.timezone)
+  // Repaint the list every 30 s so a message label switches from
+  // "N мин назад" to the exact send time once the hour has passed
+  // (and day dividers refresh at midnight in the configured timezone).
+  const [, setTick] = useState(0)
+
+  // Сообщение, текст которого сейчас правится в нижнем поле ввода
+  const [editing, setEditing] = useState<{ id: number; text: string } | null>(
+    null,
+  )
+  useEffect(() => {
+    setEditing(null)
+  }, [chatKey])
+
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  // Отправка в режиме правки обновляет сообщение вместо создания нового
+  const handleSubmit = async (text: string) => {
+    if (editing) {
+      if (!onEditMessage) {
+        setEditing(null)
+        return
+      }
+      try {
+        await onEditMessage(editing.id, text)
+        setEditing(null)
+      } catch {
+        // Страница показывает ошибку; остаёмся в режиме правки
+      }
+      return
+    }
+    onSend(text)
+  }
 
   // Auto-scroll when new messages arrive
   useEffect(() => {
@@ -96,10 +141,9 @@ export default function ChatWindow({
           )}
           {messages.map((msg, idx) => {
             // Add date divider if date changes
-            const tz = useTimezoneStore.getState().timezone
             const fmtDay = (x: string) =>
               parseApiDate(x)?.toLocaleDateString('en-CA', {
-                timeZone: tz,
+                timeZone: timezone,
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -115,7 +159,7 @@ export default function ChatWindow({
                       {parseApiDate(msg.created_at)?.toLocaleDateString(
                         'ru-RU',
                         {
-                          timeZone: useTimezoneStore.getState().timezone,
+                          timeZone: timezone,
                           day: 'numeric',
                           month: 'long',
                         },
@@ -133,6 +177,15 @@ export default function ChatWindow({
                   senderAvatarIndex={msg.sender_avatar_index}
                   createdAt={msg.created_at}
                   currentUserId={currentUserId}
+                  editable={canEditMessages && msg.sender_role === 'admin'}
+                  editedAt={msg.edited_at ?? null}
+                  isEditingTarget={editing?.id === msg.id}
+                  onEditRequest={(id) => {
+                    const target = messages.find((m) => m.id === id)
+                    if (target) {
+                      setEditing({ id, text: target.message })
+                    }
+                  }}
                 />
               </div>
             )
@@ -159,10 +212,12 @@ export default function ChatWindow({
       )}
 
       <ChatInput
-        onSend={onSend}
+        onSend={handleSubmit}
         onTyping={onTyping}
         disabled={disabled}
         placeholder={placeholder}
+        editSession={editing}
+        onCancelEdit={() => setEditing(null)}
       />
     </div>
   )
