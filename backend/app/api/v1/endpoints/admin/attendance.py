@@ -551,22 +551,27 @@ async def update_timesheet_manual(
 @router.get("/attendance/timesheet/manual-history", response_model=TimesheetManualHistoryResponse)
 async def timesheet_manual_history(
     month: str = Query("", max_length=7),
+    user_id: int = Query(0, ge=0),
     current_user: User = Depends(require_permission("attendance.edit")),
     db: Session = Depends(get_db),
 ):
-    """История ручных правок табеля за месяц (кто, когда, что было → стало)."""
+    """История ручных правок табеля за месяц (кто, когда, что было → стало).
+
+    user_id — опциональный фильтр по сотруднику, чьи часы правили.
+    """
     s = _get_settings(db)
     tz = _get_admin_tz(s)
     y, m = _parse_month(month or datetime.now(tz).strftime("%Y-%m"))
     days_in_month = calendar.monthrange(y, m)[1]
 
+    logs_q = db.query(TimesheetOverrideLog).filter(
+        TimesheetOverrideLog.work_date >= f"{y:04d}-{m:02d}-01",
+        TimesheetOverrideLog.work_date <= f"{y:04d}-{m:02d}-{days_in_month:02d}",
+    )
+    if user_id:
+        logs_q = logs_q.filter(TimesheetOverrideLog.user_id == user_id)
     logs = (
-        db.query(TimesheetOverrideLog)
-        .filter(
-            TimesheetOverrideLog.work_date >= f"{y:04d}-{m:02d}-01",
-            TimesheetOverrideLog.work_date <= f"{y:04d}-{m:02d}-{days_in_month:02d}",
-        )
-        .order_by(TimesheetOverrideLog.changed_at.desc(), TimesheetOverrideLog.id.desc())
+        logs_q.order_by(TimesheetOverrideLog.changed_at.desc(), TimesheetOverrideLog.id.desc())
         .limit(500)
         .all()
     )

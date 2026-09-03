@@ -264,13 +264,16 @@ export default function TimesheetPage() {
     enabled: can(user, 'attendance.view') && !!month,
   })
 
-  // История ручных правок — только для тех, кто может редактировать табель
+  // История ручных правок — только для тех, кто может редактировать табель;
+  // фильтруется по выбранному в топ-баре сотруднику вместе с табелем
   const { data: historyData } = useQuery({
-    queryKey: ['admin-timesheet-history', month],
+    queryKey: ['admin-timesheet-history', month, userId],
     queryFn: async () => {
       const { data } = await api.get(
         '/admin/attendance/timesheet/manual-history',
-        { params: { month } },
+        {
+          params: { month, ...(userId ? { user_id: userId } : {}) },
+        },
       )
       return data as { month: string; items: HistoryItem[] }
     },
@@ -293,7 +296,7 @@ export default function TimesheetPage() {
       toast.success(t('timesheet_saved'))
       queryClient.invalidateQueries({ queryKey: ['admin-timesheet', month] })
       queryClient.invalidateQueries({
-        queryKey: ['admin-timesheet-history', month],
+        queryKey: ['admin-timesheet-history', month, userId],
       })
       setPendingEdits({})
       remindedRef.current = false
@@ -490,8 +493,10 @@ export default function TimesheetPage() {
                           let cellClass = 'p-1.5 text-center align-middle'
                           if (isEditing) {
                             // Инпут рисуем поверх ячейки (absolute) — он не участвует
-                            // в лейауте таблицы и не может растянуть колонку
-                            cellClass += ' relative'
+                            // в лейауте таблицы и не может растянуть колонку.
+                            // z-20 поднимает редактор выше sticky-колонки «Сотрудник»,
+                            // чтобы его подсветка не обрезалась ею при прокрутке.
+                            cellClass += ' relative z-20'
                           }
                           if (highlight) {
                             cellClass += ' bg-amber-200/60'
@@ -571,7 +576,19 @@ export default function TimesheetPage() {
                               className={`${cellClass} ${
                                 canEdit && !isEditing ? 'cursor-pointer' : ''
                               }`}
-                              onClick={() => !isEditing && startEdit(u, d)}
+                              onClick={(e) => {
+                                if (isEditing) return
+                                startEdit(u, d)
+                                // Полностью показываем ячейку в области прокрутки,
+                                // чтобы редактор не оказался под sticky-колонкой
+                                // или у нижней кромки таблицы
+                                requestAnimationFrame(() =>
+                                  e.currentTarget.scrollIntoView({
+                                    block: 'nearest',
+                                    inline: 'nearest',
+                                  }),
+                                )
+                              }}
                               title={
                                 canEdit && hasManual
                                   ? `${formatMinutes(u.manual_days[d] ?? 0)} (${t('timesheet_manual_cell')})`

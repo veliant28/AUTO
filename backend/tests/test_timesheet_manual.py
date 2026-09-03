@@ -224,6 +224,21 @@ def test_history_is_scoped_by_month(
     # месяц без изменений — пустой список (фронт скрывает таблицу)
     assert _get_history(client, admin_headers, month="2026-07")["items"] == []
 
+    # фильтр по сотруднику
+    r = client.get(
+        "/api/v1/admin/attendance/timesheet/manual-history",
+        headers=admin_headers,
+        params={"month": "2026-09", "user_id": operator_user.id},
+    )
+    assert r.status_code == 200
+    assert len(r.json()["items"]) == 1
+    r = client.get(
+        "/api/v1/admin/attendance/timesheet/manual-history",
+        headers=admin_headers,
+        params={"month": "2026-09", "user_id": 999999},
+    )
+    assert r.json()["items"] == []
+
 
 def test_manual_entry_validation(
     client, db: Session, operator_user, admin_headers, retail_role
