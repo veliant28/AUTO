@@ -526,7 +526,7 @@ export default function TimesheetPage() {
                                   }
                                 }}
                                 onBlur={() => setEditingKey(null)}
-                                className="w-16 h-7 px-1 text-center font-mono text-xs"
+                                className="w-full min-w-0 h-7 px-0.5 text-center font-mono text-xs"
                               />
                             )
                           } else {
