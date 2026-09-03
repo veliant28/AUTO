@@ -114,7 +114,8 @@ export default function ChatMessage({
             isMine
               ? 'bg-primary text-primary-foreground rounded-tr-sm'
               : 'bg-muted rounded-tl-sm',
-            isEditingTarget && 'ring-2 ring-ring/70',
+            // Редактируемое сообщение подсвечиваем оранжевым до отмены/отправки
+            isEditingTarget && 'bg-orange-500 text-white',
           )}
         >
           {message}
