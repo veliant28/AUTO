@@ -17,6 +17,7 @@ import {
   Building2,
   Wallet,
   Clock,
+  RotateCcw,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -62,6 +63,13 @@ const TZS = [
   'Asia/Yerevan',
   'UTC',
 ].filter((v, i, a) => a.indexOf(v) === i)
+
+/** 'HH:MM' + N минут → 'HH:MM' (с переносом через полночь) */
+function addMinutesToHM(hm: string, minutes: number): string {
+  const [h, m] = (hm || '00:00').split(':').map(Number)
+  const total = ((isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m) + minutes) % 1440
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
 
 export default function SettingsPage() {
   const { user } = useAuthStore()
@@ -126,6 +134,10 @@ export default function SettingsPage() {
   // Work-time tracking fields
   const [workStartTime, setWorkStartTime] = React.useState('09:00')
   const [workEndTime, setWorkEndTime] = React.useState('18:00')
+  // null = не задано → автофиксация как «конец смены + 15 минут»
+  const [autoClockoutTime, setAutoClockoutTime] = React.useState<string | null>(
+    null,
+  )
   const [trackAdmin, setTrackAdmin] = React.useState(false)
   const [trackManager, setTrackManager] = React.useState(false)
   const [trackOperator, setTrackOperator] = React.useState(false)
@@ -171,6 +183,7 @@ export default function SettingsPage() {
         telegram_bot_token_masked: string | null
         work_start_time: string
         work_end_time: string
+        work_auto_clockout_time: string | null
         track_admin: boolean
         track_manager: boolean
         track_operator: boolean
@@ -315,6 +328,8 @@ export default function SettingsPage() {
     // Work-time tracking
     if (data?.work_start_time) setWorkStartTime(data.work_start_time)
     if (data?.work_end_time) setWorkEndTime(data.work_end_time)
+    if (data?.work_auto_clockout_time !== undefined)
+      setAutoClockoutTime(data.work_auto_clockout_time)
     if (data?.track_admin !== undefined) setTrackAdmin(data.track_admin)
     if (data?.track_manager !== undefined) setTrackManager(data.track_manager)
     if (data?.track_operator !== undefined)
@@ -329,6 +344,8 @@ export default function SettingsPage() {
   const isLiqpayPrivateUnchanged = liqpayPrivateKey === savedLiqpayPrivateMask
   const isNovapayKeyUnchanged = novapayPrivateKey === savedNovapayKeyMask
   const isTelegramTokenUnchanged = telegramBotToken === savedTelegramTokenMask
+  // Пока автофиксация не задана — показываем значение по умолчанию (конец + 15)
+  const defaultAutoClockout = addMinutesToHM(workEndTime, 15)
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -363,6 +380,8 @@ export default function SettingsPage() {
       // Work-time tracking
       payload.work_start_time = workStartTime
       payload.work_end_time = workEndTime
+      // пустая строка = сброс к легаси «конец смены + 15 минут»
+      payload.work_auto_clockout_time = autoClockoutTime ?? ''
       payload.track_admin = trackAdmin
       payload.track_manager = trackManager
       payload.track_operator = trackOperator
@@ -374,6 +393,7 @@ export default function SettingsPage() {
         timezone,
         work_start_time: workStartTime,
         work_end_time: workEndTime,
+        work_auto_clockout_time: autoClockoutTime,
         track_admin: trackAdmin,
         track_manager: trackManager,
         track_operator: trackOperator,
@@ -1083,7 +1103,7 @@ export default function SettingsPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
                       {t('settings_worktime_start')}
@@ -1098,6 +1118,40 @@ export default function SettingsPage() {
                       {t('settings_worktime_end')}
                     </label>
                     <TimePicker value={workEndTime} onChange={setWorkEndTime} />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('settings_worktime_auto_clockout')}
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <TimePicker
+                        value={autoClockoutTime || defaultAutoClockout}
+                        onChange={(v) => setAutoClockoutTime(v)}
+                        tooltip={`${t('settings_worktime_auto_clockout_desc')} ${t(
+                          'settings_worktime_auto_clockout_default',
+                          {
+                            time: defaultAutoClockout,
+                          },
+                        )}`}
+                      />
+                      {autoClockoutTime && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-9 w-9 text-muted-foreground"
+                              onClick={() => setAutoClockoutTime(null)}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('settings_worktime_auto_clockout_reset')}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="rounded-lg border p-4 space-y-3">

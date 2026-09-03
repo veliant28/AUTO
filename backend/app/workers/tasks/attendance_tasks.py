@@ -17,8 +17,9 @@ AUTO_CLOCKOUT_GRACE_MINUTES = 15
 def auto_clockout():
     """Авто-выход: сотрудник забыл зафиксировать выход.
 
-    Если есть открытая сессия (вход без выхода) и конец смены (из настроек)
-    + 15 минут уже наступил — закрываем её фактическим временем закрытия
+    Если есть открытая сессия (вход без выхода) и время автофиксации выхода
+    из настроек (work_auto_clockout_time; пусто — «конец смены + 15 минут»)
+    уже наступило — закрываем её фактическим временем закрытия
     (auto_clock_out=True). Часы в табеле всё равно обрезаются до окна из настроек.
     """
     db = SessionLocal()
@@ -35,9 +36,20 @@ def auto_clockout():
         start_h, start_m = _parse_hm(s.work_start_time, "09:00")
         end_h, end_m = _parse_hm(s.work_end_time, "18:00")
 
-        today_local = datetime.now(tz)
+        # Явно выбранное время автофиксации (HH:MM); None = легаси «конец + 15»
+        auto_h = auto_m = None
+        auto_raw = (s.work_auto_clockout_time or "").strip()
+        if auto_raw:
+            try:
+                ah, am = (int(x) for x in auto_raw.split(":"))
+                if not (0 <= ah < 24 and 0 <= am < 60):
+                    raise ValueError
+                auto_h, auto_m = ah, am
+            except (ValueError, TypeError):
+                auto_h = auto_m = None
+
         now_utc = datetime.now(ZoneInfo("UTC")).replace(tzinfo=None)
-        today_str = today_local.strftime("%Y-%m-%d")
+        today_str = datetime.now(tz).strftime("%Y-%m-%d")
 
         sessions = (
             db.query(AttendanceSession)
@@ -58,10 +70,19 @@ def auto_clockout():
             end_local = datetime(y, m, d, end_h, end_m, tzinfo=tz)
             if end_local <= start_local:
                 end_local += timedelta(days=1)
-            end_utc = end_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-            close_at = end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
+            if auto_h is not None:
+                # Ближайшее наступление выбранного времени после начала смены
+                deadline_local = datetime(y, m, d, auto_h, auto_m, tzinfo=tz)
+                while deadline_local <= start_local:
+                    deadline_local += timedelta(days=1)
+                close_at = (
+                    deadline_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+                )
+            else:
+                end_utc = end_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+                close_at = end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
             if now_utc >= close_at:
-                # Время выхода — по факту (момент закрытия), не «конец смены + 15»
+                # Время выхода — по факту (момент закрытия)
                 sess.clock_out_at = now_utc
                 sess.auto_clock_out = True
                 closed += 1

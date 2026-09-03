@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.db import get_db
@@ -125,6 +127,7 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
         # Work-time tracking
         work_start_time=s.work_start_time or "09:00",
         work_end_time=s.work_end_time or "18:00",
+        work_auto_clockout_time=s.work_auto_clockout_time,
         track_admin=bool(s.track_admin),
         track_manager=bool(s.track_manager),
         track_operator=bool(s.track_operator),
@@ -246,6 +249,11 @@ async def update_settings(
         s.work_start_time = body.work_start_time
     if body.work_end_time is not None:
         s.work_end_time = body.work_end_time
+    if body.work_auto_clockout_time is not None:
+        auto_time = (body.work_auto_clockout_time or "").strip()
+        if auto_time and not re.fullmatch(r"([01]?\d|2[0-3]):[0-5]\d", auto_time):
+            raise HTTPException(400, "Invalid auto clock-out time, expected HH:MM")
+        s.work_auto_clockout_time = auto_time or None
     if body.track_admin is not None:
         s.track_admin = body.track_admin
     if body.track_manager is not None:

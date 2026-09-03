@@ -45,6 +45,8 @@ class SiteSettings(Base):
     # Work-time tracking (фиксация рабочего времени)
     work_start_time = Column(String, nullable=False, default="09:00")
     work_end_time = Column(String, nullable=False, default="18:00")
+    # Автофиксация выхода (HH:MM); NULL = «конец смены + 15 минут»
+    work_auto_clockout_time = Column(String, nullable=True)
     track_admin = Column(Boolean, nullable=False, default=False, server_default=text('false'))
     track_manager = Column(Boolean, nullable=False, default=False, server_default=text('false'))
     track_operator = Column(Boolean, nullable=False, default=False, server_default=text('false'))

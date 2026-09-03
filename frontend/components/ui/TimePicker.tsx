@@ -8,15 +8,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export function TimePicker({
   value,
   onChange,
   disabled,
+  tooltip,
 }: {
   value: string
   onChange: (v: string) => void
   disabled?: boolean
+  /** Подсказка при наведении на сам пикер */
+  tooltip?: string
 }) {
   const [open, setOpen] = React.useState(false)
   const [hours, minutes] = (value || '00:00').split(':')
@@ -36,19 +44,30 @@ export function TimePicker({
     }
   }, [open])
 
+  const trigger = (
+    <PopoverTrigger asChild disabled={disabled}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-9 w-24 font-normal text-center mx-auto cursor-pointer gap-1 text-base"
+        disabled={disabled}
+      >
+        <span className="flex-1">{value || '00:00'}</span>
+        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+      </Button>
+    </PopoverTrigger>
+  )
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild disabled={disabled}>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 w-24 font-normal text-center mx-auto cursor-pointer gap-1 text-base"
-          disabled={disabled}
-        >
-          <span className="flex-1">{value || '00:00'}</span>
-          <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-        </Button>
-      </PopoverTrigger>
+      {tooltip ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+          <TooltipContent>{tooltip}</TooltipContent>
+        </Tooltip>
+      ) : (
+        trigger
+      )}
       <PopoverContent className="w-fit p-2" align="center" sideOffset={4}>
         <div className="flex gap-1">
           {/* Hours */}

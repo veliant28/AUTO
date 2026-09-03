@@ -41,6 +41,7 @@ class SettingsResponse(BaseModel):
     # Work-time tracking (фиксация рабочего времени)
     work_start_time: str = "09:00"
     work_end_time: str = "18:00"
+    work_auto_clockout_time: Optional[str] = None
     track_admin: bool = False
     track_manager: bool = False
     track_operator: bool = False
@@ -77,6 +78,7 @@ class SettingsUpdate(BaseModel):
     # Work-time tracking (фиксация рабочего времени)
     work_start_time: Optional[str] = None
     work_end_time: Optional[str] = None
+    work_auto_clockout_time: Optional[str] = None
     track_admin: Optional[bool] = None
     track_manager: Optional[bool] = None
     track_operator: Optional[bool] = None
