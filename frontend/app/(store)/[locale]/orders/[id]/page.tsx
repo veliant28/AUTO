@@ -24,6 +24,7 @@ import { useAuthStore } from '@/store/authStore'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { useOrderSync } from '@/lib/orderSync'
 import { getOrderReceiptLink } from '@/lib/api/checkbox'
+import { openPayment } from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
 import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
@@ -465,9 +466,7 @@ function PaymentActions({
               const { data } = await api.post(
                 `/orders/${orderId}/pay?method=monobank`,
               )
-              if (data?.payment_url) {
-                window.open(data.payment_url, '_blank', 'noopener,noreferrer')
-              } else {
+              if (!openPayment(data)) {
                 toast.info(t('receipt_pending'))
               }
             } catch (err: any) {
@@ -493,9 +492,7 @@ function PaymentActions({
               const { data } = await api.post(
                 `/orders/${orderId}/pay?method=novapay`,
               )
-              if (data?.payment_url) {
-                window.open(data.payment_url, '_blank', 'noopener,noreferrer')
-              } else {
+              if (!openPayment(data)) {
                 toast.info(t('receipt_pending'))
               }
             } catch (err: any) {
@@ -521,9 +518,7 @@ function PaymentActions({
               const { data } = await api.post(
                 `/orders/${orderId}/pay?method=liqpay`,
               )
-              if (data?.payment_url) {
-                window.open(data.payment_url, '_blank', 'noopener,noreferrer')
-              } else {
+              if (!openPayment(data)) {
                 toast.info(t('receipt_pending'))
               }
             } catch (err: any) {

@@ -30,14 +30,26 @@ async def payment_webhook(
     request: Request,
     db: DBSession = Depends(get_db),
 ):
-    """Receive webhook from payment provider (Fondy, LiqPay, NovaPay)."""
+    """Receive webhook from payment provider (Monobank, LiqPay, NovaPay).
+
+    LiqPay отправляет form-urlencoded (data/signature), Monobank/NovaPay —
+    JSON. Всегда отвечаем HTTP 200, иначе провайдер повторяет отправку.
+    """
     if provider not in ("monobank", "liqpay", "novapay"):
         raise HTTPException(400, f"Unknown provider: {provider}")
 
+    body = {}
     try:
-        body = await request.json()
+        form = await request.form()
+        if "data" in form:
+            body = {"data": str(form.get("data", "")), "signature": str(form.get("signature", ""))}
     except Exception:
-        body = {}
+        form = None
+    if not body:
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
 
     service = PaymentService(db)
     tx = await service.process_webhook(provider, body)

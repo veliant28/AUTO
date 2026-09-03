@@ -11,6 +11,10 @@ class PaymentResult:
     payment_url: str
     invoice_url: Optional[str] = None
     receipt_url: Optional[str] = None
+    # Форма для отправки покупателя на оплату (провайдеры с form-based
+    # checkout, например LiqPay): {"action": url, "method": "POST",
+    # "fields": {"data": ..., "signature": ...}}
+    payment_form: Optional[dict] = None
 
 
 @dataclass

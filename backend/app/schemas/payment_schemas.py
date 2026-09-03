@@ -32,6 +32,8 @@ class PaymentInitResponse(BaseModel):
     success: bool
     transaction_id: Optional[int] = None
     payment_url: Optional[str] = None
+    # Форма оплаты для form-based провайдеров (LiqPay): {action, method, fields}
+    payment_form: Optional[dict] = None
     message: Optional[str] = None
 
 

@@ -39,7 +39,7 @@ import {
   WarehouseListItem,
 } from '@/components/ui/nova-poshta-items'
 import { useProfile } from '@/hooks/useProfile'
-import { fetchPaymentMethods } from '@/lib/api/payments'
+import { fetchPaymentMethods, openPayment } from '@/lib/api/payments'
 import { checkoutSchema, CheckoutFormData } from '@/lib/validations/authSchemas'
 import { novaPoshtaPublicApi } from '@/lib/api/nova-poshta-public'
 import type {
@@ -222,8 +222,8 @@ export default function CheckoutPage() {
       clearCart()
       queryClient.invalidateQueries({ queryKey: ['orders'] })
       queryClient.invalidateQueries({ queryKey: ['cart'] })
-      if (data.payment_url) {
-        window.open(data.payment_url, '_blank', 'noopener,noreferrer')
+      if (data.payment_url || data.payment_form) {
+        openPayment(data)
       }
       router.push(`/order-confirmed?order=${data.order_number}`)
     },

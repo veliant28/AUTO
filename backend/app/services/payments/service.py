@@ -14,7 +14,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session as DBSession
 
 from app.models.payments import PaymentTransaction
-from app.models.orders import Order
+from app.models.orders import Order, OrderStatus
 from app.models.settings import SiteSettings
 from app.services.payments.base import BasePaymentProvider, PaymentResult
 from app.services.payments.errors import (
@@ -36,6 +36,14 @@ PAYMENT_METHOD_NAMES = {
     "novapay": "NovaPay",
     "liqpay": "LiqPay",
 }
+
+
+def tx_payment_form(tx: Optional[PaymentTransaction]) -> Optional[dict]:
+    """Форма оплаты, сохранённая при инициации (meta.form), если есть."""
+    if not tx:
+        return None
+    meta = tx.meta if isinstance(tx.meta, dict) else {}
+    return meta.get("form")
 
 
 class PaymentService:
@@ -102,6 +110,7 @@ class PaymentService:
         method: str,
         return_url: str = "",
         webhook_url: str = "",
+        language: str = "uk",
     ) -> PaymentTransaction:
         """
         Initialize payment for an order through the specified provider.
@@ -184,6 +193,7 @@ class PaymentService:
                 description=description,
                 return_url=return_url,
                 webhook_url=webhook_url,
+                language=language,
                 items=items,
             )
         except PaymentError:
@@ -201,6 +211,8 @@ class PaymentService:
             invoice_url=result.invoice_url,
             receipt_url=result.receipt_url,
         )
+        if result.payment_form:
+            tx.meta = {"form": result.payment_form}
         self.db.add(tx)
         self.db.flush()
         self.db.commit()
@@ -242,7 +254,7 @@ class PaymentService:
             logger.warning("Webhook missing provider_tx_id")
             return None
 
-        # Find matching transaction
+        # Find matching transaction (merchant order_id, который мы слали провайдеру)
         tx = self.db.query(PaymentTransaction).filter(
             PaymentTransaction.provider_tx_id == result.provider_tx_id,
         ).first()
@@ -250,11 +262,49 @@ class PaymentService:
             logger.warning("No transaction found for provider_tx_id=%s", result.provider_tx_id)
             return None
 
+        # LiqPay: сверяем order_id/amount/currency из подписанного payload со своими данными
+        raw = result.raw or {}
+        if provider_code == "liqpay":
+            if str(raw.get("order_id", "")) != (tx.provider_tx_id or ""):
+                logger.warning("LiqPay webhook order_id mismatch: %s != %s", raw.get("order_id"), tx.provider_tx_id)
+                return None
+            try:
+                callback_amount = Decimal(str(raw.get("amount", "")))
+            except Exception:
+                callback_amount = Decimal(0)
+            if callback_amount != Decimal(str(tx.amount)):
+                logger.warning(
+                    "LiqPay webhook amount mismatch: %s != %s (order %s)",
+                    raw.get("amount"), tx.amount, tx.order_id,
+                )
+                return None
+            if raw.get("currency") not in (None, "", "UAH"):
+                logger.warning("LiqPay webhook currency mismatch: %s", raw.get("currency"))
+                return None
+
+        # Идемпотентность: повторный колбэк с тем же статусом ничего не меняет
+        meta = dict(tx.meta or {})
+        raw_changed = (meta.get("raw") or {}) != raw
+        urls_changed = bool(
+            result.invoice_url and result.invoice_url != tx.invoice_url
+        ) or bool(result.receipt_url and result.receipt_url != tx.receipt_url)
+        if tx.status == result.status and not raw_changed and not urls_changed:
+            logger.info("Webhook: duplicate callback for tx %s (%s)", tx.id, result.status)
+            return tx
+
         tx.status = result.status
         if result.invoice_url:
             tx.invoice_url = result.invoice_url
         if result.receipt_url:
             tx.receipt_url = result.receipt_url
+        if raw:
+            meta["raw"] = raw
+            tx.meta = meta
+
+        # Авто-подтверждение заказа при успешной оплате
+        if result.status == "paid" and tx.order and tx.order.status == OrderStatus.PENDING:
+            tx.order.status = OrderStatus.CONFIRMED
+
         self.db.flush()
         self.db.commit()
 

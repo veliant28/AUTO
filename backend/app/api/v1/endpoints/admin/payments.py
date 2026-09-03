@@ -39,17 +39,20 @@ async def init_payment(
     """Initialize payment for an order through the specified provider."""
     service = PaymentService(db)
     try:
+        from app.services.payments.service import tx_payment_form
         webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{method}"
+        return_url = f"{request.base_url}orders/{order_id}"
         tx = await service.init_payment(
             order_id=order_id,
             method=method,
-            return_url="",
+            return_url=return_url,
             webhook_url=webhook_url,
         )
         return PaymentInitResponse(
             success=(tx.status != "error"),
             transaction_id=tx.id,
             payment_url=tx.payment_url,
+            payment_form=tx_payment_form(tx),
             message=None,
         )
     except PaymentSettingsError as e:

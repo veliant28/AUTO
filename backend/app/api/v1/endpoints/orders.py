@@ -258,18 +258,21 @@ async def checkout(
 
     # Auto-initiate payment for online payment methods
     payment_url = None
+    payment_form = None
     if data.payment_method in ("monobank", "novapay", "liqpay"):
         try:
-            from app.services.payments.service import PaymentService
+            from app.services.payments.service import PaymentService, tx_payment_form
             webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{data.payment_method}"
+            return_url = f"{request.base_url}orders/{order.id}"
             service = PaymentService(db)
             tx = await service.init_payment(
                 order_id=order.id,
                 method=data.payment_method,
-                return_url="",
+                return_url=return_url,
                 webhook_url=webhook_url,
             )
             payment_url = tx.payment_url
+            payment_form = tx_payment_form(tx)
         except Exception as e:
             logger.warning(f"Auto-payment initiation failed for order {order.id}: {e}")
 
@@ -278,6 +281,7 @@ async def checkout(
         "order_id": order.id,
         "order_number": order.order_number,
         "payment_url": payment_url,
+        "payment_form": payment_form,
     }
 
 
@@ -351,22 +355,24 @@ async def pay_order(
     if not order:
         raise HTTPException(404, "Order not found")
 
-    from app.services.payments.service import PaymentService
+    from app.services.payments.service import PaymentService, tx_payment_form
     from app.schemas.payment_schemas import PaymentInitResponse
 
     service = PaymentService(db)
     try:
         webhook_url = str(request.base_url) + f"api/v1/payments/webhook/{method}"
+        return_url = f"{request.base_url}orders/{order_id}"
         tx = await service.init_payment(
             order_id=order_id,
             method=method,
-            return_url="",
+            return_url=return_url,
             webhook_url=webhook_url,
         )
         return PaymentInitResponse(
             success=(tx.status != "error"),
             transaction_id=tx.id,
             payment_url=tx.payment_url,
+            payment_form=tx_payment_form(tx),
             message=None,
         )
     except Exception as e:

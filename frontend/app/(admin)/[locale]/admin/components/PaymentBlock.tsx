@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/tooltip'
 import { Loader2, CreditCard, XCircle, FileText } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { getTransaction, initPayment, cancelInvoice } from '@/lib/api/payments'
+import {
+  getTransaction,
+  initPayment,
+  cancelInvoice,
+  openPayment,
+} from '@/lib/api/payments'
 import MonopayStandaloneButton from '@/components/ui/MonopayStandaloneButton'
 import NovaPayStandaloneButton from '@/components/ui/NovaPayStandaloneButton'
 import LiqPayStandaloneButton from '@/components/ui/LiqPayStandaloneButton'
@@ -84,8 +89,7 @@ export default function PaymentBlock({
     setInitLoading(method)
     try {
       const result = await initPayment(orderId, method)
-      if (result.payment_url) {
-        window.open(result.payment_url, '_blank', 'noopener,noreferrer')
+      if (openPayment(result)) {
         toast.success(t('payment_init_success'))
         refetch()
       } else {
