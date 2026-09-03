@@ -24,7 +24,11 @@ describe('authStore', () => {
   it('sets user', () => {
     useAuthStore.getState().setUser(mockUser)
     const { user, isAuthenticated } = useAuthStore.getState()
-    expect(user).toMatchObject({ id: 1, email: 'test@example.com', role: 'retail' })
+    expect(user).toMatchObject({
+      id: 1,
+      email: 'test@example.com',
+      role: 'retail',
+    })
     expect(isAuthenticated).toBe(true)
   })
 
@@ -35,6 +39,7 @@ describe('authStore', () => {
       id: 2,
       email: 'admin@test.com',
       role: 'retail',
+      permissions: [],
       full_name: null,
       first_name: null,
       avatar_index: null,
