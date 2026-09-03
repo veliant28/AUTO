@@ -423,6 +423,16 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     return () => clearInterval(id)
   }, [])
 
+  // Несохранённые правки табеля — кнопка «Сохранить» видна только при dirty
+  const [timesheetDirty, setTimesheetDirty] = useState(false)
+  useEffect(() => {
+    const id = setInterval(() => {
+      const win = window as any
+      setTimesheetDirty(!!win.__timesheetDirty)
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
   const timesheetMonthKey = useMemo(() => {
     if (!timesheetMonth) {
       const now = new Date()
@@ -881,13 +891,27 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     variant="destructive"
                     onClick={() => {
                       ;(window as any).__timesheetSetMonth?.(undefined)
-                      toast.info(ta('timesheet_reset_month'))
+                      if (!timesheetDirty)
+                        toast.info(ta('timesheet_reset_month'))
                     }}
                   >
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{ta('timesheet_reset')}</TooltipContent>
+              </Tooltip>
+            )}
+            {can(user, 'attendance.edit') && timesheetDirty && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() => (window as any).__saveTimesheet?.()}
+                  >
+                    <Save className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('timesheet_save')}</TooltipContent>
               </Tooltip>
             )}
           </div>

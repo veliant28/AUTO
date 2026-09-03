@@ -11,7 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.api.v1.deps import require_permission, require_role
 from app.models import Role, User, SiteSettings
-from app.models.attendance import AttendanceSession
+from app.models.attendance import (
+    AttendanceSession,
+    TimesheetOverride,
+    TimesheetOverrideLog,
+)
 from app.schemas.attendance_schemas import (
     AttendanceRecordItem,
     AttendanceRecordListResponse,
@@ -19,6 +23,11 @@ from app.schemas.attendance_schemas import (
     AttendanceTodayResponse,
     AttendanceTimesheetResponse,
     AttendanceTimesheetUser,
+    TimesheetActorInfo,
+    TimesheetManualEntryIn,
+    TimesheetManualHistoryItem,
+    TimesheetManualHistoryResponse,
+    TimesheetManualUpdateIn,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,22 +121,48 @@ def _worked_minutes(
     return int((eff_out - eff_in).total_seconds() // 60)
 
 
-def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s: SiteSettings, tz: ZoneInfo, now_utc: datetime) -> None:
-    """Ленивое авто-закрытие: вход есть, выхода нет, а конец смены + 15 мин уже прошёл.
+def _auto_close_moment(work_date: str, tz: ZoneInfo, s: SiteSettings) -> datetime:
+    """Момент (naive UTC), после которого открытая сессия авто-закрывается.
 
-    Время выхода ставим по факту (момент закрытия), а не «конец смены + 15 минут»:
-    если сотрудник зашёл поздно (после грации), выходить «в прошлом» некорректно.
-    Часы в табеле всё равно обрезаются до рабочего окна из настроек.
+    Если задан site_settings.work_auto_clockout_time (HH:MM) — ближайшее
+    наступление этого wall-time после начала смены (корректно для смен,
+    переходящих через полночь). Если поле пустое — прежнее поведение:
+    конец смены + 15 минут.
+    """
+    if not (s.work_auto_clockout_time or "").strip():
+        _, end_utc = _work_window_utc(work_date, tz, s)
+        return end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
+    try:
+        h, m = (int(x) for x in s.work_auto_clockout_time.strip().split(":"))
+        if not (0 <= h < 24 and 0 <= m < 60):
+            raise ValueError
+    except (ValueError, TypeError):
+        _, end_utc = _work_window_utc(work_date, tz, s)
+        return end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
+
+    y, mo, d = _parse_date(work_date)
+    start_h, start_m = _parse_hm(s.work_start_time, "09:00")
+    deadline_local = datetime(y, mo, d, h, m, tzinfo=tz)
+    start_local = datetime(y, mo, d, start_h, start_m, tzinfo=tz)
+    while deadline_local <= start_local:
+        deadline_local += timedelta(days=1)
+    return deadline_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+
+
+def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s: SiteSettings, tz: ZoneInfo, now_utc: datetime) -> None:
+    """Ленивое авто-закрытие: вход есть, выхода нет, а время авто-выхода прошло.
+
+    Время выхода ставим по факту (момент закрытия). Часы в табеле всё равно
+    обрезаются до рабочего окна из настроек и появляются после закрытия.
     """
     changed = False
     for sess in sessions:
         if sess.clock_out_at is not None:
             continue
         try:
-            _, end_utc = _work_window_utc(sess.work_date, tz, s)
+            close_at = _auto_close_moment(sess.work_date, tz, s)
         except HTTPException:
             continue
-        close_at = end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
         if now_utc >= close_at:
             sess.clock_out_at = now_utc
             sess.auto_clock_out = True
@@ -161,6 +196,39 @@ def _today_item(sess: Optional[AttendanceSession]) -> Optional[AttendanceTodayIt
         clock_in_at=sess.clock_in_at.isoformat() if sess.clock_in_at else None,
         clock_out_at=sess.clock_out_at.isoformat() if sess.clock_out_at else None,
         auto_clock_out=bool(sess.auto_clock_out),
+    )
+
+
+def _visible_staff_query(db: Session, current_user: User):
+    """Видимые в табеле сотрудники по роли текущего пользователя.
+
+    Админ — весь штат (admin/manager/operator), менеджер — менеджеры и
+    операторы, остальные — только себя.
+    """
+    q = (
+        db.query(User)
+        .join(Role, User.role_id == Role.id)
+        .filter(User.is_active.is_(True))
+    )
+    if current_user.role.name == "admin":
+        return q.filter(Role.name.in_(STAFF_ROLE_NAMES))
+    if current_user.role.name == "manager":
+        return q.filter(Role.name.in_(("manager", "operator")))
+    return q.filter(User.id == current_user.id)
+
+
+def _actor_item(u: Optional[User], user_id: int) -> TimesheetActorInfo:
+    """Информация об участнике правки; при удалённом пользователе — только id."""
+    if u is None:
+        return TimesheetActorInfo(user_id=user_id)
+    return TimesheetActorInfo(
+        user_id=u.id,
+        full_name=u.full_name,
+        first_name=u.first_name,
+        last_name=u.last_name,
+        email=u.email,
+        phone=u.phone,
+        role=u.role.name if u.role else "",
     )
 
 
@@ -314,17 +382,7 @@ async def attendance_timesheet(
 
     # Видимость табеля по роли: админ — все, менеджер — менеджеры и операторы,
     # оператор — только себя
-    users_q = (
-        db.query(User)
-        .join(Role, User.role_id == Role.id)
-        .filter(User.is_active.is_(True))
-    )
-    if current_user.role.name == "admin":
-        users_q = users_q.filter(Role.name.in_(STAFF_ROLE_NAMES))
-    elif current_user.role.name == "manager":
-        users_q = users_q.filter(Role.name.in_(("manager", "operator")))
-    else:
-        users_q = users_q.filter(User.id == current_user.id)
+    users_q = _visible_staff_query(db, current_user)
     if user_id:
         users_q = users_q.filter(User.id == user_id)
     users = users_q.order_by(User.id).all()
@@ -355,7 +413,31 @@ async def attendance_timesheet(
             by_user[sess.user_id][sess.work_date] = (
                 by_user[sess.user_id].get(sess.work_date, 0) + minutes
             )
-            totals[sess.user_id] += minutes
+
+    # Авторасчёт из сессий — сохраняем до применения ручных правок
+    auto_by_user: Dict[int, Dict[str, int]] = {
+        uid: dict(by_user[uid]) for uid in user_ids
+    }
+
+    # Ручные правки администрации: значение дня = правка, если она есть.
+    # Сессии/фиксация в эту таблицу не пишут, поэтому ручные часы не затираются.
+    overrides = (
+        db.query(TimesheetOverride)
+        .filter(
+            TimesheetOverride.user_id.in_(user_ids),
+            TimesheetOverride.work_date >= f"{y:04d}-{m:02d}-01",
+            TimesheetOverride.work_date <= days[-1],
+        )
+        .all()
+    )
+    manual_days: Dict[int, Dict[str, int]] = {uid: {} for uid in user_ids}
+    for ov in overrides:
+        by_user[ov.user_id][ov.work_date] = ov.minutes
+        manual_days[ov.user_id][ov.work_date] = ov.minutes
+
+    totals: Dict[int, int] = {
+        uid: sum(by_user[uid].values()) for uid in user_ids
+    }
 
     staff_users = [
         AttendanceTimesheetUser(
@@ -367,6 +449,8 @@ async def attendance_timesheet(
             phone=u.phone,
             role=u.role.name if u.role else "",
             days=by_user.get(u.id, {}),
+            manual_days=manual_days.get(u.id, {}),
+            auto_days=auto_by_user.get(u.id, {}),
             total_minutes=totals.get(u.id, 0),
         )
         for u in users
@@ -378,4 +462,133 @@ async def attendance_timesheet(
         work_end=s.work_end_time or "18:00",
         days=days,
         users=staff_users,
+    )
+
+
+# --------------------------------------------------------------------------
+# Ручное редактирование табеля (только для администраторов)
+# --------------------------------------------------------------------------
+
+@router.put("/attendance/timesheet/manual")
+async def update_timesheet_manual(
+    body: TimesheetManualUpdateIn,
+    current_user: User = Depends(require_permission("attendance.edit")),
+    db: Session = Depends(get_db),
+):
+    """Вручную проставить часы дня в табеле.
+
+    minutes=None в записи = сбросить правку (день снова считается из сессий).
+    Правки хранятся отдельно от сессий фиксации — авто-фиксация их не трогает.
+    Каждое реальное изменение фиксируется в timesheet_override_log.
+    """
+    if not body.entries:
+        return {"ok": True, "changed": 0}
+
+    # Последняя запись по (user, date) выигрывает; даты валидируем
+    entries: Dict[Tuple[int, str], TimesheetManualEntryIn] = {}
+    for e in body.entries:
+        _parse_date(e.work_date)
+        entries[(e.user_id, e.work_date)] = e
+
+    # Целевые сотрудники должны быть активными и видимыми текущему пользователю
+    target_ids = {uid for uid, _ in entries}
+    visible_ids = {
+        u.id
+        for u in _visible_staff_query(db, current_user)
+        .filter(User.id.in_(target_ids))
+        .all()
+    }
+    for uid, _ in entries:
+        if uid not in visible_ids:
+            raise HTTPException(
+                400, f"User {uid} is not in the visible staff or is inactive"
+            )
+
+    now_utc = _now_utc()
+    changed = 0
+    for (uid, work_date), e in entries.items():
+        ov = (
+            db.query(TimesheetOverride)
+            .filter_by(user_id=uid, work_date=work_date)
+            .first()
+        )
+        before = ov.minutes if ov else None
+        after = e.minutes
+        if after == before:
+            continue  # значения не изменились — ничего не пишем
+        if after is None:
+            db.delete(ov)
+        elif ov is None:
+            db.add(
+                TimesheetOverride(
+                    user_id=uid,
+                    work_date=work_date,
+                    minutes=after,
+                    updated_by_id=current_user.id,
+                    updated_at=now_utc,
+                )
+            )
+        else:
+            ov.minutes = after
+            ov.updated_by_id = current_user.id
+            ov.updated_at = now_utc
+        db.add(
+            TimesheetOverrideLog(
+                user_id=uid,
+                work_date=work_date,
+                minutes_before=before,
+                minutes_after=after,
+                changed_by_id=current_user.id,
+                changed_at=now_utc,
+            )
+        )
+        changed += 1
+
+    db.commit()
+    return {"ok": True, "changed": changed}
+
+
+@router.get("/attendance/timesheet/manual-history", response_model=TimesheetManualHistoryResponse)
+async def timesheet_manual_history(
+    month: str = Query("", max_length=7),
+    current_user: User = Depends(require_permission("attendance.edit")),
+    db: Session = Depends(get_db),
+):
+    """История ручных правок табеля за месяц (кто, когда, что было → стало)."""
+    s = _get_settings(db)
+    tz = _get_admin_tz(s)
+    y, m = _parse_month(month or datetime.now(tz).strftime("%Y-%m"))
+    days_in_month = calendar.monthrange(y, m)[1]
+
+    logs = (
+        db.query(TimesheetOverrideLog)
+        .filter(
+            TimesheetOverrideLog.work_date >= f"{y:04d}-{m:02d}-01",
+            TimesheetOverrideLog.work_date <= f"{y:04d}-{m:02d}-{days_in_month:02d}",
+        )
+        .order_by(TimesheetOverrideLog.changed_at.desc(), TimesheetOverrideLog.id.desc())
+        .limit(500)
+        .all()
+    )
+
+    user_ids = {log.user_id for log in logs} | {log.changed_by_id for log in logs}
+    users = {
+        u.id: u
+        for u in db.query(User).filter(User.id.in_(user_ids)).all()
+    } if user_ids else {}
+
+    return TimesheetManualHistoryResponse(
+        month=f"{y:04d}-{m:02d}",
+        items=[
+            TimesheetManualHistoryItem(
+                id=log.id,
+                work_date=log.work_date,
+                minutes_before=log.minutes_before,
+                minutes_after=log.minutes_after,
+                changed_at=log.changed_at.isoformat(),
+                employee=_actor_item(users.get(log.user_id), log.user_id),
+                changed_by=_actor_item(users.get(log.changed_by_id), log.changed_by_id),
+            )
+            for log in logs
+        ],
     )

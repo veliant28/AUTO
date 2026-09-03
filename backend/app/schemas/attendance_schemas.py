@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 
 
@@ -45,7 +45,12 @@ class AttendanceTimesheetUser(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     role: str = ""
+    # Эффективные минуты дня: ручная правка администрации, если есть, иначе авторасчёт
     days: Dict[str, int] = {}
+    # Только дни с ручной правкой (для подсветки на клиенте)
+    manual_days: Dict[str, int] = {}
+    # Авторасчёт из сессий (до ручных правок) — для предпросмотра сброса правки
+    auto_days: Dict[str, int] = {}
     total_minutes: int = 0
 
 
@@ -55,3 +60,39 @@ class AttendanceTimesheetResponse(BaseModel):
     work_end: str
     days: List[str]
     users: List[AttendanceTimesheetUser]
+
+
+class TimesheetManualEntryIn(BaseModel):
+    """Одна правка табеля: minutes=None означает «вернуть авторасчёт»."""
+    user_id: int
+    work_date: str  # YYYY-MM-DD
+    minutes: Optional[int] = Field(None, ge=0, le=1440)
+
+
+class TimesheetManualUpdateIn(BaseModel):
+    entries: List[TimesheetManualEntryIn] = []
+
+
+class TimesheetActorInfo(BaseModel):
+    user_id: int
+    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    role: str = ""
+
+
+class TimesheetManualHistoryItem(BaseModel):
+    id: int
+    work_date: str
+    minutes_before: Optional[int] = None
+    minutes_after: Optional[int] = None
+    changed_at: str  # naive UTC ISO
+    employee: TimesheetActorInfo
+    changed_by: TimesheetActorInfo
+
+
+class TimesheetManualHistoryResponse(BaseModel):
+    month: str
+    items: List[TimesheetManualHistoryItem] = []
