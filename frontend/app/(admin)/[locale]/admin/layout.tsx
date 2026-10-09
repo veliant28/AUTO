@@ -1170,6 +1170,21 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </Tooltip>
           </div>
         )}
+        {isOrders && (
+          <div className="border-r pr-2 self-stretch flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  onClick={() => (window as any).__openCreateOrder?.()}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ta('create_order')}</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         {isProtection && (
           <div className="border-r pr-2 self-stretch flex items-center">
             <Tooltip>

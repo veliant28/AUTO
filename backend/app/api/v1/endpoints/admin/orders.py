@@ -1,109 +1,64 @@
 import re
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_
 from app.core.db import get_db
+from app.core.security import get_password_hash
 from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     AdminOrderItem, AdminAdminOrderListResponse,
     UpdateOrderStatusSchema,
     AdminOrderDetailResponse, AdminOrderItemSchema,
     AdminOrderUpdateSchema, AdminOrderAddItemSchema,
+    AdminOrderCreateSchema, AdminOrderProductItem, AdminOrderProductSearchResponse,
     OrderChangeLogResponse, UnifiedEventResponse,
 )
 from app.schemas.tecdoc_schemas import AdminOfferItem
-from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part
+from app.models import User, Order, OrderItem, OrderStatus, OrderChangeLog, Part, Role
 from app.models.suppliers import SupplierOffer, Supplier
 from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from app.models.returns import ReturnRequest, ReturnStatus
 from datetime import datetime
+from app.services.catalog_utils import best_offer
+from app.services.promocode_service import (
+    find_customer_by_phone,
+    phone_digits,
+    promocode_allowed_for,
+)
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 
 router = APIRouter()
 
-
-@router.get("/orders", response_model=AdminAdminOrderListResponse)
-async def list_orders(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=500),
-    status: str = Query("", max_length=50),
-    search: str = Query("", max_length=100),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("orders.view")),
-):
-    """Список заказов для админ-панели с пагинацией, фильтром по статусу и поиском."""
-    query = db.query(Order)
-    if status:
-        try:
-            query = query.filter(Order.status == OrderStatus(status))
-        except ValueError:
-            pass
-    if search:
-        like = f"%{search}%"
-        try:
-            search_id = int(search)
-            query = query.filter(
-                (Order.id == search_id) |
-                (Order.order_number.ilike(like)) |
-                (Order.full_name.ilike(like)) |
-                (Order.last_name.ilike(like)) |
-                (Order.first_name.ilike(like)) |
-                (Order.middle_name.ilike(like)) |
-                (Order.phone.ilike(like))
-            )
-        except ValueError:
-            query = query.filter(
-                (Order.order_number.ilike(like)) |
-                (Order.full_name.ilike(like)) |
-                (Order.last_name.ilike(like)) |
-                (Order.first_name.ilike(like)) |
-                (Order.middle_name.ilike(like)) |
-                (Order.phone.ilike(like))
-            )
-    total = query.count()
-    orders = query.order_by(Order.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
-    return AdminAdminOrderListResponse(
-        items=[
-            AdminOrderItem(
-                id=o.id,
-                order_number=o.order_number or f"ORD-{o.id:010d}",
-                user_id=o.user_id,
-                status=o.status.value if hasattr(o.status, "value") else o.status,
-                total=float(o.total),
-                full_name=o.full_name,
-                phone=o.phone,
-                address=o.address,
-                created_at=o.created_at,
-                items_count=len(o.items),
-            )
-            for o in orders
-        ],
-        total=total,
-        page=page,
-        page_size=page_size,
-    )
+# Учётка, которую заводим клиенту, оформившему заказ по телефону без регистрации
+PHONE_CUSTOMER_EMAIL_DOMAIN = "phone.svom.local"
 
 
-@router.get("/orders/{order_id}", response_model=AdminOrderDetailResponse)
-async def get_order_detail(
-    order_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("orders.view")),
-):
-    """Детальная информация о заказе для админ-панели."""
-    order = db.query(Order).options(
+def _actor_name(user: User) -> str:
+    """Имя сотрудника для истории: «Фамилия Имя» (как в остальных записях),
+    с откатом на полное имя и почту."""
+    composed = f"{user.last_name or ''} {user.first_name or ''}".strip()
+    return composed or user.full_name or user.email
+
+
+def _phone_digits(phone: str | None) -> str:
+    return re.sub(r"\D", "", phone or "")
+
+
+def _load_order_for_detail(db: Session, order_id: int) -> Order | None:
+    return db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.part)
         .selectinload(Part.offers).joinedload(SupplierOffer.supplier),
         joinedload(Order.items).selectinload(OrderItem.supplier_offer).joinedload(SupplierOffer.supplier),
         joinedload(Order.updated_by),
     ).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(404, "Order not found")
 
-    # Compute user rating stats for this order's user
+
+def _serialize_order_detail(db: Session, order: Order) -> AdminOrderDetailResponse:
+    """Полная деталь заказа — тот же формат, что отдаёт GET /admin/orders/{id}."""
     user_id = order.user_id
     order_vals = db.query(
         func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)).label("delivered_total"),
@@ -193,6 +148,398 @@ async def get_order_detail(
     )
 
 
+def _find_or_create_customer(
+    db: Session,
+    *,
+    phone: str,
+    last_name: str,
+    first_name: str,
+    middle_name: str | None,
+) -> tuple[User, bool]:
+    """Заказ всегда привязан к пользователю: ищем клиента по телефону, а если его нет —
+    заводим учётку, чтобы телефонный заказ был виден в его личном кабинете после регистрации."""
+    digits = _phone_digits(phone)
+    existing_customer = find_customer_by_phone(db, phone)
+    if existing_customer:
+        return existing_customer, False
+
+    email = f"{digits or 'unknown'}@{PHONE_CUSTOMER_EMAIL_DOMAIN}"
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        return existing, False
+
+    role = db.query(Role).filter(Role.name == "retail").first() or db.query(Role).order_by(Role.id).first()
+    if not role:
+        raise HTTPException(400, "Роль для клиента не настроена")
+
+    full_name = " ".join(p for p in (last_name, first_name, middle_name) if p) or None
+    user = User(
+        email=email,
+        password_hash=get_password_hash(secrets.token_urlsafe(24)),
+        full_name=full_name,
+        first_name=first_name or None,
+        last_name=last_name or None,
+        middle_name=middle_name or None,
+        phone=("+" + digits) if digits else None,
+        is_active=True,
+        role_id=role.id,
+        created_at=datetime.utcnow().isoformat(),
+    )
+    db.add(user)
+    db.flush()
+    return user, True
+
+
+@router.get("/orders", response_model=AdminAdminOrderListResponse)
+async def list_orders(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=500),
+    status: str = Query("", max_length=50),
+    search: str = Query("", max_length=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders.view")),
+):
+    """Список заказов для админ-панели с пагинацией, фильтром по статусу и поиском."""
+    query = db.query(Order)
+    if status:
+        try:
+            query = query.filter(Order.status == OrderStatus(status))
+        except ValueError:
+            pass
+    if search:
+        like = f"%{search}%"
+        try:
+            search_id = int(search)
+            query = query.filter(
+                (Order.id == search_id) |
+                (Order.order_number.ilike(like)) |
+                (Order.full_name.ilike(like)) |
+                (Order.last_name.ilike(like)) |
+                (Order.first_name.ilike(like)) |
+                (Order.middle_name.ilike(like)) |
+                (Order.phone.ilike(like))
+            )
+        except ValueError:
+            query = query.filter(
+                (Order.order_number.ilike(like)) |
+                (Order.full_name.ilike(like)) |
+                (Order.last_name.ilike(like)) |
+                (Order.first_name.ilike(like)) |
+                (Order.middle_name.ilike(like)) |
+                (Order.phone.ilike(like))
+            )
+    total = query.count()
+    orders = query.order_by(Order.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    return AdminAdminOrderListResponse(
+        items=[
+            AdminOrderItem(
+                id=o.id,
+                order_number=o.order_number or f"ORD-{o.id:010d}",
+                user_id=o.user_id,
+                status=o.status.value if hasattr(o.status, "value") else o.status,
+                total=float(o.total),
+                full_name=o.full_name,
+                phone=o.phone,
+                address=o.address,
+                created_at=o.created_at,
+                items_count=len(o.items),
+            )
+            for o in orders
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get("/orders/product-search", response_model=AdminOrderProductSearchResponse)
+async def search_order_products(
+    q: str = Query(..., min_length=2, max_length=100),
+    limit: int = Query(15, ge=1, le=50),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders.edit_status")),
+):
+    """Поиск товаров для добавления в заказ: «бренд + артикул», «бренд + SKU» либо артикул/SKU."""
+    query = q.strip()
+    if len(query) < 2:
+        return AdminOrderProductSearchResponse(items=[])
+
+    tokens = [t for t in re.split(r"\s+", query) if t]
+    brand_part = " ".join(tokens[:-1]) if len(tokens) >= 2 else None
+    code_part = tokens[-1]
+    code_like = f"%{code_part}%"
+    code_lower = code_part.lower()
+
+    base = db.query(Part).options(
+        selectinload(Part.offers).joinedload(SupplierOffer.supplier),
+    ).filter(Part.is_active == True)  # noqa: E712
+
+    def rank_and_limit(statement):
+        sku_col = func.coalesce(Part.sku, "")
+        return statement.order_by(
+            case(
+                (func.lower(Part.article) == code_lower, 0),
+                (func.lower(sku_col) == code_lower, 1),
+                (Part.article.ilike(f"{code_part}%"), 2),
+                (sku_col.ilike(f"{code_part}%"), 3),
+                else_=4,
+            ),
+            Part.article,
+        ).limit(limit)
+
+    parts = []
+    if brand_part:
+        parts = rank_and_limit(
+            base.filter(Part.brand.ilike(f"%{brand_part}%")).filter(
+                or_(Part.article.ilike(code_like), func.coalesce(Part.sku, "").ilike(code_like))
+            )
+        ).all()
+    if not parts:
+        # Без бренда (или бренд не совпал) — ищем по артикулу/SKU/названию
+        parts = rank_and_limit(
+            base.filter(
+                or_(
+                    Part.article.ilike(code_like),
+                    func.coalesce(Part.sku, "").ilike(code_like),
+                    Part.name.ilike(f"%{query}%"),
+                )
+            )
+        ).all()
+
+    items = []
+    for part in parts:
+        best = best_offer(part.offers or [])
+        if not best or best.get("price") is None:
+            # Без оффера нельзя посчитать цену позиции заказа
+            continue
+        items.append(
+            AdminOrderProductItem(
+                part_id=part.id,
+                article=part.article,
+                brand=part.brand,
+                name=part.name,
+                sku=part.sku,
+                image_url=part.image_url,
+                price=best.get("price"),
+                currency=best.get("currency"),
+                quantity=best.get("quantity") or 0,
+                supplier_name=best.get("supplier_name"),
+                supplier_offer_id=best.get("supplier_offer_id"),
+            )
+        )
+    return AdminOrderProductSearchResponse(items=items)
+
+
+@router.post("/orders", response_model=AdminOrderDetailResponse)
+async def create_order(
+    data: AdminOrderCreateSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders.edit_status")),
+):
+    """Создание заказа администратором (заказ по телефону, без витрины)."""
+    if not data.items:
+        raise HTTPException(400, "В заказе должна быть хотя бы одна позиция")
+
+    # Способ оплаты обязателен: счета/наложка зависят от него
+    from app.services.payments.service import PAYMENT_METHOD_NAMES
+    if data.payment_method not in PAYMENT_METHOD_NAMES:
+        raise HTTPException(400, "Выберите способ оплаты")
+
+    # Заказ оформляется на доставку: без способа и адреса его не отправить
+    if data.delivery_type not in ("warehouse", "courier"):
+        raise HTTPException(400, "Выберите способ доставки")
+    if data.delivery_type == "warehouse":
+        if not (data.delivery_city_ref and data.delivery_warehouse_ref):
+            raise HTTPException(400, "Укажите город и отделение Новой Почты")
+    elif not (
+        data.delivery_city_ref
+        and data.delivery_street_ref
+        and (data.delivery_house or "").strip()
+    ):
+        raise HTTPException(400, "Укажите город, улицу и дом для курьерской доставки")
+
+    merged: dict[int, int] = {}
+    for item in data.items:
+        merged[item.part_id] = merged.get(item.part_id, 0) + max(1, int(item.quantity))
+
+    parts = db.query(Part).options(
+        selectinload(Part.offers).joinedload(SupplierOffer.supplier),
+    ).filter(Part.id.in_(list(merged.keys()))).all()
+    parts_by_id = {p.id: p for p in parts}
+    for part_id in merged:
+        if part_id not in parts_by_id:
+            raise HTTPException(400, f"Товар не найден: {part_id}")
+
+    # Цену берём из БД (лучший оффер), а не из тела запроса
+    resolved: list[tuple[Part, int, float, int | None]] = []
+    for part_id, quantity in merged.items():
+        part = parts_by_id[part_id]
+        best = best_offer(part.offers or [])
+        if not best or best.get("price") is None:
+            raise HTTPException(400, f"Для товара «{part.article}» нет доступной цены")
+        resolved.append((part, quantity, float(best["price"]), best.get("supplier_offer_id")))
+
+    total = round(sum(quantity * price for _, quantity, price, _ in resolved), 2)
+    original_total = total
+
+    phone_digits = _phone_digits(data.phone)
+    customer, customer_created = _find_or_create_customer(
+        db,
+        phone=data.phone,
+        last_name=data.last_name,
+        first_name=data.first_name,
+        middle_name=data.middle_name,
+    )
+
+    promocode = None
+    discount_amount = 0.0
+    if data.promocode:
+        code = data.promocode.strip().upper()
+        promocode = db.query(Promocode).filter(Promocode.code == code).first()
+        if not promocode:
+            raise HTTPException(400, "Промокод не найден")
+        if not promocode.is_active:
+            raise HTTPException(400, "Промокод неактивен")
+        if promocode.expires_at and promocode.expires_at < datetime.utcnow():
+            raise HTTPException(400, "Срок действия промокода истёк")
+        if promocode.used_at:
+            raise HTTPException(400, "Промокод уже использован")
+        # Код выдан конкретному человеку: применить его может только этот клиент
+        # (если он зарегистрирован) или сотрудник, оформляющий заказ
+        if not promocode_allowed_for(
+            promocode,
+            client_user_id=customer.id,
+            actor_user_id=current_user.id,
+        ):
+            raise HTTPException(400, "Промокод принадлежит другому пользователю")
+        if promocode.type == "margin":
+            total_margin = 0.0
+            for part, quantity, price, _ in resolved:
+                best = best_offer(part.offers or [])
+                base_price = float(best["original_price"]) if best else 0.0
+                margin_per_item = price - base_price
+                if margin_per_item > 0:
+                    total_margin += margin_per_item * quantity
+            if total_margin > 0:
+                discount_amount = round(total_margin * (promocode.discount_percent or 100) / 100, 2)
+                total = max(round(total - discount_amount, 2), 0.0)
+        promocode.used_at = datetime.utcnow()
+
+    actor_name = _actor_name(current_user)
+    actor_group = current_user.role.name if current_user.role else None
+
+    order = Order(
+        user_id=customer.id,
+        status=OrderStatus.PENDING,
+        total=total,
+        full_name=" ".join(filter(None, [data.last_name, data.first_name, data.middle_name])),
+        phone=("+" + phone_digits) if phone_digits else data.phone,
+        last_name=data.last_name,
+        first_name=data.first_name,
+        middle_name=data.middle_name,
+        delivery_type=data.delivery_type,
+        delivery_city=data.delivery_city,
+        delivery_warehouse=data.delivery_warehouse,
+        delivery_city_ref=data.delivery_city_ref,
+        delivery_settlement_ref=data.delivery_settlement_ref,
+        delivery_city_label=data.delivery_city_label,
+        delivery_warehouse_ref=data.delivery_warehouse_ref,
+        delivery_warehouse_label=data.delivery_warehouse_label,
+        delivery_street_ref=data.delivery_street_ref,
+        delivery_street_label=data.delivery_street_label,
+        delivery_house=data.delivery_house,
+        delivery_apartment=data.delivery_apartment,
+        payment_method=data.payment_method,
+        promocode_id=promocode.id if promocode else None,
+        promocode_code=promocode.code if promocode else None,
+        discount_amount=discount_amount,
+        original_total=original_total,
+        updated_by_user_id=current_user.id,
+        updated_by_name=actor_name,
+        updated_by_group=actor_group,
+        updated_at=datetime.utcnow(),
+    )
+    db.add(order)
+    db.flush()
+    order.order_number = f"ORD-{order.id:010d}"
+
+    for part, quantity, price, supplier_offer_id in resolved:
+        db.add(
+            OrderItem(
+                order_id=order.id,
+                part_id=part.id,
+                quantity=quantity,
+                price=price,
+                supplier_offer_id=supplier_offer_id,
+            )
+        )
+
+    # Действие "create" означает, что заказ оформлен сотрудником из админки
+    # (витринное оформление записи в историю не пишет) — админка показывает по
+    # этому признаку отдельную метку в таймлайне
+    details = [
+        f"{len(resolved)} поз. на {total} ₴",
+        f"получатель: {order.full_name}, {order.phone}",
+    ]
+    if data.delivery_type:
+        destination = data.delivery_warehouse or data.delivery_street_label or data.delivery_city or ""
+        details.append(f"доставка: {data.delivery_type} {destination}".strip())
+    if data.payment_method:
+        details.append(f"оплата: {data.payment_method}")
+    if promocode:
+        details.append(f"промокод: {promocode.code} (-{discount_amount} ₴)")
+    if customer_created:
+        details.append("клиент заведён по номеру телефона")
+
+    db.add(
+        OrderChangeLog(
+            order_id=order.id,
+            user_id=current_user.id,
+            user_name=actor_name,
+            user_group=actor_group,
+            action="create",
+            details="; ".join(details),
+            created_at=datetime.utcnow(),
+        )
+    )
+    db.commit()
+
+    # Telegram-уведомления как при обычном оформлении (fire-and-forget)
+    import asyncio
+    asyncio.ensure_future(
+        send_telegram_notification(
+            telegram_format.new_order(
+                number=order.order_number,
+                total=order.total,
+                full_name=order.full_name,
+                phone=order.phone,
+            )
+        )
+    )
+    asyncio.ensure_future(
+        send_customer_telegram_notification(
+            order.user_id,
+            telegram_format.customer_new_order(order.order_number, order.total),
+        )
+    )
+
+    created_order = _load_order_for_detail(db, order.id)
+    return _serialize_order_detail(db, created_order)
+
+
+@router.get("/orders/{order_id}", response_model=AdminOrderDetailResponse)
+async def get_order_detail(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("orders.view")),
+):
+    """Детальная информация о заказе для админ-панели."""
+    order = _load_order_for_detail(db, order_id)
+    if not order:
+        raise HTTPException(404, "Order not found")
+    return _serialize_order_detail(db, order)
+
+
 @router.put("/orders/{order_id}")
 async def update_order(
     order_id: int,
@@ -216,10 +563,55 @@ async def update_order(
                 changes.append(f"{part_base}: {item.quantity} шт. → {upd.quantity} шт.")
                 item.quantity = upd.quantity
 
-        # Recalculate total after quantity changes
+        # Recalculate total after quantity changes (скидка промокода сохраняется)
         db.flush()
-        order.total = sum(
-            float(i.quantity) * float(i.price) for i in order.items
+        order.total = max(
+            sum(float(i.quantity) * float(i.price) for i in order.items)
+            - float(order.discount_amount or 0),
+            0,
+        )
+
+    if data.add_items:
+        for add in data.add_items:
+            part = db.query(Part).options(
+                selectinload(Part.offers).joinedload(SupplierOffer.supplier)
+            ).filter(Part.id == add.part_id).first()
+            if not part:
+                raise HTTPException(400, f"Товар не найден: {add.part_id}")
+            best = best_offer(part.offers or [])
+            if not best or best.get("price") is None:
+                raise HTTPException(400, f"Для товара «{part.article}» нет доступной цены")
+
+            quantity = max(1, int(add.quantity))
+            existing = db.query(OrderItem).filter(
+                OrderItem.order_id == order_id, OrderItem.part_id == part.id
+            ).first()
+            if existing:
+                changes.append(
+                    f"{part.name} {part.article}: {existing.quantity} шт. → {existing.quantity + quantity} шт."
+                )
+                existing.quantity += quantity
+            else:
+                changes.append(
+                    f"добавлен товар: {part.name} {part.article}: {quantity} шт. × {float(best['price'])} ₴"
+                )
+                db.add(OrderItem(
+                    order_id=order.id,
+                    part_id=part.id,
+                    quantity=quantity,
+                    price=float(best["price"]),
+                    supplier_offer_id=best.get("supplier_offer_id"),
+                ))
+
+        # Пересчитываем сумму по всем позициям заказа (за вычетом скидки)
+        db.flush()
+        order.total = max(
+            sum(
+                float(i.quantity) * float(i.price)
+                for i in db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+            )
+            - float(order.discount_amount or 0),
+            0,
         )
 
     if data.phone is not None and order.phone != data.phone:
@@ -270,6 +662,12 @@ async def update_order(
         # Sync promocode used_at: set when applied, clear when removed
         if data.promocode_code:
             pc = db.query(Promocode).filter(Promocode.code == data.promocode_code).first()
+            if pc and not promocode_allowed_for(
+                pc,
+                client_user_id=order.user_id,
+                actor_user_id=current_user.id,
+            ):
+                raise HTTPException(400, "Промокод принадлежит другому пользователю")
             if pc and not pc.used_at:
                 pc.used_at = datetime.utcnow()
         elif old_code:
@@ -285,14 +683,14 @@ async def update_order(
 
     if changes:
         order.updated_by_user_id = current_user.id
-        order.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
+        order.updated_by_name = _actor_name(current_user)
         order.updated_by_group = role_name
         order.updated_at = datetime.utcnow()
 
         log = OrderChangeLog(
             order_id=order.id,
             user_id=current_user.id,
-            user_name=f"{current_user.last_name or ''} {current_user.first_name or ''}".strip(),
+            user_name=_actor_name(current_user),
             user_group=role_name,
             action="edit",
             details="; ".join(changes),
@@ -333,14 +731,14 @@ async def delete_order_item(
     order.total = sum(float(i.quantity) * float(i.price) for i in remaining)
     role_name = current_user.role.name if current_user.role else ""
     order.updated_by_user_id = current_user.id
-    order.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
+    order.updated_by_name = _actor_name(current_user)
     order.updated_by_group = role_name
     order.updated_at = datetime.utcnow()
 
     log = OrderChangeLog(
         order_id=order.id,
         user_id=current_user.id,
-        user_name=f"{current_user.last_name or ''} {current_user.first_name or ''}".strip(),
+        user_name=_actor_name(current_user),
         user_group=role_name,
         action="item_removed",
         details=item_info,
@@ -485,7 +883,7 @@ async def add_order_item(
             break
 
     role_name = current_user.role.name if current_user.role else ""
-    user_display = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
+    user_display = _actor_name(current_user)
     part_info = f"{part.name} {part.article} (SKU: {part.sku or '—'})"
 
     if existing_item:
@@ -610,14 +1008,14 @@ async def update_order_status(
 
     role_name = current_user.role.name if current_user.role else ""
     order.updated_by_user_id = current_user.id
-    order.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
+    order.updated_by_name = _actor_name(current_user)
     order.updated_by_group = role_name
     order.updated_at = datetime.utcnow()
 
     log = OrderChangeLog(
         order_id=order.id,
         user_id=current_user.id,
-        user_name=f"{current_user.last_name or ''} {current_user.first_name or ''}".strip(),
+        user_name=_actor_name(current_user),
         user_group=role_name,
         action="status_change",
         details=f"статус: {old_status} → {data.status}",

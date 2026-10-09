@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Eye,
@@ -29,8 +29,8 @@ import {
   RefreshCw,
   AlertTriangle,
   ScanBarcode,
-  Warehouse,
   Gift,
+  Laptop,
   Check,
   FileText,
 } from 'lucide-react'
@@ -63,7 +63,11 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
-import { novaPoshtaApi } from '@/lib/api/nova-poshta'
+import { useNovaPoshtaAddressSearch } from '@/hooks/useNovaPoshtaAddressSearch'
+import {
+  SettlementItem,
+  WarehouseDropdownItem,
+} from '@/components/ui/nova-poshta-items'
 import {
   getReceipt as getCheckboxReceipt,
   getReceiptLink as getCheckboxReceiptLink,
@@ -73,19 +77,17 @@ import { useRequirePerm } from '@/hooks/useRequirePerm'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
+import { supplierBadgeClass } from '@/lib/suppliers'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import PaymentBlock from './PaymentBlock'
 import PaymentBadge from './PaymentBadge'
 import { paymentBadgeClass, paymentMethodLabel } from './PaymentHelpers'
+import OrderProductSearch, { OrderSearchProduct } from './OrderProductSearch'
+import { fetchPaymentMethods } from '@/lib/api/payments'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
-
-const supplierColors: Record<string, string> = {
-  UTR: 'bg-red-500 text-white',
-  GPL: 'bg-orange-500 text-white',
-}
 
 interface AdminOrderItemDetail {
   id: number
@@ -180,7 +182,11 @@ interface OrderDetailModalProps {
   orderId: number | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Режим создания заказа (заказ по телефону): товары и получатель вводятся вручную */
+  createMode?: boolean
 }
+
+type DraftItem = OrderSearchProduct & { quantity: number }
 
 function formatDate(dateStr: string): string {
   return formatDateTime(dateStr, useTimezoneStore.getState().timezone, {
@@ -189,12 +195,154 @@ function formatDate(dateStr: string): string {
   })
 }
 
+interface OrderItemCardProps {
+  imageUrl: string | null
+  brand: string | null
+  article: string
+  sku: string | null
+  partName: string
+  supplierName: string | null
+  price: number
+  quantity: number
+  editable: boolean
+  onDecrease?: () => void
+  onIncrease?: () => void
+  onRemove?: () => void
+  removeDisabled?: boolean
+  deleteLabel: string
+  /** Позиция добавлена в редакторе и ещё не сохранена — пунктирная рамка */
+  pending?: boolean
+}
+
+/** Карточка позиции заказа — общая для просмотра, редактирования и создания. */
+function OrderItemCard({
+  imageUrl,
+  brand,
+  article,
+  sku,
+  partName,
+  supplierName,
+  price,
+  quantity,
+  editable,
+  onDecrease,
+  onIncrease,
+  onRemove,
+  removeDisabled,
+  deleteLabel,
+  pending = false,
+}: OrderItemCardProps) {
+  return (
+    <div
+      className={`flex gap-3 p-3 rounded-lg border bg-card transition-colors ${pending ? 'border-dashed border-primary/60' : ''}`}
+    >
+      <div
+        className={`w-[80px] h-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center ${imageUrl ? '' : `bg-gradient-to-br ${getBrandColor(brand)}`}`}
+      >
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-3xl font-bold text-white/40 select-none">
+            {getBrandInitial(brand)}
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+              {brand && (
+                <Badge variant="secondary" className="text-sm px-1.5">
+                  {brand}
+                </Badge>
+              )}
+              <span className="text-sm font-mono text-muted-foreground">
+                {article}
+              </span>
+              {supplierName && (
+                <Badge
+                  className={`${supplierBadgeClass(supplierName)} border-0 text-sm`}
+                >
+                  {supplierName}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm font-medium line-clamp-2">{partName}</p>
+          </div>
+          <div className="flex items-center shrink-0 gap-2">
+            {sku && (
+              <Badge className="bg-blue-500 text-white border-0 text-sm">
+                {sku}
+              </Badge>
+            )}
+            {editable && onRemove && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={onRemove}
+                    disabled={removeDisabled}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{deleteLabel}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-1">
+          {editable ? (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+                onClick={onDecrease}
+                disabled={quantity <= 1}
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="w-8 text-center font-medium tabular-nums">
+                {quantity}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+                onClick={onIncrease}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground ml-1">
+                × {fmt(price)} ₴
+              </span>
+            </div>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              {quantity} &times; {fmt(price)} ₴
+            </span>
+          )}
+          <span className="font-semibold text-base">
+            {fmt(quantity * price)} ₴
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function OrderDetailModal({
   orderId,
   open,
   onOpenChange,
+  createMode = false,
 }: OrderDetailModalProps) {
   const t = useTranslations('admin')
+  const tc = useTranslations('checkout')
+  const locale = useLocale()
   const queryClient = useQueryClient()
   const timezone = useTimezoneStore((s) => s.timezone)
   const reqPerm = useRequirePerm()
@@ -210,40 +358,242 @@ export default function OrderDetailModal({
   const deliveryType = editRecipient.delivery_type || ''
   const settlementRef = editRecipient.delivery_settlement_ref || ''
 
-  const [cityQuery, setCityQuery] = useState('')
-  const { data: settlements = [], isFetching: citiesLoading } = useQuery({
-    queryKey: ['admin-order-np-cities', cityQuery],
-    queryFn: () =>
-      novaPoshtaApi
-        .searchSettlements({ query: cityQuery })
-        .then((r) => r.data as any[]),
-    enabled: cityQuery.length >= 2,
-    staleTime: 30000,
-  })
-
-  const [warehouseQuery, setWarehouseQuery] = useState('')
-  const { data: warehouses = [], isFetching: warehousesLoading } = useQuery({
-    queryKey: ['admin-order-np-warehouses', deliveryCityRef, warehouseQuery],
-    queryFn: () =>
-      novaPoshtaApi
-        .searchWarehouses({ city_ref: deliveryCityRef, query: warehouseQuery })
-        .then((r) => r.data as any[]),
-    enabled: !!deliveryCityRef && warehouseQuery.length >= 1,
-    staleTime: 30000,
-  })
-
-  const [streetQuery, setStreetQuery] = useState('')
-  const { data: streets = [], isFetching: streetsLoading } = useQuery({
-    queryKey: ['admin-order-np-streets', settlementRef, streetQuery],
-    queryFn: () =>
-      novaPoshtaApi
-        .searchStreets({ settlement_ref: settlementRef, query: streetQuery })
-        .then((r) => r.data as any[]),
-    enabled: !!settlementRef && streetQuery.length >= 2,
-    staleTime: 30000,
+  // Поиск Новой Почты — тот же хук, что на витрине в оформлении заказа
+  const {
+    cityQuery,
+    setCityQuery,
+    warehouseQuery,
+    setWarehouseQuery,
+    streetQuery,
+    setStreetQuery,
+    settlements,
+    citiesLoading,
+    warehouses,
+    warehousesLoading,
+    streets,
+    streetsLoading,
+  } = useNovaPoshtaAddressSearch({
+    prefix: 'admin-order',
+    cityRef: deliveryCityRef,
+    settlementRef,
+    locale,
   })
 
   const [promoInput, setPromoInput] = useState('')
+
+  // ── Режим создания заказа (заказ по телефону) ──────────────────
+  const editable = editMode || createMode
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([])
+  const [draftPromo, setDraftPromo] = useState<{
+    code: string
+    discount: number
+  } | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState('')
+  // Позиции, добавленные в существующий заказ в режиме редактирования
+  // (уходят на бэкенд только при сохранении)
+  const [newItems, setNewItems] = useState<DraftItem[]>([])
+
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: () => fetchPaymentMethods().then((r) => r.methods),
+    enabled: createMode && open,
+    staleTime: 30000,
+  })
+  const enabledPaymentMethods = useMemo(
+    () => (paymentMethods || []).filter((m) => m.enabled),
+    [paymentMethods],
+  )
+
+  // Каждое открытие создания — чистая форма
+  useEffect(() => {
+    if (!createMode || !open) return
+    setDraftItems([])
+    setDraftPromo(null)
+    setPromoInput('')
+    setPaymentMethod('')
+    setEditRecipient({})
+    setCityQuery('')
+    setWarehouseQuery('')
+    setStreetQuery('')
+  }, [createMode, open, setCityQuery, setWarehouseQuery, setStreetQuery])
+
+  const draftTotal = useMemo(
+    () =>
+      draftItems.reduce(
+        (sum, item) => sum + item.quantity * (item.price || 0),
+        0,
+      ),
+    [draftItems],
+  )
+  const draftDiscount = draftPromo?.discount || 0
+  const draftGrandTotal = Math.max(draftTotal - draftDiscount, 0)
+  const draftQuantities = useMemo(() => {
+    const map: Record<number, number> = {}
+    draftItems.forEach((item) => {
+      map[item.part_id] = item.quantity
+    })
+    return map
+  }, [draftItems])
+
+  const addDraftItem = (product: OrderSearchProduct) => {
+    setDraftItems((prev) => {
+      const existing = prev.find((item) => item.part_id === product.part_id)
+      if (existing) {
+        return prev.map((item) =>
+          item.part_id === product.part_id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        )
+      }
+      return [...prev, { ...product, quantity: 1 }]
+    })
+  }
+
+  const changeDraftQuantity = (partId: number, delta: number) => {
+    setDraftItems((prev) =>
+      prev.map((item) =>
+        item.part_id === partId
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item,
+      ),
+    )
+  }
+
+  const promoMessageKey = (message: string): string => {
+    if (message.includes('not found')) return 'not_found'
+    if (message.includes('inactive')) return 'inactive'
+    if (message.includes('expired')) return 'expired'
+    if (message.includes('already used')) return 'used'
+    if (message.includes('another user')) return 'wrong_user'
+    return 'error'
+  }
+
+  const applyDraftPromo = useMutation({
+    mutationFn: async (code: string) => {
+      const { data } = await api.post('/loyalty/validate', {
+        code,
+        phone: editRecipient.phone || undefined,
+        items: draftItems.map((item) => ({
+          part_id: item.part_id,
+          price: item.price || 0,
+          quantity: item.quantity,
+        })),
+      })
+      return data
+    },
+    onSuccess: (resp, code) => {
+      if (!resp?.valid) {
+        toast.error(t('promo_' + promoMessageKey(resp?.message || 'error')))
+        return
+      }
+      setDraftPromo({ code, discount: resp?.discount_amount || 0 })
+      setPromoInput('')
+      toast.success(t('promo_applied'))
+    },
+    onError: () => toast.error(t('promo_error')),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/admin/orders', {
+        last_name: editRecipient.last_name || '',
+        first_name: editRecipient.first_name || '',
+        middle_name: editRecipient.middle_name || '',
+        phone: editRecipient.phone || '',
+        delivery_type: editRecipient.delivery_type || '',
+        delivery_city: editRecipient.delivery_city || '',
+        delivery_warehouse: editRecipient.delivery_warehouse || '',
+        delivery_city_ref: editRecipient.delivery_city_ref || '',
+        delivery_settlement_ref: editRecipient.delivery_settlement_ref || '',
+        delivery_city_label: editRecipient.delivery_city_label || '',
+        delivery_warehouse_ref: editRecipient.delivery_warehouse_ref || '',
+        delivery_warehouse_label: editRecipient.delivery_warehouse_label || '',
+        delivery_street_ref: editRecipient.delivery_street_ref || '',
+        delivery_street_label: editRecipient.delivery_street_label || '',
+        delivery_house: editRecipient.delivery_house || '',
+        delivery_apartment: editRecipient.delivery_apartment || '',
+        payment_method: paymentMethod,
+        promocode: draftPromo?.code || null,
+        items: draftItems.map((item) => ({
+          part_id: item.part_id,
+          quantity: item.quantity,
+        })),
+      })
+      return data as AdminOrderDetail
+    },
+    onSuccess: (data) => {
+      toast.success(t('order_created'))
+      // Кэшируем созданный заказ, чтобы модалка сразу показала его без запроса
+      queryClient.setQueryData(['admin-order-detail', data.id], data)
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      setDraftItems([])
+      setDraftPromo(null)
+      setPromoInput('')
+      setEditRecipient({})
+      // После создания просто закрываем модалку: заказ уже в списке
+      onOpenChange(false)
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || t('order_create_error'))
+    },
+  })
+
+  const handleCreate = () => {
+    if (draftItems.length === 0) {
+      toast.error(t('items_required'))
+      return
+    }
+    if (!editRecipient.last_name?.trim()) {
+      toast.error(t('last_name_required'))
+      return
+    }
+    if (!editRecipient.first_name?.trim()) {
+      toast.error(t('first_name_required'))
+      return
+    }
+    const phoneDigits = (editRecipient.phone || '').replace(/\D/g, '')
+    if (!phoneDigits) {
+      toast.error(t('phone_required'))
+      return
+    }
+    if (!/^380\d{9}$/.test(phoneDigits)) {
+      toast.error(t('phone_format'))
+      return
+    }
+    if (!editRecipient.delivery_type) {
+      toast.error(t('delivery_required'))
+      return
+    }
+    if (editRecipient.delivery_type === 'warehouse') {
+      if (!editRecipient.delivery_city_ref) {
+        toast.error(t('city_required'))
+        return
+      }
+      if (!editRecipient.delivery_warehouse_ref) {
+        toast.error(t('warehouse_required'))
+        return
+      }
+    }
+    if (editRecipient.delivery_type === 'courier') {
+      if (!editRecipient.delivery_city_ref) {
+        toast.error(t('city_required'))
+        return
+      }
+      if (!editRecipient.delivery_street_ref) {
+        toast.error(t('street_required'))
+        return
+      }
+      if (!editRecipient.delivery_house?.trim()) {
+        toast.error(t('house_required'))
+        return
+      }
+    }
+    if (!paymentMethod) {
+      toast.error(t('payment_required'))
+      return
+    }
+    createMutation.mutate()
+  }
 
   const {
     data: orderDetail,
@@ -303,7 +653,7 @@ export default function OrderDetailModal({
       if (orderDetail.delivery_street_label)
         setStreetQuery(orderDetail.delivery_street_label)
     }
-  }, [orderDetail])
+  }, [orderDetail, setCityQuery, setWarehouseQuery, setStreetQuery])
 
   const statusMutation = useMutation({
     mutationFn: async ({
@@ -342,6 +692,7 @@ export default function OrderDetailModal({
         queryKey: ['admin-order-all-events', orderId],
       })
       setEditMode(false)
+      setNewItems([])
       refetchOrderDetail()
       toast.success(t('order_updated'))
     },
@@ -389,7 +740,7 @@ export default function OrderDetailModal({
     mutationFn: async (code: string) => {
       const { data } = await api.post('/loyalty/validate', {
         code,
-        order_total: editMode ? editTotal : orderDetail?.total || 0,
+        phone: editRecipient.phone || undefined,
         items: orderDetail?.items.map((i) => ({
           part_id: i.part_id,
           quantity: editQuantities[i.id] ?? i.quantity,
@@ -398,27 +749,104 @@ export default function OrderDetailModal({
       })
       return data
     },
-    onSuccess: (resp) => {
-      if (!resp.success) {
-        toast.error(t('promo_' + (resp.message || 'error')))
+    onSuccess: (resp, code) => {
+      if (!resp?.valid) {
+        toast.error(t('promo_' + promoMessageKey(resp?.message || 'error')))
         return
       }
-      queryClient.invalidateQueries({
-        queryKey: ['admin-order-detail', orderId],
-      })
+      setPromoInput('')
+      const discount = resp.discount_amount || 0
+      const baseTotal = editMode ? editTotal : orderDetail?.total || 0
       updateMutation.mutate({
-        promocode_code: resp.code,
-        discount_amount: resp.discount_amount,
-        original_total: resp.original_total,
-        total: resp.total,
+        promocode_code: code,
+        discount_amount: discount,
+        original_total: baseTotal,
+        total: Math.max(baseTotal - discount, 0),
       })
     },
     onError: () => toast.error(t('promo_error')),
   })
 
+  const addEditItem = (product: OrderSearchProduct) => {
+    // Товар уже в заказе — увеличиваем количество существующей позиции
+    const existing = orderDetail?.items.find(
+      (item) => item.part_id === product.part_id,
+    )
+    if (existing) {
+      setEditQuantities((prev) => ({
+        ...prev,
+        [existing.id]: (prev[existing.id] ?? existing.quantity) + 1,
+      }))
+      return
+    }
+    setNewItems((prev) => {
+      const draft = prev.find((item) => item.part_id === product.part_id)
+      if (draft) {
+        return prev.map((item) =>
+          item.part_id === product.part_id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        )
+      }
+      return [...prev, { ...product, quantity: 1 }]
+    })
+  }
+
+  const changeNewItemQuantity = (partId: number, delta: number) => {
+    setNewItems((prev) =>
+      prev.map((item) =>
+        item.part_id === partId
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item,
+      ),
+    )
+  }
+
+  const cancelEdit = () => {
+    setEditMode(false)
+    setNewItems([])
+    if (orderDetail) {
+      setEditRecipient({
+        phone: orderDetail.phone || '',
+        last_name: orderDetail.last_name || '',
+        first_name: orderDetail.first_name || '',
+        middle_name: orderDetail.middle_name || '',
+        delivery_type: orderDetail.delivery_type || '',
+        delivery_city: orderDetail.delivery_city || '',
+        delivery_warehouse: orderDetail.delivery_warehouse || '',
+        delivery_city_ref: orderDetail.delivery_city_ref || '',
+        delivery_settlement_ref: orderDetail.delivery_settlement_ref || '',
+        delivery_city_label: orderDetail.delivery_city_label || '',
+        delivery_warehouse_ref: orderDetail.delivery_warehouse_ref || '',
+        delivery_warehouse_label: orderDetail.delivery_warehouse_label || '',
+        delivery_street_ref: orderDetail.delivery_street_ref || '',
+        delivery_street_label: orderDetail.delivery_street_label || '',
+        delivery_house: orderDetail.delivery_house || '',
+        delivery_apartment: orderDetail.delivery_apartment || '',
+      })
+      if (orderDetail.delivery_city) setCityQuery(orderDetail.delivery_city)
+      if (orderDetail.delivery_warehouse)
+        setWarehouseQuery(orderDetail.delivery_warehouse)
+      if (orderDetail.delivery_street_label)
+        setStreetQuery(orderDetail.delivery_street_label)
+    }
+  }
+
+  const editAddedQuantities = useMemo(() => {
+    const map: Record<number, number> = {}
+    orderDetail?.items.forEach((item) => {
+      map[item.part_id] = editQuantities[item.id] ?? item.quantity
+    })
+    newItems.forEach((item) => {
+      map[item.part_id] = item.quantity
+    })
+    return map
+  }, [orderDetail, editQuantities, newItems])
+
   const enterEditMode = () => {
     if (!orderDetail) return
     setEditMode(true)
+    setNewItems([])
     const q: Record<number, number> = {}
     orderDetail.items.forEach((item) => {
       q[item.id] = item.quantity
@@ -468,8 +896,14 @@ export default function OrderDetailModal({
     if (recipientChanged) {
       Object.assign(changes, editRecipient)
     }
+    if (newItems.length > 0) {
+      changes.add_items = newItems.map((item) => ({
+        part_id: item.part_id,
+        quantity: item.quantity,
+      }))
+    }
     if (Object.keys(changes).length === 0) {
-      setEditMode(false)
+      cancelEdit()
       return
     }
     updateMutation.mutate(changes)
@@ -477,7 +911,21 @@ export default function OrderDetailModal({
 
   const localeKey = LOCALE_MAP.ru
 
-  if (!orderId) return null
+  if (!orderId && !createMode) return null
+
+  // Значения для правой колонки: в режиме создания считаем по черновику
+  const shownPositions = createMode
+    ? draftItems.length
+    : orderDetail?.items.length || 0
+  const shownDiscount = createMode
+    ? draftDiscount
+    : orderDetail?.discount_amount || 0
+  // В редактировании сумму считаем по текущим количествам, вычитая скидку промокода
+  const shownTotal = createMode
+    ? draftGrandTotal
+    : editMode
+      ? Math.max(editTotal - shownDiscount, 0)
+      : orderDetail?.total || 0
 
   return (
     <TooltipProvider>
@@ -495,14 +943,30 @@ export default function OrderDetailModal({
           className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0"
           aria-describedby={undefined}
         >
-          {detailLoading ? (
+          {detailLoading && !createMode ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : !orderDetail ? null : (
+          ) : !orderDetail && !createMode ? null : (
             <>
               <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
-                {showHistory ? (
+                {createMode ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                      <DialogTitle className="text-2xl font-bold tracking-tight">
+                        {t('new_order')}
+                      </DialogTitle>
+                      <Badge
+                        className={`${ORDER_STATUS_LABELS.pending?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {t('order_new')}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(new Date().toISOString())}
+                    </p>
+                  </div>
+                ) : !orderDetail ? null : showHistory ? (
                   <div className="flex items-center gap-3">
                     <DialogTitle className="text-2xl font-bold tracking-tight">
                       {orderDetail.order_number}
@@ -570,7 +1034,7 @@ export default function OrderDetailModal({
               <div
                 className={`flex-1 ${showHistory ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} p-6`}
               >
-                {showHistory ? (
+                {showHistory && !createMode ? (
                   <div className="relative pl-12 space-y-0">
                     <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
                     {!allEvents || allEvents.length === 0 ? (
@@ -630,6 +1094,18 @@ export default function OrderDetailModal({
                               <span className="font-medium">
                                 {ev.user_name || t('system_actor')}
                               </span>
+                              {!isWaybill && ev.event_type === 'create' && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge className="bg-violet-500 text-white border-0 gap-1 h-6 px-2 text-sm cursor-help">
+                                      <Laptop className="w-3.5 h-3.5" />
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {t('order_created_from_admin')}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                               <span className="text-sm text-muted-foreground">
                                 {formatDateTime(ev.created_at, timezone, {
                                   locale: localeKey,
@@ -671,12 +1147,15 @@ export default function OrderDetailModal({
                                   )}
                                 </span>
                               ) : (
-                                formatPhonesInText(
-                                  ev.details || ev.event_type,
-                                ).replace(
-                                  /\b(warehouse|parcel_locker|courier)\b/g,
-                                  (m: string) => t(m),
-                                )
+                                formatPhonesInText(ev.details || ev.event_type)
+                                  .replace(
+                                    /\b(warehouse|parcel_locker|courier)\b/g,
+                                    (m: string) => t(m),
+                                  )
+                                  .replace(
+                                    /\b(cod|monobank|novapay|liqpay)\b/g,
+                                    (m: string) => tc(`payment_${m}`),
+                                  )
                               )}
                             </div>
                           </div>
@@ -689,150 +1168,125 @@ export default function OrderDetailModal({
                     <div className="border rounded-lg p-3 flex flex-col min-h-0">
                       <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                         <Package className="w-5 h-5" /> {t('order_items')}
+                        {createMode && draftItems.length > 0 && (
+                          <Badge variant="secondary" className="text-sm">
+                            {t('items_count_pcs', {
+                              count: draftItems.reduce(
+                                (sum, item) => sum + item.quantity,
+                                0,
+                              ),
+                            })}
+                          </Badge>
+                        )}
                       </h4>
                       <div className="space-y-3 flex-1 overflow-y-auto pr-1 mt-3">
-                        {orderDetail.items.map((item) => {
-                          const qty = editQuantities[item.id] ?? item.quantity
-                          const itemTotal = qty * item.price
-                          return (
-                            <div
-                              key={item.id}
-                              className="flex gap-3 p-3 rounded-lg border bg-card transition-colors"
-                            >
-                              <div
-                                className={`w-[80px] h-[80px] shrink-0 rounded-lg overflow-hidden relative flex items-center justify-center ${item.image_url ? '' : `bg-gradient-to-br ${getBrandColor(item.brand)}`}`}
-                              >
-                                {item.image_url ? (
-                                  <img
-                                    src={item.image_url}
-                                    alt=""
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-3xl font-bold text-white/40 select-none">
-                                    {getBrandInitial(item.brand)}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 space-y-1">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                                      {item.brand && (
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-sm px-1.5"
-                                        >
-                                          {item.brand}
-                                        </Badge>
-                                      )}
-                                      <span className="text-sm font-mono text-muted-foreground">
-                                        {item.article}
-                                      </span>
-                                      {item.supplier_name && (
-                                        <Badge
-                                          className={`${supplierColors[item.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                                        >
-                                          {item.supplier_name}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-sm font-medium line-clamp-2">
-                                      {item.part_name}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center shrink-0 gap-2">
-                                    {item.sku && (
-                                      <Badge className="bg-blue-500 text-white border-0 text-sm">
-                                        {item.sku}
-                                      </Badge>
-                                    )}
-                                    {editMode && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="destructive"
-                                            size="icon"
-                                            className="shrink-0"
-                                            onClick={() => {
-                                              if (!reqPerm('orders.delete'))
-                                                return
-                                              deleteItemMutation.mutate(item.id)
-                                            }}
-                                            disabled={
-                                              deleteItemMutation.isPending
-                                            }
-                                          >
-                                            <Trash2 className="w-4 h-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom">
-                                          {t('delete')}
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between pt-1">
-                                  {editMode ? (
-                                    <div className="flex items-center gap-1">
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7 rounded-full"
-                                        onClick={() =>
-                                          setEditQuantities((prev) => ({
-                                            ...prev,
-                                            [item.id]: Math.max(
-                                              1,
-                                              (prev[item.id] || item.quantity) -
-                                                1,
-                                            ),
-                                          }))
-                                        }
-                                        disabled={
-                                          (editQuantities[item.id] ??
-                                            item.quantity) <= 1
-                                        }
-                                      >
-                                        <Minus className="w-4 h-4" />
-                                      </Button>
-                                      <span className="w-8 text-center font-medium tabular-nums">
-                                        {qty}
-                                      </span>
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7 rounded-full"
-                                        onClick={() =>
-                                          setEditQuantities((prev) => ({
-                                            ...prev,
-                                            [item.id]:
-                                              (prev[item.id] || item.quantity) +
-                                              1,
-                                          }))
-                                        }
-                                      >
-                                        <Plus className="w-4 h-4" />
-                                      </Button>
-                                      <span className="text-sm text-muted-foreground ml-1">
-                                        × {fmt(item.price)} ₴
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">
-                                      {item.quantity} &times; {fmt(item.price)}{' '}
-                                      ₴
-                                    </span>
-                                  )}
-                                  <span className="font-semibold text-base">
-                                    {fmt(itemTotal)} ₴
-                                  </span>
-                                </div>
-                              </div>
+                        {createMode ? (
+                          draftItems.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-muted-foreground text-sm text-center px-6">
+                              {t('order_search_items_empty')}
                             </div>
+                          ) : (
+                            draftItems.map((item) => (
+                              <OrderItemCard
+                                key={item.part_id}
+                                imageUrl={item.image_url}
+                                brand={item.brand}
+                                article={item.article}
+                                sku={item.sku}
+                                partName={item.name}
+                                supplierName={item.supplier_name}
+                                price={item.price || 0}
+                                quantity={item.quantity}
+                                editable
+                                onDecrease={() =>
+                                  changeDraftQuantity(item.part_id, -1)
+                                }
+                                onIncrease={() =>
+                                  changeDraftQuantity(item.part_id, 1)
+                                }
+                                onRemove={() =>
+                                  setDraftItems((prev) =>
+                                    prev.filter(
+                                      (p) => p.part_id !== item.part_id,
+                                    ),
+                                  )
+                                }
+                                deleteLabel={t('delete')}
+                              />
+                            ))
                           )
-                        })}
+                        ) : (
+                          <>
+                            {orderDetail!.items.map((item) => (
+                              <OrderItemCard
+                                key={item.id}
+                                imageUrl={item.image_url}
+                                brand={item.brand}
+                                article={item.article}
+                                sku={item.sku}
+                                partName={item.part_name}
+                                supplierName={item.supplier_name}
+                                price={item.price}
+                                quantity={
+                                  editQuantities[item.id] ?? item.quantity
+                                }
+                                editable={editMode}
+                                onDecrease={() =>
+                                  setEditQuantities((prev) => ({
+                                    ...prev,
+                                    [item.id]: Math.max(
+                                      1,
+                                      (prev[item.id] || item.quantity) - 1,
+                                    ),
+                                  }))
+                                }
+                                onIncrease={() =>
+                                  setEditQuantities((prev) => ({
+                                    ...prev,
+                                    [item.id]:
+                                      (prev[item.id] || item.quantity) + 1,
+                                  }))
+                                }
+                                onRemove={() => {
+                                  if (!reqPerm('orders.delete')) return
+                                  deleteItemMutation.mutate(item.id)
+                                }}
+                                removeDisabled={deleteItemMutation.isPending}
+                                deleteLabel={t('delete')}
+                              />
+                            ))}
+                            {editMode &&
+                              newItems.map((item) => (
+                                <OrderItemCard
+                                  key={`new-${item.part_id}`}
+                                  imageUrl={item.image_url}
+                                  brand={item.brand}
+                                  article={item.article}
+                                  sku={item.sku}
+                                  partName={item.name}
+                                  supplierName={item.supplier_name}
+                                  price={item.price || 0}
+                                  quantity={item.quantity}
+                                  editable
+                                  pending
+                                  onDecrease={() =>
+                                    changeNewItemQuantity(item.part_id, -1)
+                                  }
+                                  onIncrease={() =>
+                                    changeNewItemQuantity(item.part_id, 1)
+                                  }
+                                  onRemove={() =>
+                                    setNewItems((prev) =>
+                                      prev.filter(
+                                        (p) => p.part_id !== item.part_id,
+                                      ),
+                                    )
+                                  }
+                                  deleteLabel={t('delete')}
+                                />
+                              ))}
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -866,10 +1320,11 @@ export default function OrderDetailModal({
                         <div className="grid gap-1">
                           <span className="text-muted-foreground text-sm">
                             {t('phone_label')}
+                            {createMode && ' *'}
                           </span>
-                          {editMode ? (
+                          {editable ? (
                             <PhoneInput
-                              value={editRecipient.phone}
+                              value={editRecipient.phone || ''}
                               onChange={(v) =>
                                 setEditRecipient((p) => ({ ...p, phone: v }))
                               }
@@ -879,12 +1334,12 @@ export default function OrderDetailModal({
                             <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
                               <span
                                 className={
-                                  orderDetail.phone
+                                  orderDetail!.phone
                                     ? 'truncate'
                                     : 'truncate text-muted-foreground'
                                 }
                               >
-                                {formatPhone(orderDetail.phone) || '—'}
+                                {formatPhone(orderDetail!.phone) || '—'}
                               </span>
                             </div>
                           )}
@@ -894,8 +1349,9 @@ export default function OrderDetailModal({
                             <div key={field} className="grid gap-1">
                               <span className="text-muted-foreground text-sm">
                                 {t(field)}
+                                {createMode && field !== 'middle_name' && ' *'}
                               </span>
-                              {editMode ? (
+                              {editable ? (
                                 <Input
                                   className="h-10 w-full text-sm"
                                   value={editRecipient[field] || ''}
@@ -942,7 +1398,7 @@ export default function OrderDetailModal({
                               delivery_apartment: '',
                             }))
                           }
-                          disabled={!editMode}
+                          disabled={!editable}
                           className="grid grid-cols-3 gap-2"
                         >
                           <Tooltip>
@@ -995,84 +1451,71 @@ export default function OrderDetailModal({
                             <TooltipContent>{t('courier')}</TooltipContent>
                           </Tooltip>
                         </RadioGroup>
-                        <div className="grid gap-1">
-                          <span className="text-muted-foreground text-sm">
-                            {t('city')}
-                          </span>
-                          {editMode ? (
-                            <SearchableSelect<any>
-                              items={settlements}
-                              isLoading={citiesLoading}
-                              value={editRecipient.delivery_city || ''}
-                              onChange={(item) =>
-                                setEditRecipient((p) => ({
-                                  ...p,
-                                  delivery_city: item.label,
-                                  delivery_city_ref:
-                                    item.delivery_city_ref || item.ref,
-                                  delivery_settlement_ref:
-                                    item.settlement_ref || '',
-                                  delivery_city_label: item.label,
-                                  delivery_warehouse: '',
-                                  delivery_warehouse_ref: '',
-                                  delivery_warehouse_label: '',
-                                  delivery_street_ref: '',
-                                  delivery_street_label: '',
-                                  delivery_house: '',
-                                  delivery_apartment: '',
-                                }))
-                              }
-                              searchQuery={cityQuery}
-                              onSearchChange={setCityQuery}
-                              getKey={(item: any) => item.ref}
-                              getLabel={(item: any) => item.label}
-                              renderItem={(item: any) => (
-                                <>
-                                  <div className="font-medium leading-tight">
-                                    {item.label}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-0.5">
-                                    {[item.area, item.region]
-                                      .filter(Boolean)
-                                      .join(' — ')}
-                                    {item.warehouses_count &&
-                                    item.warehouses_count !== '0' ? (
-                                      <span className="ml-2 inline-flex items-center gap-1">
-                                        <Warehouse className="w-3 h-3" />×
-                                        {item.warehouses_count}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </>
-                              )}
-                              placeholder={t('city')}
-                              minSearchLength={2}
-                              noResultsMessage={t('novaposhta_no_results')}
-                              typeToSearchMessage={t(
-                                'novaposhta_type_to_search',
-                              )}
-                              hideSearchIcon
-                            />
-                          ) : (
-                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                              <span
-                                className={
-                                  orderDetail.delivery_city
-                                    ? 'truncate'
-                                    : 'truncate text-muted-foreground'
+                        {(deliveryType || !editable) && (
+                          <div className="grid gap-1">
+                            <span className="text-muted-foreground text-sm">
+                              {t('city')}
+                            </span>
+                            {editable ? (
+                              <SearchableSelect<any>
+                                items={settlements}
+                                isLoading={citiesLoading}
+                                value={editRecipient.delivery_city || ''}
+                                onChange={(item) =>
+                                  setEditRecipient((p) => ({
+                                    ...p,
+                                    delivery_city: item.label,
+                                    delivery_city_ref:
+                                      item.delivery_city_ref || item.ref,
+                                    delivery_settlement_ref:
+                                      item.settlement_ref || '',
+                                    delivery_city_label: item.label,
+                                    delivery_warehouse: '',
+                                    delivery_warehouse_ref: '',
+                                    delivery_warehouse_label: '',
+                                    delivery_street_ref: '',
+                                    delivery_street_label: '',
+                                    delivery_house: '',
+                                    delivery_apartment: '',
+                                  }))
                                 }
-                              >
-                                {orderDetail.delivery_city || '—'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                                searchQuery={cityQuery}
+                                onSearchChange={setCityQuery}
+                                getKey={(item: any) => item.ref}
+                                getLabel={(item: any) => item.label}
+                                renderItem={(item: any) => (
+                                  <SettlementItem item={item} />
+                                )}
+                                dropdownInPopover
+                                placeholder={t('city')}
+                                minSearchLength={2}
+                                noResultsMessage={t('novaposhta_no_results')}
+                                typeToSearchMessage={t(
+                                  'novaposhta_type_to_search',
+                                )}
+                                hideSearchIcon
+                              />
+                            ) : (
+                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                <span
+                                  className={
+                                    orderDetail!.delivery_city
+                                      ? 'truncate'
+                                      : 'truncate text-muted-foreground'
+                                  }
+                                >
+                                  {orderDetail!.delivery_city || '—'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {deliveryType === 'warehouse' && (
                           <div className="grid gap-1">
                             <span className="text-muted-foreground text-sm">
                               {t('warehouse')}
                             </span>
-                            {editMode ? (
+                            {editable ? (
                               <SearchableSelect<any>
                                 items={warehouses}
                                 isLoading={warehousesLoading}
@@ -1089,48 +1532,31 @@ export default function OrderDetailModal({
                                 onSearchChange={setWarehouseQuery}
                                 getKey={(item: any) => item.ref}
                                 getLabel={(item: any) => item.label}
-                                renderItem={(item: any) => {
-                                  const isPostomat = item.type === 'Postomat'
-                                  return (
-                                    <div className="font-medium leading-tight flex items-center gap-2">
-                                      {isPostomat ? (
-                                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
-                                          {t('novaposhta_postomat')}
-                                        </span>
-                                      ) : (
-                                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-1.5 py-0.5 rounded font-semibold shrink-0">
-                                          №{item.number}
-                                        </span>
-                                      )}
-                                      <span className="truncate">
-                                        {item.label.includes(':')
-                                          ? item.label.slice(
-                                              0,
-                                              item.label.indexOf(':'),
-                                            )
-                                          : item.label}
-                                      </span>
-                                    </div>
-                                  )
-                                }}
+                                renderItem={(item: any) => (
+                                  <WarehouseDropdownItem
+                                    item={item}
+                                    postomatLabel={t('novaposhta_postomat')}
+                                  />
+                                )}
                                 placeholder={t('warehouse')}
                                 minSearchLength={1}
                                 noResultsMessage={t('novaposhta_no_results')}
                                 typeToSearchMessage={t(
                                   'novaposhta_type_to_search',
                                 )}
+                                dropdownInPopover
                                 hideSearchIcon
                               />
                             ) : (
                               <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
                                 <span
                                   className={
-                                    orderDetail.delivery_warehouse
+                                    orderDetail!.delivery_warehouse
                                       ? 'truncate'
                                       : 'truncate text-muted-foreground'
                                   }
                                 >
-                                  {orderDetail.delivery_warehouse || '—'}
+                                  {orderDetail!.delivery_warehouse || '—'}
                                 </span>
                               </div>
                             )}
@@ -1142,7 +1568,7 @@ export default function OrderDetailModal({
                               <span className="text-muted-foreground text-sm">
                                 {t('street')}
                               </span>
-                              {editMode ? (
+                              {editable ? (
                                 <SearchableSelect<any>
                                   items={streets}
                                   isLoading={streetsLoading}
@@ -1175,18 +1601,19 @@ export default function OrderDetailModal({
                                   typeToSearchMessage={t(
                                     'novaposhta_type_to_search',
                                   )}
+                                  dropdownInPopover
                                   hideSearchIcon
                                 />
                               ) : (
                                 <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
                                   <span
                                     className={
-                                      orderDetail.delivery_street_label
+                                      orderDetail!.delivery_street_label
                                         ? 'truncate'
                                         : 'truncate text-muted-foreground'
                                     }
                                   >
-                                    {orderDetail.delivery_street_label || '—'}
+                                    {orderDetail!.delivery_street_label || '—'}
                                   </span>
                                 </div>
                               )}
@@ -1196,7 +1623,7 @@ export default function OrderDetailModal({
                                 <span className="text-muted-foreground text-sm">
                                   {t('house')}
                                 </span>
-                                {editMode ? (
+                                {editable ? (
                                   <Input
                                     className="h-10 w-full text-sm"
                                     value={editRecipient.delivery_house || ''}
@@ -1210,7 +1637,7 @@ export default function OrderDetailModal({
                                   />
                                 ) : (
                                   <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
-                                    {orderDetail.delivery_house || '—'}
+                                    {orderDetail!.delivery_house || '—'}
                                   </div>
                                 )}
                               </div>
@@ -1218,7 +1645,7 @@ export default function OrderDetailModal({
                                 <span className="text-muted-foreground text-sm">
                                   {t('apartment')}
                                 </span>
-                                {editMode ? (
+                                {editable ? (
                                   <Input
                                     className="h-10 w-full text-sm"
                                     value={
@@ -1234,7 +1661,7 @@ export default function OrderDetailModal({
                                   />
                                 ) : (
                                   <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm h-10">
-                                    {orderDetail.delivery_apartment || '—'}
+                                    {orderDetail!.delivery_apartment || '—'}
                                   </div>
                                 )}
                               </div>
@@ -1254,13 +1681,15 @@ export default function OrderDetailModal({
                             <span className="text-muted-foreground">
                               {t('total_items')}
                             </span>
-                            <span>{orderDetail.items.length} шт.</span>
+                            <span>
+                              {t('items_count_pcs', { count: shownPositions })}
+                            </span>
                           </div>
-                          {orderDetail.discount_amount > 0 && (
+                          {shownDiscount > 0 && (
                             <div className="flex justify-between text-green-600 text-sm">
                               <span>{t('discount_label')}</span>
                               <span className="font-semibold">
-                                -{fmt(orderDetail.discount_amount)} ₴
+                                -{fmt(shownDiscount)} ₴
                               </span>
                             </div>
                           )}
@@ -1269,7 +1698,7 @@ export default function OrderDetailModal({
                               {t('order_total')}:
                             </span>
                             <span className="font-bold text-lg">
-                              {fmt(editMode ? editTotal : orderDetail.total)} ₴
+                              {fmt(shownTotal)} ₴
                             </span>
                           </div>
                         </div>
@@ -1278,7 +1707,71 @@ export default function OrderDetailModal({
                           <h4 className="font-semibold text-lg flex items-center gap-2">
                             <Gift className="w-5 h-5" /> {t('promocode')}
                           </h4>
-                          {editMode && !orderDetail.promocode_code ? (
+                          {createMode ? (
+                            draftPromo ? (
+                              <div className="flex gap-2">
+                                <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm gap-2 min-w-0">
+                                  <Check className="w-4 h-4 text-green-600 shrink-0" />
+                                  <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300 truncate">
+                                    {draftPromo.code}
+                                  </span>
+                                  {draftPromo.discount > 0 && (
+                                    <span className="text-xs text-green-600 ml-auto shrink-0">
+                                      -{fmt(draftPromo.discount)} ₴
+                                    </span>
+                                  )}
+                                </div>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="destructive"
+                                      size="icon"
+                                      className="h-10 w-10 shrink-0"
+                                      onClick={() => setDraftPromo(null)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{t('remove')}</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder={t('promocode_placeholder')}
+                                  value={promoInput}
+                                  maxLength={10}
+                                  onChange={(e) =>
+                                    setPromoInput(e.target.value.toUpperCase())
+                                  }
+                                  className="h-10 text-sm uppercase flex-1"
+                                />
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-10 w-10 shrink-0"
+                                      disabled={
+                                        promoInput.length < 10 ||
+                                        applyDraftPromo.isPending
+                                      }
+                                      onClick={() =>
+                                        applyDraftPromo.mutate(promoInput)
+                                      }
+                                    >
+                                      {applyDraftPromo.isPending ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <Gift className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{t('apply')}</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            )
+                          ) : editMode && !orderDetail!.promocode_code ? (
                             <div className="flex gap-2">
                               <Input
                                 placeholder={t('promocode_placeholder')}
@@ -1311,15 +1804,15 @@ export default function OrderDetailModal({
                               <div className="flex items-center flex-1 rounded-lg border bg-green-50 dark:bg-green-950/20 px-3 py-2 text-sm gap-2">
                                 <Check className="w-4 h-4 text-green-600 shrink-0" />
                                 <span className="font-mono font-bold tracking-wider text-green-700 dark:text-green-300">
-                                  {orderDetail.promocode_code || '—'}
+                                  {orderDetail!.promocode_code || '—'}
                                 </span>
-                                {orderDetail.discount_amount > 0 && (
+                                {orderDetail!.discount_amount > 0 && (
                                   <span className="text-xs text-green-600 ml-auto">
-                                    -{fmt(orderDetail.discount_amount)} ₴
+                                    -{fmt(orderDetail!.discount_amount)} ₴
                                   </span>
                                 )}
                               </div>
-                              {editMode && orderDetail.promocode_code ? (
+                              {editMode && orderDetail!.promocode_code ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
@@ -1346,24 +1839,59 @@ export default function OrderDetailModal({
                         </div>
                         <Separator className="my-3" />
                         <div className="flex flex-col space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-lg flex items-center gap-2">
-                              <CreditCard className="w-5 h-5" />{' '}
-                              {t('payment_method')}
-                            </h4>
-                            <PaymentBadge
-                              orderId={orderDetail!.id}
-                              paymentMethod={orderDetail!.payment_method ?? ''}
-                              t={t}
-                            />
-                          </div>
-                          {orderDetail!.payment_method !== 'cod' &&
+                          <h4 className="font-semibold text-lg flex items-center gap-2">
+                            <CreditCard className="w-5 h-5" />{' '}
+                            {t('payment_method')}
+                            {!createMode && (
+                              <span className="ml-auto">
+                                <PaymentBadge
+                                  orderId={orderDetail!.id}
+                                  paymentMethod={
+                                    orderDetail!.payment_method ?? ''
+                                  }
+                                  t={t}
+                                />
+                              </span>
+                            )}
+                          </h4>
+                          {createMode ? (
+                            enabledPaymentMethods.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">
+                                {t('no_payment_methods')}
+                              </p>
+                            ) : (
+                              <RadioGroup
+                                value={paymentMethod}
+                                onValueChange={setPaymentMethod}
+                                className="grid grid-cols-2 gap-2"
+                              >
+                                {enabledPaymentMethods.map((method) => (
+                                  <Label
+                                    key={method.code}
+                                    htmlFor={`order-pay-${method.code}`}
+                                    className="flex h-10 items-center gap-2 rounded-lg border px-2.5 text-sm has-data-[state=checked]:border-primary cursor-pointer min-w-0"
+                                  >
+                                    <RadioGroupItem
+                                      value={method.code}
+                                      id={`order-pay-${method.code}`}
+                                      className="cursor-pointer shrink-0"
+                                    />
+                                    <span className="truncate">
+                                      {tc(`payment_${method.code}`)}
+                                    </span>
+                                  </Label>
+                                ))}
+                              </RadioGroup>
+                            )
+                          ) : (
+                            orderDetail!.payment_method !== 'cod' &&
                             orderDetail!.payment_method && (
                               <PaymentBlock
                                 orderId={orderDetail!.id}
                                 paymentMethod={orderDetail!.payment_method}
                               />
-                            )}
+                            )
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1373,7 +1901,33 @@ export default function OrderDetailModal({
 
               <Separator className="flex-shrink-0" />
               <div className="flex-shrink-0 p-4 pt-3">
-                {showHistory ? (
+                {createMode ? (
+                  <div className="flex items-center gap-2">
+                    <OrderProductSearch
+                      onAdd={addDraftItem}
+                      addedQuantities={draftQuantities}
+                    />
+                    <Button
+                      variant="outline"
+                      className="h-10"
+                      onClick={() => onOpenChange(false)}
+                    >
+                      {t('cancel')}
+                    </Button>
+                    <Button
+                      className="gap-2 h-10"
+                      onClick={handleCreate}
+                      disabled={createMutation.isPending}
+                    >
+                      {createMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      {t('create')}
+                    </Button>
+                  </div>
+                ) : showHistory ? (
                   <Button
                     variant="outline"
                     onClick={() => setShowHistory(false)}
@@ -1381,52 +1935,20 @@ export default function OrderDetailModal({
                     <ArrowLeft className="w-4 h-4 mr-1" /> {t('back')}
                   </Button>
                 ) : editMode ? (
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <OrderProductSearch
+                      onAdd={addEditItem}
+                      addedQuantities={editAddedQuantities}
+                    />
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        setEditMode(false)
-                        if (orderDetail) {
-                          setEditRecipient({
-                            phone: orderDetail.phone || '',
-                            last_name: orderDetail.last_name || '',
-                            first_name: orderDetail.first_name || '',
-                            middle_name: orderDetail.middle_name || '',
-                            delivery_type: orderDetail.delivery_type || '',
-                            delivery_city: orderDetail.delivery_city || '',
-                            delivery_warehouse:
-                              orderDetail.delivery_warehouse || '',
-                            delivery_city_ref:
-                              orderDetail.delivery_city_ref || '',
-                            delivery_settlement_ref:
-                              orderDetail.delivery_settlement_ref || '',
-                            delivery_city_label:
-                              orderDetail.delivery_city_label || '',
-                            delivery_warehouse_ref:
-                              orderDetail.delivery_warehouse_ref || '',
-                            delivery_warehouse_label:
-                              orderDetail.delivery_warehouse_label || '',
-                            delivery_street_ref:
-                              orderDetail.delivery_street_ref || '',
-                            delivery_street_label:
-                              orderDetail.delivery_street_label || '',
-                            delivery_house: orderDetail.delivery_house || '',
-                            delivery_apartment:
-                              orderDetail.delivery_apartment || '',
-                          })
-                          if (orderDetail.delivery_city)
-                            setCityQuery(orderDetail.delivery_city)
-                          if (orderDetail.delivery_warehouse)
-                            setWarehouseQuery(orderDetail.delivery_warehouse)
-                          if (orderDetail.delivery_street_label)
-                            setStreetQuery(orderDetail.delivery_street_label)
-                        }
-                      }}
+                      className="h-10"
+                      onClick={cancelEdit}
                     >
                       {t('cancel')}
                     </Button>
                     <Button
-                      className="gap-2"
+                      className="gap-2 h-10"
                       onClick={handleSave}
                       disabled={updateMutation.isPending}
                     >

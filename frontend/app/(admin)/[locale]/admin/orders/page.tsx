@@ -224,6 +224,7 @@ export default function AdminOrdersPage() {
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [viewOrderId, setViewOrderId] = useState<number | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [editQuantities, setEditQuantities] = useState<Record<number, number>>(
@@ -561,6 +562,17 @@ export default function AdminOrdersPage() {
     [queryClient],
   )
 
+  // Кнопка «+» в топ-баре админки открывает модалку в режиме создания заказа
+  useEffect(() => {
+    ;(window as any).__openCreateOrder = () => {
+      if (!reqPerm('orders.edit_status')) return
+      setCreateOpen(true)
+    }
+    return () => {
+      delete (window as any).__openCreateOrder
+    }
+  }, [reqPerm])
+
   const enterEditMode = () => {
     if (!orderDetail) return
     setEditMode(true)
@@ -874,12 +886,17 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
 
+        {/* Одна модалка на создание и просмотр: после создания заказ попадает
+            в список, а модалка просто закрывается — открыть его можно кнопкой
+            «Просмотр» в строке заказа */}
         <OrderDetailModal
           orderId={viewOrderId}
-          open={!!viewOrderId}
+          open={!!viewOrderId || createOpen}
+          createMode={createOpen && !viewOrderId}
           onOpenChange={(open) => {
             if (!open) {
               setViewOrderId(null)
+              setCreateOpen(false)
               setEditMode(false)
               setShowHistory(false)
             }

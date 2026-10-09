@@ -152,12 +152,63 @@ class AdminOrderAddItemSchema(BaseModel):
     quantity: int = 1
 
 
+class AdminOrderCreateItem(BaseModel):
+    part_id: int
+    quantity: int = 1
+
+
+class AdminOrderCreateSchema(BaseModel):
+    """Заказ, оформленный администратором вручную (например, по телефону)."""
+
+    last_name: str
+    first_name: str
+    middle_name: Optional[str] = None
+    phone: str
+    delivery_type: Optional[str] = None
+    delivery_city: Optional[str] = None
+    delivery_warehouse: Optional[str] = None
+    delivery_city_ref: Optional[str] = None
+    delivery_settlement_ref: Optional[str] = None
+    delivery_city_label: Optional[str] = None
+    delivery_warehouse_ref: Optional[str] = None
+    delivery_warehouse_label: Optional[str] = None
+    delivery_street_ref: Optional[str] = None
+    delivery_street_label: Optional[str] = None
+    delivery_house: Optional[str] = None
+    delivery_apartment: Optional[str] = None
+    payment_method: str
+    promocode: Optional[str] = None
+    items: List[AdminOrderCreateItem]
+
+
+class AdminOrderProductItem(BaseModel):
+    """Товар для поиска в футере модалки создания заказа."""
+
+    part_id: int
+    article: str
+    brand: Optional[str] = None
+    name: str
+    sku: Optional[str] = None
+    image_url: Optional[str] = None
+    price: Optional[float] = None
+    currency: Optional[str] = None
+    quantity: int = 0
+    supplier_name: Optional[str] = None
+    supplier_offer_id: Optional[int] = None
+
+
+class AdminOrderProductSearchResponse(BaseModel):
+    items: List[AdminOrderProductItem]
+
+
 class AdminOrderUpdateItem(BaseModel):
     id: int
     quantity: int
 
 class AdminOrderUpdateSchema(BaseModel):
     items: Optional[List[AdminOrderUpdateItem]] = None
+    # Новые позиции, которые сотрудник добавил в существующий заказ
+    add_items: Optional[List[AdminOrderAddItemSchema]] = None
     last_name: Optional[str] = None
     first_name: Optional[str] = None
     middle_name: Optional[str] = None

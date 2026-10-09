@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 
 /**
  * Generic searchable select (combobox) with keyboard navigation.
@@ -41,6 +42,11 @@ export interface SearchableSelectProps<T> {
   dropdownMaxHeight?: number
   /** If true, hides the search icon inside the input. */
   hideSearchIcon?: boolean
+  /**
+   * Рендерить список в Radix Popover (портал). Нужно внутри скроллящихся
+   * контейнеров и модалок: список не обрезается и не добавляет скроллбар.
+   */
+  dropdownInPopover?: boolean
 }
 
 function SearchableSelect<T>({
@@ -60,6 +66,7 @@ function SearchableSelect<T>({
   disabled = false,
   dropdownMaxHeight = 160,
   hideSearchIcon = false,
+  dropdownInPopover = false,
 }: SearchableSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -147,76 +154,117 @@ function SearchableSelect<T>({
     }
   }
 
+  const inputNode = (
+    <div className="relative">
+      {!hideSearchIcon && (
+        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+      )}
+      <Input
+        placeholder={placeholder}
+        value={searchQuery}
+        onChange={(e) => {
+          onSearchChange(e.target.value)
+          setIsOpen(true)
+        }}
+        onFocus={() => {
+          if (searchQuery.length >= minSearchLength) setIsOpen(true)
+        }}
+        onKeyDown={handleKeyDown}
+        className={hideSearchIcon ? 'pl-3' : 'pl-8'}
+        disabled={disabled}
+      />
+      {isLoading && (
+        <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground pointer-events-none" />
+      )}
+    </div>
+  )
+
+  const resultsNode = isLoading ? (
+    <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
+      <Loader2 className="w-4 h-4 animate-spin" />
+      <span>Loading…</span>
+    </div>
+  ) : (
+    <div
+      ref={listRef}
+      className="overflow-y-auto py-1"
+      style={{ maxHeight: dropdownMaxHeight }}
+    >
+      {items.length > 0 ? (
+        items.map((item, index) => {
+          const isSelected = value != null && getKey(value) === getKey(item)
+          const isHighlighted = index === highlightedIndex
+          return (
+            <div
+              key={getKey(item)}
+              data-index={index}
+              role="option"
+              aria-selected={isSelected || isHighlighted}
+              className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                isHighlighted
+                  ? 'bg-accent'
+                  : isSelected
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'hover:bg-muted'
+              }`}
+              onClick={() => handleSelect(item)}
+              onMouseEnter={() => setHighlightedIndex(index)}
+            >
+              {renderItem(item, isSelected, isHighlighted)}
+            </div>
+          )
+        })
+      ) : (
+        <div className="text-sm text-muted-foreground py-3 text-center">
+          {noResultsMessage}
+        </div>
+      )}
+    </div>
+  )
+
+  // Вариант для модалок: список рендерится в портал, поэтому не обрезается
+  // скроллящейся колонкой и не создаёт в ней лишний скроллбар
+  if (dropdownInPopover) {
+    const popoverOpen = isOpen && !disabled && searchQuery.length > 0
+    return (
+      <div ref={containerRef} className="relative w-full">
+        <Popover
+          open={popoverOpen}
+          onOpenChange={(o) => {
+            if (!o) {
+              setIsOpen(false)
+              setHighlightedIndex(-1)
+            }
+          }}
+        >
+          <PopoverAnchor asChild>{inputNode}</PopoverAnchor>
+          <PopoverContent
+            align="start"
+            sideOffset={4}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            className="pointer-events-auto w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden"
+          >
+            {searchQuery.length >= minSearchLength ? (
+              resultsNode
+            ) : (
+              <div className="text-xs text-muted-foreground py-3 text-center">
+                {typeToSearchMessage}
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
+    )
+  }
+
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="relative">
-        {!hideSearchIcon && (
-          <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
-        )}
-        <Input
-          placeholder={placeholder}
-          value={searchQuery}
-          onChange={(e) => {
-            onSearchChange(e.target.value)
-            setIsOpen(true)
-          }}
-          onFocus={() => {
-            if (searchQuery.length >= minSearchLength) setIsOpen(true)
-          }}
-          onKeyDown={handleKeyDown}
-          className={hideSearchIcon ? 'pl-3' : 'pl-8'}
-          disabled={disabled}
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-2.5 top-2.5 w-4 h-4 animate-spin text-muted-foreground pointer-events-none" />
-        )}
-      </div>
+      {inputNode}
 
       {showDropdown && (
         <div className="absolute top-full mt-1 w-full z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Loading…</span>
-            </div>
-          ) : (
-            <div
-              ref={listRef}
-              className="overflow-y-auto py-1"
-              style={{ maxHeight: dropdownMaxHeight }}
-            >
-              {items.length > 0 ? (
-                items.map((item, index) => {
-                  const isSelected =
-                    value != null && getKey(value) === getKey(item)
-                  const isHighlighted = index === highlightedIndex
-                  return (
-                    <div
-                      key={getKey(item)}
-                      data-index={index}
-                      role="option"
-                      aria-selected={isSelected || isHighlighted}
-                      className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
-                        isHighlighted
-                          ? 'bg-accent'
-                          : isSelected
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'hover:bg-muted'
-                      }`}
-                      onClick={() => handleSelect(item)}
-                      onMouseEnter={() => setHighlightedIndex(index)}
-                    >
-                      {renderItem(item, isSelected, isHighlighted)}
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="text-sm text-muted-foreground py-3 text-center">
-                  {noResultsMessage}
-                </div>
-              )}
-            </div>
-          )}
+          {resultsNode}
         </div>
       )}
 

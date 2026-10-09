@@ -1,12 +1,13 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
 
 from app.core.db import get_db
 from app.models.loyalty import Promocode
 from app.schemas.loyalty_schemas import PromocodeResponse, PromocodeMyListResponse
-from app.api.v1.endpoints.auth import get_current_user
+from app.api.v1.endpoints.auth import get_current_user, get_optional_user
+from app.services.promocode_service import find_customer_by_phone, promocode_allowed_for
 
 router = APIRouter()
 
@@ -17,8 +18,14 @@ router = APIRouter()
 async def validate_promocode(
     data: dict,
     db: Session = Depends(get_db),
+    actor_id: Optional[int] = Depends(get_optional_user),
 ):
-    """Validate a promocode and return its details. If items provided, returns discount_amount."""
+    """Validate a promocode and return its details. If items provided, returns discount_amount.
+
+    Если передан phone получателя, проверяем и владельца кода: код, выданный
+    конкретному пользователю, действует только для него или для сотрудника,
+    который оформляет заказ (его токен приходит в запросе).
+    """
     from app.models.suppliers import SupplierOffer
     code = data.get("code", "")
     items = data.get("items", [])
@@ -31,7 +38,17 @@ async def validate_promocode(
         return {"valid": False, "message": "Promocode expired", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
     if pc.used_at:
         return {"valid": False, "message": "Promocode already used", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
-    
+
+    hint_phone = (data.get("phone") or "").strip()
+    if hint_phone:
+        client = find_customer_by_phone(db, hint_phone)
+        if not promocode_allowed_for(
+            pc,
+            client_user_id=client.id if client else None,
+            actor_user_id=actor_id,
+        ):
+            return {"valid": False, "message": "Promocode belongs to another user", "type": pc.type, "discount_percent": pc.discount_percent, "discount_amount": 0}
+
     discount_amount = 0
     if items and pc.type == 'margin':
         total_margin = 0
