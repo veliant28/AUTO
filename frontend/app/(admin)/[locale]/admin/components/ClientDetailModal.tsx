@@ -756,7 +756,9 @@ export default function ClientDetailModal({
                       </>
                     ) : cartItems.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                        <PackageOpen className="w-12 h-12" />
+                        <div className="bg-muted rounded-full p-6">
+                          <ShoppingCart className="w-16 h-16 text-muted-foreground" />
+                        </div>
                         <p className="text-sm">{t('monitor_cart_empty')}</p>
                       </div>
                     ) : (
