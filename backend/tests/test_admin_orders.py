@@ -1,7 +1,10 @@
 import pytest
 from datetime import datetime
 from app.core.security import get_password_hash
-from app.models import Role, User, Order, OrderItem, OrderStatus, OrderChangeLog
+from app.models import (
+    Role, User, Order, OrderItem, OrderStatus, OrderChangeLog,
+    Permission, RolePermission,
+)
 from app.models.parts import Part
 from app.models.suppliers import Supplier
 
@@ -30,6 +33,42 @@ def admin_user(db, admin_role):
 @pytest.fixture
 def admin_headers(client, admin_user):
     resp = client.post("/api/v1/auth/login", json={"email": admin_user.email, "password": "password123"})
+    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+
+def _grant_role_permissions(db, role, *codemames):
+    for codename in codemames:
+        perm = db.query(Permission).filter(Permission.codename == codename).first()
+        if not perm:
+            perm = Permission(codename=codename, description="", group_name="")
+            db.add(perm)
+            db.flush()
+        bound = (
+            db.query(RolePermission)
+            .filter_by(role_id=role.id, permission_id=perm.id)
+            .first()
+        )
+        if not bound:
+            db.add(RolePermission(role_id=role.id, permission_id=perm.id))
+    db.commit()
+
+
+@pytest.fixture
+def manager_user(db, manager_role):
+    _grant_role_permissions(db, manager_role, "orders.view", "orders.edit_status")
+    user = User(email="manager@orders.example.com",
+                password_hash=get_password_hash("password123"),
+                role_id=manager_role.id, is_active=True, first_name="Manager")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def manager_headers(client, manager_user):
+    resp = client.post("/api/v1/auth/login",
+                       json={"email": manager_user.email, "password": "password123"})
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}
 
 
@@ -629,33 +668,52 @@ class TestAddItemsToOrder:
 
 
 class TestEditLockedStatuses:
+    """Отправленный, доставленный и отменённый заказ правит только администратор."""
+
     @pytest.mark.parametrize("status", [OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.CANCELLED])
-    def test_locked_statuses_cannot_be_edited(self, client, db, admin_headers, admin_user, status):
+    def test_admin_can_edit_locked_statuses(self, client, db, admin_headers, admin_user, status):
         order = _order(db, user_id=admin_user.id, status=status)
         resp = client.put(f"/api/v1/admin/orders/{order.id}",
                           headers=admin_headers,
                           json={"phone": "+380670000000"})
-        assert resp.status_code == 400
-        assert "изменить" in resp.json()["detail"]
+        assert resp.status_code == 200, resp.text
+        db.refresh(order)
+        assert order.phone == "+380670000000"
 
-    def test_locked_status_rejects_adding_items(self, client, db, admin_headers, admin_user):
+    @pytest.mark.parametrize("status", [OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.CANCELLED])
+    def test_manager_cannot_edit_locked_statuses(self, client, db, manager_headers, admin_user, status):
+        order = _order(db, user_id=admin_user.id, status=status)
+        resp = client.put(f"/api/v1/admin/orders/{order.id}",
+                          headers=manager_headers,
+                          json={"phone": "+380670000001"})
+        assert resp.status_code == 400
+        assert "администратор" in resp.json()["detail"]
+
+    @pytest.mark.parametrize("status", [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PROCESSING])
+    def test_manager_can_edit_open_statuses(self, client, db, manager_headers, admin_user, status):
+        order = _order(db, user_id=admin_user.id, status=status)
+        resp = client.put(f"/api/v1/admin/orders/{order.id}",
+                          headers=manager_headers,
+                          json={"phone": "+380670000002"})
+        assert resp.status_code == 200, resp.text
+
+    def test_manager_cannot_add_items_to_locked_order(self, client, db, manager_headers, admin_user):
         part, _offer = _part_with_offer(db, article="ART-LOCK", sku="SKULOCK")
         order = _order(db, user_id=admin_user.id, status=OrderStatus.DELIVERED)
         resp = client.put(f"/api/v1/admin/orders/{order.id}",
-                          headers=admin_headers,
+                          headers=manager_headers,
                           json={"add_items": [{"part_id": part.id, "quantity": 1}]})
         assert resp.status_code == 400
         assert db.query(OrderItem).filter(OrderItem.order_id == order.id).count() == 0
 
-    @pytest.mark.parametrize("status", [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PROCESSING])
-    def test_open_statuses_can_be_edited(self, client, db, admin_headers, admin_user, status):
-        order = _order(db, user_id=admin_user.id, status=status)
+    def test_admin_can_add_items_to_locked_order(self, client, db, admin_headers, admin_user):
+        part, _offer = _part_with_offer(db, article="ART-LOCK2", sku="SKULOCK2")
+        order = _order(db, user_id=admin_user.id, status=OrderStatus.CANCELLED)
         resp = client.put(f"/api/v1/admin/orders/{order.id}",
                           headers=admin_headers,
-                          json={"phone": "+380670000001"})
+                          json={"add_items": [{"part_id": part.id, "quantity": 1}]})
         assert resp.status_code == 200, resp.text
-        db.refresh(order)
-        assert order.phone == "+380670000001"
+        assert db.query(OrderItem).filter(OrderItem.order_id == order.id).count() == 1
 
 
 class TestProductSearch:

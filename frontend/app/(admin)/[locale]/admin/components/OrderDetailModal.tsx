@@ -348,6 +348,7 @@ export default function OrderDetailModal({
   const locale = useLocale()
   const queryClient = useQueryClient()
   const timezone = useTimezoneStore((s) => s.timezone)
+  const { user } = useAuthStore()
   const reqPerm = useRequirePerm()
 
   const [editMode, setEditMode] = useState(false)
@@ -846,8 +847,12 @@ export default function OrderDetailModal({
     return map
   }, [orderDetail, editQuantities, newItems])
 
+  const isAdmin = user?.role === 'admin'
+  // В финальных статусах заказ правит только администратор
   const canEditOrder =
-    !!orderDetail && !EDIT_LOCKED_STATUSES.includes(orderDetail.status)
+    isAdmin ||
+    !orderDetail ||
+    !EDIT_LOCKED_STATUSES.includes(orderDetail.status)
 
   const enterEditMode = () => {
     if (!orderDetail) return

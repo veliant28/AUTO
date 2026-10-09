@@ -555,13 +555,13 @@ async def update_order(
     if not order:
         raise HTTPException(404, "Order not found")
 
-    # Отправленный, доставленный и отменённый заказ не редактируем
+    # Отправленный, доставленный и отменённый заказ правит только администратор
+    role_name = current_user.role.name if current_user.role else ""
     order_status = order.status.value if hasattr(order.status, "value") else order.status
-    if order_status in EDIT_LOCKED_STATUSES:
-        raise HTTPException(400, "Заказ в этом статусе нельзя изменить")
+    if order_status in EDIT_LOCKED_STATUSES and role_name != "admin":
+        raise HTTPException(400, "Заказ в этом статусе может изменить только администратор")
 
     changes = []
-    role_name = current_user.role.name if current_user.role else ""
 
     if data.items is not None:
         for upd in data.items:

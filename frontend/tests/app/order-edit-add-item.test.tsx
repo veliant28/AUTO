@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { toast } from '@/lib/toast'
+import { useAuthStore } from '@/store/authStore'
 import OrderDetailModal from '@/app/(admin)/[locale]/admin/components/OrderDetailModal'
 
 jest.mock('@/lib/api/payments', () => ({
@@ -95,9 +96,24 @@ function renderModal() {
   )
 }
 
+const setRole = (role: string) =>
+  useAuthStore.setState({
+    user: {
+      id: 1,
+      email: 'staff@example.com',
+      role,
+      permissions: [],
+      full_name: null,
+      first_name: null,
+      avatar_index: null,
+    },
+    isAuthenticated: true,
+  })
+
 describe('Добавление товаров в существующий заказ', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    useAuthStore.setState({ user: null, isAuthenticated: false })
     mockedApi.get.mockImplementation((url: string) => {
       if (url.includes('product-search')) {
         return Promise.resolve({ data: { items: [PRODUCT] } } as any)
@@ -139,13 +155,18 @@ describe('Добавление товаров в существующий зак
     )
   })
 
-  it('не пускает в редактирование отправленный/доставленный/отменённый заказ', async () => {
+  const renderDeliveredOrder = () => {
     mockedApi.get.mockImplementation((url: string) =>
       /\/admin\/orders\/5$/.test(url)
         ? Promise.resolve({ data: { ...ORDER, status: 'delivered' } } as any)
         : Promise.resolve({ data: {} } as any),
     )
     renderModal()
+  }
+
+  it('не пускает менеджера в редактирование закрытого заказа', async () => {
+    setRole('manager')
+    renderDeliveredOrder()
 
     expect(await screen.findByText('ORD-0000000005')).toBeInTheDocument()
     fireEvent.click(screen.getByText('edit_order'))
@@ -155,6 +176,20 @@ describe('Добавление товаров в существующий зак
     expect(
       screen.queryByPlaceholderText('order_search_placeholder'),
     ).not.toBeInTheDocument()
+  })
+
+  it('администратор редактирует заказ в закрытом статусе', async () => {
+    setRole('admin')
+    renderDeliveredOrder()
+
+    expect(await screen.findByText('ORD-0000000005')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('edit_order'))
+
+    // Администратора пускаем: в футере появляется поиск товаров
+    expect(
+      await screen.findByPlaceholderText('order_search_placeholder'),
+    ).toBeInTheDocument()
+    expect(toast.info).not.toHaveBeenCalledWith('edit_locked')
   })
 
   it('применяет промокод в режиме редактирования', async () => {
