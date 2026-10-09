@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 const MAX_DIGITS = 12 // 380 + 9 digits
 
 export function formatPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '')
+  const digits = (raw ?? '').replace(/\D/g, '')
   if (!digits) return ''
   const withoutPlus = digits.replace(/^\+/, '')
   if (withoutPlus.length <= 2) return '+' + withoutPlus

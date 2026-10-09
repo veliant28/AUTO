@@ -31,6 +31,7 @@ jest.mock('next-intl', () => ({
     const parts = key.split('.')
     return parts[parts.length - 1]
   },
+  useLocale: () => 'ru',
 }))
 
 jest.mock('next/navigation', () => ({
@@ -66,3 +67,9 @@ jest.mock('@/lib/toast', () => ({
     dismiss: jest.fn(),
   },
 }))
+
+// jsdom не реализует scrollIntoView: его вызывают списки с навигацией
+// с клавиатуры (SearchableSelect, поиск товаров в модалке заказа)
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function () {}
+}
