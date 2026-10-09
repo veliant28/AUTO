@@ -209,19 +209,18 @@ class NovaPoshtaLookupService:
     ) -> List[NovaPoshtaLookupWarehouse]:
         """Search warehouses in a city."""
         client = self._get_sender_client(sender_profile_id)
+        numeric_query = query.strip().isdigit() and len(query.strip()) > 1
         props: dict = {
             "CityRef": city_ref,
-            "Limit": str(limit),
+            # Поиск по номеру отделения («19») должен видеть всех кандидатов:
+            # при Limit=50 №19 в большом городе в первую страницу не попадает,
+            # и поиск выглядит как «ничего не находит».
+            "Limit": "500" if numeric_query else str(limit),
         }
         if query:
             props["FindByString"] = query
         if warehouse_type_ref:
             props["TypeOfWarehouseRef"] = warehouse_type_ref
-
-        # FindByString is unreliable for multi-digit numbers ("18", "19").
-        # Search by the first digit instead and filter locally.
-        if query.strip().isdigit() and len(query.strip()) > 1:
-            props["FindByString"] = query.strip()[0]
 
         try:
             response = await client.call(
@@ -242,10 +241,10 @@ class NovaPoshtaLookupService:
             if ref not in seen_refs:
                 seen_refs.add(ref)
                 number = item.get("Number", "")
-                # For multi-digit numeric queries, filter locally by number prefix
-                if query.strip().isdigit() and len(query.strip()) > 1:
-                    if not number.startswith(query.strip()):
-                        continue
+                # НП отдаёт и совпадения по адресу — оставляем номера,
+                # начинающиеся с введённого числа
+                if numeric_query and not number.startswith(query.strip()):
+                    continue
                 results.append(NovaPoshtaLookupWarehouse(
                     ref=ref,
                     number=number,
