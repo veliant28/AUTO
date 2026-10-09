@@ -628,6 +628,36 @@ class TestAddItemsToOrder:
         assert resp.status_code == 400
 
 
+class TestEditLockedStatuses:
+    @pytest.mark.parametrize("status", [OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.CANCELLED])
+    def test_locked_statuses_cannot_be_edited(self, client, db, admin_headers, admin_user, status):
+        order = _order(db, user_id=admin_user.id, status=status)
+        resp = client.put(f"/api/v1/admin/orders/{order.id}",
+                          headers=admin_headers,
+                          json={"phone": "+380670000000"})
+        assert resp.status_code == 400
+        assert "изменить" in resp.json()["detail"]
+
+    def test_locked_status_rejects_adding_items(self, client, db, admin_headers, admin_user):
+        part, _offer = _part_with_offer(db, article="ART-LOCK", sku="SKULOCK")
+        order = _order(db, user_id=admin_user.id, status=OrderStatus.DELIVERED)
+        resp = client.put(f"/api/v1/admin/orders/{order.id}",
+                          headers=admin_headers,
+                          json={"add_items": [{"part_id": part.id, "quantity": 1}]})
+        assert resp.status_code == 400
+        assert db.query(OrderItem).filter(OrderItem.order_id == order.id).count() == 0
+
+    @pytest.mark.parametrize("status", [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PROCESSING])
+    def test_open_statuses_can_be_edited(self, client, db, admin_headers, admin_user, status):
+        order = _order(db, user_id=admin_user.id, status=status)
+        resp = client.put(f"/api/v1/admin/orders/{order.id}",
+                          headers=admin_headers,
+                          json={"phone": "+380670000001"})
+        assert resp.status_code == 200, resp.text
+        db.refresh(order)
+        assert order.phone == "+380670000001"
+
+
 class TestProductSearch:
     def test_search_by_brand_and_article(self, client, db, admin_headers):
         _part_with_offer(db, article="0986452041", brand="Bosch", sku="SKU-A")

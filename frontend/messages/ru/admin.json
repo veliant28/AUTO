@@ -1159,6 +1159,7 @@
   "timesheet_reset": "Сбросить месяц",
   "timesheet_reset_month": "Показан текущий месяц",
   "create_order": "Создать заказ",
+  "edit_locked": "Заказ в этом статусе изменить нельзя",
   "create": "Создать",
   "new_order": "Новый заказ",
   "order_created": "Заказ создан",

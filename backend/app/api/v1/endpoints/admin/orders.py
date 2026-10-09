@@ -36,6 +36,9 @@ router = APIRouter()
 # Учётка, которую заводим клиенту, оформившему заказ по телефону без регистрации
 PHONE_CUSTOMER_EMAIL_DOMAIN = "phone.svom.local"
 
+# Статусы, в которых заказ уже нельзя менять
+EDIT_LOCKED_STATUSES = {"shipped", "delivered", "cancelled"}
+
 
 def _actor_name(user: User) -> str:
     """Имя сотрудника для истории: «Фамилия Имя» (как в остальных записях),
@@ -551,6 +554,11 @@ async def update_order(
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(404, "Order not found")
+
+    # Отправленный, доставленный и отменённый заказ не редактируем
+    order_status = order.status.value if hasattr(order.status, "value") else order.status
+    if order_status in EDIT_LOCKED_STATUSES:
+        raise HTTPException(400, "Заказ в этом статусе нельзя изменить")
 
     changes = []
     role_name = current_user.role.name if current_user.role else ""

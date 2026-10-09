@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import api from '@/lib/api'
+import { toast } from '@/lib/toast'
 import OrderDetailModal from '@/app/(admin)/[locale]/admin/components/OrderDetailModal'
 
 jest.mock('@/lib/api/payments', () => ({
@@ -136,6 +137,24 @@ describe('Добавление товаров в существующий зак
         }),
       ),
     )
+  })
+
+  it('не пускает в редактирование отправленный/доставленный/отменённый заказ', async () => {
+    mockedApi.get.mockImplementation((url: string) =>
+      /\/admin\/orders\/5$/.test(url)
+        ? Promise.resolve({ data: { ...ORDER, status: 'delivered' } } as any)
+        : Promise.resolve({ data: {} } as any),
+    )
+    renderModal()
+
+    expect(await screen.findByText('ORD-0000000005')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('edit_order'))
+
+    // Показали причину и не вошли в редактирование
+    expect(toast.info).toHaveBeenCalledWith('edit_locked')
+    expect(
+      screen.queryByPlaceholderText('order_search_placeholder'),
+    ).not.toBeInTheDocument()
   })
 
   it('применяет промокод в режиме редактирования', async () => {

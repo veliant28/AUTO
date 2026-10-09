@@ -152,6 +152,9 @@ interface UnifiedEvent {
 }
 
 const statusKeys = Object.keys(ORDER_STATUS_LABELS)
+
+// Отправленный, доставленный и отменённый заказ не редактируем
+const EDIT_LOCKED_STATUSES = ['shipped', 'delivered', 'cancelled']
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
   ua: 'uk-UA',
@@ -843,8 +846,15 @@ export default function OrderDetailModal({
     return map
   }, [orderDetail, editQuantities, newItems])
 
+  const canEditOrder =
+    !!orderDetail && !EDIT_LOCKED_STATUSES.includes(orderDetail.status)
+
   const enterEditMode = () => {
     if (!orderDetail) return
+    if (!canEditOrder) {
+      toast.info(t('edit_locked'))
+      return
+    }
     setEditMode(true)
     setNewItems([])
     const q: Record<number, number> = {}
@@ -856,6 +866,11 @@ export default function OrderDetailModal({
   }
 
   const handleSave = () => {
+    if (!canEditOrder) {
+      toast.info(t('edit_locked'))
+      cancelEdit()
+      return
+    }
     const changes: any = {}
     const itemsChanged = orderDetail?.items.some(
       (item) => editQuantities[item.id] !== item.quantity,

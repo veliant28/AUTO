@@ -1159,6 +1159,7 @@
   "timesheet_reset": "Reset month",
   "timesheet_reset_month": "Showing current month",
   "create_order": "Create order",
+  "edit_locked": "Order cannot be edited in this status",
   "create": "Create",
   "new_order": "New order",
   "order_created": "Order created",
