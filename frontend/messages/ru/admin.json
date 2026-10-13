@@ -1101,6 +1101,7 @@
   "attendance_clock_done": "Сегодня зафиксировано",
   "attendance_clock_in_success": "Вход зафиксирован в {time}",
   "attendance_clock_out_success": "Выход зафиксирован в {time}",
+  "attendance_clock_out_already": "Сессия уже закрыта",
   "attendance_clock_error": "Ошибка фиксации времени",
   "attendance_guard_toast": "Зафиксируйте вход, чтобы начать работу",
   "timesheet_title": "Табель",

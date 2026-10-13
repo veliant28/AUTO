@@ -1101,6 +1101,7 @@
   "attendance_clock_done": "Today already recorded",
   "attendance_clock_in_success": "Clocked in at {time}",
   "attendance_clock_out_success": "Clocked out at {time}",
+  "attendance_clock_out_already": "Session already closed",
   "attendance_clock_error": "Failed to record time",
   "attendance_guard_toast": "Clock in to start working",
   "timesheet_title": "Timesheet",

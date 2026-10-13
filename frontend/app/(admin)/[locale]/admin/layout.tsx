@@ -333,6 +333,18 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           clock_out_at: string | null
           auto_clock_out: boolean
         } | null
+        stuck_sessions: {
+          id: number
+          work_date: string
+          clock_in_at: string | null
+          auto_clock_out: boolean
+        }[]
+        closed_sessions: {
+          work_date: string
+          clock_in_at: string | null
+          clock_out_at: string | null
+          auto_clock_out: boolean
+        }[]
       }
     },
     refetchInterval: 30000,
@@ -348,27 +360,33 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       queryClient.setQueryData(['attendance-today'], data)
       // Если открыта страница «Фиксация» — обновляем таблицу сразу
       queryClient.invalidateQueries({ queryKey: ['admin-attendance-records'] })
-      const rec =
-        action === 'clock-in' ? data?.open_session : data?.sessions?.at(-1)
       if (action === 'clock-in') {
         toast.success(
           ta('attendance_clock_in_success', {
-            time: formatDate(rec?.clock_in_at),
+            time: formatDate(data?.open_session?.clock_in_at),
           }),
         )
-      } else {
-        toast.success(
-          ta('attendance_clock_out_success', {
-            time: formatDate(rec?.clock_out_at),
-          }),
-        )
+        return
       }
+      const closed = data?.closed_sessions ?? []
+      if (closed.length === 0) {
+        // Сессию уже закрыли до нас (например, авто-выход) — это не ошибка
+        toast.info(ta('attendance_clock_out_already'))
+        return
+      }
+      toast.success(
+        ta('attendance_clock_out_success', {
+          time: formatDate(closed.at(-1)?.clock_out_at),
+        }),
+      )
     },
     onError: () => toast.error(ta('attendance_clock_error')),
   })
 
   const openSession = todayAttendance?.open_session ?? null
-  const clockedIn = !!openSession
+  // Залипшая сессия прошлых дней: кнопка та же, но «Выход» закрывает и её
+  const hasStuckSession = (todayAttendance?.stuck_sessions?.length ?? 0) > 0
+  const clockedIn = !!openSession || hasStuckSession
 
   // Календарь на странице «Фиксация» (просмотр по дням)
   const [attendanceDate, setAttendanceDate] = useState<Date | undefined>(
