@@ -31,10 +31,33 @@ class AttendanceTodayItem(BaseModel):
     auto_clock_out: bool = False
 
 
+class AttendanceStuckSessionItem(BaseModel):
+    """Открытая сессия прошлых дней («залипшая»): вход есть, выхода нет."""
+    id: int
+    work_date: str
+    clock_in_at: Optional[str] = None
+    auto_clock_out: bool = False
+
+
+class AttendanceClosedSessionItem(BaseModel):
+    """Сессия, закрытая вызовом clock-out (для тоста и обновления UI)."""
+    work_date: str
+    clock_in_at: Optional[str] = None
+    clock_out_at: Optional[str] = None
+    auto_clock_out: bool = False
+
+
 class AttendanceTodayResponse(BaseModel):
-    """Сессии текущего пользователя за сегодня + открытая (незакрытая) сессия."""
+    """Сессии текущего пользователя за сегодня + открытая (незакрытая) сессия.
+
+    stuck_sessions — открытые сессии прошлых дней (кнопка «Выход» должна их
+    видеть). closed_sessions — что фактически закрыл clock-out (пусто, если
+    открытых уже не было: например, авто-выход сработал раньше).
+    """
     sessions: List[AttendanceTodayItem] = []
     open_session: Optional[AttendanceTodayItem] = None
+    stuck_sessions: List[AttendanceStuckSessionItem] = []
+    closed_sessions: List[AttendanceClosedSessionItem] = []
 
 
 class AttendanceTimesheetUser(BaseModel):

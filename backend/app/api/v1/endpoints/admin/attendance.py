@@ -1,7 +1,7 @@
 """Admin endpoints for work-time tracking (фиксация рабочего времени + табель)."""
 import calendar
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
 
@@ -17,8 +17,10 @@ from app.models.attendance import (
     TimesheetOverrideLog,
 )
 from app.schemas.attendance_schemas import (
+    AttendanceClosedSessionItem,
     AttendanceRecordItem,
     AttendanceRecordListResponse,
+    AttendanceStuckSessionItem,
     AttendanceTodayItem,
     AttendanceTodayResponse,
     AttendanceTimesheetResponse,
@@ -29,13 +31,17 @@ from app.schemas.attendance_schemas import (
     TimesheetManualHistoryResponse,
     TimesheetManualUpdateIn,
 )
+from app.services.attendance_rules import (
+    compute_auto_close_at_utc,
+    compute_window_utc,
+    session_auto_close_at,
+    session_window,
+    snapshot_for_date,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-# Авто-выход: конец смены из настроек + 15 минут
-AUTO_CLOCKOUT_GRACE_MINUTES = 15
 
 # Сотрудники сайта (кому в табеле считаются часы)
 STAFF_ROLE_NAMES = ("admin", "manager", "operator")
@@ -57,17 +63,6 @@ def _get_admin_tz(s: SiteSettings) -> ZoneInfo:
         return ZoneInfo(tz_name)
     except Exception:
         return ZoneInfo("Europe/Kiev")
-
-
-def _parse_hm(value: str, default: str = "09:00") -> Tuple[int, int]:
-    try:
-        h, m = (int(x) for x in str(value or default).split(":"))
-        if not (0 <= h < 24 and 0 <= m < 60):
-            raise ValueError
-        return h, m
-    except (ValueError, TypeError):
-        h, m = (int(x) for x in default.split(":"))
-        return h, m
 
 
 def _today_str(tz: ZoneInfo) -> str:
@@ -94,17 +89,15 @@ def _parse_month(month: str) -> Tuple[int, int]:
 
 
 def _work_window_utc(work_date: str, tz: ZoneInfo, s: SiteSettings) -> Tuple[datetime, datetime]:
-    """[start, end) смены для даты work_date, в naive UTC. Конец <= начала → следующий день."""
-    y, m, d = _parse_date(work_date)
-    start_h, start_m = _parse_hm(s.work_start_time, "09:00")
-    end_h, end_m = _parse_hm(s.work_end_time, "18:00")
-    start_local = datetime(y, m, d, start_h, start_m, tzinfo=tz)
-    end_local = datetime(y, m, d, end_h, end_m, tzinfo=tz)
-    if end_local <= start_local:
-        end_local += timedelta(days=1)
-    start_utc = start_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-    end_utc = end_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-    return start_utc, end_utc
+    """[start, end) смены для даты work_date, в naive UTC (окно из настроек).
+
+    Тонкая обёртка над app.services.attendance_rules — API-ошибка на мусорную
+    дату сохраняется; сама логика окна живёт в сервисе.
+    """
+    try:
+        return compute_window_utc(work_date, tz, s)
+    except ValueError:
+        raise HTTPException(400, "Invalid date, expected YYYY-MM-DD")
 
 
 def _worked_minutes(
@@ -124,29 +117,13 @@ def _worked_minutes(
 def _auto_close_moment(work_date: str, tz: ZoneInfo, s: SiteSettings) -> datetime:
     """Момент (naive UTC), после которого открытая сессия авто-закрывается.
 
-    Если задан site_settings.work_auto_clockout_time (HH:MM) — ближайшее
-    наступление этого wall-time после начала смены (корректно для смен,
-    переходящих через полночь). Если поле пустое — прежнее поведение:
-    конец смены + 15 минут.
+    Тонкая обёртка над app.services.attendance_rules (логика: явное время
+    автофиксации или легаси «конец смены + 15 минут»).
     """
-    if not (s.work_auto_clockout_time or "").strip():
-        _, end_utc = _work_window_utc(work_date, tz, s)
-        return end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
     try:
-        h, m = (int(x) for x in s.work_auto_clockout_time.strip().split(":"))
-        if not (0 <= h < 24 and 0 <= m < 60):
-            raise ValueError
-    except (ValueError, TypeError):
-        _, end_utc = _work_window_utc(work_date, tz, s)
-        return end_utc + timedelta(minutes=AUTO_CLOCKOUT_GRACE_MINUTES)
-
-    y, mo, d = _parse_date(work_date)
-    start_h, start_m = _parse_hm(s.work_start_time, "09:00")
-    deadline_local = datetime(y, mo, d, h, m, tzinfo=tz)
-    start_local = datetime(y, mo, d, start_h, start_m, tzinfo=tz)
-    while deadline_local <= start_local:
-        deadline_local += timedelta(days=1)
-    return deadline_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+        return compute_auto_close_at_utc(work_date, tz, s)
+    except ValueError:
+        raise HTTPException(400, "Invalid date, expected YYYY-MM-DD")
 
 
 def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s: SiteSettings, tz: ZoneInfo, now_utc: datetime) -> None:
@@ -160,8 +137,9 @@ def _auto_close_open_sessions(db: Session, sessions: List[AttendanceSession], s:
         if sess.clock_out_at is not None:
             continue
         try:
-            close_at = _auto_close_moment(sess.work_date, tz, s)
-        except HTTPException:
+            # Дедлайн сессии: снимок, если есть; иначе — текущие настройки
+            close_at = session_auto_close_at(sess, tz, s)
+        except ValueError:
             continue
         if now_utc >= close_at:
             sess.clock_out_at = now_utc
@@ -196,6 +174,37 @@ def _today_item(sess: Optional[AttendanceSession]) -> Optional[AttendanceTodayIt
         clock_in_at=sess.clock_in_at.isoformat() if sess.clock_in_at else None,
         clock_out_at=sess.clock_out_at.isoformat() if sess.clock_out_at else None,
         auto_clock_out=bool(sess.auto_clock_out),
+    )
+
+
+def _stuck_item(sess: AttendanceSession) -> AttendanceStuckSessionItem:
+    return AttendanceStuckSessionItem(
+        id=sess.id,
+        work_date=sess.work_date,
+        clock_in_at=sess.clock_in_at.isoformat() if sess.clock_in_at else None,
+        auto_clock_out=bool(sess.auto_clock_out),
+    )
+
+
+def _closed_item(sess: AttendanceSession) -> AttendanceClosedSessionItem:
+    return AttendanceClosedSessionItem(
+        work_date=sess.work_date,
+        clock_in_at=sess.clock_in_at.isoformat() if sess.clock_in_at else None,
+        clock_out_at=sess.clock_out_at.isoformat() if sess.clock_out_at else None,
+        auto_clock_out=bool(sess.auto_clock_out),
+    )
+
+
+def _today_response(
+    sessions: List[AttendanceSession],
+    stuck: List[AttendanceSession],
+    closed: Optional[List[AttendanceSession]] = None,
+) -> AttendanceTodayResponse:
+    return AttendanceTodayResponse(
+        sessions=[_today_item(x) for x in sessions if x],
+        open_session=_today_item(_open_session(sessions)),
+        stuck_sessions=[_stuck_item(x) for x in stuck],
+        closed_sessions=[_closed_item(x) for x in (closed or [])],
     )
 
 
@@ -252,6 +261,20 @@ def _open_session(sessions: List[AttendanceSession]) -> Optional[AttendanceSessi
     return next((s for s in sessions if s.clock_out_at is None), None)
 
 
+def _stuck_open_sessions(db: Session, user_id: int, tz: ZoneInfo) -> List[AttendanceSession]:
+    """Открытые сессии пользователя за прошлые дни («залипшие» хвосты)."""
+    return (
+        db.query(AttendanceSession)
+        .filter(
+            AttendanceSession.user_id == user_id,
+            AttendanceSession.clock_out_at.is_(None),
+            AttendanceSession.work_date < _today_str(tz),
+        )
+        .order_by(AttendanceSession.clock_in_at)
+        .all()
+    )
+
+
 # --------------------------------------------------------------------------
 # Кнопка входа/выхода
 # --------------------------------------------------------------------------
@@ -261,14 +284,16 @@ async def get_today_attendance(
     current_user: User = Depends(require_role("admin", "manager", "operator")),
     db: Session = Depends(get_db),
 ):
-    """Сессии текущего пользователя за сегодня + открытая сессия (для кнопки и guard'а)."""
+    """Сессии текущего пользователя за сегодня + открытая сессия (для кнопки и guard'а).
+
+    Залипшие сессии прошлых дней отдаём отдельным списком и здесь не
+    закрываем: сотрудник должен успеть нажать «Выход» вручную.
+    """
     s = _get_settings(db)
     tz = _get_admin_tz(s)
     sessions = _today_sessions(db, current_user.id, s, tz)
-    return AttendanceTodayResponse(
-        sessions=[_today_item(x) for x in sessions if x],
-        open_session=_today_item(_open_session(sessions)),
-    )
+    stuck = _stuck_open_sessions(db, current_user.id, tz)
+    return _today_response(sessions, stuck)
 
 
 @router.post("/attendance/clock-in", response_model=AttendanceTodayResponse)
@@ -276,25 +301,32 @@ async def clock_in(
     current_user: User = Depends(require_role("admin", "manager", "operator")),
     db: Session = Depends(get_db),
 ):
-    """Зафиксировать вход: открыть новую сессию (идемпотентно при уже открытой)."""
+    """Зафиксировать вход: открыть новую сессию (идемпотентно при уже открытой).
+
+    В новую сессию кладём снимок правил (окно смены и дедлайн авто-фиксации):
+    последующие правки настроек не меняют расчёт этой сессии.
+    """
     s = _get_settings(db)
     tz = _get_admin_tz(s)
     sessions = _today_sessions(db, current_user.id, s, tz)
     open_sess = _open_session(sessions)
     if open_sess is None:
+        work_date = _today_str(tz)
+        start_utc, end_utc, auto_close_utc = snapshot_for_date(work_date, tz, s)
         open_sess = AttendanceSession(
             user_id=current_user.id,
-            work_date=_today_str(tz),
+            work_date=work_date,
             clock_in_at=_now_utc(),
+            work_start_at=start_utc,
+            work_end_at=end_utc,
+            auto_close_at=auto_close_utc,
         )
         db.add(open_sess)
         db.commit()
         db.refresh(open_sess)
         sessions = _today_sessions(db, current_user.id, s, tz)
-    return AttendanceTodayResponse(
-        sessions=[_today_item(x) for x in sessions if x],
-        open_session=_today_item(_open_session(sessions)),
-    )
+    stuck = _stuck_open_sessions(db, current_user.id, tz)
+    return _today_response(sessions, stuck)
 
 
 @router.post("/attendance/clock-out", response_model=AttendanceTodayResponse)
@@ -302,21 +334,36 @@ async def clock_out(
     current_user: User = Depends(require_role("admin", "manager", "operator")),
     db: Session = Depends(get_db),
 ):
-    """Зафиксировать выход: закрыть открытую сессию за сегодня."""
+    """Зафиксировать выход: закрыть все открытые сессии — сегодняшнюю и залипшие.
+
+    Идемпотентно: если открытых уже нет (авто-выход сработал раньше), отвечаем
+    200 с пустым closed_sessions — не ошибкой. Время выхода — фактический
+    момент закрытия. Залипшие сессии прошлых дней помечаем auto_clock_out=True
+    (закрыты не в момент ухода); часы от этого не зависят — обрезаются окном.
+    """
     s = _get_settings(db)
     tz = _get_admin_tz(s)
-    sessions = _today_sessions(db, current_user.id, s, tz)
-    open_sess = _open_session(sessions)
-    if open_sess is None:
-        raise HTTPException(400, "No open attendance session for today")
-    open_sess.clock_out_at = _now_utc()
-    open_sess.auto_clock_out = False
-    db.commit()
-    sessions = _today_sessions(db, current_user.id, s, tz)
-    return AttendanceTodayResponse(
-        sessions=[_today_item(x) for x in sessions if x],
-        open_session=_today_item(_open_session(sessions)),
+    today = _today_str(tz)
+    now_utc = _now_utc()
+    open_sessions = (
+        db.query(AttendanceSession)
+        .filter(
+            AttendanceSession.user_id == current_user.id,
+            AttendanceSession.clock_out_at.is_(None),
+        )
+        .order_by(AttendanceSession.clock_in_at)
+        .all()
     )
+    closed: List[AttendanceSession] = []
+    for sess in open_sessions:
+        sess.clock_out_at = now_utc
+        sess.auto_clock_out = sess.work_date < today
+        closed.append(sess)
+    if closed:
+        db.commit()
+    sessions = _today_sessions(db, current_user.id, s, tz)
+    stuck = _stuck_open_sessions(db, current_user.id, tz)
+    return _today_response(sessions, stuck, closed=closed)
 
 
 # --------------------------------------------------------------------------
@@ -405,8 +452,9 @@ async def attendance_timesheet(
         if sess.clock_out_at is None:
             continue
         try:
-            start_utc, end_utc = _work_window_utc(sess.work_date, tz, s)
-        except HTTPException:
+            # Окно сессии: снимок, если есть; иначе — текущие настройки
+            start_utc, end_utc = session_window(sess, tz, s)
+        except ValueError:
             continue
         minutes = _worked_minutes(sess.clock_in_at, sess.clock_out_at, start_utc, end_utc)
         if minutes > 0:

@@ -12,6 +12,11 @@ class AttendanceSession(Base):
     сумма пересечений всех сессий дня с рабочим окном из настроек.
     work_date — дата смены в часовом поясе настроек (YYYY-MM-DD),
     clock_in_at/clock_out_at — моменты в naive UTC (как остальной бэкенд).
+
+    work_start_at/work_end_at/auto_close_at — снимок правил на момент входа
+    (окно смены и дедлайн авто-фиксации, naive UTC): правки настроек позже
+    не меняют расчёт уже зафиксированной сессии. NULL — строка без снимка
+    (старые записи): считается по текущим настройкам.
     """
 
     __tablename__ = "attendance_sessions"
@@ -22,6 +27,9 @@ class AttendanceSession(Base):
     clock_in_at = Column(DateTime, nullable=False)
     clock_out_at = Column(DateTime, nullable=True)
     auto_clock_out = Column(Boolean, nullable=False, default=False)
+    work_start_at = Column(DateTime, nullable=True)
+    work_end_at = Column(DateTime, nullable=True)
+    auto_close_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=func.now())
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
 
