@@ -15,11 +15,13 @@ import {
   HelpCircle,
   Receipt,
   Building2,
+  Briefcase,
   Wallet,
   Clock,
   RotateCcw,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TimePicker } from '@/components/ui/TimePicker'
 import { Switch } from '@/components/ui/switch'
@@ -44,6 +46,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox as CheckboxUI } from '@/components/ui/checkbox'
+import { Slider } from '@/components/ui/slider'
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -149,6 +152,26 @@ export default function SettingsPage() {
   const [trackAdmin, setTrackAdmin] = React.useState(false)
   const [trackManager, setTrackManager] = React.useState(false)
   const [trackOperator, setTrackOperator] = React.useState(false)
+
+  // B2B-цены: наценка от закупки для клиентов с ролью b2b (правило price_rules
+  // type='b2b'); сохраняется отдельным запросом вместе с общей кнопкой «Сохранить»
+  const [b2bEnabled, setB2bEnabled] = React.useState(false)
+  const [b2bMargin, setB2bMargin] = React.useState('')
+  // Максимум = минимальная розничная наценка: выше неё B2B-цена дороже розничной
+  const [b2bMaxMargin, setB2bMaxMargin] = React.useState(0)
+  const [savedB2b, setSavedB2b] = React.useState<{
+    enabled: boolean
+    margin: string
+  } | null>(null)
+  const b2bMarginValue = Number(b2bMargin.replace(',', '.')) || 0
+  // Цвет бейджа наценки: 0 — нейтральный (только закупка), меньше розничной —
+  // зелёный, равна розничной — синий. Меняется плавно (transition-colors).
+  const b2bBadgeClass =
+    b2bMarginValue <= 0
+      ? 'bg-foreground text-background'
+      : b2bMarginValue >= b2bMaxMargin
+        ? 'bg-blue-500 text-white'
+        : 'bg-green-500 text-white'
 
   // When eye closed – show all stars; when open – show partial mask with visible edges
   const telegramTokenDisplay = showTelegramToken
@@ -346,6 +369,29 @@ export default function SettingsPage() {
       setTrackOperator(data.track_operator)
   }, [data])
 
+  // B2B-наценка живёт в price_rules (type='b2b'), не в настройках
+  const { data: b2bData } = useQuery({
+    queryKey: ['admin-b2b-pricing'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/pricing/b2b')
+      return data as {
+        enabled: boolean
+        margin_percent: number
+        max_margin_percent: number
+      }
+    },
+    enabled: can(user, 'pricing.view'),
+  })
+
+  React.useEffect(() => {
+    if (!b2bData) return
+    const margin = b2bData.margin_percent ? String(b2bData.margin_percent) : ''
+    setB2bEnabled(b2bData.enabled)
+    setB2bMargin(margin)
+    setB2bMaxMargin(b2bData.max_margin_percent ?? 0)
+    setSavedB2b({ enabled: b2bData.enabled, margin })
+  }, [b2bData])
+
   const isKeyUnchanged = resendApiKey === savedKeyMask
   const isSecretUnchanged = googleClientSecret === savedSecretMask
   const isCheckboxKeyUnchanged = checkboxApiKey === savedCheckboxKeyMask
@@ -420,8 +466,22 @@ export default function SettingsPage() {
       payload.track_manager = trackManager
       payload.track_operator = trackOperator
       await api.put('/admin/settings', payload)
+
+      // B2B-наценка — отдельное правило (price_rules.type='b2b'): сохраняем
+      // той же кнопкой, если значения менялись
+      if (
+        savedB2b &&
+        (savedB2b.enabled !== b2bEnabled || savedB2b.margin !== b2bMargin)
+      ) {
+        await api.put('/admin/pricing/b2b', {
+          enabled: b2bEnabled,
+          margin_percent: b2bMarginValue,
+        })
+      }
     },
     onSuccess: () => {
+      setSavedB2b({ enabled: b2bEnabled, margin: b2bMargin })
+      queryClient.invalidateQueries({ queryKey: ['admin-b2b-pricing'] })
       const attendanceSettings = {
         brand_name: brandName,
         timezone,
@@ -444,11 +504,36 @@ export default function SettingsPage() {
   })
 
   React.useEffect(() => {
-    ;(window as any).__saveSettings = () => saveMutation.mutate()
+    ;(window as any).__saveSettings = () => {
+      // Запрет: B2B-наценка должна быть ниже розничной — иначе не сохраняем
+      // и показываем синий тост (без общей «Ошибки сохранения»)
+      const b2bChanged =
+        savedB2b &&
+        (savedB2b.enabled !== b2bEnabled || savedB2b.margin !== b2bMargin)
+      if (b2bChanged) {
+        if (b2bEnabled && b2bMarginValue <= 0) {
+          toast.info(t('settings_b2b_margin_required'))
+          return
+        }
+        if (b2bEnabled && b2bMarginValue > b2bMaxMargin) {
+          toast.info(t('settings_b2b_margin_exceeds', { max: b2bMaxMargin }))
+          return
+        }
+      }
+      saveMutation.mutate()
+    }
     return () => {
       delete (window as any).__saveSettings
     }
-  }, [saveMutation.mutate])
+  }, [
+    saveMutation.mutate,
+    savedB2b,
+    b2bEnabled,
+    b2bMargin,
+    b2bMarginValue,
+    b2bMaxMargin,
+    t,
+  ])
 
   const testEmailMutation = useMutation({
     mutationFn: async () => {
@@ -1261,6 +1346,74 @@ export default function SettingsPage() {
                 </div>
               </>
             )}
+          </CardContent>
+        </Card>
+
+        {/* B2B-цены: наценка от закупки для клиентов с ролью B2B */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-primary" />
+              {t('settings_b2b_title')}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {t('settings_b2b_tooltip')}
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div
+              className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+              onClick={() => setB2bEnabled(!b2bEnabled)}
+            >
+              <label
+                className="text-sm font-medium cursor-pointer"
+                htmlFor="b2b-enabled"
+              >
+                {t('settings_b2b_enabled')}
+              </label>
+              <Switch
+                id="b2b-enabled"
+                checked={b2bEnabled}
+                onCheckedChange={setB2bEnabled}
+                className="cursor-pointer"
+              />
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-sm font-medium">
+                  {t('settings_b2b_margin')}
+                </label>
+                {/* Бейдж меняет цвет плавно: 0 — нейтральный (закупка),
+                    меньше розничной — зелёный, равна розничной — синий */}
+                <Badge
+                  className={`border-0 text-sm tabular-nums transition-colors duration-500 ${b2bBadgeClass}`}
+                >
+                  {b2bMarginValue}%
+                </Badge>
+              </div>
+              {/* Ползунок: от закупочной цены (0%) до розничной (максимум);
+                  без включённых B2B-цен неактивен */}
+              <Slider
+                min={0}
+                max={Math.max(b2bMaxMargin, 1)}
+                step={0.5}
+                disabled={!b2bEnabled}
+                value={[Math.min(b2bMarginValue, Math.max(b2bMaxMargin, 1))]}
+                onValueChange={(v) => setB2bMargin(String(v[0]))}
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{t('settings_b2b_slider_purchase')}</span>
+                <span>
+                  {t('settings_b2b_slider_retail', { max: b2bMaxMargin })}
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
