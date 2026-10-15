@@ -18,6 +18,7 @@ from app.models import (
 from app.models.presence import PresenceSession, ProductView, ClientIp
 from app.models.loyalty import Promocode
 from app.services import presence_service
+from app.services.delivery_variants import aggregate_variants, monthly_type_counts
 from app.schemas.monitor_schemas import (
     MonitorClientsResponse,
     MonitorClientItem,
@@ -41,6 +42,9 @@ from app.schemas.monitor_schemas import (
     MonitorLoyaltyResponse,
     MonitorLoyaltyStatsMonth,
     MonitorLoyaltyStatsResponse,
+    MonitorClientDeliveryResponse,
+    MonitorDeliveryVariant,
+    MonitorDeliveryMonth,
 )
 from app.api.v1.endpoints.admin.loyalty import _promocode_to_response
 
@@ -875,4 +879,31 @@ async def monitor_client_loyalty_stats(
     return MonitorLoyaltyStatsResponse(
         months=months,
         total=sum(v for v in buckets.values()),
+    )
+
+
+@router.get("/monitor/clients/{client_key}/delivery", response_model=MonitorClientDeliveryResponse)
+async def monitor_client_delivery(
+    client_key: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Варианты доставки клиента из заказов + типы доставки по месяцам (12 мес.).
+
+    Не история и не хранилище: списком — уникальные варианты (свежие сверху,
+    до 100), всё выводится из заказов при каждом запросе, включая отменённые.
+    Для анонимной сессии заказов быть не может — пустой ответ.
+    """
+    user_id, _session_id = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorClientDeliveryResponse(
+            variants=[], total=0, months=[MonitorDeliveryMonth(**m) for m in monthly_type_counts([])],
+        )
+
+    orders = db.query(Order).filter(Order.user_id == user_id).all()
+    variants = aggregate_variants(orders)
+    return MonitorClientDeliveryResponse(
+        variants=[MonitorDeliveryVariant(**v) for v in variants],
+        total=len(variants),
+        months=[MonitorDeliveryMonth(**m) for m in monthly_type_counts(orders)],
     )

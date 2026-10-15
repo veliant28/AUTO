@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 
@@ -207,3 +208,31 @@ class MonitorLoyaltyStatsResponse(BaseModel):
     """Выдача промокодов по месяцам за 12 месяцев (всегда 12 записей)."""
     months: List[MonitorLoyaltyStatsMonth]
     total: int
+
+
+class MonitorDeliveryVariant(BaseModel):
+    """Уникальный вариант доставки клиента (выводится из заказов, без дублей)."""
+    type: str  # 'pickup' | 'warehouse' | 'courier' | 'other'
+    raw_type: Optional[str]  # исходный delivery_type — для неизвестных типов
+    city_label: Optional[str]
+    warehouse_label: Optional[str]
+    street_label: Optional[str]
+    house: Optional[str]
+    apartment: Optional[str]
+    count: int
+    first_used_at: datetime
+    last_used_at: datetime
+
+
+class MonitorDeliveryMonth(BaseModel):
+    month: str  # 'YYYY-MM'
+    pickup: int
+    warehouse: int
+    courier: int
+
+
+class MonitorClientDeliveryResponse(BaseModel):
+    """Варианты доставки клиента + типы доставки по месяцам за 12 месяцев."""
+    variants: List[MonitorDeliveryVariant]
+    total: int
+    months: List[MonitorDeliveryMonth]

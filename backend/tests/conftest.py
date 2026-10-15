@@ -86,6 +86,7 @@ def admin_role(db):
         "returns.view", "returns.edit_status", "returns.delete", "returns.edit",
         "checkbox.view", "payments.view",
         "attendance.view", "attendance.edit",
+        "monitor.view",
     ]
     existing = {p.codename: p for p in db.query(Permission).all()}
     for codename in all_perms:
