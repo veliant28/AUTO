@@ -79,6 +79,14 @@ const supplierColors: Record<string, string> = {
   GPL: 'bg-orange-500 text-white',
 }
 
+// Цвета бейджей способов доставки — в тон сериям графика
+const DELIVERY_BADGE_COLORS: Record<string, string> = {
+  pickup: 'bg-green-500 text-white',
+  warehouse: 'bg-blue-500 text-white',
+  courier: 'bg-orange-500 text-white',
+  other: 'bg-gray-500 text-white',
+}
+
 // Цвета ролевых бейджей — как в таблице монитора и сайдбаре админки
 const ROLE_BADGE_COLORS: Record<string, string> = {
   admin: 'bg-red-500 text-white',
@@ -255,10 +263,128 @@ interface MonitorLoyaltyStatsResponse {
   total: number
 }
 
+interface MonitorDeliveryVariant {
+  type: 'pickup' | 'warehouse' | 'courier' | 'other'
+  raw_type: string | null
+  city_label: string | null
+  warehouse_label: string | null
+  street_label: string | null
+  house: string | null
+  apartment: string | null
+  count: number
+  first_used_at: string
+  last_used_at: string
+}
+
+interface MonitorDeliveryMonth {
+  month: string // 'YYYY-MM'
+  pickup: number
+  warehouse: number
+  courier: number
+}
+
+interface MonitorClientDeliveryResponse {
+  variants: MonitorDeliveryVariant[]
+  total: number
+  months: MonitorDeliveryMonth[]
+}
+
 interface ClientDetailModalProps {
   clientKey: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+// ── Загрузчики данных модалки ───────────────────────────────────────────
+// Вынесены на уровень модуля: одни и те же функции используют хуки режимов
+// и предзагрузка (prefetch) при открытии модалки — без дублирования логики.
+
+const fetchClient = async (clientKey: string) => {
+  const { data } = await api.get<MonitorClientDetail>(
+    `/admin/monitor/clients/${clientKey}`,
+  )
+  return data
+}
+
+const fetchClientCart = async (clientKey: string) => {
+  const { data } = await api.get<MonitorCartResponse>(
+    `/admin/monitor/clients/${clientKey}/cart`,
+  )
+  return data
+}
+
+const fetchClientIndex = async (clientKey: string) => {
+  const { data } = await api.get<MonitorIndexResponse>(
+    `/admin/monitor/clients/${clientKey}/index`,
+  )
+  return data
+}
+
+const fetchClientOrders = async (clientKey: string, page: number) => {
+  const { data } = await api.get<MonitorOrderListResponse>(
+    `/admin/monitor/clients/${clientKey}/orders`,
+    { params: { page, page_size: 20 } },
+  )
+  return data
+}
+
+const fetchClientReturns = async (clientKey: string, page: number) => {
+  const { data } = await api.get<MonitorReturnListResponse>(
+    `/admin/monitor/clients/${clientKey}/returns`,
+    { params: { page, page_size: 20 } },
+  )
+  return data
+}
+
+const fetchClientIps = async (clientKey: string, page: number) => {
+  const { data } = await api.get<MonitorIpListResponse>(
+    `/admin/monitor/clients/${clientKey}/ips`,
+    { params: { page, page_size: 20 } },
+  )
+  return data
+}
+
+const fetchClientVisits = async (clientKey: string) => {
+  const { data } = await api.get<MonitorVisitsResponse>(
+    `/admin/monitor/clients/${clientKey}/visits?days=7`,
+  )
+  return data
+}
+
+const fetchClientLoyalty = async (clientKey: string, page: number) => {
+  const { data } = await api.get<MonitorLoyaltyResponse>(
+    `/admin/monitor/clients/${clientKey}/loyalty`,
+    { params: { page, page_size: 20 } },
+  )
+  return data
+}
+
+const fetchClientLoyaltyStats = async (clientKey: string) => {
+  const { data } = await api.get<MonitorLoyaltyStatsResponse>(
+    `/admin/monitor/clients/${clientKey}/loyalty-stats`,
+  )
+  return data
+}
+
+const fetchClientDelivery = async (clientKey: string) => {
+  const { data } = await api.get<MonitorClientDeliveryResponse>(
+    `/admin/monitor/clients/${clientKey}/delivery`,
+  )
+  return data
+}
+
+/** Следующая страница бесконечных списков (заказы/возвраты/IP/промокоды) */
+const nextListPage = (last: {
+  page: number
+  page_size: number
+  total: number
+}) => (last.page * last.page_size < last.total ? last.page + 1 : undefined)
+
+// Предзагрузка режимов НЕ переопределяет staleTime: свежие данные (5 минут)
+// prefetch пропускает — повторные открытия модалки почти бесплатны.
+const listPrefetchOptions = {
+  initialPageParam: 1,
+  getNextPageParam: nextListPage,
 }
 
 /**
@@ -274,136 +400,167 @@ export default function ClientDetailModal({
   const locale = useLocale()
   const tz = useTimezone()
   const queryClient = useQueryClient()
-  // Переключатель вида: просмотр товаров <-> корзина <-> индекс <-> IP <-> лояльность
+  // Переключатель вида: просмотр товаров <-> корзина <-> индекс <-> IP <-> лояльность <-> доставка
   const [mode, setMode] = useState<
-    'main' | 'cart' | 'index' | 'ip' | 'loyalty'
+    'main' | 'cart' | 'index' | 'ip' | 'loyalty' | 'delivery'
   >('main')
   const [listTab, setListTab] = useState<'orders' | 'returns'>('orders')
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-monitor-client', clientKey],
-    queryFn: async () => {
-      const { data } = await api.get<MonitorClientDetail>(
-        `/admin/monitor/clients/${clientKey}`,
-      )
-      return data
-    },
+    queryFn: () => fetchClient(clientKey!),
     enabled: !!clientKey && open,
     refetchInterval: 10000,
   })
 
+  // Запросы режимов: данные предзагружаются при открытии модалки, а при
+  // входе в режим (enabled: false → true) гарантированно обновляются —
+  // staleTime 0 делает кэш «протухшим», поэтому вход всегда рефетчит.
+  // Сами по себе режимы не опрашиваются: повторно срабатывает только вход.
   const cart = useQuery({
     queryKey: ['admin-monitor-client-cart', clientKey],
-    queryFn: async () => {
-      const { data } = await api.get<MonitorCartResponse>(
-        `/admin/monitor/clients/${clientKey}/cart`,
-      )
-      return data
-    },
+    queryFn: () => fetchClientCart(clientKey!),
     enabled: !!clientKey && open && mode === 'cart',
-    refetchInterval: 10000,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   // Индекс успешности: статистика для доната
   const index = useQuery({
     queryKey: ['admin-monitor-client-index', clientKey],
-    queryFn: async () => {
-      const { data } = await api.get<MonitorIndexResponse>(
-        `/admin/monitor/clients/${clientKey}/index`,
-      )
-      return data
-    },
+    queryFn: () => fetchClientIndex(clientKey!),
     enabled: !!clientKey && open && mode === 'index',
-    refetchInterval: 30000,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   // Заказы/возвраты клиента — ленивая подгрузка (бесконечный скролл)
   const orders = useInfiniteQuery({
     queryKey: ['admin-monitor-client-orders', clientKey],
-    queryFn: async ({ pageParam }) => {
-      const { data } = await api.get<MonitorOrderListResponse>(
-        `/admin/monitor/clients/${clientKey}/orders`,
-        { params: { page: pageParam, page_size: 20 } },
-      )
-      return data
-    },
+    queryFn: ({ pageParam }) =>
+      fetchClientOrders(clientKey!, pageParam as number),
     initialPageParam: 1,
-    getNextPageParam: (last) =>
-      last.page * last.page_size < last.total ? last.page + 1 : undefined,
+    getNextPageParam: nextListPage,
     enabled: !!clientKey && open && mode === 'index' && listTab === 'orders',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   const returns = useInfiniteQuery({
     queryKey: ['admin-monitor-client-returns', clientKey],
-    queryFn: async ({ pageParam }) => {
-      const { data } = await api.get<MonitorReturnListResponse>(
-        `/admin/monitor/clients/${clientKey}/returns`,
-        { params: { page: pageParam, page_size: 20 } },
-      )
-      return data
-    },
+    queryFn: ({ pageParam }) =>
+      fetchClientReturns(clientKey!, pageParam as number),
     initialPageParam: 1,
-    getNextPageParam: (last) =>
-      last.page * last.page_size < last.total ? last.page + 1 : undefined,
+    getNextPageParam: nextListPage,
     enabled: !!clientKey && open && mode === 'index' && listTab === 'returns',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   // IP-история клиента: список (бесконечный скролл) + посещения за 7 дней
   const ips = useInfiniteQuery({
     queryKey: ['admin-monitor-client-ips', clientKey],
-    queryFn: async ({ pageParam }) => {
-      const { data } = await api.get<MonitorIpListResponse>(
-        `/admin/monitor/clients/${clientKey}/ips`,
-        { params: { page: pageParam, page_size: 20 } },
-      )
-      return data
-    },
+    queryFn: ({ pageParam }) => fetchClientIps(clientKey!, pageParam as number),
     initialPageParam: 1,
-    getNextPageParam: (last) =>
-      last.page * last.page_size < last.total ? last.page + 1 : undefined,
+    getNextPageParam: nextListPage,
     enabled: !!clientKey && open && mode === 'ip',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   const visits = useQuery({
     queryKey: ['admin-monitor-client-visits', clientKey],
-    queryFn: async () => {
-      const { data } = await api.get<MonitorVisitsResponse>(
-        `/admin/monitor/clients/${clientKey}/visits?days=7`,
-      )
-      return data
-    },
+    queryFn: () => fetchClientVisits(clientKey!),
     enabled: !!clientKey && open && mode === 'ip',
-    refetchInterval: 30000,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   // Промокоды клиента — ленивая подгрузка (бесконечный скролл), как заказы/IP
   const loyalty = useInfiniteQuery({
     queryKey: ['admin-monitor-client-loyalty', clientKey],
-    queryFn: async ({ pageParam }) => {
-      const { data } = await api.get<MonitorLoyaltyResponse>(
-        `/admin/monitor/clients/${clientKey}/loyalty`,
-        { params: { page: pageParam, page_size: 20 } },
-      )
-      return data
-    },
+    queryFn: ({ pageParam }) =>
+      fetchClientLoyalty(clientKey!, pageParam as number),
     initialPageParam: 1,
-    getNextPageParam: (last) =>
-      last.page * last.page_size < last.total ? last.page + 1 : undefined,
+    getNextPageParam: nextListPage,
     enabled: !!clientKey && open && mode === 'loyalty',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
   // Статистика выдачи по месяцам (график за 12 месяцев)
   const loyaltyStats = useQuery({
     queryKey: ['admin-monitor-client-loyalty-stats', clientKey],
-    queryFn: async () => {
-      const { data } = await api.get<MonitorLoyaltyStatsResponse>(
-        `/admin/monitor/clients/${clientKey}/loyalty-stats`,
-      )
-      return data
-    },
+    queryFn: () => fetchClientLoyaltyStats(clientKey!),
     enabled: !!clientKey && open && mode === 'loyalty',
-    refetchInterval: 30000,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   })
+
+  // Варианты доставки клиента из заказов + типы по месяцам (график за 12 месяцев)
+  const deliveryStats = useQuery({
+    queryKey: ['admin-monitor-client-delivery', clientKey],
+    queryFn: () => fetchClientDelivery(clientKey!),
+    enabled: !!clientKey && open && mode === 'delivery',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  })
+
+  // Предзагрузка режимов: после того как основная часть загрузилась, тихо
+  // тянем данные всех режимов один раз на открытие модалки. Свежий кэш
+  // prefetch пропускает (staleTime по умолчанию), поэтому повторные открытия
+  // почти бесплатны, а вход в режим всё равно делает рефетч (staleTime 0).
+  const mainLoaded = !!data
+  const clientIsAnonymous = data?.client?.is_anonymous
+  useEffect(() => {
+    if (!open || !clientKey || !mainLoaded) return
+    const key = clientKey
+    void queryClient.prefetchQuery({
+      queryKey: ['admin-monitor-client-cart', key],
+      queryFn: () => fetchClientCart(key),
+    })
+    void queryClient.prefetchQuery({
+      queryKey: ['admin-monitor-client-index', key],
+      queryFn: () => fetchClientIndex(key),
+    })
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: ['admin-monitor-client-orders', key],
+      queryFn: ({ pageParam }) => fetchClientOrders(key, pageParam as number),
+      ...listPrefetchOptions,
+    })
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: ['admin-monitor-client-returns', key],
+      queryFn: ({ pageParam }) => fetchClientReturns(key, pageParam as number),
+      ...listPrefetchOptions,
+    })
+    void queryClient.prefetchInfiniteQuery({
+      queryKey: ['admin-monitor-client-ips', key],
+      queryFn: ({ pageParam }) => fetchClientIps(key, pageParam as number),
+      ...listPrefetchOptions,
+    })
+    void queryClient.prefetchQuery({
+      queryKey: ['admin-monitor-client-visits', key],
+      queryFn: () => fetchClientVisits(key),
+    })
+    if (!clientIsAnonymous) {
+      // У анонимной сессии нет ни промокодов, ни заказов — эти режимы
+      // недоступны, предзагружать нечего
+      void queryClient.prefetchInfiniteQuery({
+        queryKey: ['admin-monitor-client-loyalty', key],
+        queryFn: ({ pageParam }) =>
+          fetchClientLoyalty(key, pageParam as number),
+        ...listPrefetchOptions,
+      })
+      void queryClient.prefetchQuery({
+        queryKey: ['admin-monitor-client-loyalty-stats', key],
+        queryFn: () => fetchClientLoyaltyStats(key),
+      })
+      void queryClient.prefetchQuery({
+        queryKey: ['admin-monitor-client-delivery', key],
+        queryFn: () => fetchClientDelivery(key),
+      })
+    }
+  }, [open, clientKey, mainLoaded, clientIsAnonymous, queryClient])
 
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -654,6 +811,72 @@ export default function ClientDetailModal({
     }
   }, [loyaltyStats.data, isDark, t, chartBg, axisTextColor, borderColor])
 
+  // ── Stacked-график способов доставки за 12 месяцев ─────────────────────
+  const deliveryOption = useMemo(() => {
+    const months = deliveryStats.data?.months ?? []
+    const series: Record<string, { color: string; name: string }> = {
+      pickup: { color: '#22c55e', name: t('monitor_delivery_series_pickup') },
+      warehouse: {
+        color: '#3b82f6',
+        name: t('monitor_delivery_series_warehouse'),
+      },
+      courier: { color: '#f97316', name: t('monitor_delivery_series_courier') },
+    }
+    const order: Array<'pickup' | 'warehouse' | 'courier'> = [
+      'pickup',
+      'warehouse',
+      'courier',
+    ]
+    return {
+      backgroundColor: chartBg,
+      tooltip: {
+        trigger: 'axis' as const,
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
+        borderColor: isDark ? '#374151' : '#e5e7eb',
+        textStyle: { color: isDark ? '#e5e7eb' : '#1f2937', fontSize: 12 },
+        formatter: (params: any[]) => {
+          if (!params?.length) return ''
+          const m = months[params[0].dataIndex]?.month ?? ''
+          // "2026-08" -> "08.2026"
+          const full = m ? `${m.slice(5, 7)}.${m.slice(0, 4)}` : m
+          const rows = params
+            .filter((p) => p.value > 0)
+            .map((p) => `${p.marker}${p.seriesName}: <b>${p.value}</b>`)
+            .join('<br/>')
+          return `<b>${full}</b><br/>${rows}`
+        },
+      },
+      legend: { top: 0, textStyle: { color: axisTextColor } },
+      grid: { top: 40, right: 20, bottom: 30, left: 40 },
+      xAxis: {
+        type: 'category' as const,
+        // "2026-08" -> "08.26"
+        data: months.map(
+          (m) => `${m.month.slice(5, 7)}.${m.month.slice(2, 4)}`,
+        ),
+        axisLabel: { color: axisTextColor },
+        axisLine: { lineStyle: { color: borderColor } },
+      },
+      yAxis: {
+        type: 'value' as const,
+        minInterval: 1,
+        axisLabel: { color: axisTextColor },
+        splitLine: { lineStyle: { color: borderColor } },
+      },
+      series: order.map((key, idx) => ({
+        name: series[key].name,
+        type: 'bar' as const,
+        stack: 'delivery',
+        data: months.map((m) => m[key]),
+        itemStyle: {
+          color: series[key].color,
+          // Скругление только у верхнего сегмента стопки
+          borderRadius: idx === order.length - 1 ? [4, 4, 0, 0] : 0,
+        },
+      })),
+    }
+  }, [deliveryStats.data, isDark, t, chartBg, axisTextColor, borderColor])
+
   if (!clientKey) return null
 
   const c = data?.client
@@ -670,6 +893,37 @@ export default function ClientDetailModal({
   const allIps = ips.data?.pages.flatMap((p) => p.items) ?? []
   const allPromos = loyalty.data?.pages.flatMap((p) => p.items) ?? []
   const promoTotal = loyalty.data?.pages[0]?.total ?? 0
+  const deliveryVariants = deliveryStats.data?.variants ?? []
+
+  // Подпись типа доставки для бейджа плитки (короткая, как в блоке «Доставка»)
+  const deliveryTypeLabel = (v: MonitorDeliveryVariant) => {
+    if (v.type === 'warehouse') return t('warehouse')
+    if (v.type === 'courier') return t('courier')
+    if (v.type === 'other') return t('monitor_delivery_type_other')
+    return t('pickup')
+  }
+
+  // Детали варианта: город + отделение/почтомат либо адрес курьера
+  const deliveryDetails = (v: MonitorDeliveryVariant): string => {
+    if (v.type === 'warehouse') {
+      return [v.city_label, v.warehouse_label].filter(Boolean).join(', ')
+    }
+    if (v.type === 'courier') {
+      const address = [
+        v.city_label,
+        [v.street_label, v.house].filter(Boolean).join(' '),
+      ]
+        .filter(Boolean)
+        .join(', ')
+      // У легаси-заказов адрес может быть не заполнен — показываем что есть
+      const base = address || v.warehouse_label || ''
+      return v.apartment
+        ? `${base}, ${t('monitor_delivery_apartment')} ${v.apartment}`
+        : base
+    }
+    // Самовывоз — без деталей; неизвестный тип — как сохранено в заказе
+    return v.type === 'other' ? v.raw_type || '' : ''
+  }
 
   return (
     <TooltipProvider>
@@ -1338,6 +1592,104 @@ export default function ClientDetailModal({
                   </div>
                 </div>
               </div>
+            ) : mode === 'delivery' ? (
+              <div className="p-6 h-full min-h-0">
+                <div
+                  className="grid gap-6 h-full min-h-0"
+                  style={{
+                    gridTemplateColumns:
+                      'calc((100% - 48px) * 2 / 3 + 24px) calc((100% - 48px) / 3)',
+                  }}
+                >
+                  {/* Типы доставки по месяцам за 12 месяцев */}
+                  <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                    <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                      <Truck className="w-5 h-5" />{' '}
+                      {t('monitor_delivery_chart_title')}
+                    </h4>
+                    <div className="flex-1 min-h-0 flex items-center justify-center">
+                      {deliveryStats.isLoading && !deliveryStats.data ? (
+                        <Skeleton className="h-[420px] w-full" />
+                      ) : !deliveryStats.data ||
+                        deliveryStats.data.months.every(
+                          (m) => m.pickup + m.warehouse + m.courier === 0,
+                        ) ? (
+                        <div className="text-sm text-muted-foreground">
+                          {t('monitor_no_data')}
+                        </div>
+                      ) : (
+                        <ChartErrorBoundary>
+                          <ReactECharts
+                            option={deliveryOption}
+                            style={{ height: 420, width: '100%' }}
+                          />
+                        </ChartErrorBoundary>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Уникальные способы доставки (не история — без дублей) */}
+                  <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                    <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                      <Truck className="w-5 h-5" />{' '}
+                      {t('monitor_delivery_title')}
+                      {deliveryVariants.length > 0 && (
+                        <Badge className="bg-blue-500 text-white border-0">
+                          {deliveryVariants.length}
+                        </Badge>
+                      )}
+                    </h4>
+                    <div className="flex-1 overflow-y-auto pr-1 mt-3 space-y-2">
+                      {deliveryStats.isLoading && !deliveryStats.data ? (
+                        <Skeleton className="h-12 w-full" />
+                      ) : deliveryVariants.length === 0 ? (
+                        <div className="text-sm text-muted-foreground py-8 text-center">
+                          {t('monitor_delivery_empty')}
+                        </div>
+                      ) : (
+                        deliveryVariants.map((v, idx) => {
+                          const details = deliveryDetails(v)
+                          return (
+                            <div
+                              key={`${v.type}|${v.city_label}|${v.warehouse_label}|${v.street_label}|${v.house}`}
+                              className="p-2.5 rounded-lg border bg-card space-y-1.5"
+                            >
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <Badge
+                                  className={`${DELIVERY_BADGE_COLORS[v.type] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                >
+                                  {deliveryTypeLabel(v)}
+                                </Badge>
+                                {/* Вверху всегда способ из последнего заказа */}
+                                {idx === 0 && (
+                                  <Badge className="bg-purple-500 text-white border-0 text-sm">
+                                    {t('monitor_delivery_latest')}
+                                  </Badge>
+                                )}
+                              </div>
+                              {details && (
+                                <div className="text-base font-semibold">
+                                  {details}
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                <span>
+                                  {t('monitor_delivery_count', {
+                                    count: v.count,
+                                  })}
+                                </span>
+                                <span>
+                                  {formatDateTime(v.last_used_at, tz)}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : isLoading && !data ? (
               <div className="p-6 space-y-3">
                 <Skeleton className="h-6 w-48" />
@@ -1790,6 +2142,26 @@ export default function ClientDetailModal({
                   <RefreshCw className="w-4 h-4" />
                 </Button>
               </>
+            ) : mode === 'delivery' ? (
+              <>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setMode('main')}>
+                    <ArrowLeft className="w-4 h-4 mr-1" /> {t('back')}
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    queryClient.invalidateQueries({
+                      queryKey: ['admin-monitor-client-delivery', clientKey],
+                    })
+                    toast.info(t('monitor_refreshed'))
+                  }}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </>
             ) : (
               <>
                 <div className="flex gap-2">
@@ -1824,6 +2196,14 @@ export default function ClientDetailModal({
                     disabled={!data || c?.is_anonymous}
                   >
                     <Gift className="w-4 h-4" /> {t('monitor_loyalty_button')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => setMode('delivery')}
+                    disabled={!data || c?.is_anonymous}
+                  >
+                    <Truck className="w-4 h-4" /> {t('monitor_delivery_button')}
                   </Button>
                 </div>
                 <Button
