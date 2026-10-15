@@ -1,6 +1,7 @@
 'use client'
 import { can } from '@/lib/permissions'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
@@ -74,6 +75,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { PhoneInput } from '@/components/ui/PhoneInput'
+import AnimatedSuccessBadge from '../components/AnimatedSuccessBadge'
 import { toast } from '@/lib/toast'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime, parseApiDate } from '@/lib/dates'
@@ -134,6 +136,9 @@ interface AdminReturnDetail {
   user_name: string
   user_last_name: string | null
   user_first_name: string | null
+  user_email: string | null
+  user_success_index: number
+  user_total_orders: number
   phone: string | null
   last_name: string | null
   first_name: string | null
@@ -197,6 +202,31 @@ function formatPhone(phone: string | null | undefined): string {
   if (digits.length < 10) return phone
   const d = digits.slice(-10)
   return `+38 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
+}
+
+/** Бейдж ТТН: реальный номер копируется по клику, маска — нет */
+function TtnCell({ ttn }: { ttn: string | null }) {
+  const copyTtn = useCopyTtn()
+
+  if (ttn) {
+    const formatted = ttn.replace(/(\d{2})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4')
+    return (
+      <Badge
+        className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
+        onClick={() => copyTtn(ttn)}
+      >
+        <ScanBarcode className="w-3.5 h-3.5" />
+        {formatted}
+      </Badge>
+    )
+  }
+
+  return (
+    <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
+      <ScanLine className="w-3.5 h-3.5" />
+      XX XXXX XXXX XXXX
+    </Badge>
+  )
 }
 
 export default function AdminReturnsPage() {
@@ -588,27 +618,7 @@ export default function AdminReturnsPage() {
       columnHelper.accessor('ttn_number', {
         header: 'ТТН',
         size: 180,
-        cell: (info) => {
-          const ttn = info.getValue<string | null>()
-          if (ttn) {
-            const formatted = ttn.replace(
-              /(\d{2})(\d{4})(\d{4})(\d{4})/,
-              '$1 $2 $3 $4',
-            )
-            return (
-              <Badge className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5">
-                <ScanBarcode className="w-3.5 h-3.5" />
-                {formatted}
-              </Badge>
-            )
-          }
-          return (
-            <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
-              <ScanLine className="w-3.5 h-3.5" />
-              XX XXXX XXXX XXXX
-            </Badge>
-          )
-        },
+        cell: (info) => <TtnCell ttn={info.getValue<string | null>()} />,
       }),
       columnHelper.display({
         id: 'actions',
@@ -803,7 +813,7 @@ export default function AdminReturnsPage() {
           }}
         >
           <DialogContent
-            className="w-[90vw] max-w-[1400px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0"
+            className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0"
             aria-describedby={undefined}
           >
             {detailLoading ? (
@@ -995,7 +1005,7 @@ export default function AdminReturnsPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-[2fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
+                    <div className="grid grid-cols-[2fr_1fr_1fr] gap-6 h-full min-h-0 grid-rows-[minmax(0,1fr)]">
                       <div className="border rounded-lg p-3 flex flex-col min-h-0">
                         <h4 className="font-semibold text-lg flex items-center gap-2 mb-3 flex-shrink-0">
                           <Package className="w-5 h-5" />{' '}
@@ -1165,6 +1175,66 @@ export default function AdminReturnsPage() {
                                 </div>
                               )
                             })}
+                        </div>
+                      </div>
+
+                      {/* Center: личные данные клиента (как в модалке заказа, без доставки) */}
+                      <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                          <User className="w-5 h-5" />{' '}
+                          {t('monitor_personal_data')}
+                          <AnimatedSuccessBadge
+                            value={returnDetail.user_success_index}
+                            totalOrders={returnDetail.user_total_orders}
+                          />
+                        </h4>
+                        <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground text-sm">
+                              {t('phone_label')}
+                            </p>
+                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                              <span className="truncate">
+                                {formatPhone(returnDetail.phone) || '—'}
+                              </span>
+                            </div>
+                          </div>
+                          {['last_name', 'first_name', 'middle_name'].map(
+                            (field) => (
+                              <div key={field} className="space-y-1">
+                                <p className="text-muted-foreground text-sm">
+                                  {t(field)}
+                                </p>
+                                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                                  <span
+                                    className={
+                                      (returnDetail as any)[field]
+                                        ? 'truncate'
+                                        : 'truncate text-muted-foreground'
+                                    }
+                                  >
+                                    {(returnDetail as any)[field] || '—'}
+                                  </span>
+                                </div>
+                              </div>
+                            ),
+                          )}
+                          <div className="space-y-1">
+                            <p className="text-muted-foreground text-sm">
+                              Email
+                            </p>
+                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                              <span
+                                className={
+                                  returnDetail.user_email
+                                    ? 'truncate'
+                                    : 'truncate text-muted-foreground'
+                                }
+                              >
+                                {returnDetail.user_email || '—'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 

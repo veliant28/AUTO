@@ -12,6 +12,7 @@ from app.api.v1.deps import require_permission
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
+from app.services.client_index import compute_client_index_stats
 from app.services import telegram_format
 from app.schemas.returns_schemas import (
     AdminReturnListItem, AdminReturnListResponse,
@@ -96,6 +97,12 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
         )
         for item in (r.items or [])
     ]
+
+    # Индекс успешности клиента (общая формула) — для бейджа в «Личных данных»
+    index_stats = {"success_index": 0, "total_orders": 0}
+    if db and r.user_id:
+        index_stats = compute_client_index_stats(db, r.user_id)
+
     return {
         "id": r.id,
         "return_number": r.return_number or f"RND-{r.id:010d}",
@@ -105,6 +112,9 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
         "user_name": r.user.full_name or r.user.email if r.user else "",
         "user_last_name": r.user.last_name if r.user else None,
         "user_first_name": r.user.first_name if r.user else None,
+        "user_email": r.user.email if r.user else None,
+        "user_success_index": index_stats["success_index"],
+        "user_total_orders": index_stats["total_orders"],
         "phone": r.order.phone if r.order else None,
         "last_name": r.order.last_name if r.order else None,
         "first_name": r.order.first_name if r.order else None,

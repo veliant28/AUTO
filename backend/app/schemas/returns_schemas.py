@@ -114,6 +114,10 @@ class AdminReturnDetailResponse(BaseModel):
     user_name: str = ""
     user_last_name: Optional[str] = None
     user_first_name: Optional[str] = None
+    user_email: Optional[str] = None
+    # Индекс успешности клиента (общая формула) — бейдж в колонке «Личные данные»
+    user_success_index: int = 0
+    user_total_orders: int = 0
     phone: Optional[str] = None
     last_name: Optional[str] = None
     first_name: Optional[str] = None
