@@ -13,8 +13,10 @@
   "edrpou_placeholder": "12345678",
   "city": "Город",
   "city_placeholder": "Киев",
-  "contact_name": "ФИО контакта",
-  "contact_name_placeholder": "Иванов Иван",
+  "contact_last_name": "Фамилия",
+  "contact_last_name_placeholder": "Иванов",
+  "contact_first_name": "Имя",
+  "contact_first_name_placeholder": "Иван",
   "phone": "Телефон",
   "email": "Email для входа",
   "email_placeholder": "client@example.com",
@@ -29,6 +31,9 @@
   "success_again": "Отправить ещё одну заявку",
   "error_required": "Заполните обязательные поля",
   "error_email": "Введите корректный email",
-  "error_phone": "Введите корректный номер телефона",
+  "error_phone_required": "Укажите",
+  "error_phone_format": "Неверный формат",
+  "error_edrpou": "ЕДРПОУ / ИНН — 8 цифр для компании или 10 для ФОП",
+  "error_edrpou_limit": "ЕДРПОУ / ИНН — только цифры, максимум 10",
   "error_generic": "Не удалось отправить заявку. Попробуйте позже."
 }

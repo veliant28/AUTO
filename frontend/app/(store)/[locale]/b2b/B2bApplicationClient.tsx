@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -16,11 +16,16 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { PhoneInput } from '@/components/ui/PhoneInput'
+import { PhoneInput, phoneToApi } from '@/components/ui/PhoneInput'
 import api from '@/lib/api'
 import { toast } from '@/lib/toast'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+// ЕДРПОУ юрлица — 8 цифр, ІПН/РНОКПП ФОП — 10
+const EDRPOU_RE = /^\d{8}$|^\d{10}$/
+const EDRPOU_MAX = 10
+// Не чаще одного предупреждения в 2.5 с: иначе тост сыпется на каждый лишний символ
+const EDRPOU_TOAST_MS = 2500
 
 export default function B2bApplicationClient() {
   const t = useTranslations('b2b')
@@ -30,12 +35,29 @@ export default function B2bApplicationClient() {
   const [company, setCompany] = useState('')
   const [edrpou, setEdrpou] = useState('')
   const [city, setCity] = useState('')
-  const [contactName, setContactName] = useState('')
+  const [contactLastName, setContactLastName] = useState('')
+  const [contactFirstName, setContactFirstName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+  const edrpouToastAt = useRef(0)
+
+  // Только цифры и не больше 10: всё, что не прошло фильтр, сопровождаем
+  // синим тостом с правилом заполнения
+  const handleEdrpouChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, '')
+    if (digits !== raw || digits.length > EDRPOU_MAX) {
+      const now = Date.now()
+      if (now - edrpouToastAt.current > EDRPOU_TOAST_MS) {
+        edrpouToastAt.current = now
+        toast.info(t('error_edrpou_limit'))
+      }
+    }
+    setEdrpou(digits.slice(0, EDRPOU_MAX))
+  }
 
   const benefits = [
     { icon: Percent, text: t('benefit_prices') },
@@ -47,28 +69,39 @@ export default function B2bApplicationClient() {
     e.preventDefault()
     if (
       !company.trim() ||
-      !contactName.trim() ||
-      !city.trim() ||
-      !edrpou.trim()
+      !contactLastName.trim() ||
+      !contactFirstName.trim() ||
+      !city.trim()
     ) {
       toast.error(t('error_required'))
+      return
+    }
+    if (!EDRPOU_RE.test(edrpou.trim())) {
+      toast.error(t('error_edrpou'))
       return
     }
     if (!EMAIL_RE.test(email.trim())) {
       toast.error(t('error_email'))
       return
     }
-    if (phone.replace(/\D/g, '').length < 11) {
-      toast.error(t('error_phone'))
+    // Правило как в оформлении заказа: не короче 10 символов и с кодом +380
+    if (phone.length < 10) {
+      setPhoneError(t('error_phone_required'))
       return
     }
+    if (!/^\+380/.test(phone)) {
+      setPhoneError(t('error_phone_format'))
+      return
+    }
+    setPhoneError(null)
     setSending(true)
     try {
       await api.post('/requests/b2b-application', {
         company: company.trim(),
         edrpou: edrpou.trim(),
-        contact_name: contactName.trim(),
-        phone,
+        contact_last_name: contactLastName.trim(),
+        contact_first_name: contactFirstName.trim(),
+        phone: phoneToApi(phone),
         email: email.trim(),
         city: city.trim(),
         comment: comment.trim() || null,
@@ -104,7 +137,9 @@ export default function B2bApplicationClient() {
                   setCompany('')
                   setEdrpou('')
                   setCity('')
-                  setContactName('')
+                  setContactLastName('')
+                  setContactFirstName('')
+                  setPhoneError(null)
                   setPhone('')
                   setEmail('')
                   setComment('')
@@ -158,7 +193,7 @@ export default function B2bApplicationClient() {
                   {t('section_company')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="text-sm text-muted-foreground mb-2 block">
                       {t('company')} *
                     </label>
@@ -175,17 +210,13 @@ export default function B2bApplicationClient() {
                     </label>
                     <Input
                       value={edrpou}
-                      onChange={(e) =>
-                        setEdrpou(
-                          e.target.value.replace(/[^\d]/g, '').slice(0, 10),
-                        )
-                      }
+                      onChange={(e) => handleEdrpouChange(e.target.value)}
                       placeholder={t('edrpou_placeholder')}
                       inputMode="numeric"
                       required
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
                       {t('city')} *
                     </label>
@@ -207,22 +238,47 @@ export default function B2bApplicationClient() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
-                      {t('contact_name')} *
+                      {t('contact_last_name')} *
                     </label>
                     <Input
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      placeholder={t('contact_name_placeholder')}
+                      value={contactLastName}
+                      onChange={(e) => setContactLastName(e.target.value)}
+                      placeholder={t('contact_last_name_placeholder')}
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
-                      {t('phone')} *
-                    </label>
-                    <PhoneInput value={phone} onChange={setPhone} />
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="text-sm text-muted-foreground">
+                        {t('phone')} *
+                      </label>
+                      {phoneError && (
+                        <span className="text-xs text-destructive">
+                          {phoneError}
+                        </span>
+                      )}
+                    </div>
+                    <PhoneInput
+                      value={phone}
+                      onChange={(value) => {
+                        setPhone(value)
+                        if (phoneError) setPhoneError(null)
+                      }}
+                      className={phoneError ? 'border-destructive' : undefined}
+                    />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('contact_first_name')} *
+                    </label>
+                    <Input
+                      value={contactFirstName}
+                      onChange={(e) => setContactFirstName(e.target.value)}
+                      placeholder={t('contact_first_name_placeholder')}
+                      required
+                    />
+                  </div>
+                  <div>
                     <label className="text-sm text-muted-foreground mb-2 block">
                       {t('email')} *
                     </label>

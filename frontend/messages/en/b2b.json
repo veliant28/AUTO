@@ -13,8 +13,10 @@
   "edrpou_placeholder": "12345678",
   "city": "City",
   "city_placeholder": "Kyiv",
-  "contact_name": "Contact name",
-  "contact_name_placeholder": "John Smith",
+  "contact_last_name": "Last name",
+  "contact_last_name_placeholder": "Smith",
+  "contact_first_name": "First name",
+  "contact_first_name_placeholder": "John",
   "phone": "Phone",
   "email": "Login email",
   "email_placeholder": "client@example.com",
@@ -29,6 +31,9 @@
   "success_again": "Send another application",
   "error_required": "Fill in the required fields",
   "error_email": "Enter a valid email",
-  "error_phone": "Enter a valid phone number",
+  "error_phone_required": "Required",
+  "error_phone_format": "Invalid format",
+  "error_edrpou": "Company ID / Tax number — 8 digits for a company, 10 for a sole trader",
+  "error_edrpou_limit": "Company ID / Tax number — digits only, up to 10",
   "error_generic": "Could not send the application. Please try again later."
 }

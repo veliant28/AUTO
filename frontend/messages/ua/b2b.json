@@ -13,8 +13,10 @@
   "edrpou_placeholder": "12345678",
   "city": "Місто",
   "city_placeholder": "Київ",
-  "contact_name": "ПІБ контакту",
-  "contact_name_placeholder": "Іванов Іван",
+  "contact_last_name": "Прізвище",
+  "contact_last_name_placeholder": "Іванов",
+  "contact_first_name": "Ім'я",
+  "contact_first_name_placeholder": "Іван",
   "phone": "Телефон",
   "email": "Email для входу",
   "email_placeholder": "client@example.com",
@@ -29,6 +31,9 @@
   "success_again": "Надіслати ще одну заявку",
   "error_required": "Заповніть обов'язкові поля",
   "error_email": "Введіть коректний email",
-  "error_phone": "Введіть коректний номер телефону",
+  "error_phone_required": "Вкажіть",
+  "error_phone_format": "Невірний формат",
+  "error_edrpou": "ЄДРПОУ / ІПН — 8 цифр для компанії або 10 для ФОП",
+  "error_edrpou_limit": "ЄДРПОУ / ІПН — лише цифри, максимум 10",
   "error_generic": "Не вдалося надіслати заявку. Спробуйте пізніше."
 }
