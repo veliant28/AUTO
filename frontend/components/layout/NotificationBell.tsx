@@ -1,9 +1,17 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Bell, MessageCircle, ShoppingCart, RotateCcw } from 'lucide-react'
+import {
+  Bell,
+  ClipboardList,
+  MessageCircle,
+  ShoppingCart,
+  RotateCcw,
+} from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { parseApiDate } from '@/lib/dates'
+import { useRequestsStore } from '@/store/requestsStore'
 
 const ONE_HOUR = 60 * 60 * 1000
 const TWO_HOURS = 2 * ONE_HOUR
@@ -28,10 +36,21 @@ interface MessageItem {
   created_at: string | null
 }
 
+interface RequestItem {
+  id: number
+  number: string
+  title: string
+  category_name: string | null
+  status: string
+  created_at: string | null
+  deadline_state: 'ok' | 'due_soon' | 'overdue'
+}
+
 interface NotificationsData {
   new_orders: OrderItem[]
   new_returns: ReturnItem[]
   unread_messages: MessageItem[]
+  new_requests?: RequestItem[]
 }
 
 function timeColor(createdAt: string | null): string {
@@ -66,9 +85,12 @@ function timeAgo(createdAt: string | null): string {
 }
 
 export default function NotificationBell() {
+  const t = useTranslations('admin')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const [data, setData] = useState<NotificationsData | null>(null)
+  // Любое WS-событие журнала заявок перезапрашивает колокольчик без ожидания
+  const lastEvent = useRequestsStore((s) => s.lastEvent)
 
   useEffect(() => {
     let cancelled = false
@@ -95,7 +117,7 @@ export default function NotificationBell() {
       cancelled = true
       clearInterval(id)
     }
-  }, [])
+  }, [lastEvent])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -110,15 +132,25 @@ export default function NotificationBell() {
   const orders = data?.new_orders || []
   const returns = data?.new_returns || []
   const messages = data?.unread_messages || []
-  const total = orders.length + returns.length + messages.length
+  const requests = data?.new_requests || []
+  const total =
+    orders.length + returns.length + messages.length + requests.length
 
-  // Badge color: priority orders/returns > support
+  const requestsOverdue = requests.some((r) => r.deadline_state === 'overdue')
+
+  // Badge color: просроченная заявка > свежие заказы/возвраты > заявки > поддержка
   const allItems = [...orders, ...returns]
   const orderReturnColor = worstBadgeColor(allItems)
-  const badgeColor =
-    messages.length > 0 && allItems.length === 0
-      ? 'bg-blue-500'
-      : orderReturnColor || 'bg-red-500'
+  let badgeColor = 'bg-blue-500'
+  if (requestsOverdue) badgeColor = 'bg-red-500'
+  else if (orderReturnColor) badgeColor = orderReturnColor
+  else if (requests.length > 0) badgeColor = 'bg-violet-500'
+
+  const requestBg = (item: RequestItem) => {
+    if (item.deadline_state === 'overdue') return 'bg-red-500'
+    if (item.deadline_state === 'due_soon') return 'bg-orange-500'
+    return item.status === 'in_progress' ? 'bg-orange-500' : 'bg-blue-500'
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -155,6 +187,44 @@ export default function NotificationBell() {
               </p>
             )}
 
+            {requests.length > 0 && (
+              <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                {t('requests_title')}
+              </p>
+            )}
+
+            {requests.map((r) => (
+              <a
+                key={`req-${r.id}`}
+                href={`/admin/requests?id=${r.id}`}
+                className={`${requestBg(r)} text-white flex items-start gap-3 p-3 rounded-lg hover:opacity-90 transition-opacity cursor-pointer`}
+              >
+                <ClipboardList className="w-5 h-5 mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{r.number}</p>
+                  <p className="text-xs opacity-90 truncate">{r.title}</p>
+                  {r.category_name && (
+                    <p className="text-xs opacity-75 truncate">
+                      {r.category_name}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs opacity-80 shrink-0 whitespace-nowrap">
+                  {r.deadline_state === 'overdue'
+                    ? t('requests_overdue_short')
+                    : r.deadline_state === 'due_soon'
+                      ? t('requests_due_soon_short')
+                      : timeAgo(r.created_at)}
+                </span>
+              </a>
+            ))}
+
+            {orders.length > 0 && (
+              <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                {t('orders_title')}
+              </p>
+            )}
+
             {orders.map((o) => (
               <a
                 key={`order-${o.id}`}
@@ -179,6 +249,12 @@ export default function NotificationBell() {
               </a>
             ))}
 
+            {returns.length > 0 && (
+              <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                {t('returns_title')}
+              </p>
+            )}
+
             {returns.map((r) => (
               <a
                 key={`return-${r.id}`}
@@ -194,6 +270,12 @@ export default function NotificationBell() {
                 </span>
               </a>
             ))}
+
+            {messages.length > 0 && (
+              <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                {t('support_title')}
+              </p>
+            )}
 
             {messages.map((m) => (
               <a

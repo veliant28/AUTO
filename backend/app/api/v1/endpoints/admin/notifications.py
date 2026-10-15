@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
-from app.models import User
+from app.models import User, Permission, RolePermission
 from app.models.orders import Order, OrderStatus
 from app.models.returns import ReturnRequest, ReturnStatus
 from app.models.support import ChatConversation, ChatMessage, SenderRole, ChatStatus
@@ -12,6 +12,19 @@ from datetime import datetime
 
 
 router = APIRouter()
+
+
+def _has_requests_view(db: Session, user: User) -> bool:
+    """Есть ли у роли пользователя право requests.view (журнал заявок)."""
+    return bool(
+        db.query(RolePermission)
+        .join(Permission)
+        .filter(
+            RolePermission.role_id == user.role_id,
+            Permission.codename == "requests.view",
+        )
+        .first()
+    )
 
 
 class NotificationOrderItem(BaseModel):
@@ -40,10 +53,21 @@ class NotificationMessageItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class NotificationRequestItem(BaseModel):
+    id: int
+    number: str | None = None
+    title: str | None = None
+    category_name: str | None = None
+    status: str | None = None
+    created_at: datetime | None = None
+    deadline_state: str = "ok"
+
+
 class NotificationsResponse(BaseModel):
     new_orders: list[NotificationOrderItem] = []
     new_returns: list[NotificationReturnItem] = []
     unread_messages: list[NotificationMessageItem] = []
+    new_requests: list[NotificationRequestItem] = []
 
 
 @router.get("/notifications", response_model=NotificationsResponse)
@@ -51,7 +75,7 @@ async def get_notifications(
     current_user: User = Depends(require_permission("orders.view")),
     db: Session = Depends(get_db),
 ):
-    """Get new orders, returns, and unread support messages."""
+    """Get new orders, returns, unread support messages and requests."""
     new_orders = (
         db.query(Order)
         .filter(Order.status == OrderStatus.PENDING)
@@ -95,8 +119,40 @@ async def get_notifications(
                 )
             )
 
+    # Заявки журнала: новые и просроченные (с учётом видимости по роли).
+    # Пользователю без права requests.view секция не отдаётся вовсе.
+    new_requests = []
+    if _has_requests_view(db, current_user):
+        from app.models.requests import OPEN_STATUSES, Request, RequestStatus
+        from app.services import requests_service as rs
+
+        open_items = (
+            rs.visible_requests_query(db, current_user)
+            .options(joinedload(Request.category))
+            .filter(Request.status.in_([RequestStatus.NEW, RequestStatus.IN_PROGRESS]))
+            .order_by(desc(Request.created_at))
+            .limit(30)
+            .all()
+        )
+        for r in open_items:
+            state = rs.deadline_state(r)
+            if state["state"] == "ok" and r.status != RequestStatus.NEW:
+                continue
+            new_requests.append(
+                NotificationRequestItem(
+                    id=r.id,
+                    number=r.number,
+                    title=r.title,
+                    category_name=r.category.name if r.category else None,
+                    status=r.status.value if hasattr(r.status, "value") else str(r.status),
+                    created_at=r.created_at,
+                    deadline_state=state["state"],
+                )
+            )
+
     return NotificationsResponse(
         new_orders=[NotificationOrderItem.model_validate(o) for o in new_orders],
         new_returns=[NotificationReturnItem.model_validate(r) for r in new_returns],
         unread_messages=unread_messages,
+        new_requests=new_requests,
     )

@@ -142,6 +142,10 @@ export default function SettingsPage() {
   const [telegramChatId, setTelegramChatId] = React.useState('')
   const [hasTelegramBotToken, setHasTelegramBotToken] = React.useState(false)
 
+  // Публичный адрес сайта и телефон — подставляются в фирменные письма
+  const [siteUrl, setSiteUrl] = React.useState('')
+  const [contactPhone, setContactPhone] = React.useState('')
+
   // Work-time tracking fields
   const [workStartTime, setWorkStartTime] = React.useState('09:00')
   const [workEndTime, setWorkEndTime] = React.useState('18:00')
@@ -214,6 +218,8 @@ export default function SettingsPage() {
         telegram_chat_id: string | null
         has_telegram_bot_token: boolean
         telegram_bot_token_masked: string | null
+        site_url: string | null
+        contact_phone: string | null
         work_start_time: string
         work_end_time: string
         work_auto_clockout_time: string | null
@@ -367,6 +373,9 @@ export default function SettingsPage() {
     if (data?.track_manager !== undefined) setTrackManager(data.track_manager)
     if (data?.track_operator !== undefined)
       setTrackOperator(data.track_operator)
+    // Публичный адрес сайта и телефон для писем
+    if (data?.site_url) setSiteUrl(data.site_url)
+    if (data?.contact_phone) setContactPhone(data.contact_phone)
   }, [data])
 
   // B2B-наценка живёт в price_rules (type='b2b'), не в настройках
@@ -465,6 +474,9 @@ export default function SettingsPage() {
       payload.track_admin = trackAdmin
       payload.track_manager = trackManager
       payload.track_operator = trackOperator
+      // Письма: публичный адрес сайта и телефон
+      payload.site_url = siteUrl
+      payload.contact_phone = contactPhone
       await api.put('/admin/settings', payload)
 
       // B2B-наценка — отдельное правило (price_rules.type='b2b'): сохраняем
@@ -600,6 +612,32 @@ export default function SettingsPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_site_url')}
+                  </label>
+                  <Input
+                    value={siteUrl}
+                    onChange={(e) => setSiteUrl(e.target.value)}
+                    placeholder="https://svom.com.ua"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {t('settings_site_url_hint')}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {t('settings_contact_phone')}
+                  </label>
+                  <Input
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+380 (67) 000-00-00"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {t('settings_contact_phone_hint')}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-muted p-4 border">
                   <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">

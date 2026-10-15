@@ -7,6 +7,9 @@ class SiteSettings(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     brand_name = Column(String, nullable=False, default="SVOM")
     timezone = Column(String, nullable=False, default="Europe/Kiev")
+    # Публичный адрес сайта (ссылки и логотип в письмах) и телефон для писем
+    site_url = Column(String, nullable=True)
+    contact_phone = Column(String, nullable=True)
     resend_api_key_encrypted = Column(Text, nullable=True)
     email_from = Column(String, nullable=False, default="noreply@svom.com.ua")
     email_from_name = Column(String, nullable=True)

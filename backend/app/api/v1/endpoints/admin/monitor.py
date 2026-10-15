@@ -1,4 +1,5 @@
 """Admin endpoints for the Monitor tab (online clients, chart, archive)."""
+import calendar
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -48,6 +49,10 @@ from app.schemas.monitor_schemas import (
     MonitorClientDeliveryResponse,
     MonitorDeliveryVariant,
     MonitorDeliveryMonth,
+    MonitorB2BApplication,
+    MonitorClientB2BResponse,
+    MonitorTurnoverDay,
+    MonitorClientTurnoverResponse,
 )
 from app.api.v1.endpoints.admin.loyalty import _promocode_to_response
 
@@ -434,7 +439,7 @@ def _load_profile(db: Session, client_key: str) -> Tuple[Dict, Optional[User]]:
             "delivery_type": user.delivery_type,
             "delivery_city_label": user.delivery_city_label or user.delivery_city,
             "delivery_warehouse_label": user.delivery_warehouse_label or user.delivery_warehouse,
-            "delivery_street_label": user.delivery_street_label or user.delivery_street,
+            "delivery_street_label": user.delivery_street_label or user.delivery_street_ref,
             "delivery_house": user.delivery_house,
             "delivery_apartment": user.delivery_apartment,
         }
@@ -859,4 +864,165 @@ async def monitor_client_delivery(
         variants=[MonitorDeliveryVariant(**v) for v in variants],
         total=len(variants),
         months=[MonitorDeliveryMonth(**m) for m in monthly_type_counts(orders)],
+    )
+
+
+@router.get(
+    "/monitor/clients/{client_key}/b2b",
+    response_model=MonitorClientB2BResponse,
+)
+async def monitor_client_b2b(
+    client_key: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """B2B-заявки клиента из журнала (категория b2b_registration).
+
+    Сопоставление по email: заявка с витрины может быть подана до создания
+    аккаунта, поэтому дополнительно ищем email в payload заявки.
+    """
+    from app.models.requests import (
+        CATEGORY_B2B_REGISTRATION,
+        Request,
+        RequestCategory,
+    )
+
+    user_id, _session_id = _parse_client_key(client_key)
+    if user_id is None:
+        return MonitorClientB2BResponse(applications=[], total=0)
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.email:
+        return MonitorClientB2BResponse(applications=[], total=0)
+
+    email = user.email.strip().lower()
+    category = (
+        db.query(RequestCategory)
+        .filter(RequestCategory.code == CATEGORY_B2B_REGISTRATION)
+        .first()
+    )
+    if not category:
+        return MonitorClientB2BResponse(applications=[], total=0)
+
+    rows = (
+        db.query(Request)
+        .options(joinedload(Request.resolved_by).joinedload(User.role))
+        .filter(
+            Request.category_id == category.id,
+            or_(
+                # email в данных заявки (витрина) — регистронезависимо
+                func.lower(Request.payload["email"].as_string()) == email,
+                # либо заявку создал сам клиент
+                Request.created_by_id == user_id,
+            ),
+        )
+        .order_by(Request.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    applications = []
+    for r in rows:
+        payload = r.payload or {}
+        decider = r.resolved_by
+        decided_by = None
+        if decider:
+            decided_by = (
+                f"{decider.last_name or ''} {decider.first_name or ''}".strip()
+                or decider.email
+            )
+        applications.append(
+            MonitorB2BApplication(
+                id=r.id,
+                number=r.number,
+                status=(
+                    r.status.value if hasattr(r.status, "value") else str(r.status)
+                ),
+                created_at=r.created_at,
+                resolved_at=r.resolved_at,
+                decided_by=decided_by,
+                company=payload.get("company"),
+                edrpou=payload.get("edrpou"),
+                contact_name=payload.get("contact_name"),
+                phone=payload.get("phone"),
+                email=payload.get("email") or user.email,
+                city=payload.get("city"),
+                comment=payload.get("comment"),
+                locale=payload.get("locale"),
+            )
+        )
+    return MonitorClientB2BResponse(applications=applications, total=len(applications))
+
+
+@router.get(
+    "/monitor/clients/{client_key}/turnover",
+    response_model=MonitorClientTurnoverResponse,
+)
+async def monitor_client_turnover(
+    client_key: str,
+    month: str = Query("", max_length=7),  # 'YYYY-MM', пусто — текущий месяц
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("monitor.view")),
+):
+    """Оборот клиента по дням месяца (без отменённых заказов).
+
+    Дни считаются в часовом поясе админки, как в остальных виджетах монитора.
+    """
+    user_id, _session_id = _parse_client_key(client_key)
+
+    tz = _get_admin_tz(db)
+    now_local = datetime.now(tz)
+    try:
+        year, mon = (int(p) for p in month.split("-")) if month else (now_local.year, now_local.month)
+        if not (1 <= mon <= 12) or year < 2000 or year > 2100:
+            raise ValueError
+    except (ValueError, TypeError):
+        raise HTTPException(400, "Invalid month")
+
+    days_in_month = calendar.monthrange(year, mon)[1]
+    buckets: Dict[str, Dict[str, float]] = {
+        f"{year:04d}-{mon:02d}-{d:02d}": {"total": 0.0, "orders": 0}
+        for d in range(1, days_in_month + 1)
+    }
+
+    if user_id is not None:
+        first_local = datetime(year, mon, 1, tzinfo=tz)
+        next_local = (
+            datetime(year + 1, 1, 1, tzinfo=tz)
+            if mon == 12
+            else datetime(year, mon + 1, 1, tzinfo=tz)
+        )
+        start_utc = first_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+        end_utc = next_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+
+        orders = (
+            db.query(Order)
+            .filter(
+                Order.user_id == user_id,
+                Order.created_at >= start_utc,
+                Order.created_at < end_utc,
+                Order.status != OrderStatus.CANCELLED,
+            )
+            .all()
+        )
+        for o in orders:
+            created = o.created_at
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=ZoneInfo("UTC"))
+            local = created.astimezone(tz)
+            key = f"{local.year:04d}-{local.month:02d}-{local.day:02d}"
+            bucket = buckets.get(key)
+            if bucket is not None:
+                bucket["total"] += float(o.total or 0)
+                bucket["orders"] += 1
+
+    days = [
+        MonitorTurnoverDay(day=k, total=round(v["total"], 2), orders=int(v["orders"]))
+        for k, v in buckets.items()
+    ]
+    return MonitorClientTurnoverResponse(
+        month=f"{year:04d}-{mon:02d}",
+        days=days,
+        month_total=round(sum(v["total"] for v in buckets.values()), 2),
+        month_orders=int(sum(v["orders"] for v in buckets.values())),
     )

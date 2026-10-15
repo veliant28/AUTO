@@ -167,7 +167,7 @@ async def login(data: LoginSchema, request: Request, db: Session = Depends(get_d
 
 
 @router.post("/forgot-password")
-async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
+async def forgot_password(data: ForgotPasswordSchema, request: Request = None, db: Session = Depends(get_db)):
     """Запрос сброса пароля. Отправляет токен сброса на email пользователя."""
     user = db.query(User).filter(User.email == data.email).first()
     if not user:
@@ -183,35 +183,38 @@ async def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_
     db.commit()
     
     # Try to send email via Resend if configured
-    from app.core.config import settings as app_settings
     from app.models.settings import SiteSettings
-    from app.services.crypto_util import decrypt_password
-    from app.services.email_service import send_email, build_password_reset_html_ru
+    from app.services.email_service import (
+        branding_from_settings,
+        build_password_reset_html,
+        normalize_locale,
+        send_brand_email,
+    )
 
     site_settings = db.query(SiteSettings).first()
-    api_key_encrypted = site_settings.resend_api_key_encrypted if site_settings else None
-    api_key = decrypt_password(api_key_encrypted) if api_key_encrypted else app_settings.RESEND_API_KEY
-    
-    if api_key:
-        reset_link = f"{'http://localhost:3080'}/ru/auth/reset-password?token={token}"
-        user_name = user.first_name or user.full_name or user.email
-        html = build_password_reset_html_ru(reset_link, user_name)
-        
-        from_email = site_settings.email_from if site_settings else "noreply@svom.com.ua"
-        from_name = site_settings.email_from_name if site_settings else None
-        
-        try:
-            await asyncio.to_thread(
-                send_email,
-                to_email=user.email,
-                subject="Восстановление пароля — SVOM Auto Parts",
-                html=html,
-                api_key=api_key,
-                from_email=from_email,
-                from_name=from_name,
-            )
-        except Exception as e:
-            logger.error("Failed to send password reset email to %s: %s", user.email, e)
+    branding = branding_from_settings(site_settings)
+    accept_language = request.headers.get("Accept-Language", "ru") if request else "ru"
+    loc = normalize_locale(accept_language)
+
+    site_base = branding.site_url or "http://localhost:3080"
+    reset_link = f"{site_base}/{loc}/auth/reset-password?token={token}"
+    user_name = user.first_name or user.full_name or user.email
+    html = build_password_reset_html(branding, loc, reset_link, user_name)
+    subjects = {
+        "ru": "Восстановление пароля",
+        "ua": "Відновлення пароля",
+        "en": "Password Reset",
+    }
+
+    try:
+        await send_brand_email(
+            db,
+            to_email=user.email,
+            subject=subjects[loc],
+            html=html,
+        )
+    except Exception as e:
+        logger.error("Failed to send password reset email to %s: %s", user.email, e)
     
     return {"message": "If the email exists, a recovery link has been sent"}
 

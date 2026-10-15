@@ -39,6 +39,7 @@ import {
   ShieldAlert,
   CalendarDays,
   ClipboardList,
+  ClipboardCheck,
   CalendarClock,
   Timer,
 } from 'lucide-react'
@@ -97,6 +98,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import PresenceClient from '@/components/PresenceClient'
+import RequestsWatcher from '@/components/admin/RequestsWatcher'
 import AttendanceGuard from '@/components/AttendanceGuard'
 import { TimePicker } from '@/components/ui/TimePicker'
 import { formatDate } from '@/hooks/useTimezone'
@@ -176,6 +178,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     '/admin/support': { icon: MessageSquare, titleKey: 'support_title' },
     '/admin/attendance': { icon: CalendarClock, titleKey: 'attendance_title' },
     '/admin/timesheet': { icon: ClipboardList, titleKey: 'timesheet_title' },
+    '/admin/requests': { icon: ClipboardCheck, titleKey: 'requests_title' },
   }
 
   const pageMetaEntries = Object.entries(pageMeta).sort(
@@ -1667,6 +1670,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       perm: 'orders.view',
     },
     {
+      href: '/admin/requests',
+      icon: ClipboardCheck,
+      label: t('requests_title'),
+      perm: 'requests.view',
+    },
+    {
       href: '/admin/loyalty',
       icon: Gift,
       label: t('loyalty_title'),
@@ -1779,6 +1788,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-muted/10">
       <PresenceClient />
+      <RequestsWatcher />
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"

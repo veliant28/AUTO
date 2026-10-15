@@ -20,6 +20,8 @@ class ConnectionManager:
         self._chat_subscriptions: Dict[int, Set[int]] = {}
         # user_id -> set of chat_ids they're subscribed to
         self._user_subscriptions: Dict[int, Set[int]] = {}
+        # Журнал заявок: user_id подписчиков канала /ws/requests
+        self._request_subscribers: Set[int] = set()
         # redis pub/sub client (set up later if available)
         self._redis_pub = None
         self._redis_sub = None
@@ -114,6 +116,28 @@ class ConnectionManager:
         subscribed_users = self._chat_subscriptions.get(chat_id, set())
         for user_id in subscribed_users:
             await self._send_to_user(user_id, data)
+
+    # ── Журнал заявок ───────────────────────────────────────────────────────
+
+    def subscribe_requests(self, user_id: int) -> None:
+        """Подписка на канал заявок (staff с правом requests.view)."""
+        self._request_subscribers.add(user_id)
+
+    async def broadcast_request_event(
+        self, event: dict, recipients: list | None = None
+    ) -> None:
+        """Мгновенное событие журнала заявок подписчикам канала.
+
+        recipients — только эти пользователи (видимость заявки); None — все.
+        """
+        message = json.dumps(event, default=str)
+        targets = (
+            set(recipients) & self._request_subscribers
+            if recipients is not None
+            else set(self._request_subscribers)
+        )
+        for user_id in list(targets):
+            await self._send_to_user(user_id, message)
 
     def is_user_online(self, user_id: int) -> bool:
         """Check if a user has an active WebSocket connection."""

@@ -1,19 +1,31 @@
-import Link from 'next/link';
-import { Search, Car, Package, Truck, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import HeroSearchForm from '@/components/features/HeroSearchForm';
-import VehicleSelectorDialog from '@/components/vehicles/VehicleSelectorDialog';
-import { getTranslations } from 'next-intl/server';
+import Link from 'next/link'
+import { Search, Car, Package, Truck, Shield } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import HeroSearchForm from '@/components/features/HeroSearchForm'
+import VehicleSelectorDialog from '@/components/vehicles/VehicleSelectorDialog'
+import { getTranslations } from 'next-intl/server'
 
 export default async function HomePage() {
-  const t = await getTranslations('home');
+  const t = await getTranslations('home')
 
   const features = [
     { icon: Car, title: t('feature_parts'), desc: t('feature_parts_desc') },
-    { icon: Search, title: t('feature_search'), desc: t('feature_search_desc') },
-    { icon: Truck, title: t('feature_delivery'), desc: t('feature_delivery_desc') },
-    { icon: Shield, title: t('feature_quality'), desc: t('feature_quality_desc') },
-  ];
+    {
+      icon: Search,
+      title: t('feature_search'),
+      desc: t('feature_search_desc'),
+    },
+    {
+      icon: Truck,
+      title: t('feature_delivery'),
+      desc: t('feature_delivery_desc'),
+    },
+    {
+      icon: Shield,
+      title: t('feature_quality'),
+      desc: t('feature_quality_desc'),
+    },
+  ]
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -48,11 +60,16 @@ export default async function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">{t('why_title')}</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">{t('why_desc')}</p>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              {t('why_desc')}
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((f) => (
-              <div key={f.title} className="text-center p-6 rounded-xl border bg-card hover:border-primary/50 transition-all hover:shadow-md">
+              <div
+                key={f.title}
+                className="text-center p-6 rounded-xl border bg-card hover:border-primary/50 transition-all hover:shadow-md"
+              >
                 <div className="bg-primary/10 w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-4">
                   <f.icon className="w-7 h-7 text-primary" />
                 </div>
@@ -69,8 +86,10 @@ export default async function HomePage() {
           <div className="max-w-lg mx-auto space-y-4">
             <h2 className="text-3xl font-bold">{t('b2b_title')}</h2>
             <p className="text-muted-foreground">{t('b2b_desc')}</p>
-            <Link href="/auth/register">
-              <Button size="lg" variant="outline" className="mt-4">{t('b2b_cta')}</Button>
+            <Link href="/b2b">
+              <Button size="lg" variant="outline" className="mt-4">
+                {t('b2b_cta')}
+              </Button>
             </Link>
           </div>
         </div>
@@ -82,5 +101,5 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
-  );
+  )
 }

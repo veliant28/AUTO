@@ -11,6 +11,7 @@ import enTelegram from './en/telegram.json'
 import enPages from './en/pages.json'
 import enHome from './en/home.json'
 import enAuth from './en/auth.json'
+import enB2b from './en/b2b.json'
 
 import ruCommon from './ru/common.json'
 import ruAdmin from './ru/admin.json'
@@ -25,6 +26,7 @@ import ruTelegram from './ru/telegram.json'
 import ruPages from './ru/pages.json'
 import ruHome from './ru/home.json'
 import ruAuth from './ru/auth.json'
+import ruB2b from './ru/b2b.json'
 
 import uaCommon from './ua/common.json'
 import uaAdmin from './ua/admin.json'
@@ -39,6 +41,7 @@ import uaTelegram from './ua/telegram.json'
 import uaPages from './ua/pages.json'
 import uaHome from './ua/home.json'
 import uaAuth from './ua/auth.json'
+import uaB2b from './ua/b2b.json'
 
 export const messages = {
   en: {
@@ -55,6 +58,7 @@ export const messages = {
     pages: enPages,
     home: enHome,
     auth: enAuth,
+    b2b: enB2b,
   },
   ru: {
     common: ruCommon,
@@ -70,6 +74,7 @@ export const messages = {
     pages: ruPages,
     home: ruHome,
     auth: ruAuth,
+    b2b: ruB2b,
   },
   ua: {
     common: uaCommon,
@@ -85,6 +90,7 @@ export const messages = {
     pages: uaPages,
     home: uaHome,
     auth: uaAuth,
+    b2b: uaB2b,
   },
 } as const
 

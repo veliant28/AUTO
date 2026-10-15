@@ -236,3 +236,41 @@ class MonitorClientDeliveryResponse(BaseModel):
     variants: List[MonitorDeliveryVariant]
     total: int
     months: List[MonitorDeliveryMonth]
+
+
+class MonitorB2BApplication(BaseModel):
+    """B2B-заявка клиента (из журнала заявок, категория b2b_registration)."""
+    id: int
+    number: str
+    status: str  # new | in_progress | resolved | rejected
+    created_at: Optional[datetime]
+    resolved_at: Optional[datetime]
+    decided_by: Optional[str]  # кто одобрил/отклонил
+    company: Optional[str]
+    edrpou: Optional[str]
+    contact_name: Optional[str]
+    phone: Optional[str]
+    email: Optional[str]
+    city: Optional[str]
+    comment: Optional[str]
+    locale: Optional[str]
+
+
+class MonitorClientB2BResponse(BaseModel):
+    """Данные B2B-заявок клиента (свежие сверху)."""
+    applications: List[MonitorB2BApplication]
+    total: int
+
+
+class MonitorTurnoverDay(BaseModel):
+    day: str  # 'YYYY-MM-DD'
+    total: float
+    orders: int
+
+
+class MonitorClientTurnoverResponse(BaseModel):
+    """Оборот клиента по дням выбранного месяца (без отменённых заказов)."""
+    month: str  # 'YYYY-MM'
+    days: List[MonitorTurnoverDay]
+    month_total: float
+    month_orders: int

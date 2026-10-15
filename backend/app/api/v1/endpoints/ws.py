@@ -308,3 +308,60 @@ async def websocket_chat(websocket: WebSocket, token: str = Query(...)):
         logger.error(f"WebSocket error for user {user_id}: {e}")
     finally:
         manager.disconnect(user_id, websocket)
+
+
+@router.websocket("/ws/requests")
+async def websocket_requests(websocket: WebSocket, token: str = Query(...)):
+    """Канал журнала заявок: мгновенные события (создание/статус/комментарии).
+
+    Подключаются только сотрудники с правом requests.view; b2b и retail
+    получают отказ. Клиент может слать {"type": "ping"} — ответим pong.
+    """
+    try:
+        token_data = verify_token(token)
+        user_id = token_data["user_id"]
+    except Exception:
+        await websocket.close(code=4001, reason="Invalid token")
+        return
+
+    db: Session = next(get_db())
+    try:
+        from app.models import Permission, RolePermission, User
+
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.is_active:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
+        has_perm = (
+            db.query(RolePermission)
+            .join(Permission)
+            .filter(
+                RolePermission.role_id == user.role_id,
+                Permission.codename == "requests.view",
+            )
+            .first()
+        )
+        if not has_perm:
+            await websocket.close(code=4003, reason="Access denied")
+            return
+    finally:
+        db.close()
+
+    await manager.connect(user_id, websocket)
+    manager.subscribe_requests(user_id)
+
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if data.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+    except WebSocketDisconnect:
+        logger.info(f"Requests WS disconnected: user={user_id}")
+    except Exception as e:
+        logger.error(f"Requests WS error for user {user_id}: {e}")
+    finally:
+        manager.disconnect(user_id, websocket)

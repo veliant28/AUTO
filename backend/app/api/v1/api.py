@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, footer, settings, categories, returns, nova_poshta, loyalty, payments, support
+from app.api.v1.endpoints import catalog, users, cart, auth, favorites, orders, notifications, telegram, footer, settings, categories, returns, nova_poshta, loyalty, payments, support, requests_public
 from app.api.v1.endpoints.admin import admin_router
 from app.api.v1.endpoints import ws as ws_router
 
@@ -12,6 +12,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
 api_router.include_router(favorites.router, prefix="/favorites", tags=["Favorites"])
 api_router.include_router(orders.router, prefix="/orders", tags=["Orders"])
 api_router.include_router(returns.router, prefix="/returns", tags=["Returns"])
+api_router.include_router(requests_public.router, prefix="/requests", tags=["Requests"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(telegram.router, prefix="/telegram", tags=["Telegram"])
 api_router.include_router(footer.router, prefix="", tags=["Footer"])

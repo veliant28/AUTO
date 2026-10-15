@@ -23,6 +23,13 @@ from .protection import BanRecord, ProtectionEvent, Whitelist
 from .backup import BackupRecord
 from .presence import PresenceSession, ProductView, ClientIp
 from .attendance import AttendanceSession
+from .requests import (
+    Request,
+    RequestCategory,
+    RequestComment,
+    RequestEvent,
+    RequestStatus,
+)
 
 __all__ = [
     "Base", 
@@ -51,4 +58,5 @@ __all__ = [
     "BackupRecord",
     "PresenceSession", "ProductView", "ClientIp",
     "AttendanceSession",
+    "Request", "RequestCategory", "RequestComment", "RequestEvent", "RequestStatus",
 ]

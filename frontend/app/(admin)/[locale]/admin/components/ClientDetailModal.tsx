@@ -26,6 +26,7 @@ import {
   Activity,
   ArrowLeft,
   Building2,
+  CalendarIcon,
   Copy,
   Eye,
   Gift,
@@ -45,6 +46,15 @@ import {
 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { format as formatDf } from 'date-fns'
+import type { Locale as DateFnsLocale } from 'date-fns'
+import { ru as dfRu, uk as dfUk, enUS as dfEn } from 'date-fns/locale'
 import {
   Tooltip,
   TooltipTrigger,
@@ -86,6 +96,31 @@ const DELIVERY_BADGE_COLORS: Record<string, string> = {
   warehouse: 'bg-blue-500 text-white',
   courier: 'bg-orange-500 text-white',
   other: 'bg-gray-500 text-white',
+}
+
+// Локали date-fns для календаря месяцев и подписи месяца в режиме B2B
+const DATE_FNS_LOCALE: Record<string, DateFnsLocale> = {
+  ru: dfRu,
+  ua: dfUk,
+  en: dfEn,
+}
+
+/** Date → 'YYYY-MM' */
+const monthKeyOf = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+
+/** 'YYYY-MM' → Date (первое число месяца) */
+const monthDateOf = (key: string) => {
+  const [y, m] = key.split('-').map(Number)
+  return new Date(y, (m || 1) - 1, 1)
+}
+
+// Цвета статусов B2B-заявок — как у бейджей журнала заявок
+const B2B_STATUS_COLORS: Record<string, string> = {
+  new: 'bg-blue-500 text-white',
+  in_progress: 'bg-orange-500 text-white',
+  resolved: 'bg-green-500 text-white',
+  rejected: 'bg-red-500 text-white',
 }
 
 // Цвета ролевых бейджей — как в таблице монитора и сайдбаре админки
@@ -290,6 +325,41 @@ interface MonitorClientDeliveryResponse {
   months: MonitorDeliveryMonth[]
 }
 
+interface MonitorB2BApplication {
+  id: number
+  number: string
+  status: string
+  created_at: string | null
+  resolved_at: string | null
+  decided_by: string | null
+  company: string | null
+  edrpou: string | null
+  contact_name: string | null
+  phone: string | null
+  email: string | null
+  city: string | null
+  comment: string | null
+  locale: string | null
+}
+
+interface MonitorClientB2BResponse {
+  applications: MonitorB2BApplication[]
+  total: number
+}
+
+interface MonitorTurnoverDay {
+  day: string // 'YYYY-MM-DD'
+  total: number
+  orders: number
+}
+
+interface MonitorClientTurnoverResponse {
+  month: string // 'YYYY-MM'
+  days: MonitorTurnoverDay[]
+  month_total: number
+  month_orders: number
+}
+
 interface ClientDetailModalProps {
   clientKey: string | null
   open: boolean
@@ -374,6 +444,21 @@ const fetchClientDelivery = async (clientKey: string) => {
   return data
 }
 
+const fetchClientB2b = async (clientKey: string) => {
+  const { data } = await api.get<MonitorClientB2BResponse>(
+    `/admin/monitor/clients/${clientKey}/b2b`,
+  )
+  return data
+}
+
+const fetchClientTurnover = async (clientKey: string, month: string) => {
+  const { data } = await api.get<MonitorClientTurnoverResponse>(
+    `/admin/monitor/clients/${clientKey}/turnover`,
+    { params: { month } },
+  )
+  return data
+}
+
 /** Следующая страница бесконечных списков (заказы/возвраты/IP/промокоды) */
 const nextListPage = (last: {
   page: number
@@ -401,11 +486,15 @@ export default function ClientDetailModal({
   const locale = useLocale()
   const tz = useTimezone()
   const queryClient = useQueryClient()
-  // Переключатель вида: просмотр товаров <-> корзина <-> индекс <-> IP <-> лояльность <-> доставка
+  const dateLocale = DATE_FNS_LOCALE[locale] || dfRu
+  // Переключатель вида: просмотр товаров <-> корзина <-> индекс <-> IP <-> лояльность <-> доставка <-> B2B
   const [mode, setMode] = useState<
-    'main' | 'cart' | 'index' | 'ip' | 'loyalty' | 'delivery'
+    'main' | 'cart' | 'index' | 'ip' | 'loyalty' | 'delivery' | 'b2b'
   >('main')
   const [listTab, setListTab] = useState<'orders' | 'returns'>('orders')
+  // Месяц графика оборота в режиме B2B ('YYYY-MM')
+  const [b2bMonth, setB2bMonth] = useState<string>(() => monthKeyOf(new Date()))
+  const [b2bMonthOpen, setB2bMonthOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-monitor-client', clientKey],
@@ -507,6 +596,23 @@ export default function ClientDetailModal({
     refetchOnWindowFocus: false,
   })
 
+  // B2B-режим: заявки клиента из журнала + оборот по дням выбранного месяца
+  const b2bApps = useQuery({
+    queryKey: ['admin-monitor-client-b2b', clientKey],
+    queryFn: () => fetchClientB2b(clientKey!),
+    enabled: !!clientKey && open && mode === 'b2b',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  })
+
+  const turnover = useQuery({
+    queryKey: ['admin-monitor-client-turnover', clientKey, b2bMonth],
+    queryFn: () => fetchClientTurnover(clientKey!, b2bMonth),
+    enabled: !!clientKey && open && mode === 'b2b',
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  })
+
   // Предзагрузка режимов: после того как основная часть загрузилась, тихо
   // тянем данные всех режимов один раз на открытие модалки. Свежий кэш
   // prefetch пропускает (staleTime по умолчанию), поэтому повторные открытия
@@ -560,8 +666,16 @@ export default function ClientDetailModal({
         queryKey: ['admin-monitor-client-delivery', key],
         queryFn: () => fetchClientDelivery(key),
       })
+      void queryClient.prefetchQuery({
+        queryKey: ['admin-monitor-client-b2b', key],
+        queryFn: () => fetchClientB2b(key),
+      })
+      void queryClient.prefetchQuery({
+        queryKey: ['admin-monitor-client-turnover', key, b2bMonth],
+        queryFn: () => fetchClientTurnover(key, b2bMonth),
+      })
     }
-  }, [open, clientKey, mainLoaded, clientIsAnonymous, queryClient])
+  }, [open, clientKey, mainLoaded, clientIsAnonymous, queryClient, b2bMonth])
 
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -878,6 +992,55 @@ export default function ClientDetailModal({
     }
   }, [deliveryStats.data, isDark, t, chartBg, axisTextColor, borderColor])
 
+  // ── Bar-график оборота клиента по дням месяца (режим B2B) ─────────────
+  const turnoverOption = useMemo(() => {
+    const days = turnover.data?.days ?? []
+    return {
+      backgroundColor: chartBg,
+      tooltip: {
+        trigger: 'axis' as const,
+        backgroundColor: isDark ? '#1f2937' : '#ffffff',
+        borderColor: isDark ? '#374151' : '#e5e7eb',
+        textStyle: { color: isDark ? '#e5e7eb' : '#1f2937', fontSize: 12 },
+        formatter: (params: any[]) => {
+          const p = params?.[0]
+          if (!p) return ''
+          const d = days[p.dataIndex]?.day ?? ''
+          // "2026-08-06" -> "06.08.2026"
+          const full = d ? `${d.slice(8)}.${d.slice(5, 7)}.${d.slice(0, 4)}` : d
+          const orders = days[p.dataIndex]?.orders ?? 0
+          return (
+            `<b>${full}</b><br/>` +
+            `${t('monitor_turnover_series')}: <b>${fmt.format(p.value || 0)} ₴</b><br/>` +
+            t('monitor_items_count', { count: orders })
+          )
+        },
+      },
+      grid: { top: 30, right: 20, bottom: 30, left: 60 },
+      xAxis: {
+        type: 'category' as const,
+        // сначала день, потом месяц: "06.08"; подписи через каждые 5 дней
+        data: days.map((d) => `${d.day.slice(8)}.${d.day.slice(5, 7)}`),
+        axisLabel: { color: axisTextColor, interval: 4 },
+        axisLine: { lineStyle: { color: borderColor } },
+      },
+      yAxis: {
+        type: 'value' as const,
+        axisLabel: { color: axisTextColor },
+        splitLine: { lineStyle: { color: borderColor } },
+      },
+      series: [
+        {
+          name: t('monitor_turnover_series'),
+          type: 'bar' as const,
+          data: days.map((d) => d.total),
+          itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] },
+          barMaxWidth: 22,
+        },
+      ],
+    }
+  }, [turnover.data, isDark, t, chartBg, axisTextColor, borderColor])
+
   if (!clientKey) return null
 
   const c = data?.client
@@ -895,6 +1058,7 @@ export default function ClientDetailModal({
   const allPromos = loyalty.data?.pages.flatMap((p) => p.items) ?? []
   const promoTotal = loyalty.data?.pages[0]?.total ?? 0
   const deliveryVariants = deliveryStats.data?.variants ?? []
+  const b2bApplications = b2bApps.data?.applications ?? []
 
   // Подпись типа доставки для бейджа плитки (короткая, как в блоке «Доставка»)
   const deliveryTypeLabel = (v: MonitorDeliveryVariant) => {
@@ -1678,6 +1842,217 @@ export default function ClientDetailModal({
                   </div>
                 </div>
               </div>
+            ) : mode === 'b2b' ? (
+              <div className="p-6 h-full min-h-0">
+                <div
+                  className="grid gap-6 h-full min-h-0"
+                  style={{
+                    gridTemplateColumns:
+                      'calc((100% - 48px) * 2 / 3 + 24px) calc((100% - 48px) / 3)',
+                  }}
+                >
+                  {/* Заявки клиента на B2B из журнала */}
+                  <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                    <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                      <Building2 className="w-5 h-5" />{' '}
+                      {t('client_b2b_applications')}
+                      {b2bApplications.length > 0 && (
+                        <Badge className="bg-blue-500 text-white border-0">
+                          {b2bApplications.length}
+                        </Badge>
+                      )}
+                    </h4>
+                    <div className="flex-1 overflow-y-auto pr-1 mt-3 space-y-2">
+                      {b2bApps.isLoading && !b2bApps.data ? (
+                        <Skeleton className="h-24 w-full" />
+                      ) : b2bApplications.length === 0 ? (
+                        <div className="text-sm text-muted-foreground py-8 text-center">
+                          {t('client_b2b_no_application')}
+                        </div>
+                      ) : (
+                        b2bApplications.map((a) => (
+                          <div
+                            key={a.id}
+                            className="p-3 rounded-lg border bg-card space-y-2"
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-xs text-muted-foreground">
+                                {a.number}
+                              </span>
+                              <Badge
+                                className={`${B2B_STATUS_COLORS[a.status] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                              >
+                                {t(`requests_status_${a.status}`)}
+                              </Badge>
+                              <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                                {formatDateTime(a.created_at, tz)}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1 text-sm">
+                              {a.company && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_company')}
+                                  </span>
+                                  <span className="font-medium">
+                                    {a.company}
+                                  </span>
+                                </>
+                              )}
+                              {a.edrpou && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_edrpou')}
+                                  </span>
+                                  <span>{a.edrpou}</span>
+                                </>
+                              )}
+                              {a.contact_name && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_contact')}
+                                  </span>
+                                  <span>{a.contact_name}</span>
+                                </>
+                              )}
+                              {a.phone && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_phone')}
+                                  </span>
+                                  <span>{a.phone}</span>
+                                </>
+                              )}
+                              {a.email && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_email')}
+                                  </span>
+                                  <span className="break-all">{a.email}</span>
+                                </>
+                              )}
+                              {a.city && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_city')}
+                                  </span>
+                                  <span>{a.city}</span>
+                                </>
+                              )}
+                              {a.comment && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_fields_comment')}
+                                  </span>
+                                  <span className="whitespace-pre-wrap">
+                                    {a.comment}
+                                  </span>
+                                </>
+                              )}
+                              {a.resolved_at && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    {t('requests_resolved_at')}
+                                  </span>
+                                  <span className="tabular-nums">
+                                    {formatDateTime(a.resolved_at, tz)}
+                                    {a.decided_by ? ` — ${a.decided_by}` : ''}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Оборот: итог месяца + календарь + график по дням */}
+                  <div className="border rounded-lg p-3 flex flex-col min-h-0">
+                    <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                      <Activity className="w-5 h-5" />{' '}
+                      {t('client_b2b_turnover')}
+                    </h4>
+
+                    {/* Итог месяца */}
+                    <div className="grid grid-cols-2 gap-2 mt-3 flex-shrink-0">
+                      <div className="rounded-lg border bg-muted/30 p-2.5">
+                        <p className="text-xs text-muted-foreground">
+                          {t('client_b2b_total')}
+                        </p>
+                        <p className="text-xl font-bold tabular-nums">
+                          {fmt.format(turnover.data?.month_total ?? 0)} ₴
+                        </p>
+                      </div>
+                      <div className="rounded-lg border bg-muted/30 p-2.5">
+                        <p className="text-xs text-muted-foreground">
+                          {t('client_b2b_orders')}
+                        </p>
+                        <p className="text-xl font-bold tabular-nums">
+                          {turnover.data?.month_orders ?? 0}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Переключатель месяца календарём */}
+                    <Popover
+                      open={b2bMonthOpen}
+                      onOpenChange={setB2bMonthOpen}
+                      modal={false}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="mt-3 justify-start text-left font-normal capitalize flex-shrink-0"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                          {formatDf(monthDateOf(b2bMonth), 'LLLL yyyy', {
+                            locale: dateLocale,
+                          })}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div style={{ pointerEvents: 'auto' }}>
+                          <Calendar
+                            className="rounded-md"
+                            navLayout="around"
+                            captionLayout="dropdown"
+                            locale={dateLocale}
+                            startMonth={new Date(2023, 0)}
+                            endMonth={new Date()}
+                            month={monthDateOf(b2bMonth)}
+                            onMonthChange={(m) => {
+                              setB2bMonth(monthKeyOf(m))
+                              setB2bMonthOpen(false)
+                            }}
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <div className="flex-1 min-h-0 mt-3 flex items-center justify-center">
+                      {turnover.isLoading && !turnover.data ? (
+                        <Skeleton className="h-full w-full min-h-[200px]" />
+                      ) : (turnover.data?.month_total ?? 0) === 0 ? (
+                        <div className="text-sm text-muted-foreground">
+                          {t('monitor_no_data')}
+                        </div>
+                      ) : (
+                        <ChartErrorBoundary>
+                          <ReactECharts
+                            option={turnoverOption}
+                            style={{
+                              height: '100%',
+                              width: '100%',
+                              minHeight: 200,
+                            }}
+                          />
+                        </ChartErrorBoundary>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : isLoading && !data ? (
               <div className="p-6 space-y-3">
                 <Skeleton className="h-6 w-48" />
@@ -2137,6 +2512,33 @@ export default function ClientDetailModal({
                   <RefreshCw className="w-4 h-4" />
                 </Button>
               </>
+            ) : mode === 'b2b' ? (
+              <>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setMode('main')}>
+                    <ArrowLeft className="w-4 h-4 mr-1" /> {t('back')}
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    queryClient.invalidateQueries({
+                      queryKey: ['admin-monitor-client-b2b', clientKey],
+                    })
+                    queryClient.invalidateQueries({
+                      queryKey: [
+                        'admin-monitor-client-turnover',
+                        clientKey,
+                        b2bMonth,
+                      ],
+                    })
+                    toast.info(t('monitor_refreshed'))
+                  }}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </>
             ) : (
               <>
                 <div className="flex gap-2">
@@ -2179,6 +2581,14 @@ export default function ClientDetailModal({
                     disabled={!data || c?.is_anonymous}
                   >
                     <Truck className="w-4 h-4" /> {t('monitor_delivery_button')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => setMode('b2b')}
+                    disabled={!data || c?.is_anonymous}
+                  >
+                    <Building2 className="w-4 h-4" /> {t('client_mode_b2b')}
                   </Button>
                 </div>
                 <Button

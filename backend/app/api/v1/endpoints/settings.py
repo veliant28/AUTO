@@ -92,6 +92,8 @@ def _build_settings_response(s: SiteSettings) -> SettingsResponse:
     return SettingsResponse(
         brand_name=s.brand_name,
         timezone=s.timezone,
+        site_url=s.site_url,
+        contact_phone=s.contact_phone,
         email_from=s.email_from,
         email_from_name=s.email_from_name,
         has_resend_api_key=bool(s.resend_api_key_encrypted),
@@ -250,6 +252,11 @@ async def update_settings(
             s.telegram_bot_token_encrypted = None
     if body.telegram_chat_id is not None:
         s.telegram_chat_id = body.telegram_chat_id or None
+    # Публичный адрес сайта и телефон для писем
+    if body.site_url is not None:
+        s.site_url = (body.site_url or "").strip().rstrip("/") or None
+    if body.contact_phone is not None:
+        s.contact_phone = (body.contact_phone or "").strip() or None
     # Work-time tracking
     if body.work_start_time is not None:
         s.work_start_time = body.work_start_time
@@ -287,23 +294,32 @@ async def test_email_settings(
     db: Session = Depends(get_db),
 ):
     """Отправить тестовое письмо для проверки настроек SMTP/Resend."""
-    import asyncio
-    from app.services.email_service import send_email
+    from app.services.email_service import (
+        branding_from_settings,
+        build_brand_email,
+        send_brand_email,
+    )
 
     s = _get_settings(db)
     if not s.resend_api_key_encrypted:
         raise HTTPException(400, "Resend API key is not configured")
 
-    api_key = decrypt_password(s.resend_api_key_encrypted)
+    branding = branding_from_settings(s)
+    html = build_brand_email(
+        branding=branding,
+        locale="ru",
+        title="Тестовое письмо",
+        paragraphs=[
+            "Настройки почты работают корректно — это тестовое письмо.",
+            "This is a test email — your mail settings work correctly.",
+        ],
+    )
     try:
-        await asyncio.to_thread(
-            send_email,
+        await send_brand_email(
+            db,
             to_email=body.to_email,
-            subject="Test email from SVOM Auto Parts",
-            html="<p>This is a test email. Your SMTP/Resend settings are working correctly!</p>",
-            api_key=api_key,
-            from_email=s.email_from,
-            from_name=s.email_from_name or s.brand_name,
+            subject=f"Test email — {branding.brand_name}",
+            html=html,
         )
         return {"message": "Test email sent successfully"}
     except Exception as e:
