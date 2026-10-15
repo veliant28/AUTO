@@ -266,6 +266,8 @@
   "promo_applied": "Промокод применён",
   "promo_error": "Ошибка проверки промокода",
   "discount_label": "Скидка:",
+  "b2b_savings": "Экономия B2B:",
+  "regular_price": "обычная цена",
   "apply": "Применить",
   "loyalty_discount_percent": "Скидка",
   "copy": "Копировать",

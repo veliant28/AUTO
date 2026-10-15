@@ -74,38 +74,63 @@ export default function SearchPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {results?.map((part: any) => (
-              <div
-                key={part.id}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors"
-              >
-                <div className="space-y-1 min-w-0 flex-1 mr-4">
-                  <div className="flex items-center gap-2">
-                    {part.brand && (
-                      <Badge variant="secondary" className="text-sm px-1.5">
-                        {part.brand}
-                      </Badge>
-                    )}
-                    <span className="font-mono text-sm text-muted-foreground">
-                      {part.article}
-                    </span>
+            {results?.map((part: any) => {
+              // Процент выгоды B2B-цены против розничной (для зелёного чипа)
+              const b2bPct =
+                part.is_b2b &&
+                part.price != null &&
+                part.retail_price != null &&
+                part.retail_price > part.price
+                  ? Math.round((1 - part.price / part.retail_price) * 100)
+                  : null
+              return (
+                <div
+                  key={part.id}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+                >
+                  <div className="space-y-1 min-w-0 flex-1 mr-4">
+                    <div className="flex items-center gap-2">
+                      {part.brand && (
+                        <Badge variant="secondary" className="text-sm px-1.5">
+                          {part.brand}
+                        </Badge>
+                      )}
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {part.article}
+                      </span>
+                    </div>
+                    <p className="font-medium line-clamp-2">{part.name}</p>
                   </div>
-                  <p className="font-medium line-clamp-2">{part.name}</p>
+                  <div className="flex items-center gap-4 shrink-0">
+                    {part.price && (
+                      <div className="text-right space-y-0.5">
+                        <div className="flex items-center gap-2 justify-end">
+                          <span className="font-bold text-lg whitespace-nowrap">
+                            {fmt(part.price)} ₴
+                          </span>
+                          {b2bPct != null && (
+                            <Badge className="bg-green-500 text-white border-0 text-xs px-1.5 shrink-0">
+                              −{b2bPct}%
+                            </Badge>
+                          )}
+                        </div>
+                        {/* Зачёркнутая розничная — видна только B2B-клиенту */}
+                        {b2bPct != null && part.retail_price != null && (
+                          <span className="block text-xs text-muted-foreground line-through">
+                            {fmt(part.retail_price)} ₴
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <Button variant="outline" size="lg" asChild>
+                      <Link href={`/catalog/${part.sku || part.article}`}>
+                        {t('details')} <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
-                  {part.price && (
-                    <span className="font-bold text-lg whitespace-nowrap">
-                      {fmt(part.price)} ₴
-                    </span>
-                  )}
-                  <Button variant="outline" size="lg" asChild>
-                    <Link href={`/catalog/${part.sku || part.article}`}>
-                      {t('details')} <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

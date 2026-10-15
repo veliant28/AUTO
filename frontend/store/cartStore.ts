@@ -8,6 +8,8 @@ export interface CartItem {
   part_name: string
   quantity: number
   price: number | null
+  /** Розничная цена — для зачёркивания B2B-цены (если price — цена B2B) */
+  retail_price?: number | null
   supplier_name: string | null
   supplier_offer_id?: number | null
   brand: string | null

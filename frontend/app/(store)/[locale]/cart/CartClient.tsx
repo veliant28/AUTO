@@ -162,6 +162,15 @@ export default function CartPage() {
   const discountAmount = useCartStore((s) => s.discountAmount)
   const setPromocode = useCartStore((s) => s.setPromocode)
 
+  // Экономия B2B: розничная цена минус цена клиента по всем позициям
+  const b2bSavings = items.reduce(
+    (sum, i) =>
+      i.retail_price != null && i.price != null && i.retail_price > i.price
+        ? sum + (i.retail_price - i.price) * i.quantity
+        : sum,
+    0,
+  )
+
   const applyPromo = useMutation({
     mutationFn: async (code: string) => {
       const { data } = await api.post('/loyalty/validate', {
@@ -398,6 +407,14 @@ export default function CartPage() {
                             × {fmt(item.price)} ₴
                           </span>
                         )}
+                        {/* Зачёркнутая розничная — видна только B2B-клиенту */}
+                        {item.price != null &&
+                          item.retail_price != null &&
+                          item.retail_price > item.price && (
+                            <span className="text-xs text-muted-foreground line-through ml-1">
+                              {fmt(item.retail_price)} ₴
+                            </span>
+                          )}
                       </div>
                       <p className="font-semibold text-base">
                         {fmt(itemTotalPrice)} ₴
@@ -428,6 +445,12 @@ export default function CartPage() {
                     <span className="font-semibold">
                       -{fmt(discountAmount)} ₴
                     </span>
+                  </div>
+                )}
+                {b2bSavings > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>{t('b2b_savings')}</span>
+                    <span className="font-semibold">−{fmt(b2bSavings)} ₴</span>
                   </div>
                 )}
                 <div className="flex justify-between">

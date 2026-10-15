@@ -67,6 +67,7 @@ export default function ProductClient({ article }: { article: string }) {
       part_name: data?.info?.name || data?.part?.name || article,
       quantity: 1,
       price: data?.price?.price ?? null,
+      retail_price: data?.price?.retail_price ?? null,
       supplier_name: data?.price?.supplier_name || null,
       supplier_offer_id: data?.price?.supplier_offer_id ?? null,
       brand: data?.part?.brand,
@@ -166,6 +167,14 @@ export default function ProductClient({ article }: { article: string }) {
   const brand = data?.part?.brand
   const name = data?.info?.name || data?.part?.name || article
   const price = data?.price
+  // Процент выгоды B2B-цены против розничной (для зелёного чипа)
+  const b2bPct =
+    price?.is_b2b &&
+    price?.price != null &&
+    price?.retail_price != null &&
+    price.retail_price > price.price
+      ? Math.round((1 - price.price / price.retail_price) * 100)
+      : null
   const info = data?.info
   const images = data?.images || []
   const crosses = data?.crosses || []
@@ -270,13 +279,33 @@ export default function ProductClient({ article }: { article: string }) {
           <h1 className="text-2xl font-bold leading-snug">{name}</h1>
 
           {price ? (
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-3xl font-bold">{fmt(price.price)} ₴</span>
-              <Badge
-                className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
-              >
-                {inStock ? tc('in_stock') : tc('out_of_stock')}
-              </Badge>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-baseline gap-2.5 flex-wrap">
+                  <span className="text-3xl font-bold">
+                    {fmt(price.price)} ₴
+                  </span>
+                  {b2bPct != null && (
+                    <Badge className="bg-green-500 text-white border-0 text-sm shrink-0">
+                      −{b2bPct}%
+                    </Badge>
+                  )}
+                </div>
+                <Badge
+                  className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
+                >
+                  {inStock ? tc('in_stock') : tc('out_of_stock')}
+                </Badge>
+              </div>
+              {/* Розничная цена зачёркнута — видна только B2B-клиенту */}
+              {b2bPct != null && price.retail_price != null && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="line-through">
+                    {fmt(price.retail_price)} ₴
+                  </span>{' '}
+                  {tc('regular_price')}
+                </p>
+              )}
             </div>
           ) : (
             <span className="text-sm text-muted-foreground">—</span>

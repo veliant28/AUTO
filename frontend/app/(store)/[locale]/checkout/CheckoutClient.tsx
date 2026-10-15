@@ -93,6 +93,15 @@ export default function CheckoutPage() {
 
   const promocode = useCartStore((s) => s.promocode)
 
+  // Экономия B2B: розничная цена минус цена клиента по всем позициям
+  const b2bSavings = items.reduce(
+    (sum, i) =>
+      i.retail_price != null && i.price != null && i.retail_price > i.price
+        ? sum + (i.retail_price - i.price) * i.quantity
+        : sum,
+    0,
+  )
+
   // ── Payment methods (fetched with polling for real-time updates) ──
   const { data: paymentMethods } = useQuery({
     queryKey: ['payment-methods'],
@@ -735,6 +744,13 @@ export default function CheckoutPage() {
                     {items.length} {t('pcs')}
                   </span>
                 </div>
+                {/* Экономия B2B: розничная минус цена клиента по позициям */}
+                {b2bSavings > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>{t('b2b_savings')}</span>
+                    <span className="font-semibold">−{fmt(b2bSavings)} ₴</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     {t('total_label')}:

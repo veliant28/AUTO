@@ -25,6 +25,9 @@ export type ProductTileItem = {
   name: string
   brand: string | null
   price: number | null
+  /** Розничная цена — для зачёркивания B2B-цены */
+  retail_price?: number | null
+  is_b2b?: boolean
   quantity: number
   currency: string
   image_url: string | null
@@ -48,6 +51,14 @@ export default function ProductTile({
 }: ProductTileProps) {
   const t = useTranslations('common')
   const inStock = product.quantity > 0
+  // Процент выгоды B2B-цены против розничной (для зелёного чипа)
+  const b2bPct =
+    product.is_b2b &&
+    product.price != null &&
+    product.retail_price != null &&
+    product.retail_price > product.price
+      ? Math.round((1 - product.price / product.retail_price) * 100)
+      : null
   const cartItems = useCartStore((state) => state.items)
   const isInCart = cartItems.some((i) => i.part_id === product.id)
 
@@ -114,12 +125,27 @@ export default function ProductTile({
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             {product.price != null ? (
-              <span className="font-bold text-base">
-                {fmt(product.price)}{' '}
-                <span className="text-base font-normal text-muted-foreground">
-                  ₴
-                </span>
-              </span>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-base">
+                    {fmt(product.price)}{' '}
+                    <span className="text-base font-normal text-muted-foreground">
+                      ₴
+                    </span>
+                  </span>
+                  {b2bPct != null && (
+                    <Badge className="bg-green-500 text-white border-0 text-xs px-1.5 shrink-0">
+                      −{b2bPct}%
+                    </Badge>
+                  )}
+                </div>
+                {/* Зачёркнутая розничная — видна только B2B-клиенту */}
+                {b2bPct != null && product.retail_price != null && (
+                  <span className="block text-xs text-muted-foreground line-through">
+                    {fmt(product.retail_price)} ₴
+                  </span>
+                )}
+              </div>
             ) : (
               <span className="text-xs text-muted-foreground">—</span>
             )}
