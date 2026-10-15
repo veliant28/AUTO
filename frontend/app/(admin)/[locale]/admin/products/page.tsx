@@ -453,9 +453,13 @@ export default function AdminProductsPage() {
       }),
       columnHelper.accessor('name', {
         header: t('products_name'),
-        size: 190,
+        size: 260,
+        // При table-fixed колонка ровно своей ширины, поэтому название
+        // обрезается, а не растягивает таблицу
         cell: (info) => (
-          <span className="text-sm truncate">{info.getValue() || '—'}</span>
+          <span className="block truncate text-sm">
+            {info.getValue() || '—'}
+          </span>
         ),
       }),
       columnHelper.accessor('brand', {
@@ -515,7 +519,7 @@ export default function AdminProductsPage() {
       }),
       columnHelper.accessor('min_price', {
         header: t('products_price'),
-        size: 110,
+        size: 150,
         cell: (info) => {
           const item = info.row.original
           return item.min_price != null ? (
@@ -575,7 +579,7 @@ export default function AdminProductsPage() {
       columnHelper.display({
         id: 'actions',
         header: t('actions'),
-        size: 110,
+        size: 170,
         cell: ({ row }) => (
           <div className="flex gap-2">
             <AddToOrderDropdown productId={row.original.id} t={t} />
@@ -718,7 +722,7 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm table-fixed">
                   <thead>
                     {table.getHeaderGroups().map((hg) => (
                       <tr key={hg.id} className="border-b bg-muted/50">
