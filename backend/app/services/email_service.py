@@ -269,7 +269,8 @@ def build_b2b_approved_html(
     не отправляем, пароль у него уже есть (при забытом — сброс пароля).
     """
     loc = normalize_locale(locale)
-    login_url = f"{branding.site_url}/auth/login" if branding.site_url else ""
+    # Ссылка входа — из адреса сайта в настройках, с языковым префиксом локали письма
+    login_url = f"{branding.site_url}/{loc}/auth/login" if branding.site_url else ""
     texts = {
         "ru": {
             "subject": "Заявка на B2B одобрена",
