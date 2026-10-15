@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
@@ -8,8 +7,7 @@ from app.schemas.admin_schemas import (
 )
 from app.schemas.user_schemas import AdminUserCreate, AdminUserUpdate
 from app.models import User, Role
-from app.models.orders import Order, OrderStatus
-from app.models.returns import ReturnRequest, ReturnStatus
+from app.services.client_index import compute_client_index_stats_bulk
 from app.core.security import get_password_hash
 from datetime import datetime
 
@@ -38,93 +36,33 @@ async def list_users(
     total = query.count()
     users = query.order_by(User.id).offset((page - 1) * page_size).limit(page_size).all()
 
-    # Compute user rating stats (counts + monetary values)
+    # Рейтинг клиентов — общая формула индекса (services.client_index),
+    # та же, что в карточке клиента и модалке заказа
     user_ids = [u.id for u in users]
+    stats_map = compute_client_index_stats_bulk(db, user_ids)
 
-    # Count-based stats
-    order_counts = (
-        db.query(
-            Order.user_id,
-            func.sum(case((Order.status == OrderStatus.DELIVERED, 1), else_=0)).label("delivered"),
-            func.sum(case((Order.status == OrderStatus.CANCELLED, 1), else_=0)).label("cancelled"),
-        )
-        .filter(Order.user_id.in_(user_ids))
-        .group_by(Order.user_id)
-        .all()
-    )
-    return_counts = (
-        db.query(
-            ReturnRequest.user_id,
-            func.count(ReturnRequest.id).label("completed"),
-        )
-        .filter(
-            ReturnRequest.user_id.in_(user_ids),
-            ReturnRequest.status == ReturnStatus.COMPLETED,
-        )
-        .group_by(ReturnRequest.user_id)
-        .all()
-    )
-
-    # Monetary value stats for success_index
-    order_values = (
-        db.query(
-            Order.user_id,
-            func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)).label("delivered_total"),
-            func.sum(case((Order.status == OrderStatus.CANCELLED, Order.total), else_=0)).label("cancelled_total"),
-        )
-        .filter(Order.user_id.in_(user_ids))
-        .group_by(Order.user_id)
-        .all()
-    )
-    return_refunds = (
-        db.query(
-            ReturnRequest.user_id,
-            func.sum(ReturnRequest.total_refund).label("refunded_total"),
-        )
-        .filter(
-            ReturnRequest.user_id.in_(user_ids),
-            ReturnRequest.status == ReturnStatus.COMPLETED,
-        )
-        .group_by(ReturnRequest.user_id)
-        .all()
-    )
-
-    count_map = {r.user_id: (r.delivered, r.cancelled) for r in order_counts}
-    return_map = {r.user_id: r.completed for r in return_counts}
-    value_map = {r.user_id: (float(r.delivered_total or 0), float(r.cancelled_total or 0)) for r in order_values}
-    refund_map = {r.user_id: float(r.refunded_total or 0) for r in return_refunds}
-
-    def compute_success_index(user_id: int) -> int:
-        delivered_total, cancelled_total = value_map.get(user_id, (0.0, 0.0))
-        refunded = refund_map.get(user_id, 0.0)
-        total_value = delivered_total + cancelled_total
-        if total_value == 0:
-            return 0
-        retained = delivered_total - refunded
-        if retained < 0:
-            retained = 0
-        return round((retained / total_value) * 100)
+    items = []
+    for u in users:
+        stats = stats_map.get(u.id) or {}
+        items.append(AdminUserResponse(
+            id=u.id,
+            email=u.email,
+            full_name=u.full_name,
+            first_name=u.first_name,
+            last_name=u.last_name,
+            middle_name=u.middle_name,
+            role=u.role.name,
+            is_active=u.is_active,
+            phone=u.phone,
+            created_at=u.created_at,
+            orders_delivered=stats.get("delivered_count", 0),
+            orders_cancelled=stats.get("cancelled_count", 0),
+            returns_completed=stats.get("full_count", 0) + stats.get("partial_count", 0),
+            success_index=stats.get("success_index", 0),
+        ))
 
     return AdminUserListResponse(
-        items=[
-            AdminUserResponse(
-                id=u.id,
-                email=u.email,
-                full_name=u.full_name,
-                first_name=u.first_name,
-                last_name=u.last_name,
-                middle_name=u.middle_name,
-                role=u.role.name,
-                is_active=u.is_active,
-                phone=u.phone,
-                created_at=u.created_at,
-                orders_delivered=count_map.get(u.id, (0, 0))[0],
-                orders_cancelled=count_map.get(u.id, (0, 0))[1],
-                returns_completed=return_map.get(u.id, 0),
-                success_index=compute_success_index(u.id),
-            )
-            for u in users
-        ],
+        items=items,
         total=total,
         page=page,
         page_size=page_size,
