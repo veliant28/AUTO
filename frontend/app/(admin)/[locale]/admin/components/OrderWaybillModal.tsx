@@ -48,6 +48,7 @@ import OrderWaybillRecipientSection from './OrderWaybillRecipientSection'
 import OrderWaybillPaymentSection from './OrderWaybillPaymentSection'
 import OrderWaybillServiceEditorSection from './OrderWaybillServiceEditorSection'
 import OrderWaybillFooter from './OrderWaybillFooter'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
@@ -77,6 +78,7 @@ export default function OrderWaybillModal({
 }: Props) {
   const t = useTranslations('admin')
   const queryClient = useQueryClient()
+  const copyTtn = useCopyTtn()
   const formInitialized = React.useRef(false)
 
   // ── Delivery promocode state ──────────────────────────────────────────────
@@ -1521,6 +1523,8 @@ export default function OrderWaybillModal({
               if (isTrackingMode) {
                 setIsTrackingMode(false)
               } else if (waybill) {
+                // Копируем ТТН, затем переходим к трекингу
+                copyTtn(waybill.np_number)
                 syncMutation.mutate(waybill.id, {
                   onSuccess: () => setIsTrackingMode(true),
                 })

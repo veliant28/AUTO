@@ -27,6 +27,7 @@ import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 import { toast } from '@/lib/toast'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import type {
@@ -115,6 +116,7 @@ export default function OrderWaybillTrackingModal({
   const t = useTranslations('admin')
   const timezone = useTimezoneStore((s) => s.timezone)
   const queryClient = useQueryClient()
+  const copyTtn = useCopyTtn()
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ['np-waybill', orderId],
@@ -149,7 +151,14 @@ export default function OrderWaybillTrackingModal({
           <DialogDescription>
             {waybill && (
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline">{waybill.np_number}</Badge>
+                {/* Реальная ТТН — по клику копируется без пробелов */}
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => copyTtn(waybill.np_number)}
+                >
+                  {waybill.np_number}
+                </Badge>
                 <Badge>{waybill.status_text || waybill.status_code}</Badge>
               </div>
             )}

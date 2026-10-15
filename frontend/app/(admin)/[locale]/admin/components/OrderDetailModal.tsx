@@ -75,6 +75,7 @@ import {
 } from '@/lib/api/checkbox'
 import { useAuthStore } from '@/store/authStore'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 import { ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
@@ -351,6 +352,7 @@ export default function OrderDetailModal({
   const timezone = useTimezoneStore((s) => s.timezone)
   const { user } = useAuthStore()
   const reqPerm = useRequirePerm()
+  const copyTtn = useCopyTtn()
 
   const [editMode, setEditMode] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -1160,7 +1162,8 @@ export default function OrderDetailModal({
                                   <span>{t('waybill_' + ev.event_type)}</span>
                                   {ev.np_number && (
                                     <Badge
-                                      className={`border-0 text-sm font-mono gap-1.5 ${ev.event_type === 'delete' ? 'bg-red-500 text-white line-through' : ev.event_type === 'create' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}
+                                      className={`border-0 text-sm font-mono gap-1.5 cursor-pointer ${ev.event_type === 'delete' ? 'bg-red-500 text-white line-through' : ev.event_type === 'create' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}
+                                      onClick={() => copyTtn(ev.np_number)}
                                     >
                                       <ScanBarcode className="w-3.5 h-3.5" />
                                       {ev.np_number}

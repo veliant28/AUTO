@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import CatalogPagination from '@/components/features/CatalogPagination'
 import { useAuthStore } from '@/store/authStore'
 import { RETURN_STATUS_LABELS } from '@/lib/constants'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 const PAGE_SIZE = 10
 
@@ -67,6 +68,7 @@ export default function ReturnsPage() {
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
+  const copyTtn = useCopyTtn()
 
   const page = useMemo(() => {
     const value = Number(searchParams?.get('page') || '1')
@@ -217,7 +219,11 @@ export default function ReturnsPage() {
                     </span>
                     <span>
                       {ttnFormatted ? (
-                        <Badge className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5">
+                        <Badge
+                          className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
+                          // Реальная ТТН — по клику копируется без пробелов
+                          onClick={() => copyTtn(ret.ttn_number)}
+                        >
                           <ScanBarcode className="w-3.5 h-3.5" />
                           {ttnFormatted}
                         </Badge>

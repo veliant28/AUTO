@@ -2,6 +2,7 @@
 
 import { ScanBarcode, ScanLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 /** Format NP number from "20400048799000" → "204 000 4879 9000" */
 function formatNpNumber(num: string): string {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function NpWaybillBadge({ npNumber, isDeleted, exists }: Props) {
+  const copyTtn = useCopyTtn()
   const hasNumber = !!npNumber && exists
 
   let bgClass: string
@@ -30,7 +32,11 @@ export function NpWaybillBadge({ npNumber, isDeleted, exists }: Props) {
 
   return (
     <Badge
-      className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass}`}
+      className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass} ${
+        npNumber ? 'cursor-pointer' : ''
+      }`}
+      // Реальная ТТН (не маска) — по клику копируем номер без пробелов
+      onClick={npNumber ? () => copyTtn(npNumber) : undefined}
     >
       {hasNumber || isDeleted ? (
         <ScanBarcode className="w-3.5 h-3.5" />
