@@ -4,19 +4,19 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
-import { ClipboardCheck, Plus, Search, Settings2 } from 'lucide-react'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { Plus, Search, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
@@ -30,6 +30,7 @@ import {
   actorLabel,
   STATUSES,
   type RequestCategory,
+  type RequestListItem,
   type RequestListResponse,
 } from './shared'
 import { useAuthStore } from '@/store/authStore'
@@ -42,6 +43,8 @@ import CategoriesDialog from './CategoriesDialog'
 import { useRequestDate } from './useRequestDate'
 
 const PAGE_SIZE = 20
+
+const columnHelper = createColumnHelper<RequestListItem>()
 
 export default function RequestsPage() {
   const t = useTranslations('admin')
@@ -119,7 +122,9 @@ export default function RequestsPage() {
     refetchInterval: 30000,
   })
 
-  const items = data?.items || []
+  // Стабильная ссылка массива: иначе TanStack пересчитывает строки
+  // на каждый рендер и страница крутит лишние перерисовки
+  const items = useMemo(() => data?.items || [], [data])
   const total = data?.total || 0
   const progress = data?.progress || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -140,20 +145,126 @@ export default function RequestsPage() {
     ]
   }, [t, data?.counts])
 
+  // Колонки журнала — те же дефиниции и рендер, что в таблице заказов
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('number', {
+        header: t('requests_col_number'),
+        size: 160,
+        cell: (info) => (
+          <span className="font-mono whitespace-nowrap">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('category_name', {
+        header: t('requests_col_category'),
+        size: 180,
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('title', {
+        header: t('requests_col_title'),
+        size: 260,
+        cell: (info) => (
+          <span className="text-sm block max-w-[280px] truncate">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'author',
+        header: t('requests_col_author'),
+        size: 160,
+        cell: ({ row }) =>
+          row.original.created_by ? (
+            <span className="text-sm">
+              {actorLabel(row.original.created_by)}
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              {t('requests_source_storefront')}
+            </span>
+          ),
+      }),
+      columnHelper.display({
+        id: 'assignee',
+        header: t('requests_col_assignee'),
+        size: 160,
+        cell: ({ row }) =>
+          row.original.assignee ? (
+            <span className="text-sm">{actorLabel(row.original.assignee)}</span>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              {t('requests_assignee_none')}
+            </span>
+          ),
+      }),
+      columnHelper.display({
+        id: 'deadline',
+        header: t('requests_col_deadline'),
+        size: 170,
+        cell: ({ row }) => (
+          <DeadlineCell
+            deadline={row.original.deadline}
+            state={row.original.deadline_state}
+            minutesLeft={row.original.minutes_left}
+            minutesLate={row.original.minutes_late}
+            closed={
+              row.original.status === 'resolved' ||
+              row.original.status === 'rejected'
+            }
+          />
+        ),
+      }),
+      columnHelper.display({
+        id: 'status',
+        header: t('requests_col_status'),
+        size: 130,
+        cell: ({ row }) => (
+          <RequestsStatusBadge
+            status={row.original.status}
+            className="text-sm"
+          />
+        ),
+      }),
+      columnHelper.accessor('created_at', {
+        header: t('requests_col_created'),
+        size: 150,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {fmtDate(info.getValue())}
+          </span>
+        ),
+      }),
+    ],
+    [t, fmtDate],
+  )
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize: PAGE_SIZE } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize: PAGE_SIZE })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: totalPages,
+  })
+
   return (
     <div className="p-6 space-y-4">
-      {/* Заголовок + действия */}
+      {/* Действия: название страницы показывает топ-бар */}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ClipboardCheck className="w-6 h-6 text-primary" />
-          {t('requests_title')}
-        </h1>
         <div className="ml-auto flex items-center gap-2">
           {can(user, 'requests.manage') && (
             <Button
               variant="outline"
-              size="sm"
-              className="gap-2"
+              className="gap-1.5"
               onClick={() =>
                 reqPerm('requests.manage') && setCategoriesOpen(true)
               }
@@ -164,8 +275,7 @@ export default function RequestsPage() {
           )}
           {can(user, 'requests.create') && (
             <Button
-              size="sm"
-              className="gap-2"
+              className="gap-1.5"
               onClick={() => reqPerm('requests.create') && setCreateOpen(true)}
             >
               <Plus className="w-4 h-4" />
@@ -200,7 +310,7 @@ export default function RequestsPage() {
         ))}
 
         <div className="flex items-center gap-3 ml-auto min-w-[240px]">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
             {t('requests_progress_label')}
           </span>
           <Progress value={progress} className="w-40" />
@@ -216,7 +326,7 @@ export default function RequestsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t('requests_search_placeholder')}
-            className="pl-9"
+            className="pl-9 h-10"
           />
         </div>
         <Select
@@ -226,7 +336,7 @@ export default function RequestsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[240px]">
+          <SelectTrigger className="w-[240px] h-10">
             <SelectValue placeholder={t('requests_filter_category')} />
           </SelectTrigger>
           <SelectContent>
@@ -241,123 +351,99 @@ export default function RequestsPage() {
       </div>
 
       {/* Таблица */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('requests_col_number')}</TableHead>
-                <TableHead>{t('requests_col_category')}</TableHead>
-                <TableHead>{t('requests_col_title')}</TableHead>
-                <TableHead>{t('requests_col_author')}</TableHead>
-                <TableHead>{t('requests_col_assignee')}</TableHead>
-                <TableHead>{t('requests_col_deadline')}</TableHead>
-                <TableHead>{t('requests_col_status')}</TableHead>
-                <TableHead>{t('requests_col_created')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading &&
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={`sk-${i}`}>
-                    <TableCell colSpan={8}>
-                      <Skeleton className="h-8 w-full" />
-                    </TableCell>
-                  </TableRow>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
                 ))}
-              {!isLoading && items.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="text-center text-muted-foreground py-10"
-                  >
-                    {t('requests_empty')}
-                  </TableCell>
-                </TableRow>
-              )}
-              {items.map((item) => (
-                <TableRow
-                  key={item.id}
-                  onClick={() => setOpenId(item.id)}
-                  className={`cursor-pointer ${
-                    item.deadline_state === 'overdue' ? 'bg-red-500/5' : ''
-                  }`}
+              </thead>
+              <tbody>
+                {isLoading &&
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={`sk-${i}`} className="border-b last:border-0">
+                      <td colSpan={columns.length} className="p-3">
+                        <Skeleton className="h-8 w-full" />
+                      </td>
+                    </tr>
+                  ))}
+                {!isLoading && items.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      className="p-3 text-center text-muted-foreground py-10"
+                    >
+                      {t('requests_empty')}
+                    </td>
+                  </tr>
+                )}
+                {!isLoading &&
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => setOpenId(row.original.id)}
+                      className={`cursor-pointer border-b last:border-0 hover:bg-muted/30 ${
+                        row.original.deadline_state === 'overdue'
+                          ? 'bg-red-500/5'
+                          : ''
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-3">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
+          {!isLoading && total > PAGE_SIZE && (
+            <div className="flex items-center justify-between p-3 border-t">
+              <span className="text-sm text-muted-foreground">
+                {t('page_of', { page, total: totalPages })}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
                 >
-                  <TableCell className="font-mono text-xs whitespace-nowrap">
-                    {item.number}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {item.category_name}
-                  </TableCell>
-                  <TableCell className="text-sm max-w-[280px] truncate">
-                    {item.title}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {item.created_by ? (
-                      actorLabel(item.created_by)
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t('requests_source_storefront')}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {item.assignee ? (
-                      actorLabel(item.assignee)
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t('requests_assignee_none')}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DeadlineCell
-                      deadline={item.deadline}
-                      state={item.deadline_state}
-                      minutesLeft={item.minutes_left}
-                      minutesLate={item.minutes_late}
-                      closed={
-                        item.status === 'resolved' || item.status === 'rejected'
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <RequestsStatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {fmtDate(item.created_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  {t('pagination_prev')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {t('pagination_next')}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Пагинация */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            ←
-          </Button>
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            →
-          </Button>
-        </div>
-      )}
 
       {openId != null && (
         <RequestDetailModal

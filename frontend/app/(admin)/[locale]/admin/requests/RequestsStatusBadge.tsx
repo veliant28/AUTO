@@ -71,14 +71,14 @@ export function DeadlineCell({
 
   if (!deadline) {
     return (
-      <span className="text-xs text-muted-foreground">
+      <span className="text-sm text-muted-foreground">
         {t('requests_no_deadline')}
       </span>
     )
   }
 
   if (closed) {
-    return <span className="text-xs tabular-nums">{fmtDate(deadline)}</span>
+    return <span className="text-sm tabular-nums">{fmtDate(deadline)}</span>
   }
 
   const cls =
@@ -90,9 +90,9 @@ export function DeadlineCell({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs tabular-nums">{fmtDate(deadline)}</span>
+      <span className="text-sm tabular-nums">{fmtDate(deadline)}</span>
       <Badge
-        className={`${cls} text-white border-0 text-[10px] px-1.5 transition-colors duration-700 w-fit ${
+        className={`${cls} text-white border-0 text-sm transition-colors duration-700 w-fit ${
           state === 'overdue' ? 'animate-pulse' : ''
         }`}
       >

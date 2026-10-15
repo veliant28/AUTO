@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Building2,
   Check,
-  ClipboardCheck,
   Loader2,
   Send,
   ShieldBan,
@@ -40,6 +39,7 @@ import { can } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
 import api from '@/lib/api'
+import { formatPhone } from '@/lib/phone'
 import { DeadlineCell, RequestsStatusBadge } from './RequestsStatusBadge'
 import {
   actorLabel,
@@ -121,17 +121,24 @@ function PayloadCard({
   const rows: { label: string; value: React.ReactNode }[] = []
 
   if (code === 'b2b_registration') {
+    // Контакт: два поля у свежих заявок, одной строкой — у старых
+    const contact = [payload.contact_last_name, payload.contact_first_name]
+      .filter(Boolean)
+      .join(' ')
     if (payload.company)
       rows.push({ label: t('requests_fields_company'), value: payload.company })
     if (payload.edrpou)
       rows.push({ label: t('requests_fields_edrpou'), value: payload.edrpou })
-    if (payload.contact_name)
+    if (contact || payload.contact_name)
       rows.push({
         label: t('requests_fields_contact'),
-        value: payload.contact_name,
+        value: contact || payload.contact_name,
       })
     if (payload.phone)
-      rows.push({ label: t('requests_fields_phone'), value: payload.phone })
+      rows.push({
+        label: t('requests_fields_phone'),
+        value: formatPhone(payload.phone),
+      })
     if (payload.email)
       rows.push({
         label: t('requests_fields_email'),
@@ -332,21 +339,35 @@ export default function RequestDetailModal({
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[96vw] max-w-[1200px] h-[88vh] max-h-[88vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b">
-          <div className="flex flex-wrap items-center gap-3 pr-8">
-            <ClipboardCheck className="w-5 h-5 text-primary shrink-0" />
-            <DialogTitle className="font-mono text-base">
-              {detail?.number ?? `#${requestId}`}
-            </DialogTitle>
-            {detail && <RequestsStatusBadge status={detail.status} />}
-            {detail?.category?.name && (
-              <Badge variant="outline" className="font-normal">
-                {detail.category.name}
-              </Badge>
-            )}
+      {/* Размер и заголовок — как в модалке заказа */}
+      <DialogContent className="w-[98vw] max-w-[1800px] h-[90vh] overflow-hidden flex flex-col !p-0 !gap-0">
+        <DialogHeader className="p-6 pb-3 pr-14 flex-shrink-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <DialogTitle className="text-2xl font-bold tracking-tight">
+                  {detail?.number ?? `#${requestId}`}
+                </DialogTitle>
+                {detail && (
+                  <RequestsStatusBadge
+                    status={detail.status}
+                    className="text-sm"
+                  />
+                )}
+                {detail?.category?.name && (
+                  <Badge variant="outline" className="font-normal text-sm">
+                    {detail.category.name}
+                  </Badge>
+                )}
+              </div>
+              {detail && (
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  {fmtDate(detail.created_at, true)}
+                </p>
+              )}
+            </div>
             {detail && (
-              <div className="ml-auto">
+              <div className="shrink-0">
                 <DeadlineCell
                   deadline={detail.deadline}
                   state={detail.deadline_state}
@@ -373,10 +394,10 @@ export default function RequestDetailModal({
           <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
             {/* Левая колонка: детали и данные заявки */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Building2 className="w-4 h-4 text-primary" />
+              <h4 className="font-semibold text-lg flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
                 {t('requests_details_title')}
-              </div>
+              </h4>
 
               <div className="rounded-lg border p-3 space-y-2 text-sm">
                 <div className="grid grid-cols-[130px_1fr] gap-2">
@@ -443,7 +464,7 @@ export default function RequestDetailModal({
               />
 
               {automated && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Timer className="w-3.5 h-3.5" />
                   {t('requests_automated_hint')}
                 </p>
@@ -452,10 +473,10 @@ export default function RequestDetailModal({
 
             {/* Правая колонка: комментарии и история */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Send className="w-4 h-4 text-primary" />
+              <h4 className="font-semibold text-lg flex items-center gap-2">
+                <Send className="w-5 h-5" />
                 {t('requests_comments_title')}
-              </div>
+              </h4>
 
               <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                 {detail.comments.length === 0 && (
@@ -465,12 +486,12 @@ export default function RequestDetailModal({
                 )}
                 {detail.comments.map((c) => (
                   <div key={c.id} className="rounded-lg border p-3 bg-card">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                       <span className="font-medium text-foreground">
                         {c.author_name || '—'}
                       </span>
                       {c.author_group && (
-                        <Badge variant="outline" className="text-[10px] px-1.5">
+                        <Badge variant="outline" className="text-sm">
                           {c.author_group}
                         </Badge>
                       )}
@@ -510,16 +531,16 @@ export default function RequestDetailModal({
 
               <Separator />
 
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Timer className="w-4 h-4 text-primary" />
+              <h4 className="font-semibold text-lg flex items-center gap-2">
+                <Timer className="w-5 h-5" />
                 {t('requests_events_title')}
-              </div>
+              </h4>
               <div className="space-y-1.5">
                 {detail.events.map((e) => (
-                  <div key={e.id} className="flex items-start gap-2 text-xs">
+                  <div key={e.id} className="flex items-start gap-2 text-sm">
                     <Badge
                       variant="outline"
-                      className="shrink-0 font-normal text-[10px]"
+                      className="shrink-0 font-normal text-sm"
                     >
                       {t(EVENT_KEY[e.event_type] ?? 'requests_ev_status')}
                     </Badge>
@@ -568,7 +589,7 @@ export default function RequestDetailModal({
                 })
               }}
             >
-              <SelectTrigger className="w-[200px] h-9">
+              <SelectTrigger className="w-[200px] h-10">
                 <SelectValue placeholder={t('requests_assign_placeholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -598,7 +619,7 @@ export default function RequestDetailModal({
                 })
               }}
             >
-              <SelectTrigger className="w-[180px] h-9">
+              <SelectTrigger className="w-[180px] h-10">
                 <SelectValue placeholder={t('requests_status_label')} />
               </SelectTrigger>
               <SelectContent>
@@ -618,7 +639,6 @@ export default function RequestDetailModal({
           {detail && isOpen && canManage && (
             <>
               <Button
-                size="sm"
                 variant="outline"
                 className="gap-1.5 border-green-500/50 text-green-600 hover:text-green-600"
                 disabled={actionMutation.isPending}
@@ -630,7 +650,6 @@ export default function RequestDetailModal({
                 {t('requests_approve')}
               </Button>
               <Button
-                size="sm"
                 variant="outline"
                 className="gap-1.5 border-red-500/50 text-red-600 hover:text-red-600"
                 disabled={actionMutation.isPending}
@@ -646,7 +665,6 @@ export default function RequestDetailModal({
 
           {detail && canManage && (
             <Button
-              size="sm"
               variant="outline"
               className="gap-1.5 text-muted-foreground ml-auto"
               onClick={() => reqPerm('requests.manage') && setDeleteOpen(true)}
