@@ -3,8 +3,17 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { TablePagination } from '@/components/admin/TablePagination'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
@@ -69,6 +78,9 @@ type HistoryItem = {
   changed_by: ActorInfo
 }
 
+const columnHelper = createColumnHelper<TimesheetUser>()
+const historyColumnHelper = createColumnHelper<HistoryItem>()
+
 /** Фамилия + Имя, затем full_name, затем email */
 function displayName(u: {
   first_name?: string | null
@@ -129,6 +141,28 @@ function parseHoursToMinutes(raw: string): number | null | -1 {
   if (!Number.isInteger(m) || m < 0 || m > 59) return -1
   const total = h * 60 + m
   return total > 1440 ? -1 : total
+}
+
+/** Подсветка ячейки дня: выходной или ручная/несохранённая правка */
+function dayCellHighlight(
+  u: TimesheetUser,
+  d: string,
+  pendingEdits: Record<string, number | null>,
+  canEdit: boolean,
+): string {
+  const key = `${u.user_id}|${d}`
+  const hasManual = Object.prototype.hasOwnProperty.call(u.manual_days, d)
+  const hasPending = Object.prototype.hasOwnProperty.call(pendingEdits, key)
+  if (canEdit && (hasManual || hasPending)) {
+    const pending = pendingEdits[key]
+    return `bg-amber-200/60 ${
+      pending === null
+        ? 'outline-2 outline-dashed outline-offset-[-2px] outline-amber-500'
+        : 'outline-2 outline-solid outline-offset-[-2px] outline-amber-500'
+    }`
+  }
+  if (isWeekend(d)) return u.days[d] ? 'bg-muted/40' : 'bg-muted/20'
+  return ''
 }
 
 function isWeekend(dateStr: string): boolean {
@@ -324,13 +358,19 @@ export default function TimesheetPage() {
     if (isError) toast.error(t('timesheet_load_error'))
   }, [isError, t])
 
-  if (!can(user, 'attendance.view')) return null
-
-  const allUsers = (data?.users || []).map(normalizeTimesheetUser)
-  const visibleUsers = userId
-    ? allUsers.filter((u) => u.user_id === userId)
-    : allUsers
-  const days = data?.days || []
+  // Стабильные данные для TanStack: новая ссылка массива на каждый рендер
+  // заставляет таблицу пересчитываться и уходит в цикл перерисовок
+  const allUsers = React.useMemo(
+    () => (data?.users || []).map(normalizeTimesheetUser),
+    [data?.users],
+  )
+  const visibleUsers = React.useMemo(
+    () => (userId ? allUsers.filter((u) => u.user_id === userId) : allUsers),
+    [allUsers, userId],
+  )
+  // Стабильный список дней: колонки пересобираются только при смене месяца,
+  // поэтому редактор ячейки не пересоздаётся во время ввода
+  const days = React.useMemo(() => data?.days || [], [data?.days])
 
   // Открыть редактирование ячейки (только с правом attendance.edit)
   const startEdit = (u: TimesheetUser, d: string) => {
@@ -394,6 +434,353 @@ export default function TimesheetPage() {
 
   const historyItems = historyData?.items || []
 
+  // Живое состояние правок: колонки TanStack должны быть стабильными, иначе
+  // React пересоздаёт инпут редактора на каждый символ — ввод рвётся.
+  // Ячейки читают актуальные значения из ref при каждом рендере.
+  const editStateRef = useRef<Record<string, any>>({})
+  editStateRef.current = {
+    canEdit,
+    editingKey,
+    draft,
+    pendingEdits,
+    pendingCount,
+    cellKey,
+    startEdit,
+    commitEdit,
+    adjustDraft,
+    setDraft,
+    setEditingKey,
+    totalPreview,
+  }
+
+  // Колонки — те же дефиниции и рендер, что в таблице заказов
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'employee',
+        header: t('timesheet_col_employee'),
+        size: 200,
+        cell: ({ row }) => {
+          const u = row.original
+          return (
+            <div className="min-w-[180px]">
+              <Badge
+                className={`${roleBadgeColors[u.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {t(u.role) || u.role}
+              </Badge>
+              <div className="font-medium mt-0.5">{displayName(u)}</div>
+            </div>
+          )
+        },
+      }),
+      ...days.map((d) =>
+        columnHelper.display({
+          id: `day-${d}`,
+          header: () => (
+            <span className={isWeekend(d) ? 'text-muted-foreground/60' : ''}>
+              {Number(d.split('-')[2])}
+            </span>
+          ),
+          size: 44,
+          cell: ({ row }) => {
+            // Живое состояние правок читаем из ref: колонки стабильны, из-за
+            // этого React не пересоздаёт инпут редактора на каждый символ
+            const st = editStateRef.current
+            const u = row.original
+            const key = cellKey(u.user_id, d)
+            const weekend = isWeekend(d)
+            const hasManual = Object.prototype.hasOwnProperty.call(
+              u.manual_days,
+              d,
+            )
+            const hasPending = Object.prototype.hasOwnProperty.call(
+              st.pendingEdits,
+              key,
+            )
+            const isEditing = st.canEdit && st.editingKey === key
+
+            // Подсветку (выходной, ручная правка) и позиционирование редактора
+            // держит сама ячейка td — см. разметку таблицы, поэтому div
+            // отвечает только за контент и растягивается по ней
+            const cellClass = isEditing ? 'p-1.5 z-20' : 'p-1.5'
+
+            const pending = hasPending ? st.pendingEdits[key] : undefined
+            let display: React.ReactNode
+            if (st.canEdit && pending !== undefined && pending === null) {
+              display = (
+                <span className="text-[10px] italic text-muted-foreground">
+                  авто
+                </span>
+              )
+            } else {
+              const minutes =
+                pending !== undefined && pending !== null
+                  ? pending
+                  : (u.days[d] ?? 0)
+              display = minutes ? (
+                <span className="font-mono text-xs">
+                  {formatMinutes(minutes)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground/40">·</span>
+              )
+            }
+
+            return (
+              <div
+                className={`${cellClass} ${
+                  st.canEdit && !isEditing ? 'cursor-pointer' : ''
+                }`}
+                onClick={(e) => {
+                  if (isEditing) return
+                  st.startEdit(u, d)
+                  // Полностью показываем ячейку в области прокрутки,
+                  // чтобы редактор не оказался у кромки таблицы
+                  const cell = e.currentTarget
+                  requestAnimationFrame(() =>
+                    cell?.scrollIntoView({
+                      block: 'nearest',
+                      inline: 'nearest',
+                    }),
+                  )
+                }}
+                title={
+                  st.canEdit && hasManual
+                    ? `${formatMinutes(u.manual_days[d] ?? 0)} (${t('timesheet_manual_cell')})`
+                    : undefined
+                }
+              >
+                {isEditing ? (
+                  <>
+                    {/* Невидимая копия содержимого держит высоту ячейки,
+                        пока редактор нарисован поверх (absolute) */}
+                    <span className="invisible" aria-hidden="true">
+                      {display}
+                    </span>
+                    <Input
+                      autoFocus
+                      value={st.draft}
+                      onChange={(e) => st.setDraft(e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          st.commitEdit(u, d)
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault()
+                          st.setEditingKey(null)
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault()
+                          st.adjustDraft(15)
+                        } else if (e.key === 'ArrowDown') {
+                          e.preventDefault()
+                          st.adjustDraft(-15)
+                        }
+                      }}
+                      onBlur={() => st.setEditingKey(null)}
+                      className="absolute inset-0 h-full w-full min-w-0 bg-transparent px-1 text-center font-mono text-xs focus-visible:outline-none focus-visible:ring-0"
+                    />
+                  </>
+                ) : (
+                  display
+                )}
+              </div>
+            )
+          },
+        }),
+      ),
+      columnHelper.display({
+        id: 'total',
+        header: t('timesheet_col_total'),
+        size: 80,
+        cell: ({ row }) => {
+          const st = editStateRef.current
+          return (
+            <span className="font-semibold">
+              {st.canEdit && st.pendingCount > 0
+                ? formatMinutes(Math.max(0, st.totalPreview(row.original)))
+                : formatMinutes(row.original.total_minutes)}
+            </span>
+          )
+        },
+      }),
+    ],
+    [days, t],
+  )
+
+  // Колонки — те же дефиниции и рендер, что в таблице заказов
+  const historyColumns = useMemo(
+    () => [
+      historyColumnHelper.accessor('changed_at', {
+        header: t('timesheet_history_when'),
+        size: 180,
+        cell: (info) => (
+          <span className="text-muted-foreground whitespace-nowrap">
+            {formatDateTime(info.getValue(), timezone, { seconds: false })}
+          </span>
+        ),
+      }),
+      historyColumnHelper.accessor('changed_by.user_id', {
+        header: 'ID',
+        size: 80,
+        cell: (info) => (
+          <span className="font-mono text-muted-foreground whitespace-nowrap">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      historyColumnHelper.accessor('changed_by', {
+        header: t('timesheet_history_who'),
+        size: 200,
+        cell: (info) => {
+          const actor = info.getValue()
+          return (
+            <>
+              <div className="font-medium">{displayName(actor)}</div>
+              <div className="text-xs text-muted-foreground">
+                {actor.phone ? formatPhone(actor.phone) : ''}
+              </div>
+            </>
+          )
+        },
+      }),
+      historyColumnHelper.accessor('changed_by.role', {
+        header: t('timesheet_history_role'),
+        size: 140,
+        cell: (info) => {
+          const role = info.getValue()
+          return role ? (
+            <span className="whitespace-nowrap">
+              <Badge
+                className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {t(role) || role}
+              </Badge>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )
+        },
+      }),
+      historyColumnHelper.accessor('employee.user_id', {
+        header: 'ID',
+        size: 80,
+        cell: (info) => (
+          <span className="font-mono text-muted-foreground whitespace-nowrap">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      historyColumnHelper.accessor('employee', {
+        header: t('timesheet_history_employee'),
+        size: 200,
+        cell: (info) => {
+          const actor = info.getValue()
+          return (
+            <>
+              <div className="font-medium">{displayName(actor)}</div>
+              <div className="text-xs text-muted-foreground">
+                {actor.phone ? formatPhone(actor.phone) : ''}
+              </div>
+            </>
+          )
+        },
+      }),
+      historyColumnHelper.accessor('employee.role', {
+        header: t('timesheet_history_role'),
+        size: 140,
+        cell: (info) => {
+          const role = info.getValue()
+          return role ? (
+            <span className="whitespace-nowrap">
+              <Badge
+                className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {t(role) || role}
+              </Badge>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )
+        },
+      }),
+      historyColumnHelper.accessor('work_date', {
+        header: t('timesheet_history_day'),
+        size: 120,
+        cell: (info) => (
+          <span className="whitespace-nowrap">{shortDay(info.getValue())}</span>
+        ),
+      }),
+      historyColumnHelper.display({
+        id: 'minutes',
+        header: t('timesheet_history_before_after'),
+        size: 140,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap font-mono text-xs">
+            {row.original.minutes_before === null
+              ? '·'
+              : formatMinutes(row.original.minutes_before)}
+            <span className="text-muted-foreground mx-1">→</span>
+            {row.original.minutes_after === null
+              ? '·'
+              : formatMinutes(row.original.minutes_after)}
+          </span>
+        ),
+      }),
+      historyColumnHelper.display({
+        id: 'type',
+        header: t('timesheet_history_type'),
+        size: 140,
+        cell: ({ row }) => {
+          const typeLabel =
+            row.original.minutes_after === null
+              ? {
+                  key: 'timesheet_log_reset',
+                  cls: 'bg-gray-500 text-white',
+                }
+              : row.original.minutes_before === null
+                ? {
+                    key: 'timesheet_log_created',
+                    cls: 'bg-blue-500 text-white',
+                  }
+                : {
+                    key: 'timesheet_log_edited',
+                    cls: 'bg-amber-500 text-white',
+                  }
+          return (
+            <Badge
+              className={`${typeLabel.cls} border-0 text-sm whitespace-nowrap`}
+            >
+              {t(typeLabel.key)}
+            </Badge>
+          )
+        },
+      }),
+    ],
+    [t, timezone],
+  )
+
+  const table = useReactTable({
+    data: visibleUsers,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
+  const historyTable = useReactTable({
+    data: historyItems,
+    columns: historyColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
+  if (!can(user, 'attendance.view')) return null
+
   return (
     <div className="p-6">
       <Card className="overflow-hidden">
@@ -422,195 +809,75 @@ export default function TimesheetPage() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[1100px]">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground sticky left-0 bg-muted/50 z-10 min-w-[200px]">
-                      {t('timesheet_col_employee')}
-                    </th>
-                    {days.map((d) => (
-                      <th
-                        key={d}
-                        className={`p-1.5 text-center font-medium min-w-[44px] ${
-                          isWeekend(d)
-                            ? 'text-muted-foreground/60'
-                            : 'text-muted-foreground'
-                        }`}
-                      >
-                        {Number(d.split('-')[2])}
-                      </th>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    {table.getHeaderGroups().map((hg) => (
+                      <tr key={hg.id} className="border-b bg-muted/50">
+                        {hg.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            className="text-left p-3 font-medium text-muted-foreground"
+                            style={{ width: header.getSize() }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                          </th>
+                        ))}
+                      </tr>
                     ))}
-                    <th className="p-3 text-left font-medium text-muted-foreground min-w-[80px]">
-                      {t('timesheet_col_total')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleUsers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={days.length + 2}
-                        className="p-10 text-center text-sm text-muted-foreground"
-                      >
-                        {t('timesheet_empty')}
-                      </td>
-                    </tr>
-                  ) : (
-                    visibleUsers.map((u) => (
-                      <tr
-                        key={u.user_id}
-                        className="border-b last:border-0 hover:bg-muted/30"
-                      >
-                        <td className="p-3 sticky left-0 bg-card z-10">
-                          <div className="min-w-[180px]">
-                            <Badge
-                              className={`${roleBadgeColors[u.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                            >
-                              {t(u.role) || u.role}
-                            </Badge>
-                            <div className="font-medium mt-0.5">
-                              {displayName(u)}
-                            </div>
-                          </div>
-                        </td>
-                        {days.map((d) => {
-                          const key = cellKey(u.user_id, d)
-                          const weekend = isWeekend(d)
-                          const hasManual =
-                            Object.prototype.hasOwnProperty.call(
-                              u.manual_days,
-                              d,
-                            )
-                          const hasPending =
-                            Object.prototype.hasOwnProperty.call(
-                              pendingEdits,
-                              key,
-                            )
-                          const isEditing = canEdit && editingKey === key
-                          const highlight = canEdit && (hasManual || hasPending)
-
-                          let cellClass = 'p-1.5 text-center align-middle'
-                          if (isEditing) {
-                            // Инпут рисуем поверх ячейки (absolute) — он не участвует
-                            // в лейауте таблицы и не может растянуть колонку.
-                            // z-20 поднимает редактор выше sticky-колонки «Сотрудник»,
-                            // чтобы его подсветка не обрезалась ею при прокрутке.
-                            cellClass += ' relative z-20'
-                          }
-                          if (highlight) {
-                            cellClass += ' bg-amber-200/60'
-                            if (hasPending) {
-                              const pending = pendingEdits[key]
-                              cellClass +=
-                                pending === null
-                                  ? ' outline-2 outline-dashed outline-offset-[-2px] outline-amber-500'
-                                  : ' outline-2 outline-solid outline-offset-[-2px] outline-amber-500'
-                            }
-                          } else if (weekend) {
-                            const min = u.days[d]
-                            cellClass += min ? ' bg-muted/40' : ' bg-muted/20'
-                          }
-
-                          let content: React.ReactNode
-                          if (isEditing) {
-                            content = (
-                              <Input
-                                autoFocus
-                                value={draft}
-                                onChange={(e) => setDraft(e.target.value)}
-                                onFocus={(e) => e.target.select()}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    commitEdit(u, d)
-                                  } else if (e.key === 'Escape') {
-                                    e.preventDefault()
-                                    setEditingKey(null)
-                                  } else if (e.key === 'ArrowUp') {
-                                    e.preventDefault()
-                                    adjustDraft(15)
-                                  } else if (e.key === 'ArrowDown') {
-                                    e.preventDefault()
-                                    adjustDraft(-15)
-                                  }
-                                }}
-                                onBlur={() => setEditingKey(null)}
-                                className="absolute inset-0 h-full w-full min-w-0 bg-transparent px-1 text-center font-mono text-xs focus-visible:outline-none focus-visible:ring-0"
-                              />
-                            )
-                          } else {
-                            const pending = hasPending
-                              ? pendingEdits[key]
-                              : undefined
-                            if (
-                              canEdit &&
-                              pending !== undefined &&
-                              pending === null
-                            ) {
-                              content = (
-                                <span className="text-[10px] italic text-muted-foreground">
-                                  авто
-                                </span>
-                              )
-                            } else {
-                              const minutes =
-                                pending !== undefined && pending !== null
-                                  ? pending
-                                  : (u.days[d] ?? 0)
-                              content = minutes ? (
-                                <span className="font-mono text-xs">
-                                  {formatMinutes(minutes)}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground/40">
-                                  ·
-                                </span>
-                              )
-                            }
-                          }
-
-                          return (
-                            <td
-                              key={d}
-                              className={`${cellClass} ${
-                                canEdit && !isEditing ? 'cursor-pointer' : ''
-                              }`}
-                              onClick={(e) => {
-                                if (isEditing) return
-                                startEdit(u, d)
-                                // Полностью показываем ячейку в области прокрутки,
-                                // чтобы редактор не оказался под sticky-колонкой
-                                // или у нижней кромки таблицы
-                                const cell = e.currentTarget
-                                requestAnimationFrame(() =>
-                                  cell?.scrollIntoView({
-                                    block: 'nearest',
-                                    inline: 'nearest',
-                                  }),
-                                )
-                              }}
-                              title={
-                                canEdit && hasManual
-                                  ? `${formatMinutes(u.manual_days[d] ?? 0)} (${t('timesheet_manual_cell')})`
-                                  : undefined
-                              }
-                            >
-                              {content}
-                            </td>
-                          )
-                        })}
-                        <td className="p-3 font-semibold">
-                          {canEdit && pendingCount > 0
-                            ? formatMinutes(Math.max(0, totalPreview(u)))
-                            : formatMinutes(u.total_minutes)}
+                  </thead>
+                  <tbody>
+                    {visibleUsers.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={columns.length}
+                          className="p-10 text-center text-sm text-muted-foreground"
+                        >
+                          {t('timesheet_empty')}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b last:border-0 hover:bg-muted/30"
+                        >
+                          {row.getVisibleCells().map((cell) => {
+                            const isDay = cell.column.id.startsWith('day-')
+                            const d = isDay ? cell.column.id.slice(4) : ''
+                            const st = editStateRef.current
+                            const editing =
+                              isDay &&
+                              st.canEdit &&
+                              st.editingKey === `${row.original.user_id}|${d}`
+                            return (
+                              <td
+                                key={cell.id}
+                                className={
+                                  isDay
+                                    ? `p-0 align-middle relative ${editing ? 'z-20' : ''} ${dayCellHighlight(row.original, d, st.pendingEdits, st.canEdit)}`
+                                    : 'p-3'
+                                }
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <TablePagination table={table} />
+            </>
           )}
         </CardContent>
       </Card>
@@ -624,141 +891,45 @@ export default function TimesheetPage() {
               {t('timesheet_history_title')}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[1100px]">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground whitespace-nowrap">
-                      {t('timesheet_history_when')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      ID
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground min-w-[200px]">
-                      {t('timesheet_history_who')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground whitespace-nowrap">
-                      {t('timesheet_history_role')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      ID
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground min-w-[200px]">
-                      {t('timesheet_history_employee')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground whitespace-nowrap">
-                      {t('timesheet_history_role')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('timesheet_history_day')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('timesheet_history_before_after')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('timesheet_history_type')}
-                    </th>
-                  </tr>
+                  {historyTable.getHeaderGroups().map((hg) => (
+                    <tr key={hg.id} className="border-b bg-muted/50">
+                      {hg.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="text-left p-3 font-medium text-muted-foreground"
+                          style={{ width: header.getSize() }}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
                 </thead>
                 <tbody>
-                  {historyItems.map((h) => {
-                    const typeLabel =
-                      h.minutes_after === null
-                        ? {
-                            key: 'timesheet_log_reset',
-                            cls: 'bg-gray-500 text-white',
-                          }
-                        : h.minutes_before === null
-                          ? {
-                              key: 'timesheet_log_created',
-                              cls: 'bg-blue-500 text-white',
-                            }
-                          : {
-                              key: 'timesheet_log_edited',
-                              cls: 'bg-amber-500 text-white',
-                            }
-                    return (
-                      <tr
-                        key={h.id}
-                        className="border-b last:border-0 hover:bg-muted/30"
-                      >
-                        <td className="p-3 text-muted-foreground whitespace-nowrap">
-                          {formatDateTime(h.changed_at, timezone, {
-                            seconds: false,
-                          })}
-                        </td>
-                        <td className="p-3 font-mono text-muted-foreground whitespace-nowrap">
-                          {h.changed_by.user_id}
-                        </td>
-                        <td className="p-3">
-                          <div className="font-medium">
-                            {displayName(h.changed_by)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {h.changed_by.phone
-                              ? formatPhone(h.changed_by.phone)
-                              : ''}
-                          </div>
-                        </td>
-                        <td className="p-3 whitespace-nowrap">
-                          {h.changed_by.role ? (
-                            <Badge
-                              className={`${roleBadgeColors[h.changed_by.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                            >
-                              {t(h.changed_by.role) || h.changed_by.role}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
+                  {historyTable.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="border-b last:border-0 hover:bg-muted/30"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-3">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
                           )}
                         </td>
-                        <td className="p-3 font-mono text-muted-foreground whitespace-nowrap">
-                          {h.employee.user_id}
-                        </td>
-                        <td className="p-3">
-                          <div className="font-medium">
-                            {displayName(h.employee)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {h.employee.phone
-                              ? formatPhone(h.employee.phone)
-                              : ''}
-                          </div>
-                        </td>
-                        <td className="p-3 whitespace-nowrap">
-                          {h.employee.role ? (
-                            <Badge
-                              className={`${roleBadgeColors[h.employee.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                            >
-                              {t(h.employee.role) || h.employee.role}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="p-3 whitespace-nowrap">
-                          {shortDay(h.work_date)}
-                        </td>
-                        <td className="p-3 whitespace-nowrap font-mono text-xs">
-                          {h.minutes_before === null
-                            ? '·'
-                            : formatMinutes(h.minutes_before)}
-                          <span className="text-muted-foreground mx-1">→</span>
-                          {h.minutes_after === null
-                            ? '·'
-                            : formatMinutes(h.minutes_after)}
-                        </td>
-                        <td className="p-3">
-                          <Badge
-                            className={`${typeLabel.cls} border-0 text-sm whitespace-nowrap`}
-                          >
-                            {t(typeLabel.key)}
-                          </Badge>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
+            <TablePagination table={historyTable} />
           </CardContent>
         </Card>
       )}
