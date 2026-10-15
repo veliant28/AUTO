@@ -446,7 +446,7 @@ export default function AdminProductsPage() {
       }),
       columnHelper.accessor('article', {
         header: t('products_article'),
-        size: 90,
+        size: 134,
         cell: (info) => (
           <span className="font-mono text-sm">{info.getValue()}</span>
         ),
@@ -573,15 +573,15 @@ export default function AdminProductsPage() {
       columnHelper.display({
         id: 'stock',
         header: t('products_stock'),
-        size: 250,
+        size: 220,
         cell: ({ row }) => <StockSnake offers={row.original.offers || []} />,
       }),
       columnHelper.display({
         id: 'actions',
         header: t('actions'),
-        size: 170,
+        size: 155,
         cell: ({ row }) => (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <AddToOrderDropdown productId={row.original.id} t={t} />
             <Tooltip>
               <TooltipTrigger asChild>
