@@ -56,6 +56,7 @@ import { getBrandColor, getBrandInitial } from '@/lib/brand'
 import { ORDER_STATUS_LABELS, RETURN_STATUS_LABELS } from '@/lib/constants'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import ChartErrorBoundary from '@/components/ChartErrorBoundary'
+import AnimatedSuccessBadge from './AnimatedSuccessBadge'
 import api from '@/lib/api'
 import { formatDateTime, parseApiDate } from '@/lib/dates'
 import { formatPhone } from '@/lib/phone'
@@ -1110,23 +1111,10 @@ export default function ClientDetailModal({
                       <Activity className="w-5 h-5" />{' '}
                       {t('monitor_index_title')}
                       {index.data?.success_index != null && (
-                        <Badge
-                          className={`${(() => {
-                            const idx = index.data.success_index
-                            const totalOrders = index.data.total_orders
-                            return totalOrders === 0
-                              ? 'bg-gray-500'
-                              : idx >= 70
-                                ? 'bg-green-500'
-                                : idx >= 30
-                                  ? 'bg-yellow-500'
-                                  : idx >= 1
-                                    ? 'bg-orange-500'
-                                    : 'bg-red-500'
-                          })()} text-white border-0 text-sm ml-auto`}
-                        >
-                          {index.data.success_index}%
-                        </Badge>
+                        <AnimatedSuccessBadge
+                          value={index.data.success_index}
+                          totalOrders={index.data.total_orders}
+                        />
                       )}
                     </h4>
                     <div className="flex-1 min-h-0 flex flex-col items-center justify-center">
@@ -1804,23 +1792,10 @@ export default function ClientDetailModal({
                   <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                     <User className="w-5 h-5" /> {t('monitor_personal_data')}
                     {c && c.success_index != null && (
-                      <Badge
-                        className={`${(() => {
-                          const idx = c.success_index
-                          const totalOrders = c.total_orders
-                          return totalOrders === 0
-                            ? 'bg-gray-500'
-                            : idx >= 70
-                              ? 'bg-green-500'
-                              : idx >= 30
-                                ? 'bg-yellow-500'
-                                : idx >= 1
-                                  ? 'bg-orange-500'
-                                  : 'bg-red-500'
-                        })()} text-white border-0 text-sm ml-auto`}
-                      >
-                        {c.success_index}%
-                      </Badge>
+                      <AnimatedSuccessBadge
+                        value={c.success_index}
+                        totalOrders={c.total_orders}
+                      />
                     )}
                   </h4>
                   <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">

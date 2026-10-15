@@ -60,6 +60,7 @@ import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/lib/toast'
+import AnimatedSuccessBadge from './AnimatedSuccessBadge'
 import api from '@/lib/api'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
@@ -1313,28 +1314,12 @@ export default function OrderDetailModal({
                     <div className="border rounded-lg p-4 flex flex-col h-full">
                       <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                         <User className="w-5 h-5" /> {t('recipient_data')}
-                        {orderDetail &&
-                          (() => {
-                            const idx = orderDetail.user_success_index
-                            const totalOrders = orderDetail.user_total_orders
-                            const badgeColor =
-                              totalOrders === 0
-                                ? 'bg-gray-500'
-                                : idx >= 70
-                                  ? 'bg-green-500'
-                                  : idx >= 30
-                                    ? 'bg-yellow-500'
-                                    : idx >= 1
-                                      ? 'bg-orange-500'
-                                      : 'bg-red-500'
-                            return (
-                              <Badge
-                                className={`${badgeColor} text-white border-0 text-sm ml-auto`}
-                              >
-                                {idx}%
-                              </Badge>
-                            )
-                          })()}
+                        {orderDetail && (
+                          <AnimatedSuccessBadge
+                            value={orderDetail.user_success_index}
+                            totalOrders={orderDetail.user_total_orders}
+                          />
+                        )}
                       </h4>
                       <div className="flex-1 space-y-3 text-sm overflow-y-auto mt-3 px-1">
                         <div className="grid gap-1">

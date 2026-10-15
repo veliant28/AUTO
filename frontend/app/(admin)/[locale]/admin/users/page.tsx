@@ -43,8 +43,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Progress } from '@/components/ui/progress'
 import { toast } from '@/lib/toast'
 import ClientDetailModal from '../components/ClientDetailModal'
+import AnimatedSuccessBadge, {
+  useCountUp,
+} from '../components/AnimatedSuccessBadge'
 import { PhoneInput, formatPhone } from '@/components/ui/PhoneInput'
 import {
   Tooltip,
@@ -97,49 +101,32 @@ function RatingCell({
   returns: number
   successIndex: number
 }) {
-  const total = delivered + cancelled + returnsCount
-
-  const pctDelivered = total > 0 ? (delivered / total) * 100 : 0
-  const pctCancelled = total > 0 ? (cancelled / total) * 100 : 0
-  const pctReturns = total > 0 ? (returnsCount / total) * 100 : 0
-
-  let indexColor: string
-  if (total === 0) indexColor = 'text-gray-500'
-  else if (successIndex >= 70) indexColor = 'text-green-500'
-  else if (successIndex >= 30) indexColor = 'text-yellow-500'
-  else if (successIndex >= 1) indexColor = 'text-orange-500'
-  else indexColor = 'text-red-500'
+  // Заказы, которые участвуют в индексе (доставлено + отменено)
+  const totalOrders = delivered + cancelled
+  const hasData = totalOrders > 0
+  const animatedIndex = useCountUp(hasData ? successIndex : 0)
+  // Цвет полосы — по тем же порогам, что у бейджа
+  const indicatorColor = !hasData
+    ? 'bg-gray-500'
+    : successIndex >= 70
+      ? 'bg-green-500'
+      : successIndex >= 30
+        ? 'bg-yellow-500'
+        : successIndex >= 1
+          ? 'bg-orange-500'
+          : 'bg-red-500'
 
   return (
     <div className="flex items-center gap-3 justify-center px-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="h-2.5 flex-1 max-w-[140px] rounded-full bg-gray-200 overflow-hidden flex cursor-pointer">
-              {total === 0 ? (
-                <div className="h-full bg-gray-500 transition-all duration-700 w-full" />
-              ) : (
-                <>
-                  {pctDelivered > 0 && (
-                    <div
-                      className="h-full bg-green-500 transition-all duration-700"
-                      style={{ width: `${pctDelivered}%` }}
-                    />
-                  )}
-                  {pctCancelled > 0 && (
-                    <div
-                      className="h-full bg-red-500 transition-all duration-700"
-                      style={{ width: `${pctCancelled}%` }}
-                    />
-                  )}
-                  {pctReturns > 0 && (
-                    <div
-                      className="h-full bg-orange-500 transition-all duration-700"
-                      style={{ width: `${pctReturns}%` }}
-                    />
-                  )}
-                </>
-              )}
+            <div className="flex-1 max-w-[140px] cursor-pointer">
+              <Progress
+                value={hasData ? animatedIndex : 100}
+                className="h-2.5 bg-gray-200"
+                indicatorClassName={`${indicatorColor} transition-colors duration-500`}
+              />
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -152,11 +139,7 @@ function RatingCell({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <span
-        className={`text-sm font-semibold w-10 text-right tabular-nums ${indexColor}`}
-      >
-        {successIndex}%
-      </span>
+      <AnimatedSuccessBadge value={successIndex} totalOrders={totalOrders} />
     </div>
   )
 }
