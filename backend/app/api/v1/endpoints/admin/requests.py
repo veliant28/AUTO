@@ -587,7 +587,10 @@ async def _decide(
             locale = normalize_locale(payload.get("locale"))
             branding = branding_from_settings(db.query(SiteSettings).first())
             html = build_b2b_rejected_html(
-                branding, locale, payload.get("contact_name") or client_email, note or None
+                branding,
+                locale,
+                rs.contact_display_name(payload) or client_email,
+                note or None,
             )
             subject = {
                 "ru": "Заявка на B2B отклонена",

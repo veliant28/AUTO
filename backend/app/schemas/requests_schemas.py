@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class RequestCategorySchema(BaseModel):
@@ -164,12 +164,21 @@ class B2BApplicationIn(BaseModel):
 
     company: str = Field(..., min_length=2, max_length=200)
     edrpou: Optional[str] = Field(None, max_length=20)
-    contact_name: str = Field(..., min_length=2, max_length=150)
+    contact_last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    contact_first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    # Старые сборки витрины присылали контакт одним полем — принимаем и так
+    contact_name: Optional[str] = Field(None, min_length=2, max_length=150)
     phone: str = Field(..., min_length=10, max_length=30)
     email: EmailStr
     city: Optional[str] = Field(None, max_length=100)
     comment: Optional[str] = Field(None, max_length=2000)
     locale: Optional[str] = Field(None, max_length=5)
+
+    @model_validator(mode="after")
+    def _contact_required(self):
+        if not (self.contact_name or (self.contact_last_name and self.contact_first_name)):
+            raise ValueError("Укажите фамилию и имя контакта")
+        return self
 
 
 class B2BApplicationResponse(BaseModel):

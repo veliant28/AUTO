@@ -1,5 +1,4 @@
 """Admin endpoints for the Monitor tab (online clients, chart, archive)."""
-import calendar
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -51,7 +50,7 @@ from app.schemas.monitor_schemas import (
     MonitorDeliveryMonth,
     MonitorB2BApplication,
     MonitorClientB2BResponse,
-    MonitorTurnoverDay,
+    MonitorTurnoverMonth,
     MonitorClientTurnoverResponse,
 )
 from app.api.v1.endpoints.admin.loyalty import _promocode_to_response
@@ -886,6 +885,10 @@ async def monitor_client_b2b(
         Request,
         RequestCategory,
     )
+    from app.services.requests_service import (
+        contact_display_name,
+        contact_name_parts,
+    )
 
     user_id, _session_id = _parse_client_key(client_key)
     if user_id is None:
@@ -931,6 +934,7 @@ async def monitor_client_b2b(
                 f"{decider.last_name or ''} {decider.first_name or ''}".strip()
                 or decider.email
             )
+        contact_last_name, contact_first_name = contact_name_parts(payload)
         applications.append(
             MonitorB2BApplication(
                 id=r.id,
@@ -943,7 +947,9 @@ async def monitor_client_b2b(
                 decided_by=decided_by,
                 company=payload.get("company"),
                 edrpou=payload.get("edrpou"),
-                contact_name=payload.get("contact_name"),
+                contact_name=contact_display_name(payload),
+                contact_last_name=contact_last_name,
+                contact_first_name=contact_first_name,
                 phone=payload.get("phone"),
                 email=payload.get("email") or user.email,
                 city=payload.get("city"),
@@ -960,69 +966,50 @@ async def monitor_client_b2b(
 )
 async def monitor_client_turnover(
     client_key: str,
-    month: str = Query("", max_length=7),  # 'YYYY-MM', пусто — текущий месяц
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("monitor.view")),
 ):
-    """Оборот клиента по дням месяца (без отменённых заказов).
+    """Оборот клиента по месяцам за 12 месяцев (без отменённых заказов).
 
-    Дни считаются в часовом поясе админки, как в остальных виджетах монитора.
+    Месяц заказа — по created_at (UTC): та же разбивка, что в графиках
+    доставки и промокодов, иначе графики расходились бы на границе месяца.
     """
     user_id, _session_id = _parse_client_key(client_key)
 
-    tz = _get_admin_tz(db)
-    now_local = datetime.now(tz)
-    try:
-        year, mon = (int(p) for p in month.split("-")) if month else (now_local.year, now_local.month)
-        if not (1 <= mon <= 12) or year < 2000 or year > 2100:
-            raise ValueError
-    except (ValueError, TypeError):
-        raise HTTPException(400, "Invalid month")
-
-    days_in_month = calendar.monthrange(year, mon)[1]
-    buckets: Dict[str, Dict[str, float]] = {
-        f"{year:04d}-{mon:02d}-{d:02d}": {"total": 0.0, "orders": 0}
-        for d in range(1, days_in_month + 1)
-    }
+    now = datetime.utcnow()
+    buckets: Dict[str, Dict[str, float]] = {}
+    for i in range(11, -1, -1):
+        y, m = now.year, now.month - i
+        while m <= 0:
+            m += 12
+            y -= 1
+        buckets[f"{y:04d}-{m:02d}"] = {"total": 0.0, "orders": 0}
 
     if user_id is not None:
-        first_local = datetime(year, mon, 1, tzinfo=tz)
-        next_local = (
-            datetime(year + 1, 1, 1, tzinfo=tz)
-            if mon == 12
-            else datetime(year, mon + 1, 1, tzinfo=tz)
-        )
-        start_utc = first_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-        end_utc = next_local.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-
+        year, mon = map(int, next(iter(buckets)).split("-"))
         orders = (
             db.query(Order)
             .filter(
                 Order.user_id == user_id,
-                Order.created_at >= start_utc,
-                Order.created_at < end_utc,
+                Order.created_at >= datetime(year, mon, 1),
                 Order.status != OrderStatus.CANCELLED,
             )
             .all()
         )
         for o in orders:
             created = o.created_at
-            if created.tzinfo is None:
-                created = created.replace(tzinfo=ZoneInfo("UTC"))
-            local = created.astimezone(tz)
-            key = f"{local.year:04d}-{local.month:02d}-{local.day:02d}"
-            bucket = buckets.get(key)
+            if created is None:
+                continue
+            bucket = buckets.get(f"{created.year:04d}-{created.month:02d}")
             if bucket is not None:
                 bucket["total"] += float(o.total or 0)
                 bucket["orders"] += 1
 
-    days = [
-        MonitorTurnoverDay(day=k, total=round(v["total"], 2), orders=int(v["orders"]))
-        for k, v in buckets.items()
-    ]
     return MonitorClientTurnoverResponse(
-        month=f"{year:04d}-{mon:02d}",
-        days=days,
-        month_total=round(sum(v["total"] for v in buckets.values()), 2),
-        month_orders=int(sum(v["orders"] for v in buckets.values())),
+        months=[
+            MonitorTurnoverMonth(
+                month=k, total=round(v["total"], 2), orders=int(v["orders"])
+            )
+            for k, v in buckets.items()
+        ]
     )

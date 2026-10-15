@@ -249,6 +249,8 @@ class MonitorB2BApplication(BaseModel):
     company: Optional[str]
     edrpou: Optional[str]
     contact_name: Optional[str]
+    contact_last_name: Optional[str] = None
+    contact_first_name: Optional[str] = None
     phone: Optional[str]
     email: Optional[str]
     city: Optional[str]
@@ -262,15 +264,12 @@ class MonitorClientB2BResponse(BaseModel):
     total: int
 
 
-class MonitorTurnoverDay(BaseModel):
-    day: str  # 'YYYY-MM-DD'
+class MonitorTurnoverMonth(BaseModel):
+    month: str  # 'YYYY-MM'
     total: float
     orders: int
 
 
 class MonitorClientTurnoverResponse(BaseModel):
-    """Оборот клиента по дням выбранного месяца (без отменённых заказов)."""
-    month: str  # 'YYYY-MM'
-    days: List[MonitorTurnoverDay]
-    month_total: float
-    month_orders: int
+    """Оборот клиента по месяцам за 12 месяцев (без отменённых заказов)."""
+    months: List[MonitorTurnoverMonth]

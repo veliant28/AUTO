@@ -60,22 +60,16 @@ def apply_approval(db: Session, request: Request, actor: User) -> AutomationResu
 
 # ── B2B-регистрация ─────────────────────────────────────────────────────────
 
-def _split_name(value: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
-    """«Фамилия Имя …» → (last_name, first_name); одно слово — имя."""
-    parts = (value or "").split()
-    if not parts:
-        return None, None
-    if len(parts) == 1:
-        return None, parts[0]
-    return parts[0], parts[1]
-
-
 def _approve_b2b(db: Session, request: Request, actor: User) -> AutomationResult:
     from app.models.settings import SiteSettings
     from app.services.email_service import (
         branding_from_settings,
         build_b2b_approved_html,
         normalize_locale,
+    )
+    from app.services.requests_service import (
+        contact_display_name,
+        contact_name_parts,
     )
 
     payload = request.payload or {}
@@ -84,7 +78,7 @@ def _approve_b2b(db: Session, request: Request, actor: User) -> AutomationResult
         raise AutomationError("В заявке нет email клиента")
 
     locale = normalize_locale(payload.get("locale"))
-    contact_name = (payload.get("contact_name") or "").strip() or email
+    contact_name = contact_display_name(payload) or email
     phone = (payload.get("phone") or "").strip() or None
 
     b2b_role = db.query(Role).filter(Role.name == "b2b").first()
@@ -107,7 +101,7 @@ def _approve_b2b(db: Session, request: Request, actor: User) -> AutomationResult
         password = None
     else:
         password = secrets.token_urlsafe(9)
-        last_name, first_name = _split_name(contact_name)
+        last_name, first_name = contact_name_parts(payload)
         user = User(
             email=email,
             password_hash=get_password_hash(password),

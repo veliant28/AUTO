@@ -44,6 +44,37 @@ def actor_group(user: Optional[User]) -> Optional[str]:
     return user.role.name if user and user.role else None
 
 
+def contact_display_name(payload: Optional[dict]) -> str:
+    """Контакт B2B-заявки одной строкой: «Фамилия Имя».
+
+    Свежие заявки приходят двумя полями, старые хранят контакт одной строкой
+    в `contact_name` — читаем оба варианта, чтобы журнал показывал и те, и те.
+    """
+    last, first = contact_name_parts(payload)
+    return f"{last or ''} {first or ''}".strip()
+
+
+def contact_name_parts(
+    payload: Optional[dict],
+) -> Tuple[Optional[str], Optional[str]]:
+    """Фамилия и имя контакта B2B-заявки по отдельности.
+
+    Новые заявки хранят их своими полями, старые — одной строкой
+    «Фамилия Имя…» в `contact_name` (одно слово — имя).
+    """
+    data = payload or {}
+    last = (data.get("contact_last_name") or "").strip() or None
+    first = (data.get("contact_first_name") or "").strip() or None
+    if last or first:
+        return last, first
+    parts = (data.get("contact_name") or "").split()
+    if not parts:
+        return None, None
+    if len(parts) == 1:
+        return None, parts[0]
+    return parts[0], parts[1]
+
+
 def visible_requests_query(db: Session, user: User):
     """Заявки, видимые пользователю: админ — все, остальные — свои."""
     q = db.query(Request)

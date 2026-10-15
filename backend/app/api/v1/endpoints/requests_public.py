@@ -44,13 +44,18 @@ async def submit_b2b_application(
     payload = {
         "company": data.company.strip(),
         "edrpou": (data.edrpou or "").strip() or None,
-        "contact_name": data.contact_name.strip(),
+        "contact_last_name": (data.contact_last_name or "").strip() or None,
+        "contact_first_name": (data.contact_first_name or "").strip() or None,
         "phone": data.phone.strip(),
         "email": str(data.email).strip().lower(),
         "city": (data.city or "").strip() or None,
         "comment": (data.comment or "").strip() or None,
         "locale": normalize_locale(data.locale),
     }
+    legacy_contact = (data.contact_name or "").strip()
+    if legacy_contact:
+        # Заявка от старой сборки витрины — контакт пришёл одной строкой
+        payload["contact_name"] = legacy_contact
 
     now = rs.now_utc()
     response_due, due = rs.category_due_snapshot(category, now)
@@ -79,7 +84,7 @@ async def submit_b2b_application(
             send_telegram_notification(
                 telegram_format.new_request(
                     number=request.number,
-                    title=f"{payload['company']} · {payload['contact_name']}, {payload['phone']}",
+                    title=f"{payload['company']} · {rs.contact_display_name(payload)}, {payload['phone']}",
                     category=category.name,
                     author=payload["email"],
                 )

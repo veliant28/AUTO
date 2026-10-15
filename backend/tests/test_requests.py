@@ -16,6 +16,7 @@ from app.models.requests import (
     RequestComment,
     RequestStatus,
 )
+from app.services.requests_service import contact_display_name
 
 
 def _category(
@@ -112,7 +113,8 @@ def test_public_b2b_application_creates_request(client, db):
         json={
             "company": "СТО Авто Плюс",
             "edrpou": "12345678",
-            "contact_name": "Иванов Иван",
+            "contact_last_name": "Иванов",
+            "contact_first_name": "Иван",
             "phone": "+380501112233",
             "email": "sto@example.com",
             "city": "Николаев",
@@ -129,7 +131,73 @@ def test_public_b2b_application_creates_request(client, db):
     assert request.status == RequestStatus.NEW
     assert request.payload["email"] == "sto@example.com"
     assert request.payload["company"] == "СТО Авто Плюс"
+    # Контакт хранится двумя полями — общей строки в заявке больше нет
+    assert request.payload["contact_last_name"] == "Иванов"
+    assert request.payload["contact_first_name"] == "Иван"
+    assert "contact_name" not in request.payload
     assert request.response_due_at is not None and request.due_at is not None
+
+
+def test_public_b2b_application_requires_contact(client, db):
+    """Без фамилии и имени контакт не принимаем: заявку некому адресовать."""
+    _category(db, CATEGORY_B2B_REGISTRATION, "Регистрация B2B-клиента")
+
+    base = {
+        "company": "СТО Без Контакта",
+        "phone": "+380501112233",
+        "email": "nobody@example.com",
+    }
+    assert (
+        client.post("/api/v1/requests/b2b-application", json=base).status_code == 422
+    )
+    # Одного поля из двух тоже мало
+    partial = client.post(
+        "/api/v1/requests/b2b-application",
+        json={**base, "contact_last_name": "Иванов"},
+    )
+    assert partial.status_code == 422
+
+
+def test_public_b2b_application_accepts_legacy_contact(
+    client, db, admin_headers, sent_emails
+):
+    """Старые сборки витрины присылают контакт одной строкой — заявку берём.
+
+    Такая заявка остаётся рабочей до конца: имя для журнала и писем собирается
+    из `contact_name`, а создание пользователя разбирает строку на фамилию и имя.
+    """
+    _category(db, CATEGORY_B2B_REGISTRATION, "Регистрация B2B-клиента")
+    db.add(Role(name="b2b", description="corporate"))
+    db.commit()
+
+    resp = client.post(
+        "/api/v1/requests/b2b-application",
+        json={
+            "company": "СТО Старая Сборка",
+            "contact_name": "Сидоров Семён",
+            "phone": "+380501113344",
+            "email": "legacy@example.com",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    request = (
+        db.query(Request)
+        .filter(Request.number == resp.json()["request_number"])
+        .one()
+    )
+    assert request.payload["contact_name"] == "Сидоров Семён"
+    assert contact_display_name(request.payload) == "Сидоров Семён"
+
+    approved = client.post(
+        f"/api/v1/admin/requests/{request.id}/approve",
+        headers=admin_headers,
+        json={},
+    )
+    assert approved.status_code == 200, approved.text
+    user = db.query(User).filter(User.email == "legacy@example.com").one()
+    assert user.last_name == "Сидоров"
+    assert user.first_name == "Семён"
+    assert user.full_name == "Сидоров Семён"
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +335,8 @@ def test_approve_b2b_creates_user_with_credentials(
         "/api/v1/requests/b2b-application",
         json={
             "company": "СТО Новая",
-            "contact_name": "Петров Пётр",
+            "contact_last_name": "Петров",
+            "contact_first_name": "Пётр",
             "phone": "+380501112233",
             "email": "newclient@example.com",
             "locale": "ru",
@@ -288,6 +357,10 @@ def test_approve_b2b_creates_user_with_credentials(
     user = db.query(User).filter(User.email == "newclient@example.com").one()
     assert user.role.name == "b2b"
     assert user.phone == "+380501112233"
+    # Фамилия и имя берутся из полей заявки, без разбора строки
+    assert user.last_name == "Петров"
+    assert user.first_name == "Пётр"
+    assert user.full_name == "Петров Пётр"
 
     assert len(sent_emails) == 1
     assert sent_emails[0]["to"] == "newclient@example.com"
@@ -517,7 +590,8 @@ def test_client_b2b_mode_lists_application(client, db, admin_headers):
         json={
             "company": "СТО Турбо",
             "edrpou": "87654321",
-            "contact_name": "Петров Пётр",
+            "contact_last_name": "Петров",
+            "contact_first_name": "Пётр",
             "phone": "+380671112233",
             "email": "turbo@example.com",
             "city": "Львов",
@@ -543,6 +617,9 @@ def test_client_b2b_mode_lists_application(client, db, admin_headers):
     app_row = body["applications"][0]
     assert app_row["company"] == "СТО Турбо"
     assert app_row["contact_name"] == "Петров Пётр"
+    # Карточка клиента показывает фамилию и имя отдельными полями
+    assert app_row["contact_last_name"] == "Петров"
+    assert app_row["contact_first_name"] == "Пётр"
     assert app_row["status"] == "new"
 
     # Клиент без заявок — пустой список
@@ -553,8 +630,8 @@ def test_client_b2b_mode_lists_application(client, db, admin_headers):
     assert empty == {"applications": [], "total": 0}
 
 
-def test_client_turnover_by_days(client, db, admin_headers):
-    """Оборот считается по дням месяца; отменённые заказы не входят."""
+def test_client_turnover_by_months(client, db, admin_headers):
+    """Оборот за 12 месяцев: суммы по месяцам, отменённые заказы не входят."""
     from app.models import Order, OrderStatus
 
     role = Role(name="retail", description="retail")
@@ -578,30 +655,48 @@ def test_client_turnover_by_days(client, db, admin_headers):
         db.commit()
         return o
 
-    _order(datetime(2026, 5, 12, 10, 0, 0), 1500.0)
-    _order(datetime(2026, 5, 12, 18, 0, 0), 500.0)
-    _order(datetime(2026, 5, 20, 9, 0, 0), 300.0)
-    _order(datetime(2026, 5, 21, 9, 0, 0), 999.0, OrderStatus.CANCELLED)
-    _order(datetime(2026, 6, 1, 9, 0, 0), 100.0)  # другой месяц
+    now = datetime.utcnow()
+    this_month = datetime(now.year, now.month, 1, 10, 0, 0)
+    # Предыдущий месяц (год назад — заведомо вне окна в 12 месяцев)
+    prev_year, prev_month = (now.year - 1, now.month) if now.month > 1 else (now.year - 2, 12)
+    prev_month_dt = datetime(prev_year, prev_month, 15, 10, 0, 0)
+
+    _order(this_month, 1500.0)
+    _order(this_month.replace(day=2, hour=18), 500.0)
+    _order(this_month, 999.0, OrderStatus.CANCELLED)
+    _order(prev_month_dt, 100.0)  # вне окна
 
     resp = client.get(
-        f"/api/v1/admin/monitor/clients/u{buyer.id}/turnover?month=2026-05",
+        f"/api/v1/admin/monitor/clients/u{buyer.id}/turnover",
         headers=admin_headers,
     )
     assert resp.status_code == 200, resp.text
-    body = resp.json()
-    assert body["month"] == "2026-05"
-    assert len(body["days"]) == 31
-    assert body["month_total"] == 2300.0  # отмена и июнь не считаются
-    assert body["month_orders"] == 3
+    months = resp.json()["months"]
+    assert len(months) == 12
 
-    by_day = {d["day"]: d for d in body["days"]}
-    assert by_day["2026-05-12"] == {"day": "2026-05-12", "total": 2000.0, "orders": 2}
-    assert by_day["2026-05-20"]["total"] == 300.0
-    assert by_day["2026-05-21"]["orders"] == 0
+    by_month = {m["month"]: m for m in months}
+    current_key = f"{now.year:04d}-{now.month:02d}"
+    # Отмена не считается, прошлогодний заказ в окно не попадает
+    assert by_month[current_key] == {
+        "month": current_key,
+        "total": 2000.0,
+        "orders": 2,
+    }
+    # Пустые месяцы присутствуют с нулями — график всегда на 12 столбцов
+    assert sum(1 for m in months if m["orders"] == 0) == 11
+
+    # Клиент без заказов — 12 нулевых месяцев
+    other = _user(db, "nomoney@example.com", role)
+    empty = client.get(
+        f"/api/v1/admin/monitor/clients/u{other.id}/turnover",
+        headers=admin_headers,
+    ).json()["months"]
+    assert len(empty) == 12
+    assert all(m["total"] == 0 and m["orders"] == 0 for m in empty)
 
 
-def test_client_turnover_invalid_month(client, db, admin_headers):
+def test_client_turnover_ignores_legacy_month_param(client, db, admin_headers):
+    """Параметр месяца больше не участвует: график всегда на 12 месяцев."""
     role = Role(name="retail", description="retail")
     db.add(role)
     db.commit()
@@ -612,4 +707,5 @@ def test_client_turnover_invalid_month(client, db, admin_headers):
         f"/api/v1/admin/monitor/clients/u{buyer.id}/turnover?month=2026-13",
         headers=admin_headers,
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 200, resp.text
+    assert len(resp.json()["months"]) == 12
