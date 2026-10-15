@@ -40,6 +40,8 @@ class PartSchema(BaseModel):
     tecdoc_id: Optional[int]
     category_id: Optional[int]
     price: Optional[float] = None
+    retail_price: Optional[float] = None
+    is_b2b: bool = False
     quantity: Optional[int] = None
     supplier_name: Optional[str] = None
     supplier_offer_id: Optional[int] = None

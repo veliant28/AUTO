@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime, timedelta
 import logging
 from app.core.db import get_db
 from app.schemas.orders_schemas import OrderSchema, OrderListResponse, CheckoutSchema
-from app.models import Order, OrderItem, OrderStatus, Part
+from app.models import Order, OrderItem, OrderStatus, Part, SupplierOffer
 from app.models.loyalty import Promocode
 from app.models.returns import ReturnRequest
 from app.api.v1.endpoints.auth import get_optional_user, get_current_user
+from app.services.catalog_utils import best_offer, b2b_margin_for_user
+from app.services.pricing_service import resolve_b2b_price
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
 from app.services import telegram_format
 
@@ -141,8 +143,46 @@ async def checkout(
     """Оформить заказ. Принимает список товаров и данные доставки, создаёт заказ со статусом pending."""
     if not user_id:
         raise HTTPException(401, "Unauthorized")
-    
-    total = sum(item["price"] * item["quantity"] for item in data.items)
+
+    # Цены считаем на сервере — цена из тела запроса не используется (её можно
+    # подменить). Оффер берём по supplier_offer_id из корзины, при его
+    # отсутствии — лучший оффер товара; для роли b2b применяется B2B-наценка.
+    b2b_margin = b2b_margin_for_user(db, user_id)
+    resolved = []
+    for item_data in data.items:
+        part_id = item_data["part_id"]
+        quantity = int(item_data["quantity"])
+        offer = None
+        offer_id = item_data.get("supplier_offer_id")
+        if offer_id:
+            offer = db.query(SupplierOffer).filter(SupplierOffer.id == offer_id).first()
+        if offer is not None:
+            retail = offer.final_price if offer.final_price is not None else offer.price
+            if b2b_margin and b2b_margin > 0:
+                unit_price = float(resolve_b2b_price(offer.price, retail, b2b_margin))
+            else:
+                unit_price = float(retail)
+            purchase_price = float(offer.price)
+            resolved_offer_id = offer.id
+        else:
+            offers = db.query(SupplierOffer).options(
+                joinedload(SupplierOffer.supplier)
+            ).filter(SupplierOffer.part_id == part_id).all()
+            best = best_offer(offers, b2b_margin=b2b_margin)
+            if not best:
+                raise HTTPException(400, f"No available offer for part {part_id}")
+            unit_price = best["price"]
+            purchase_price = best["original_price"]
+            resolved_offer_id = best["supplier_offer_id"]
+        resolved.append({
+            "part_id": part_id,
+            "quantity": quantity,
+            "price": unit_price,
+            "purchase_price": purchase_price,
+            "supplier_offer_id": resolved_offer_id,
+        })
+
+    total = sum(r["price"] * r["quantity"] for r in resolved)
     original_total = total
     promocode_id = None
     promocode_code = None
@@ -166,22 +206,13 @@ async def checkout(
         promocode_code = pc.code
         
         if pc.type == 'margin':
-            # Calculate discount from margin only: (final_price - base_price) per item
-            from app.models.suppliers import SupplierOffer
+            # Скидка считается только с наценки: (цена продажи − закупка) за позицию
             total_margin = 0
-            for item_data in data.items:
-                part_id = item_data["part_id"]
-                item_price = item_data["price"]
-                item_qty = item_data["quantity"]
-                offer = db.query(SupplierOffer).filter(
-                    SupplierOffer.part_id == part_id,
-                    SupplierOffer.final_price.isnot(None)
-                ).first()
-                if offer and offer.price and float(offer.price) > 0:
-                    base_price = float(offer.price)
-                    margin_per_item = item_price - base_price
+            for r in resolved:
+                if r["purchase_price"] > 0:
+                    margin_per_item = r["price"] - r["purchase_price"]
                     if margin_per_item > 0:
-                        total_margin += margin_per_item * item_qty
+                        total_margin += margin_per_item * r["quantity"]
             if total_margin > 0:
                 discount_amount = round(total_margin * pc.discount_percent / 100, 2)
                 total = max(total - discount_amount, 0)
@@ -223,13 +254,13 @@ async def checkout(
     # Generate human-readable order number
     order.order_number = f"ORD-{order.id:010d}"
 
-    for item_data in data.items:
+    for r in resolved:
         order_item = OrderItem(
             order_id=order.id,
-            part_id=item_data["part_id"],
-            quantity=item_data["quantity"],
-            price=item_data["price"],
-            supplier_offer_id=item_data.get("supplier_offer_id"),
+            part_id=r["part_id"],
+            quantity=r["quantity"],
+            price=r["price"],
+            supplier_offer_id=r["supplier_offer_id"],
         )
         db.add(order_item)
     

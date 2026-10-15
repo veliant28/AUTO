@@ -15,6 +15,22 @@ def calculate_final_price(base_price: Decimal, margin_percent: Decimal) -> Decim
     return base_price * (Decimal(1) + margin_percent / Decimal(100))
 
 
+def resolve_b2b_price(
+    base_price: Decimal,
+    retail_price: Optional[Decimal],
+    b2b_margin: Decimal,
+) -> Decimal:
+    """B2B-цена от закупки, но не выше розничной.
+
+    Порог B2B-наценки — общая розничная, но категорийные наценки могут быть
+    ниже: в таких категориях B2B-клиент платит не больше розничной цены.
+    """
+    price = calculate_final_price(base_price, b2b_margin)
+    if retail_price is not None and price > retail_price:
+        return retail_price
+    return price
+
+
 def resolve_margin(db: Session, category_id: Optional[int]) -> Optional[Decimal]:
     """
     Resolve margin for a given category.
@@ -41,6 +57,40 @@ def resolve_margin(db: Session, category_id: Optional[int]) -> Optional[Decimal]
     if general_rule:
         return general_rule.margin_percent
     
+    return None
+
+
+def resolve_b2b_margin(db: Session) -> Optional[Decimal]:
+    """Активная наценка B2B (процент от закупки); None — B2B-цены выключены.
+
+    B2B-наценка никогда не пишется в supplier_offers.final_price (там живёт
+    только розничная цена) — она считается на лету от закупочной цены
+    (SupplierOffer.price) для клиентов с ролью b2b. Наценка <= 0 трактуется
+    как «выключено», чтобы случайный 0 не продавал товар по закупке.
+    """
+    rule = db.query(PriceRule).filter(
+        and_(
+            PriceRule.type == "b2b",
+            PriceRule.is_active == True
+        )
+    ).first()
+    if rule and rule.margin_percent and rule.margin_percent > 0:
+        return rule.margin_percent
+    return None
+
+
+def general_retail_margin(db: Session) -> Optional[Decimal]:
+    """Общая розничная наценка — порог для B2B-наценки.
+
+    B2B-наценка не может быть выше общей розничной. Категорийные правила на
+    порог не влияют: даже если в какой-то категории розничная наценка ниже,
+    для B2B порогом остаётся общая. None — общей розничной наценки нет.
+    """
+    rule = db.query(PriceRule).filter(
+        and_(PriceRule.type == "general", PriceRule.is_active == True)
+    ).first()
+    if rule and rule.margin_percent is not None:
+        return rule.margin_percent
     return None
 
 
@@ -86,6 +136,17 @@ def get_or_create_general_rule(db: Session) -> PriceRule:
     rule = db.query(PriceRule).filter(PriceRule.type == "general").first()
     if not rule:
         rule = PriceRule(type="general", margin_percent=Decimal(0), is_active=True)
+        db.add(rule)
+        db.commit()
+        db.refresh(rule)
+    return rule
+
+
+def get_or_create_b2b_rule(db: Session) -> PriceRule:
+    """Правило B2B-наценки; создаётся выключенным (is_active=False)."""
+    rule = db.query(PriceRule).filter(PriceRule.type == "b2b").first()
+    if not rule:
+        rule = PriceRule(type="b2b", margin_percent=Decimal(0), is_active=False)
         db.add(rule)
         db.commit()
         db.refresh(rule)

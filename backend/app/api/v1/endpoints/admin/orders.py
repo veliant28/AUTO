@@ -22,7 +22,8 @@ from app.models.loyalty import Promocode
 from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaWaybill, OrderNovaPoshtaWaybillSeat
 from app.models.returns import ReturnRequest, ReturnStatus
 from datetime import datetime
-from app.services.catalog_utils import best_offer
+from app.services.catalog_utils import best_offer, b2b_margin_for_user
+from app.services.client_index import compute_client_index_stats
 from app.services.promocode_service import (
     find_customer_by_phone,
     phone_digits,
@@ -63,31 +64,11 @@ def _load_order_for_detail(db: Session, order_id: int) -> Order | None:
 def _serialize_order_detail(db: Session, order: Order) -> AdminOrderDetailResponse:
     """Полная деталь заказа — тот же формат, что отдаёт GET /admin/orders/{id}."""
     user_id = order.user_id
-    order_vals = db.query(
-        func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)).label("delivered_total"),
-        func.sum(case((Order.status == OrderStatus.CANCELLED, Order.total), else_=0)).label("cancelled_total"),
-        func.sum(case((Order.status == OrderStatus.DELIVERED, 1), else_=0)).label("delivered_count"),
-        func.sum(case((Order.status == OrderStatus.CANCELLED, 1), else_=0)).label("cancelled_count"),
-    ).filter(Order.user_id == user_id).first()
-
-    refund_vals = db.query(
-        func.sum(ReturnRequest.total_refund).label("refunded_total"),
-    ).filter(
-        ReturnRequest.user_id == user_id,
-        ReturnRequest.status == ReturnStatus.COMPLETED,
-    ).first()
-
-    delivered_total = float(order_vals.delivered_total or 0)
-    cancelled_total = float(order_vals.cancelled_total or 0)
-    refunded = float(refund_vals.refunded_total or 0)
-    total_value = delivered_total + cancelled_total
-    user_total_orders = (order_vals.delivered_count or 0) + (order_vals.cancelled_count or 0)
-
-    if total_value > 0:
-        retained = max(delivered_total - refunded, 0)
-        user_success_index = round((retained / total_value) * 100)
-    else:
-        user_success_index = 0
+    # Индекс успешности — общая формула (services.client_index): как в карточке
+    # клиента и таблице пользователей
+    index_stats = compute_client_index_stats(db, user_id)
+    user_total_orders = index_stats["total_orders"]
+    user_success_index = index_stats["success_index"]
 
     return AdminOrderDetailResponse(
         id=order.id,
@@ -373,18 +354,6 @@ async def create_order(
         if part_id not in parts_by_id:
             raise HTTPException(400, f"Товар не найден: {part_id}")
 
-    # Цену берём из БД (лучший оффер), а не из тела запроса
-    resolved: list[tuple[Part, int, float, int | None]] = []
-    for part_id, quantity in merged.items():
-        part = parts_by_id[part_id]
-        best = best_offer(part.offers or [])
-        if not best or best.get("price") is None:
-            raise HTTPException(400, f"Для товара «{part.article}» нет доступной цены")
-        resolved.append((part, quantity, float(best["price"]), best.get("supplier_offer_id")))
-
-    total = round(sum(quantity * price for _, quantity, price, _ in resolved), 2)
-    original_total = total
-
     phone_digits = _phone_digits(data.phone)
     customer, customer_created = _find_or_create_customer(
         db,
@@ -393,6 +362,20 @@ async def create_order(
         first_name=data.first_name,
         middle_name=data.middle_name,
     )
+
+    # Цену берём из БД (лучший оффер), а не из тела запроса; для клиента
+    # с ролью b2b — от закупки с B2B-наценкой (как на витрине)
+    b2b_margin = b2b_margin_for_user(db, customer.id)
+    resolved: list[tuple[Part, int, float, int | None]] = []
+    for part_id, quantity in merged.items():
+        part = parts_by_id[part_id]
+        best = best_offer(part.offers or [], b2b_margin=b2b_margin)
+        if not best or best.get("price") is None:
+            raise HTTPException(400, f"Для товара «{part.article}» нет доступной цены")
+        resolved.append((part, quantity, float(best["price"]), best.get("supplier_offer_id")))
+
+    total = round(sum(quantity * price for _, quantity, price, _ in resolved), 2)
+    original_total = total
 
     promocode = None
     discount_amount = 0.0
@@ -580,13 +563,15 @@ async def update_order(
         )
 
     if data.add_items:
+        # Клиент заказа с ролью b2b — новые позиции тоже по B2B-наценке
+        b2b_margin = b2b_margin_for_user(db, order.user_id)
         for add in data.add_items:
             part = db.query(Part).options(
                 selectinload(Part.offers).joinedload(SupplierOffer.supplier)
             ).filter(Part.id == add.part_id).first()
             if not part:
                 raise HTTPException(400, f"Товар не найден: {add.part_id}")
-            best = best_offer(part.offers or [])
+            best = best_offer(part.offers or [], b2b_margin=b2b_margin)
             if not best or best.get("price") is None:
                 raise HTTPException(400, f"Для товара «{part.article}» нет доступной цены")
 
@@ -857,30 +842,14 @@ async def add_order_item(
     if not part:
         raise HTTPException(404, "Product not found")
 
-    # Determine price from the best offer
-    best_price = None
-    for offer in (part.offers or []):
-        if offer.quantity and offer.quantity > 0:
-            price = float(offer.final_price) if offer.final_price else float(offer.price)
-            if best_price is None or (
-                offer.updated_at and (
-                    best_price.get("updated_at") is None or
-                    offer.updated_at > best_price["updated_at"]
-                )
-            ):
-                best_price = {"price": price, "updated_at": offer.updated_at}
-
-    if best_price is None:
-        # Fallback: take any offer price (even if out of stock)
-        for offer in (part.offers or []):
-            price = float(offer.final_price) if offer.final_price else float(offer.price)
-            if best_price is None:
-                best_price = {"price": price, "updated_at": offer.updated_at}
-
-    if best_price is None:
+    # Цена — как её видит клиент заказа: для роли b2b с B2B-наценкой.
+    # Общий резолвер best_offer выбирает оффер «в наличии, самый свежий».
+    b2b_margin = b2b_margin_for_user(db, order.user_id)
+    best = best_offer(part.offers or [], b2b_margin=b2b_margin)
+    if not best or best.get("price") is None:
         raise HTTPException(400, "Для этого товара нет доступной цены")
 
-    unit_price = best_price["price"]
+    unit_price = float(best["price"])
     quantity = max(1, data.quantity)
 
     # Check if item already exists in the order
@@ -906,6 +875,7 @@ async def add_order_item(
             part_id=data.part_id,
             quantity=quantity,
             price=unit_price,
+            supplier_offer_id=best.get("supplier_offer_id"),
         )
         db.add(new_item)
         db.flush()

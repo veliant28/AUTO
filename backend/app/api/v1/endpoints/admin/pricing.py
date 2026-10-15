@@ -11,8 +11,8 @@ from app.models import User
 from app.models.pricing import PriceRule, PriceRuleHistory, PricingApplySnapshot
 from app.models.parts import PartCategory
 from app.services.pricing_service import (
-    get_or_create_general_rule, get_or_create_category_rule, update_rule,
-    apply_margins_bulk, cleanup_old_history
+    get_or_create_general_rule, get_or_create_category_rule, get_or_create_b2b_rule,
+    update_rule, apply_margins_bulk, cleanup_old_history, general_retail_margin
 )
 from pydantic import BaseModel
 
@@ -21,6 +21,19 @@ router = APIRouter()
 
 class GeneralMarginUpdate(BaseModel):
     margin_percent: float
+
+
+class B2BMarginUpdate(BaseModel):
+    enabled: bool
+    margin_percent: float
+
+
+class B2BRuleResponse(BaseModel):
+    enabled: bool
+    margin_percent: float
+    # Максимум для B2B-наценки — общая розничная наценка: выше неё B2B-цена
+    # оказалась бы выше общей розничной. Категорийные правила не влияют
+    max_margin_percent: float
 
 
 class CategoryMarginUpdate(BaseModel):
@@ -98,6 +111,65 @@ async def update_general_margin(
         margin_percent=float(rule.margin_percent), is_active=rule.is_active,
         created_at=str(rule.created_at) if rule.created_at else None,
         updated_at=str(rule.updated_at) if rule.updated_at else None,
+    )
+
+
+@router.get("/pricing/b2b", response_model=B2BRuleResponse)
+async def get_b2b_margin(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("pricing.view")),
+):
+    """Наценка B2B от закупки (по умолчанию выключена) + допустимый максимум."""
+    max_margin = general_retail_margin(db)
+    rule = db.query(PriceRule).filter(PriceRule.type == "b2b").first()
+    if not rule:
+        return B2BRuleResponse(
+            enabled=False,
+            margin_percent=0.0,
+            max_margin_percent=float(max_margin or 0),
+        )
+    return B2BRuleResponse(
+        enabled=bool(rule.is_active),
+        margin_percent=float(rule.margin_percent or 0),
+        max_margin_percent=float(max_margin or 0),
+    )
+
+
+@router.put("/pricing/b2b", response_model=B2BRuleResponse)
+async def update_b2b_margin(
+    data: B2BMarginUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("pricing.edit")),
+):
+    """Включить/выключить B2B-цены и задать наценку от закупки (процент).
+
+    История изменения процента пишется в price_rule_history (update_rule).
+    Наценка не может превышать общую розничную: категорийные правила на порог
+    не влияют.
+    """
+    if data.margin_percent < 0 or data.margin_percent > 500:
+        raise HTTPException(400, "B2B margin must be between 0 and 500")
+    if data.enabled and data.margin_percent <= 0:
+        raise HTTPException(400, "B2B margin must be greater than 0 when enabled")
+
+    max_margin = general_retail_margin(db) or Decimal(0)
+    if data.enabled and Decimal(str(data.margin_percent)) > max_margin:
+        raise HTTPException(
+            400,
+            "B2B margin cannot exceed the general retail margin "
+            f"(max {max_margin.normalize()}%)",
+        )
+
+    rule = get_or_create_b2b_rule(db)
+    update_rule(db, rule, Decimal(str(data.margin_percent)))
+    if bool(rule.is_active) != data.enabled:
+        rule.is_active = data.enabled
+        db.commit()
+        db.refresh(rule)
+    return B2BRuleResponse(
+        enabled=bool(rule.is_active),
+        margin_percent=float(rule.margin_percent or 0),
+        max_margin_percent=float(max_margin),
     )
 
 

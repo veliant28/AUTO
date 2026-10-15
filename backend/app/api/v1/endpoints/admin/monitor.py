@@ -19,6 +19,9 @@ from app.models.presence import PresenceSession, ProductView, ClientIp
 from app.models.loyalty import Promocode
 from app.services import presence_service
 from app.services.delivery_variants import aggregate_variants, monthly_type_counts
+from app.services.catalog_utils import b2b_margin_for_user
+from app.services.client_index import compute_client_index_stats
+from app.services.pricing_service import resolve_b2b_price
 from app.schemas.monitor_schemas import (
     MonitorClientsResponse,
     MonitorClientItem,
@@ -159,68 +162,8 @@ def _group_of(user_id: Optional[int], user_map: Dict[int, Dict]) -> str:
 
 
 def _client_index_stats(db: Session, user_id: int) -> Dict:
-    """Полная статистика клиента для индекса успешности.
-
-    success_index = доля «удержанной» выручки: (доставлено − возвраты) / всего.
-    Возвраты делятся на полные (total_refund >= суммы заказа) и частичные.
-    """
-    delivered_total, cancelled_total, delivered_count, cancelled_count = db.query(
-        func.sum(case((Order.status == OrderStatus.DELIVERED, Order.total), else_=0)),
-        func.sum(case((Order.status == OrderStatus.CANCELLED, Order.total), else_=0)),
-        func.sum(case((Order.status == OrderStatus.DELIVERED, 1), else_=0)),
-        func.sum(case((Order.status == OrderStatus.CANCELLED, 1), else_=0)),
-    ).filter(Order.user_id == user_id).one()
-    delivered_total = float(delivered_total or 0)
-    cancelled_total = float(cancelled_total or 0)
-    total_orders = int((delivered_count or 0) + (cancelled_count or 0))
-
-    refunded_full = 0.0
-    refunded_partial = 0.0
-    full_count = 0
-    partial_count = 0
-    # Возвраты считаем по APPROVED и COMPLETED (approved = деньги возвращены,
-    # completed = оформлен до конца); pending/rejected — не возвраты.
-    refund_rows = (
-        db.query(ReturnRequest.total_refund, Order.total)
-        .join(Order, Order.id == ReturnRequest.order_id)
-        .filter(
-            ReturnRequest.user_id == user_id,
-            ReturnRequest.status.in_(
-                [ReturnStatus.APPROVED, ReturnStatus.COMPLETED]
-            ),
-        )
-        .all()
-    )
-    for refund, order_total in refund_rows:
-        refund = float(refund or 0)
-        order_total = float(order_total or 0)
-        if refund >= order_total:
-            refunded_full += refund
-            full_count += 1
-        else:
-            refunded_partial += refund
-            partial_count += 1
-
-    refunded = refunded_full + refunded_partial
-    total_value = delivered_total + cancelled_total
-    if total_value == 0:
-        success_index = 0
-    else:
-        retained = max(delivered_total - refunded, 0)
-        success_index = round((retained / total_value) * 100)
-
-    return {
-        "success_index": success_index,
-        "total_orders": total_orders,
-        "delivered_total": delivered_total,
-        "delivered_count": int(delivered_count or 0),
-        "cancelled_total": cancelled_total,
-        "cancelled_count": int(cancelled_count or 0),
-        "refunded_full": refunded_full,
-        "full_count": full_count,
-        "refunded_partial": refunded_partial,
-        "partial_count": partial_count,
-    }
+    """Статистика индекса успешности клиента (формула — services.client_index)."""
+    return compute_client_index_stats(db, user_id)
 
 
 def _session_client_key(row: PresenceSession) -> Optional[str]:
@@ -547,8 +490,13 @@ async def monitor_client_cart(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("monitor.view")),
 ):
-    """Содержимое корзины клиента (серверная синхронизация /cart/sync)."""
+    """Содержимое корзины клиента (серверная синхронизация /cart/sync).
+
+    Цена позиции — та, что видит сам клиент: для b2b с включённой наценкой
+    это закупка + B2B-наценка (чтобы менеджер в разговоре видел те же цифры).
+    """
     user_id, session_id = _parse_client_key(client_key)
+    b2b_margin = b2b_margin_for_user(db, user_id)
     q = (
         db.query(CartItem)
         .options(
@@ -566,7 +514,12 @@ async def monitor_client_cart(
     for it in items:
         part = it.part
         offer = it.offer
-        price = float(offer.final_price) if offer and offer.final_price is not None else (float(offer.price) if offer else None)
+        retail_price = float(offer.final_price) if offer and offer.final_price is not None else (float(offer.price) if offer else None)
+        if offer and b2b_margin and b2b_margin > 0:
+            retail = offer.final_price if offer.final_price is not None else offer.price
+            price = float(resolve_b2b_price(offer.price, retail, b2b_margin))
+        else:
+            price = retail_price
         result.append(MonitorCartItem(
             part_id=it.part_id,
             article=part.article if part else None,

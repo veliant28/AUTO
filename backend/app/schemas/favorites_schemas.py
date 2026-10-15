@@ -18,6 +18,8 @@ class FavoritePartResult(BaseModel):
     brand_id: int
     brand: Optional[str] = None
     price: Optional[float] = None
+    retail_price: Optional[float] = None
+    is_b2b: bool = False
     quantity: Optional[int] = None
     currency: Optional[str] = 'UAH'
     image_url: Optional[str] = None

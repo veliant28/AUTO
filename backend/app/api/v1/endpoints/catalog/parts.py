@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, text as sa_text
@@ -10,7 +11,7 @@ from app.models.presence import ProductView
 from app.schemas.vehicle_schemas import BrandSchema, ModelSchema, ModSchema
 from app.schemas.part_schemas import PartCategorySchema, PartSchema, PartListResponse
 from app.services.sync_service import sync_service
-from app.services.catalog_utils import best_offer, part_to_result
+from app.services.catalog_utils import best_offer, part_to_result, b2b_margin_for_user
 from app.api.v1.endpoints.auth import get_optional_user
 
 logger = logging.getLogger(__name__)
@@ -224,6 +225,7 @@ async def get_part_details(
         Part.is_active == True,
         or_(Part.article == article, Part.sku == article)
     ).all()
+    b2b_margin = b2b_margin_for_user(db, user_id)
     part_data = None
     price_data = None
     if parts:
@@ -231,7 +233,7 @@ async def get_part_details(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = best_offer(offers)
+        best = best_offer(offers, b2b_margin=b2b_margin)
         part_data = {
             "id": part.id,
             "article": part.article,
@@ -243,9 +245,12 @@ async def get_part_details(
             "image_url": part.image_url,
         }
         if best:
+            # original_price (закупка) в публичный ответ не отдаём: витрине
+            # нужна розничная цена (retail_price) для зачёркивания B2B-цены
             price_data = {
                 "price": best["price"],
-                "original_price": best["original_price"],
+                "retail_price": best["retail_price"],
+                "is_b2b": best["is_b2b"],
                 "quantity": best["quantity"],
                 "supplier_name": best["supplier_name"],
                 "supplier_offer_id": best["supplier_offer_id"],
@@ -351,6 +356,7 @@ async def get_parts(
     mod_id: int,
     sec_id: int,
     db: Session = Depends(get_db),
+    user_id: Optional[int] = Depends(get_optional_user),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100),
     in_stock_only: bool = Query(False),
@@ -361,6 +367,7 @@ async def get_parts(
     sort_order: Optional[str] = Query("asc"),
 ):
     """Получить запчасти для модификации по секции."""
+    b2b_margin = b2b_margin_for_user(db, user_id)
     if mod_id == 0:
         base_query = db.query(Part).filter(Part.category_id == sec_id, Part.is_active == True)
     else:
@@ -378,17 +385,23 @@ async def get_parts(
     need_offer_join = any([in_stock_only, min_price is not None, max_price is not None, supplier_id is not None, sort_by == "price"])
     if need_offer_join:
         base_query = base_query.join(SupplierOffer)
+    # Для B2B фильтр и сортировка по цене считаются от закупки с наценкой,
+    # иначе диапазон цен не совпадал бы с отображаемой ценой
+    if b2b_margin and b2b_margin > 0:
+        price_col = SupplierOffer.price * (Decimal(1) + b2b_margin / Decimal(100))
+    else:
+        price_col = SupplierOffer.final_price
     if in_stock_only:
         base_query = base_query.filter(SupplierOffer.quantity > 0)
     if min_price is not None:
-        base_query = base_query.filter(SupplierOffer.final_price >= min_price)
+        base_query = base_query.filter(price_col >= min_price)
     if max_price is not None:
-        base_query = base_query.filter(SupplierOffer.final_price <= max_price)
+        base_query = base_query.filter(price_col <= max_price)
     if supplier_id is not None:
         base_query = base_query.filter(SupplierOffer.supplier_id == supplier_id)
 
     if sort_by == "price":
-        order_col = SupplierOffer.final_price
+        order_col = price_col
         base_query = base_query.order_by(order_col.asc() if sort_order == "asc" else order_col.desc())
     elif sort_by == "name":
         order_col = Part.name
@@ -404,7 +417,7 @@ async def get_parts(
         if parts:
             total = base_query.count()
 
-    result = [part_to_result(p, db) for p in parts]
+    result = [part_to_result(p, db, b2b_margin=b2b_margin) for p in parts]
 
     return {
         "items": result,
@@ -418,9 +431,11 @@ async def get_parts(
 async def search_parts(
     q: str = Query(..., min_length=1),
     db: Session = Depends(get_db),
+    user_id: Optional[int] = Depends(get_optional_user),
     limit: int = Query(20, ge=1, le=100),
 ):
     """Поиск запчастей по артикулу или названию."""
+    b2b_margin = b2b_margin_for_user(db, user_id)
     results = db.query(Part).filter(
         Part.is_active == True,
         or_(
@@ -435,7 +450,7 @@ async def search_parts(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = best_offer(offers)
+        best = best_offer(offers, b2b_margin=b2b_margin)
 
         enriched.append({
             "id": part.id,
@@ -446,6 +461,8 @@ async def search_parts(
             "category_id": part.category_id,
             "brand": part.brand,
             "price": best["price"] if best else None,
+            "retail_price": best["retail_price"] if best else None,
+            "is_b2b": best["is_b2b"] if best else False,
             "quantity": best["quantity"] if best else None,
             "supplier_name": best["supplier_name"] if best else None,
             "supplier_offer_id": best["supplier_offer_id"] if best else None,

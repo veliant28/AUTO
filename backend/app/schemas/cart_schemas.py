@@ -8,6 +8,8 @@ class CartItemSchema(BaseModel):
     part_name: str
     quantity: int
     price: Optional[float]
+    retail_price: Optional[float] = None
+    is_b2b: bool = False
     supplier_name: Optional[str]
     brand: Optional[str] = None
     image_url: Optional[str] = None

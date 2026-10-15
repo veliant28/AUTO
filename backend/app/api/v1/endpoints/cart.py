@@ -4,13 +4,21 @@ from typing import List, Optional
 from app.core.db import get_db
 from app.models import CartItem, Part, SupplierOffer, Supplier
 from app.schemas.cart_schemas import CartItemSchema, CartAddSchema, CartUpdateSchema, CartSyncSchema
+from app.services.catalog_utils import b2b_margin_for_user
+from app.services.pricing_service import resolve_b2b_price
 from app.api.v1.endpoints.auth import get_current_user, get_optional_user
 
 router = APIRouter()
 
 @router.get("/", response_model=List[CartItemSchema])
 async def get_cart(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Получить содержимое корзины текущего пользователя."""
+    """Получить содержимое корзины текущего пользователя.
+
+    Цена позиции — та, что видит клиент: для роли b2b с включённой наценкой
+    это закупка + B2B-наценка, иначе розничная; retail_price всегда розничная
+    (для зачёркивания на витрине).
+    """
+    b2b_margin = b2b_margin_for_user(db, user_id)
     items = db.query(CartItem).filter(CartItem.user_id == user_id).all()
     
     result = []
@@ -19,13 +27,22 @@ async def get_cart(user_id: int = Depends(get_current_user), db: Session = Depen
         offer = db.query(SupplierOffer).filter(SupplierOffer.id == item.supplier_offer_id).first() if item.supplier_offer_id else None
         supplier = db.query(Supplier).filter(Supplier.id == offer.supplier_id).first() if offer else None
         
+        retail_price = float(offer.final_price) if offer and offer.final_price is not None else (float(offer.price) if offer else None)
+        is_b2b = bool(offer and b2b_margin and b2b_margin > 0)
+        if is_b2b:
+            retail = offer.final_price if offer.final_price is not None else offer.price
+            price = float(resolve_b2b_price(offer.price, retail, b2b_margin))
+        else:
+            price = retail_price
         result.append({
             "id": item.id,
             "part_id": item.part_id,
             "article": part.article if part else "",
             "part_name": part.name if part else "",
             "quantity": item.quantity,
-            "price": float(offer.final_price) if offer and offer.final_price is not None else (float(offer.price) if offer else None),
+            "price": price,
+            "retail_price": retail_price,
+            "is_b2b": is_b2b,
             "supplier_name": supplier.name if supplier else None,
             "brand": part.brand if part else None,
             "image_url": part.image_url if part else None,            "sku": part.sku if part else None,

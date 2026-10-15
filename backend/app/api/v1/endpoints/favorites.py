@@ -5,7 +5,7 @@ from app.core.db import get_db
 from app.schemas.favorites_schemas import FavoriteItemSchema, FavoriteAddSchema, FavoriteListResponse, FavoritePartResult
 from app.models import Favorite, Part, SupplierOffer
 from app.api.v1.endpoints.auth import get_optional_user
-from app.services.catalog_utils import best_offer
+from app.services.catalog_utils import best_offer, b2b_margin_for_user
 
 router = APIRouter()
 
@@ -26,6 +26,7 @@ async def get_favorites(
     items = base_query.offset((page - 1) * page_size).limit(page_size).all()
 
     result = []
+    b2b_margin = b2b_margin_for_user(db, user_id)
     for item in items:
         part = db.query(Part).filter(Part.id == item.part_id).first()
         if not part:
@@ -33,7 +34,7 @@ async def get_favorites(
         offers = db.query(SupplierOffer).options(
             joinedload(SupplierOffer.supplier)
         ).filter(SupplierOffer.part_id == part.id).all()
-        best = best_offer(offers)
+        best = best_offer(offers, b2b_margin=b2b_margin)
         result.append({
             "id": part.id,
             "article": part.article,
@@ -41,6 +42,8 @@ async def get_favorites(
             "brand_id": part.brand_id,
             "brand": part.brand,
             "price": best["price"] if best else None,
+            "retail_price": best["retail_price"] if best else None,
+            "is_b2b": best["is_b2b"] if best else False,
             "quantity": best["quantity"] if best else None,
             "currency": best["currency"] if best else "UAH",
             "image_url": part.image_url,
