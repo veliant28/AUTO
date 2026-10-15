@@ -1,14 +1,23 @@
 'use client'
 import { can } from '@/lib/permissions'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
-import { Tag, Loader2, Search } from 'lucide-react'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
   SelectContent,
@@ -28,6 +37,8 @@ interface BrandItem {
   with_applicability: number
 }
 
+const columnHelper = createColumnHelper<BrandItem>()
+
 function CoverageCell({ matched, total }: { matched: number; total: number }) {
   const pct = total > 0 ? Math.round((matched / total) * 100) : 0
   let barColor: string
@@ -37,7 +48,7 @@ function CoverageCell({ matched, total }: { matched: number; total: number }) {
   else barColor = 'bg-red-500'
 
   return (
-    <div className="flex items-center gap-3 justify-center px-2">
+    <div className="flex items-center gap-3">
       <Progress
         value={pct}
         className="h-2.5 flex-1 max-w-[140px]"
@@ -63,7 +74,7 @@ export default function AdminBrandsPage() {
     setHydrated(true)
   }, [])
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['admin-brands', page, pageSize, search],
     queryFn: async () => {
       const params: any = { page, page_size: pageSize }
@@ -72,6 +83,92 @@ export default function AdminBrandsPage() {
       return data as { items: BrandItem[]; total: number }
     },
     enabled: hydrated && !!user,
+  })
+
+  // Стабильная ссылка массива: иначе TanStack пересчитывает строки
+  // на каждый рендер и страница крутит лишние перерисовки
+  const items = useMemo(() => data?.items || [], [data])
+  const total = data?.total || 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+
+  // Колонки — те же дефиниции и рендер, что в таблице заказов
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: t('brands_brand'),
+        size: 320,
+        cell: (info) => (
+          <span className="font-semibold text-sm">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('id', {
+        header: t('brands_id'),
+        size: 90,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('total', {
+        header: t('brands_total'),
+        size: 90,
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('matched', {
+        header: t('brands_matched'),
+        size: 130,
+        cell: (info) => (
+          <span className="text-sm text-green-600">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('with_applicability', {
+        header: t('brands_with_app'),
+        size: 150,
+        cell: (info) => (
+          <span className="text-sm text-blue-600 font-semibold">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('unmatched', {
+        header: t('brands_unmatched'),
+        size: 130,
+        cell: (info) => (
+          <span className="text-sm text-red-500">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'coverage',
+        header: t('brands_coverage'),
+        size: 250,
+        cell: ({ row }) => (
+          <CoverageCell
+            matched={row.original.with_applicability}
+            total={row.original.total}
+          />
+        ),
+      }),
+    ],
+    [t],
+  )
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: totalPages,
   })
 
   if (!hydrated) {
@@ -84,15 +181,13 @@ export default function AdminBrandsPage() {
 
   if (!can(user, 'brands.view')) return null
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0
-
   return (
     <div className="p-6">
       <div className="flex gap-4 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            className="pl-9"
+            className="pl-9 h-10"
             placeholder={t('brands_search')}
             value={search}
             onChange={(e) => {
@@ -108,7 +203,7 @@ export default function AdminBrandsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[80px]">
+          <SelectTrigger className="w-[100px] h-10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -123,70 +218,60 @@ export default function AdminBrandsPage() {
       <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('brands_brand')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[80px]">
-                    {t('brands_id')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[80px]">
-                    {t('brands_total')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
-                    {t('brands_matched')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
-                    {t('brands_with_app')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[110px]">
-                    {t('brands_unmatched')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground w-[250px]">
-                    {t('brands_coverage')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.items?.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b last:border-0 hover:bg-muted/30"
-                  >
-                    <td className="p-3 font-semibold text-sm">{item.name}</td>
-                    <td className="p-3 text-center text-sm text-muted-foreground">
-                      {item.id}
-                    </td>
-                    <td className="p-3 text-center text-sm">{item.total}</td>
-                    <td className="p-3 text-center text-sm text-green-600">
-                      {item.matched}
-                    </td>
-                    <td className="p-3 text-center text-sm text-blue-600 font-semibold">
-                      {item.with_applicability}
-                    </td>
-                    <td className="p-3 text-center text-sm text-red-500">
-                      {item.unmatched}
-                    </td>
-                    <td className="p-3">
-                      <CoverageCell
-                        matched={item.with_applicability}
-                        total={item.total}
-                      />
-                    </td>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 ))}
-                {(!data?.items || data.items.length === 0) && (
+              </thead>
+              <tbody>
+                {isLoading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={`sk-${i}`} className="border-b last:border-0">
+                      <td colSpan={columns.length} className="p-3">
+                        <Skeleton className="h-8 w-full" />
+                      </td>
+                    </tr>
+                  ))}
+                {!isLoading && items.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={columns.length}
                       className="p-6 text-center text-muted-foreground text-sm"
                     >
                       {t('brands_empty')}
                     </td>
                   </tr>
                 )}
+                {!isLoading &&
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="border-b last:border-0 hover:bg-muted/30"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-3">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -200,7 +285,7 @@ export default function AdminBrandsPage() {
                   variant="outline"
                   size="sm"
                   disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => table.previousPage()}
                 >
                   {t('prev_page')}
                 </Button>
@@ -220,7 +305,7 @@ export default function AdminBrandsPage() {
                       key={p}
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setPage(p)}
+                      onClick={() => table.setPageIndex(p - 1)}
                     >
                       {p}
                     </Button>
@@ -230,7 +315,7 @@ export default function AdminBrandsPage() {
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => table.nextPage()}
                 >
                   {t('next_page')}
                 </Button>

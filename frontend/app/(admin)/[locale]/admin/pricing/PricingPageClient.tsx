@@ -4,6 +4,14 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import {
   Loader2,
   Save,
   Play,
@@ -69,6 +77,8 @@ interface GeneralRule {
   margin_percent: number
   is_active: boolean
 }
+
+const columnHelper = createColumnHelper<CategoryRule>()
 
 function EChart({
   option,
@@ -431,6 +441,136 @@ export default function PricingPageClient() {
     )
   }
 
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('category_id', {
+        header: 'ID',
+        size: 60,
+        cell: (info) => (
+          <span className="font-mono text-xs">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('category_name', {
+        header: t('pricing_category'),
+        size: 320,
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      }),
+      columnHelper.display({
+        id: 'margin',
+        header: `${t('pricing_margin')} %`,
+        size: 220,
+        cell: ({ row }) => {
+          const cat = row.original
+          const digits = categoryOtp[cat.category_id] || ['0', '0', '0']
+          const updateVal = (newDigits: string[]) => {
+            const num = Math.min(100, Math.max(0, Number(newDigits.join(''))))
+            const clampedDigits = String(num).padStart(3, '0').split('')
+            setCategoryOtp((prev) => ({
+              ...prev,
+              [cat.category_id]: clampedDigits,
+            }))
+            setCategoryMargins((prev) => ({
+              ...prev,
+              [cat.category_id]: num,
+            }))
+          }
+          return (
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+                onClick={() => {
+                  const current = categoryMargins[cat.category_id] || 0
+                  const newVal = Math.max(0, current - 1)
+                  updateVal(String(newVal).padStart(3, '0').split(''))
+                }}
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </Button>
+              <div className="flex items-center gap-0.5">
+                <InputOTP
+                  maxLength={3}
+                  value={digits.join('')}
+                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                    const input = e.target as HTMLInputElement
+                    const set0 = () => input.setSelectionRange(0, 0)
+                    setTimeout(set0, 0)
+                    setTimeout(set0, 100)
+                  }}
+                  onPointerDown={(e: React.PointerEvent<HTMLInputElement>) => {
+                    const input = e.target as HTMLInputElement
+                    setTimeout(() => input.setSelectionRange(0, 0), 0)
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Backspace') {
+                      e.preventDefault()
+                      const input = e.target as HTMLInputElement
+                      const pos = Math.min(2, input.selectionStart ?? 2)
+                      // Use the digits for current value
+                      const currentVal = digits.join('')
+                      const newVal =
+                        currentVal.substring(0, pos) +
+                        '0' +
+                        currentVal.substring(pos + 1)
+                      const padded = newVal.slice(0, 3).padEnd(3, '0').split('')
+                      updateVal(padded)
+                      setTimeout(() => input.setSelectionRange(pos, pos), 0)
+                    }
+                  }}
+                  onChange={(val) => {
+                    const raw = val.replace(/\D/g, '')
+                    const padded = raw.padEnd(3, '0').split('')
+                    updateVal(padded)
+                  }}
+                  containerClassName="[&_[data-input-otp]]:pointer-events-auto"
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={1} className="w-7 h-8 text-xs" />
+                    <InputOTPSlot index={2} className="w-7 h-8 text-xs" />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-full"
+                onClick={() => {
+                  const current = categoryMargins[cat.category_id] || 0
+                  const newVal = Math.min(100, current + 1)
+                  updateVal(String(newVal).padStart(3, '0').split(''))
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+              <span className="text-base font-semibold text-foreground">%</span>
+            </div>
+          )
+        },
+      }),
+    ],
+    [t, categoryOtp, categoryMargins],
+  )
+
+  const table = useReactTable({
+    data: categoryRules,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: catPage - 1, pageSize: catPageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: catPage - 1, pageSize: catPageSize })
+          : updater
+      setCatPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil(catTotal / catPageSize)),
+  })
+
   return (
     <div className="p-6 space-y-6">
       <Card>
@@ -498,151 +638,45 @@ export default function PricingPageClient() {
         </div>
 
         <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">
-                  ID
-                </th>
-                <th className="text-left p-3 font-medium text-muted-foreground">
-                  {t('pricing_category')}
-                </th>
-                <th className="text-left p-3 font-medium text-muted-foreground">
-                  {t('pricing_margin')} %
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryRules.map((cat) => {
-                const digits = categoryOtp[cat.category_id] || ['0', '0', '0']
-                const updateVal = (newDigits: string[]) => {
-                  const num = Math.min(
-                    100,
-                    Math.max(0, Number(newDigits.join(''))),
-                  )
-                  const clampedDigits = String(num).padStart(3, '0').split('')
-                  setCategoryOtp((prev) => ({
-                    ...prev,
-                    [cat.category_id]: clampedDigits,
-                  }))
-                  setCategoryMargins((prev) => ({
-                    ...prev,
-                    [cat.category_id]: num,
-                  }))
-                }
-                return (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
                   <tr
-                    key={cat.category_id}
+                    key={row.id}
                     className="border-b last:border-0 hover:bg-muted/30"
                   >
-                    <td className="p-3 font-mono text-xs">{cat.category_id}</td>
-                    <td className="p-3 text-sm">{cat.category_name}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => {
-                            const current =
-                              categoryMargins[cat.category_id] || 0
-                            const newVal = Math.max(0, current - 1)
-                            updateVal(String(newVal).padStart(3, '0').split(''))
-                          }}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </Button>
-                        <div className="flex items-center gap-0.5">
-                          <InputOTP
-                            maxLength={3}
-                            value={digits.join('')}
-                            onFocus={(
-                              e: React.FocusEvent<HTMLInputElement>,
-                            ) => {
-                              const input = e.target as HTMLInputElement
-                              const set0 = () => input.setSelectionRange(0, 0)
-                              setTimeout(set0, 0)
-                              setTimeout(set0, 100)
-                            }}
-                            onPointerDown={(
-                              e: React.PointerEvent<HTMLInputElement>,
-                            ) => {
-                              const input = e.target as HTMLInputElement
-                              setTimeout(() => input.setSelectionRange(0, 0), 0)
-                            }}
-                            onKeyDown={(
-                              e: React.KeyboardEvent<HTMLInputElement>,
-                            ) => {
-                              if (e.key === 'Backspace') {
-                                e.preventDefault()
-                                const input = e.target as HTMLInputElement
-                                const pos = Math.min(
-                                  2,
-                                  input.selectionStart ?? 2,
-                                )
-                                // Use the digits for current value
-                                const currentVal = digits.join('')
-                                const newVal =
-                                  currentVal.substring(0, pos) +
-                                  '0' +
-                                  currentVal.substring(pos + 1)
-                                const padded = newVal
-                                  .slice(0, 3)
-                                  .padEnd(3, '0')
-                                  .split('')
-                                updateVal(padded)
-                                setTimeout(
-                                  () => input.setSelectionRange(pos, pos),
-                                  0,
-                                )
-                              }
-                            }}
-                            onChange={(val) => {
-                              const raw = val.replace(/\D/g, '')
-                              const padded = raw.padEnd(3, '0').split('')
-                              updateVal(padded)
-                            }}
-                            containerClassName="[&_[data-input-otp]]:pointer-events-auto"
-                          >
-                            <InputOTPGroup>
-                              <InputOTPSlot
-                                index={0}
-                                className="w-7 h-8 text-xs"
-                              />
-                              <InputOTPSlot
-                                index={1}
-                                className="w-7 h-8 text-xs"
-                              />
-                              <InputOTPSlot
-                                index={2}
-                                className="w-7 h-8 text-xs"
-                              />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => {
-                            const current =
-                              categoryMargins[cat.category_id] || 0
-                            const newVal = Math.min(100, current + 1)
-                            updateVal(String(newVal).padStart(3, '0').split(''))
-                          }}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </Button>
-                        <span className="text-base font-semibold text-foreground">
-                          %
-                        </span>
-                      </div>
-                    </td>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {categoryRules.length === 0 && (
             <div className="p-6 text-center text-muted-foreground text-sm">
               {t('pricing_empty')}
@@ -661,7 +695,7 @@ export default function PricingPageClient() {
                 variant="outline"
                 size="sm"
                 disabled={catPage === 1}
-                onClick={() => setCatPage(catPage - 1)}
+                onClick={() => table.previousPage()}
               >
                 {t('prev_page')}
               </Button>
@@ -682,7 +716,7 @@ export default function PricingPageClient() {
                       key={p}
                       variant={p === catPage ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setCatPage(p)}
+                      onClick={() => table.setPageIndex(p - 1)}
                     >
                       {p}
                     </Button>
@@ -693,7 +727,7 @@ export default function PricingPageClient() {
                 variant="outline"
                 size="sm"
                 disabled={catPage >= catTotalPages}
-                onClick={() => setCatPage(catPage + 1)}
+                onClick={() => table.nextPage()}
               >
                 {t('next_page')}
               </Button>

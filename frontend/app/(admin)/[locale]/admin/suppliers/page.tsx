@@ -4,6 +4,14 @@ import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { TablePagination } from '@/components/admin/TablePagination'
+import {
   Loader2,
   Eye,
   EyeOff,
@@ -74,6 +82,8 @@ function formatCountdown(seconds: number): string {
   const s = seconds % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
+
+const columnHelper = createColumnHelper<any>()
 
 function TokenBadge({
   supplier,
@@ -483,6 +493,184 @@ function ScheduleSection() {
     onError: () => toast.error(t('settings_schedule_run_error')),
   })
 
+  const scheduleRows = React.useMemo(() => schedules || [], [schedules])
+
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor('supplier', {
+        header: t('import_supplier'),
+        size: 85,
+        cell: (info) => {
+          const s = info.row.original
+          const color = supplierMeta[s.supplier]?.color || 'bg-gray-500'
+          return (
+            <Badge className={`${color} border-0 text-white text-sm`}>
+              {s.supplier}
+            </Badge>
+          )
+        },
+      }),
+      columnHelper.accessor('run_at_time', {
+        header: t('settings_schedule_time'),
+        size: 80,
+        cell: (info) => {
+          const s = info.row.original
+          return (
+            <TimePicker
+              value={s.run_at_time}
+              onChange={(run_at_time) =>
+                timeMutation.mutate({ supplier: s.supplier, run_at_time })
+              }
+              disabled={!s.enabled}
+            />
+          )
+        },
+      }),
+      columnHelper.accessor('schedule_status', {
+        header: t('import_status'),
+        size: 120,
+        cell: (info) => {
+          const s = info.row.original
+          const ssColor =
+            scheduleStatusColors[s.schedule_status] || 'bg-gray-400 text-white'
+          const statusLabel = scheduleStatusLabel(s.schedule_status, t)
+          return (
+            <Badge className={`${ssColor} border-0 text-sm gap-1`}>
+              {s.schedule_status === 'in_progress' && (
+                <Loader className="w-3.5 h-3.5 animate-spin" />
+              )}
+              {s.schedule_status === 'done' && (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              )}
+              {s.schedule_status === 'error' && (
+                <XCircle className="w-3.5 h-3.5" />
+              )}
+              {s.schedule_status === 'waiting' && (
+                <Clock className="w-3.5 h-3.5" />
+              )}
+              {statusLabel}
+            </Badge>
+          )
+        },
+      }),
+      columnHelper.accessor('next_run_utc', {
+        header: t('settings_schedule_next'),
+        size: 130,
+        cell: (info) => {
+          const s = info.row.original
+          return s.enabled ? (
+            <ScheduleTimer nextRunUtc={s.next_run_utc} />
+          ) : (
+            <span className="text-sm text-muted-foreground">—</span>
+          )
+        },
+      }),
+      columnHelper.accessor('last_run_at', {
+        header: t('settings_schedule_last'),
+        size: 170,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDate(info.getValue(), tz)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('last_import_progress', {
+        header: t('import_progress'),
+        size: 190,
+        cell: (info) => {
+          const s = info.row.original
+          return (
+            <div className="flex items-center gap-2 pr-2">
+              <Progress
+                value={s.last_import_progress || 0}
+                className="h-2 flex-1"
+                indicatorClassName={
+                  s.last_import_status === 'failed'
+                    ? 'bg-red-500'
+                    : s.last_import_status === 'complete'
+                      ? 'bg-green-500'
+                      : 'bg-blue-500'
+                }
+              />
+              <span className="text-sm font-mono text-muted-foreground w-8 text-right">
+                {s.last_import_progress || 0}%
+              </span>
+            </div>
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: t('actions'),
+        size: 100,
+        cell: (info) => {
+          const s = info.row.original
+          const color = supplierMeta[s.supplier]?.color || 'bg-gray-500'
+          return (
+            <div className="flex gap-2 justify-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    className={`${s.enabled ? `${color} text-white` : ''}`}
+                    variant={s.enabled ? undefined : 'outline'}
+                    onClick={() =>
+                      toggleMutation.mutate({
+                        supplier: s.supplier,
+                        enabled: !s.enabled,
+                      })
+                    }
+                  >
+                    {s.enabled ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <X className="w-4 h-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {s.enabled
+                    ? t('settings_schedule_disabled_short')
+                    : t('settings_schedule_enabled_short')}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => runMutation.mutate(s.supplier)}
+                      disabled={
+                        !s.enabled || s.schedule_status === 'in_progress'
+                      }
+                    >
+                      <Play className="w-4 h-4" />
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {s.schedule_status === 'in_progress'
+                    ? t('settings_schedule_run_in_progress')
+                    : t('settings_schedule_run')}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )
+        },
+      }),
+    ],
+    [t, tz, toggleMutation, timeMutation, runMutation],
+  )
+
+  const table = useReactTable({
+    data: scheduleRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
   if (isLoading || !schedules) {
     return (
       <Card className="mt-6">
@@ -510,50 +698,46 @@ function ScheduleSection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <table className="w-full text-sm table-fixed">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left p-3 font-medium text-muted-foreground w-[85px]">
-                {t('import_supplier')}
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground w-[80px]">
-                {t('settings_schedule_time')}
-              </th>
-              <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
-                {t('import_status')}
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground w-[130px]">
-                {t('settings_schedule_next')}
-              </th>
-              <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">
-                {t('settings_schedule_last')}
-              </th>
-              <th className="text-left p-3 font-medium text-muted-foreground w-[190px]">
-                {t('import_progress')}
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
-                {t('actions')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((s: any) => (
-              <ScheduleRow
-                key={s.supplier}
-                schedule={s}
-                tz={tz}
-                t={t}
-                onToggle={(enabled) =>
-                  toggleMutation.mutate({ supplier: s.supplier, enabled })
-                }
-                onTimeChange={(run_at_time) =>
-                  timeMutation.mutate({ supplier: s.supplier, run_at_time })
-                }
-                onRun={() => runMutation.mutate(s.supplier)}
-              />
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              {table.getHeaderGroups().map((hg) => (
+                <tr key={hg.id} className="border-b bg-muted/50">
+                  {hg.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="text-left p-3 font-medium text-muted-foreground"
+                      style={{ width: header.getSize() }}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b last:border-0 hover:bg-muted/30"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="p-3">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <TablePagination table={table} />
       </CardContent>
     </Card>
   )
@@ -611,128 +795,5 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
       {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:
       {String(s).padStart(2, '0')}
     </Badge>
-  )
-}
-
-function ScheduleRow({
-  schedule: s,
-  tz,
-  t,
-  onToggle,
-  onTimeChange,
-  onRun,
-}: {
-  schedule: any
-  tz: string
-  t: any
-  onToggle: (enabled: boolean) => void
-  onTimeChange: (v: string) => void
-  onRun: () => void
-}) {
-  const color = supplierMeta[s.supplier]?.color || 'bg-gray-500'
-  const ssColor =
-    scheduleStatusColors[s.schedule_status] || 'bg-gray-400 text-white'
-  const statusLabel = scheduleStatusLabel(s.schedule_status, t)
-
-  return (
-    <tr className="border-b last:border-0 hover:bg-muted/30">
-      <td className="p-3">
-        <Badge className={`${color} border-0 text-white text-sm`}>
-          {s.supplier}
-        </Badge>
-      </td>
-      <td className="p-3 text-center">
-        <TimePicker
-          value={s.run_at_time}
-          onChange={onTimeChange}
-          disabled={!s.enabled}
-        />
-      </td>
-      <td className="p-3">
-        <Badge className={`${ssColor} border-0 text-sm gap-1`}>
-          {s.schedule_status === 'in_progress' && (
-            <Loader className="w-3.5 h-3.5 animate-spin" />
-          )}
-          {s.schedule_status === 'done' && (
-            <CheckCircle2 className="w-3.5 h-3.5" />
-          )}
-          {s.schedule_status === 'error' && <XCircle className="w-3.5 h-3.5" />}
-          {s.schedule_status === 'waiting' && <Clock className="w-3.5 h-3.5" />}
-          {statusLabel}
-        </Badge>
-      </td>
-      <td className="p-3 text-center">
-        {s.enabled ? (
-          <ScheduleTimer nextRunUtc={s.next_run_utc} />
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="p-3 text-sm text-muted-foreground">
-        {formatDate(s.last_run_at, tz)}
-      </td>
-      <td className="p-3">
-        <div className="flex items-center gap-2 pr-2">
-          <Progress
-            value={s.last_import_progress || 0}
-            className="h-2 flex-1"
-            indicatorClassName={
-              s.last_import_status === 'failed'
-                ? 'bg-red-500'
-                : s.last_import_status === 'complete'
-                  ? 'bg-green-500'
-                  : 'bg-blue-500'
-            }
-          />
-          <span className="text-sm font-mono text-muted-foreground w-8 text-right">
-            {s.last_import_progress || 0}%
-          </span>
-        </div>
-      </td>
-      <td className="p-3">
-        <div className="flex gap-2 justify-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                className={`${s.enabled ? `${color} text-white` : ''}`}
-                variant={s.enabled ? undefined : 'outline'}
-                onClick={() => onToggle(!s.enabled)}
-              >
-                {s.enabled ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <X className="w-4 h-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {s.enabled
-                ? t('settings_schedule_disabled_short')
-                : t('settings_schedule_enabled_short')}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={onRun}
-                  disabled={!s.enabled || s.schedule_status === 'in_progress'}
-                >
-                  <Play className="w-4 h-4" />
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              {s.schedule_status === 'in_progress'
-                ? t('settings_schedule_run_in_progress')
-                : t('settings_schedule_run')}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </td>
-    </tr>
   )
 }

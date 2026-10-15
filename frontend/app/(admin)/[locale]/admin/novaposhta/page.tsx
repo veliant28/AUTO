@@ -40,13 +40,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { TablePagination } from '@/components/admin/TablePagination'
 import {
   Tooltip,
   TooltipContent,
@@ -123,6 +124,8 @@ function senderDisplayName(sender: NovaPoshtaSenderProfile): string {
 // Senders Column
 // ═══════════════════════════════════════════════════════════════════════════════
 
+const senderColumnHelper = createColumnHelper<NovaPoshtaSenderProfile>()
+
 function SendersColumn({
   t,
   showCreate,
@@ -182,6 +185,155 @@ function SendersColumn({
       toast.error(err?.response?.data?.detail || t('novaposhta_error_api')),
   })
 
+  const typeLabels: Record<string, string> = {
+    private_person: t('novaposhta_sender_type_private_person'),
+    fop: t('novaposhta_sender_type_fop'),
+    business: t('novaposhta_sender_type_business'),
+  }
+
+  // Данные приводим к стабильной ссылке: TanStack иначе пересчитывает строки
+  // на каждый рендер и страница крутит лишние перерисовки
+  const senderRows = React.useMemo(() => senders || [], [senders])
+
+  // Колонки — те же дефиниции и рендер, что в таблице заказов
+  const columns = React.useMemo(
+    () => [
+      senderColumnHelper.accessor('sender_type', {
+        header: t('novaposhta_sender_type'),
+        size: 140,
+        cell: (info) => (
+          <Badge variant="outline" className="text-sm font-normal">
+            {typeLabels[info.getValue()] || info.getValue()}
+          </Badge>
+        ),
+      }),
+      senderColumnHelper.display({
+        id: 'sender',
+        header: t('novaposhta_sender'),
+        size: 320,
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">
+              {senderDisplayName(row.original)}
+            </span>
+            {row.original.phone && (
+              <span className="text-xs text-muted-foreground mt-0.5">
+                {formatPhone(row.original.phone)}
+              </span>
+            )}
+          </div>
+        ),
+      }),
+      senderColumnHelper.accessor('is_active', {
+        header: t('novaposhta_status'),
+        size: 120,
+        cell: (info) => (
+          <Badge
+            className={`border-0 text-sm ${
+              info.getValue()
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-500 text-white'
+            }`}
+          >
+            {info.getValue()
+              ? t('novaposhta_active')
+              : t('novaposhta_inactive')}
+          </Badge>
+        ),
+      }),
+      senderColumnHelper.display({
+        id: 'actions',
+        header: t('actions'),
+        size: 180,
+        cell: ({ row }) => {
+          const sender = row.original
+          return (
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDefaultMutation.mutate(sender.id)}
+                  >
+                    <Star
+                      className={`w-4 h-4 ${
+                        sender.is_default
+                          ? 'fill-yellow-500 text-yellow-500'
+                          : ''
+                      }`}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('novaposhta_set_default')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setEditingSender(sender)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('edit')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => validateMutation.mutate(sender.id)}
+                    disabled={validateMutation.isPending}
+                  >
+                    {validateMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('novaposhta_validate') || 'Перевірити'}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => setDeleteTarget(sender)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('delete')}</TooltipContent>
+              </Tooltip>
+            </div>
+          )
+        },
+      }),
+    ],
+    [
+      t,
+      typeLabels,
+      setDefaultMutation,
+      validateMutation,
+      setEditingSender,
+      setDeleteTarget,
+    ],
+  )
+
+  const table = useReactTable({
+    data: senderRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
   if (isLoading) {
     return (
       <Card>
@@ -198,12 +350,6 @@ function SendersColumn({
     )
   }
 
-  const typeLabels: Record<string, string> = {
-    private_person: t('novaposhta_sender_type_private_person'),
-    fop: t('novaposhta_sender_type_fop'),
-    business: t('novaposhta_sender_type_business'),
-  }
-
   return (
     <TooltipProvider>
       <Card>
@@ -214,144 +360,56 @@ function SendersColumn({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-[140px] h-auto py-3">
-                  {t('novaposhta_sender_type')}
-                </TableHead>
-                <TableHead className="h-auto py-3">
-                  {t('novaposhta_sender')}
-                </TableHead>
-                <TableHead className="w-[100px] h-auto py-3">
-                  {t('novaposhta_status')}
-                </TableHead>
-                <TableHead className="w-[150px] text-right h-auto py-3">
-                  {t('actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {senders.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {t('novaposhta_senders_empty')}
-                  </TableCell>
-                </TableRow>
-              )}
-              {senders.map((sender: NovaPoshtaSenderProfile) => (
-                <TableRow key={sender.id}>
-                  {/* Тип */}
-                  <TableCell>
-                    <Badge variant="outline" className="text-sm font-normal">
-                      {typeLabels[sender.sender_type] || sender.sender_type}
-                    </Badge>
-                  </TableCell>
-
-                  {/* Отправитель */}
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-sm">
-                        {senderDisplayName(sender)}
-                      </span>
-                      {sender.phone && (
-                        <span className="text-xs text-muted-foreground mt-0.5">
-                          {formatPhone(sender.phone)}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-
-                  {/* Статус */}
-                  <TableCell>
-                    <Badge
-                      className={`border-0 text-sm ${
-                        sender.is_active
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-500 text-white'
-                      }`}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {senderRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      className="p-3 text-center py-8 text-muted-foreground"
                     >
-                      {sender.is_active
-                        ? t('novaposhta_active')
-                        : t('novaposhta_inactive')}
-                    </Badge>
-                  </TableCell>
-
-                  {/* Действия */}
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setDefaultMutation.mutate(sender.id)}
-                          >
-                            <Star
-                              className={`w-4 h-4 ${
-                                sender.is_default
-                                  ? 'fill-yellow-500 text-yellow-500'
-                                  : ''
-                              }`}
-                            />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t('novaposhta_set_default')}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setEditingSender(sender)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('edit')}</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => validateMutation.mutate(sender.id)}
-                            disabled={validateMutation.isPending}
-                          >
-                            {validateMutation.isPending ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t('novaposhta_validate') || 'Перевірити'}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => setDeleteTarget(sender)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t('delete')}</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      {t('novaposhta_senders_empty')}
+                    </td>
+                  </tr>
+                )}
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b last:border-0 hover:bg-muted/30"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <TablePagination table={table} />
         </CardContent>
       </Card>
 

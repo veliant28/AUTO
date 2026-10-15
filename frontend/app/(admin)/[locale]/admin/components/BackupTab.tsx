@@ -5,6 +5,15 @@ import { useRequirePerm } from '@/hooks/useRequirePerm'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { TablePagination } from '@/components/admin/TablePagination'
 import { useTheme } from '@wrksz/themes/client'
 import {
   Download,
@@ -176,6 +185,8 @@ interface BackupRecord {
   created_at: string | null
   completed_at: string | null
 }
+
+const columnHelper = createColumnHelper<BackupRecord>()
 
 export default function BackupTab() {
   const t = useTranslations('admin')
@@ -429,6 +440,118 @@ export default function BackupTab() {
     ],
   }
 
+  const backupRows = useMemo(() => backups || [], [backups])
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('created_at', {
+        header: t('backup_date'),
+        size: 160,
+        cell: (info) => (
+          <span className="whitespace-nowrap text-muted-foreground">
+            {info.getValue()
+              ? formatDateTime(info.getValue(), timezone, {
+                  locale: 'uk-UA',
+                  seconds: false,
+                })
+              : '—'}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('filename', {
+        header: t('backup_filename'),
+        size: 320,
+        cell: (info) => (
+          <div className="font-mono text-sm truncate max-w-[300px]">
+            {info.getValue()}
+          </div>
+        ),
+      }),
+      columnHelper.accessor('file_size', {
+        header: t('backup_size'),
+        size: 128,
+        cell: (info) => (
+          <span className="whitespace-nowrap">
+            {formatFileSize(info.getValue())}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('status', {
+        header: t('backup_status'),
+        size: 112,
+        cell: (info) => {
+          const status = info.getValue()
+          return (
+            <Badge
+              className={`${STATUS_BADGE[status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
+            >
+              {status === 'in_progress' && (
+                <Loader className="w-3.5 h-3.5 animate-spin" />
+              )}
+              {t(STATUS_LABEL_KEY[status] || 'backup_status_unknown')}
+            </Badge>
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: t('backup_actions'),
+        size: 112,
+        cell: ({ row }) => (
+          <div className="flex gap-1 justify-end">
+            {row.original.status === 'completed' && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        downloadBackup(row.original.id, row.original.filename)
+                      }
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t('backup_download')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        if (!reqPerm('backup.delete')) return
+                        setDeleteTarget(row.original)
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t('backup_delete')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            )}
+          </div>
+        ),
+      }),
+    ],
+    [t, timezone, downloadBackup, reqPerm],
+  )
+
+  const table = useReactTable({
+    data: backupRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
   if (!can(user, 'backup.view')) return null
 
   return (
@@ -480,106 +603,48 @@ export default function BackupTab() {
               {t('backup_empty')}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground w-40">
-                      {t('backup_date')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('backup_filename')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-32">
-                      {t('backup_size')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-28">
-                      {t('backup_status')}
-                    </th>
-                    <th className="text-right p-3 font-medium text-muted-foreground w-28">
-                      {t('backup_actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {backups.map((rec) => (
-                    <tr
-                      key={rec.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      <td className="p-3 whitespace-nowrap text-muted-foreground">
-                        {rec.created_at
-                          ? formatDateTime(rec.created_at, timezone, {
-                              locale: 'uk-UA',
-                              seconds: false,
-                            })
-                          : '—'}
-                      </td>
-                      <td className="p-3 font-mono text-sm truncate max-w-[300px]">
-                        {rec.filename}
-                      </td>
-                      <td className="p-3 whitespace-nowrap">
-                        {formatFileSize(rec.file_size)}
-                      </td>
-                      <td className="p-3">
-                        <Badge
-                          className={`${STATUS_BADGE[rec.status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
-                        >
-                          {rec.status === 'in_progress' && (
-                            <Loader className="w-3.5 h-3.5 animate-spin" />
-                          )}
-                          {t(
-                            STATUS_LABEL_KEY[rec.status] ||
-                              'backup_status_unknown',
-                          )}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-1 justify-end">
-                          {rec.status === 'completed' && (
-                            <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() =>
-                                      downloadBackup(rec.id, rec.filename)
-                                    }
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  <p>{t('backup_download')}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    onClick={() => {
-                                      if (!reqPerm('backup.delete')) return
-                                      setDeleteTarget(rec)
-                                    }}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  <p>{t('backup_delete')}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    {table.getHeaderGroups().map((hg) => (
+                      <tr key={hg.id} className="border-b bg-muted/50">
+                        {hg.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            className="text-left p-3 font-medium text-muted-foreground"
+                            style={{ width: header.getSize() }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody>
+                    {table.getRowModel().rows.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="border-b last:border-0 hover:bg-muted/30"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id} className="p-3">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <TablePagination table={table} />
+            </>
           )}
         </CardContent>
       </Card>

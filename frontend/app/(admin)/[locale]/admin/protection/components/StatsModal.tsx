@@ -3,6 +3,15 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { TablePagination } from '@/components/admin/TablePagination'
 import { Loader2, User, ScrollText, Unlock, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useTimezoneStore } from '@/store/timezoneStore'
@@ -48,6 +57,18 @@ const eventTypeBadges: Record<string, string> = {
   too_many_attempts: 'bg-red-600 text-white',
   endpoint_abuse: 'bg-pink-500 text-white',
 }
+
+interface ProtectionEvent {
+  id: number
+  user_id: number | null
+  email: string | null
+  ip_address: string | null
+  event_type: string
+  description: string | null
+  created_at: string | null
+}
+
+const columnHelper = createColumnHelper<ProtectionEvent>()
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return ''
@@ -121,6 +142,70 @@ export default function StatsModal({
     },
     onError: (err: any) =>
       toast.error(err?.response?.data?.detail || t('protection_ban_error')),
+  })
+
+  const events: ProtectionEvent[] = data?.events || []
+
+  const eventRows = React.useMemo(() => data?.events || [], [data])
+
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor('created_at', {
+        header: t('protection_event_date'),
+        size: 180,
+        cell: (info) => (
+          <span className="whitespace-nowrap text-sm">
+            {formatDate(info.getValue())}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('event_type', {
+        header: t('protection_event_type'),
+        size: 150,
+        cell: (info) => (
+          <Badge
+            className={`${eventTypeBadges[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+          >
+            {t('event_' + info.getValue()) || info.getValue()}
+          </Badge>
+        ),
+      }),
+      columnHelper.accessor('description', {
+        header: t('protection_event_description'),
+        size: 320,
+        cell: ({ row }) => {
+          const event = row.original
+          return (
+            <div className="text-xs">
+              <span>{t('event_' + event.event_type) || event.event_type}</span>
+              {event.description &&
+                !event.description.startsWith(event.event_type) && (
+                  <span className="text-muted-foreground block mt-0.5 leading-tight">
+                    {event.description}
+                  </span>
+                )}
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('ip_address', {
+        header: t('protection_ip'),
+        size: 140,
+        cell: (info) => (
+          <span className="font-mono text-xs">{info.getValue() || '—'}</span>
+        ),
+      }),
+    ],
+    [t],
+  )
+
+  const table = useReactTable({
+    data: eventRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
   })
 
   return (
@@ -309,72 +394,56 @@ export default function StatsModal({
                   </h4>
                   <div className="flex-1 overflow-y-auto">
                     <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-muted/50">
-                            <th className="text-left p-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-                              {t('protection_event_date')}
-                            </th>
-                            <th className="text-left p-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                              {t('protection_event_type')}
-                            </th>
-                            <th className="text-left p-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                              {t('protection_event_description')}
-                            </th>
-                            <th className="text-left p-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-                              {t('protection_ip')}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.events?.length > 0 ? (
-                            data.events.map((event: any) => (
-                              <tr
-                                key={event.id}
-                                className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                              >
-                                <td className="p-3 whitespace-nowrap text-sm">
-                                  {formatDate(event.created_at)}
-                                </td>
-                                <td className="p-3">
-                                  <Badge
-                                    className={`${eventTypeBadges[event.event_type] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            {table.getHeaderGroups().map((hg) => (
+                              <tr key={hg.id} className="border-b bg-muted/50">
+                                {hg.headers.map((header) => (
+                                  <th
+                                    key={header.id}
+                                    className="text-left p-3 font-medium text-muted-foreground"
+                                    style={{ width: header.getSize() }}
                                   >
-                                    {t('event_' + event.event_type) ||
-                                      event.event_type}
-                                  </Badge>
-                                </td>
-                                <td className="p-3 text-xs">
-                                  <span>
-                                    {t('event_' + event.event_type) ||
-                                      event.event_type}
-                                  </span>
-                                  {event.description &&
-                                    !event.description.startsWith(
-                                      event.event_type,
-                                    ) && (
-                                      <span className="text-muted-foreground block mt-0.5 leading-tight">
-                                        {event.description}
-                                      </span>
+                                    {flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext(),
                                     )}
-                                </td>
-                                <td className="p-3 font-mono text-xs">
-                                  {event.ip_address || '—'}
+                                  </th>
+                                ))}
+                              </tr>
+                            ))}
+                          </thead>
+                          <tbody>
+                            {table.getRowModel().rows.map((row) => (
+                              <tr
+                                key={row.id}
+                                className="border-b last:border-0 hover:bg-muted/30"
+                              >
+                                {row.getVisibleCells().map((cell) => (
+                                  <td key={cell.id} className="p-3">
+                                    {flexRender(
+                                      cell.column.columnDef.cell,
+                                      cell.getContext(),
+                                    )}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                            {!data.events?.length && (
+                              <tr>
+                                <td
+                                  colSpan={columns.length}
+                                  className="p-6 text-center text-muted-foreground text-sm"
+                                >
+                                  {t('protection_empty_blacklist')}
                                 </td>
                               </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td
-                                colSpan={4}
-                                className="p-6 text-center text-muted-foreground text-sm"
-                              >
-                                {t('protection_empty_blacklist')}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      <TablePagination table={table} />
                     </div>
                   </div>
                 </div>

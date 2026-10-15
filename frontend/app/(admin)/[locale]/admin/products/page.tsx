@@ -6,6 +6,14 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import {
   Package,
   Loader2,
   Pencil,
@@ -305,6 +313,22 @@ function AddToOrderDropdown({
   )
 }
 
+interface ProductRow {
+  id: number
+  sku: string | null
+  article: string
+  name: string | null
+  brand: string | null
+  min_price: number | null
+  final_price: number | null
+  margin_percent: number | null
+  is_active: boolean
+  deactivation_reason: string | null
+  offers: any[]
+}
+
+const columnHelper = createColumnHelper<ProductRow>()
+
 export default function AdminProductsPage() {
   const { user } = useAuthStore()
   const t = useTranslations('admin')
@@ -368,7 +392,7 @@ export default function AdminProductsPage() {
     },
   })
 
-  const openEdit = (product: any) => {
+  const openEdit = useCallback((product: any) => {
     setEditForm({
       article: product.article || '',
       brand: product.brand || '',
@@ -380,7 +404,7 @@ export default function AdminProductsPage() {
       image_url: product.image_url || '',
     })
     setEditProduct(product)
-  }
+  }, [])
 
   const { data } = useQuery({
     queryKey: ['admin-products', page, pageSize, search, supplier, status],
@@ -393,6 +417,221 @@ export default function AdminProductsPage() {
       return data
     },
     enabled: hydrated && !!user,
+  })
+
+  const productRows = useMemo(() => data?.items || [], [data])
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('sku', {
+        header: 'SKU',
+        size: 60,
+        cell: (info) => (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard.writeText(info.getValue() || '')
+                  toast.info(t('products_sku_copied'))
+                }}
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{info.getValue() || '—'}</TooltipContent>
+          </Tooltip>
+        ),
+      }),
+      columnHelper.accessor('article', {
+        header: t('products_article'),
+        size: 90,
+        cell: (info) => (
+          <span className="font-mono text-sm">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('name', {
+        header: t('products_name'),
+        size: 190,
+        cell: (info) => (
+          <span className="text-sm truncate">{info.getValue() || '—'}</span>
+        ),
+      }),
+      columnHelper.accessor('brand', {
+        header: t('products_brand'),
+        size: 110,
+        cell: (info) => (
+          <span className="text-sm font-semibold truncate">
+            {info.getValue() || '—'}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'supplier',
+        header: t('products_supplier'),
+        size: 100,
+        cell: ({ row }) => (
+          <div className="flex gap-1 flex-wrap">
+            {row.original.offers?.map((o: any) => (
+              <Badge
+                key={o.supplier_name}
+                className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {o.supplier_name}
+              </Badge>
+            ))}
+            {(!row.original.offers || row.original.offers.length === 0) && (
+              <span className="text-sm text-muted-foreground">—</span>
+            )}
+          </div>
+        ),
+      }),
+      columnHelper.accessor('is_active', {
+        header: t('products_status'),
+        size: 100,
+        cell: (info) => (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {info.getValue() ? (
+                <Badge className="bg-green-500 text-white border-0 text-sm cursor-pointer">
+                  {t('products_active')}
+                </Badge>
+              ) : (
+                <Badge className="bg-gray-500 text-white border-0 text-sm cursor-pointer">
+                  {t('products_inactive')}
+                </Badge>
+              )}
+            </TooltipTrigger>
+            <TooltipContent>
+              {info.getValue()
+                ? t('products_active')
+                : info.row.original.deactivation_reason
+                  ? t(`deactivation_${info.row.original.deactivation_reason}`)
+                  : t('products_inactive')}
+            </TooltipContent>
+          </Tooltip>
+        ),
+      }),
+      columnHelper.accessor('min_price', {
+        header: t('products_price'),
+        size: 110,
+        cell: (info) => {
+          const item = info.row.original
+          return item.min_price != null ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge className="bg-blue-500 text-white border-0 text-sm font-semibold cursor-pointer">
+                  {Number(item.min_price).toFixed(2)} UAH
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1 text-xs">
+                  {item.final_price != null && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold">FIN:</span>
+                      <span>
+                        {Number(item.final_price).toFixed(2)} UAH
+                        {item.margin_percent != null && (
+                          <span className="text-muted-foreground">
+                            {' '}
+                            (+{item.margin_percent}%)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {item.offers?.map((o: any, i: number) => (
+                    <div key={i}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">
+                          {o.supplier_name}:
+                        </span>
+                        <span>
+                          {Number(o.price).toFixed(2)} {o.currency || 'UAH'}
+                        </span>
+                      </div>
+                      <div className="leading-tight">
+                        {o.updated_at
+                          ? formatDateTime(o.updated_at, timezone)
+                          : '—'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            '—'
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'stock',
+        header: t('products_stock'),
+        size: 250,
+        cell: ({ row }) => <StockSnake offers={row.original.offers || []} />,
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: t('actions'),
+        size: 110,
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <AddToOrderDropdown productId={row.original.id} t={t} />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (!reqPerm('products.edit')) return
+                    openEdit(row.original)
+                  }}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('edit')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => {
+                    if (!reqPerm('products.delete')) return
+                    setDeleteTarget(row.original)
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('delete')}</TooltipContent>
+            </Tooltip>
+          </div>
+        ),
+      }),
+    ],
+    [t, timezone, reqPerm, openEdit],
+  )
+
+  const table = useReactTable({
+    data: data?.items || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((data?.total || 0) / pageSize)),
   })
 
   if (!hydrated) {
@@ -479,210 +718,45 @@ export default function AdminProductsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[60px]">
-                        SKU
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[90px]">
-                        {t('products_article')}
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[190px]">
-                        {t('products_name')}
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
-                        {t('products_brand')}
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
-                        {t('products_supplier')}
-                      </th>
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
-                        {t('products_status')}
-                      </th>
-                      <th className="text-right p-3 font-medium text-muted-foreground w-[110px]">
-                        {t('products_price')}
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
-                        {t('products_stock')}
-                      </th>
-                      <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
-                        {t('actions')}
-                      </th>
-                    </tr>
+                    {table.getHeaderGroups().map((hg) => (
+                      <tr key={hg.id} className="border-b bg-muted/50">
+                        {hg.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            className="text-left p-3 font-medium text-muted-foreground"
+                            style={{ width: header.getSize() }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
                   </thead>
                   <tbody>
-                    {data?.items?.map((item: any) => (
+                    {table.getRowModel().rows.map((row) => (
                       <tr
-                        key={item.id}
+                        key={row.id}
                         className="border-b last:border-0 hover:bg-muted/30"
                       >
-                        <td className="p-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(item.sku || '')
-                                  toast.info(t('products_sku_copied'))
-                                }}
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{item.sku || '—'}</TooltipContent>
-                          </Tooltip>
-                        </td>
-                        <td className="p-3 font-mono text-sm">
-                          {item.article}
-                        </td>
-                        <td className="p-3 text-sm truncate">
-                          {item.name || '—'}
-                        </td>
-                        <td className="p-3 text-sm font-semibold truncate">
-                          {item.brand || '—'}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex gap-1 flex-wrap">
-                            {item.offers?.map((o: any) => (
-                              <Badge
-                                key={o.supplier_name}
-                                className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                              >
-                                {o.supplier_name}
-                              </Badge>
-                            ))}
-                            {(!item.offers || item.offers.length === 0) && (
-                              <span className="text-sm text-muted-foreground">
-                                —
-                              </span>
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id} className="p-3">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
                             )}
-                          </div>
-                        </td>
-                        <td className="p-3 text-left">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              {item.is_active ? (
-                                <Badge className="bg-green-500 text-white border-0 text-sm cursor-pointer">
-                                  {t('products_active')}
-                                </Badge>
-                              ) : (
-                                <Badge className="bg-gray-500 text-white border-0 text-sm cursor-pointer">
-                                  {t('products_inactive')}
-                                </Badge>
-                              )}
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {item.is_active
-                                ? t('products_active')
-                                : item.deactivation_reason
-                                  ? t(
-                                      `deactivation_${item.deactivation_reason}`,
-                                    )
-                                  : t('products_inactive')}
-                            </TooltipContent>
-                          </Tooltip>
-                        </td>
-                        <td className="p-3 text-right text-sm">
-                          {item.min_price != null ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className="bg-blue-500 text-white border-0 text-sm font-semibold cursor-pointer">
-                                  {Number(item.min_price).toFixed(2)} UAH
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="space-y-1 text-xs">
-                                  {item.final_price != null && (
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="font-semibold">
-                                        FIN:
-                                      </span>
-                                      <span>
-                                        {Number(item.final_price).toFixed(2)}{' '}
-                                        UAH
-                                        {item.margin_percent != null && (
-                                          <span className="text-muted-foreground">
-                                            {' '}
-                                            (+{item.margin_percent}%)
-                                          </span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {item.offers?.map((o: any, i: number) => (
-                                    <div key={i}>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-semibold">
-                                          {o.supplier_name}:
-                                        </span>
-                                        <span>
-                                          {Number(o.price).toFixed(2)}{' '}
-                                          {o.currency || 'UAH'}
-                                        </span>
-                                      </div>
-                                      <div className="leading-tight">
-                                        {o.updated_at
-                                          ? formatDateTime(
-                                              o.updated_at,
-                                              timezone,
-                                            )
-                                          : '—'}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td className="p-3">
-                          <StockSnake offers={item.offers || []} />
-                        </td>
-                        <td className="p-3">
-                          <div className="flex gap-2">
-                            <AddToOrderDropdown productId={item.id} t={t} />
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (!reqPerm('products.edit')) return
-                                    openEdit(item)
-                                  }}
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>{t('edit')}</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={() => {
-                                    if (!reqPerm('products.delete')) return
-                                    setDeleteTarget(item)
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>{t('delete')}</TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </td>
+                          </td>
+                        ))}
                       </tr>
                     ))}
                     {(!data?.items || data.items.length === 0) && (
                       <tr>
                         <td
-                          colSpan={9}
+                          colSpan={columns.length}
                           className="p-6 text-center text-muted-foreground text-sm"
                         >
                           {t('products_empty') || t('roles_empty')}
@@ -702,7 +776,7 @@ export default function AdminProductsPage() {
                       variant="outline"
                       size="sm"
                       disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
+                      onClick={() => table.previousPage()}
                     >
                       {t('prev_page')}
                     </Button>
@@ -722,7 +796,7 @@ export default function AdminProductsPage() {
                           key={p}
                           variant={p === page ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => setPage(p)}
+                          onClick={() => table.setPageIndex(p - 1)}
                         >
                           {p}
                         </Button>
@@ -732,7 +806,7 @@ export default function AdminProductsPage() {
                       variant="outline"
                       size="sm"
                       disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
+                      onClick={() => table.nextPage()}
                     >
                       {t('next_page')}
                     </Button>

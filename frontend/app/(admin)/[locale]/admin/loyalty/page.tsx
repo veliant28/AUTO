@@ -5,6 +5,14 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime, parseApiDate } from '@/lib/dates'
 import dynamic from 'next/dynamic'
@@ -67,6 +75,27 @@ import { ru, uk, enUS } from 'date-fns/locale'
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
 const DATE_FNS_LOCALE: Record<string, Locale> = { ru, uk, enUS }
+
+interface Promocode {
+  id: number
+  code: string
+  type: string
+  user_id: number | null
+  user_name: string | null
+  user_phone: string | null
+  user_email: string | null
+  discount_percent: number
+  reason: string
+  issued_by_id: number
+  issued_by_name: string | null
+  issued_by_role: string | null
+  expires_at: string
+  used_at: string | null
+  is_active: boolean
+  created_at: string
+}
+
+const columnHelper = createColumnHelper<Promocode>()
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return ''
@@ -234,6 +263,173 @@ export default function LoyaltyPage() {
     }
   }, [statsData])
 
+  const items: Promocode[] = listData?.items || []
+  const totalPages = listData ? Math.ceil(listData.total / 10) : 0
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('code', {
+        header: t('loyalty_code'),
+        size: 130,
+        cell: (info) => (
+          <div className="flex items-center gap-1">
+            <code className="font-mono text-sm font-bold tracking-wider">
+              {info.getValue()}
+            </code>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10"
+                  onClick={() => {
+                    navigator.clipboard.writeText(info.getValue())
+                    toast.success(t('loyalty_copied'))
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('loyalty_copy')}</TooltipContent>
+            </Tooltip>
+          </div>
+        ),
+      }),
+      columnHelper.accessor('discount_percent', {
+        header: t('loyalty_discount_percent'),
+        size: 70,
+        cell: (info) => (
+          <span className="text-sm font-semibold">
+            {info.getValue() || 100}%
+          </span>
+        ),
+      }),
+      columnHelper.accessor('type', {
+        header: t('loyalty_type'),
+        size: 120,
+        cell: (info) => (
+          <Badge
+            className={`${info.getValue() === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
+          >
+            {info.getValue() === 'delivery'
+              ? t('loyalty_type_delivery')
+              : t('loyalty_type_margin')}
+          </Badge>
+        ),
+      }),
+      columnHelper.accessor('user_name', {
+        header: t('loyalty_client'),
+        size: 200,
+        cell: ({ row }) => (
+          <div className="text-sm">
+            <p className="font-medium truncate">
+              {row.original.user_name || '—'}
+            </p>
+            {(row.original.user_phone || row.original.user_email) && (
+              <p className="text-xs text-muted-foreground truncate">
+                {formatPhone(row.original.user_phone) ||
+                  row.original.user_email}
+              </p>
+            )}
+          </div>
+        ),
+      }),
+      columnHelper.accessor('reason', {
+        header: t('loyalty_reason'),
+        size: 250,
+        cell: (info) => (
+          <div className="text-sm truncate">{info.getValue()}</div>
+        ),
+      }),
+      columnHelper.display({
+        id: 'status',
+        header: t('status'),
+        size: 140,
+        cell: ({ row }) => {
+          const item = row.original
+          const expired =
+            (parseApiDate(item.expires_at)?.getTime() ?? 0) < Date.now()
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
+                >
+                  {item.used_at
+                    ? t('status_used')
+                    : expired
+                      ? t('status_expired')
+                      : t('status_unused')}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {item.used_at
+                  ? `${t('loyalty_used_at')}: ${formatDateTime(item.used_at, timezone)}`
+                  : ''}
+                {!item.used_at && expired
+                  ? `${t('loyalty_expired_at')}: ${formatDateTime(item.expires_at, timezone)}`
+                  : ''}
+                {!item.used_at && !expired
+                  ? `${t('loyalty_valid_until')}: ${formatDateTime(item.expires_at, timezone)}`
+                  : ''}
+              </TooltipContent>
+            </Tooltip>
+          )
+        },
+      }),
+      columnHelper.accessor('issued_by_name', {
+        header: t('loyalty_staff'),
+        size: 150,
+        cell: (info) => (
+          <span className="text-sm">{info.getValue() || '—'}</span>
+        ),
+      }),
+      columnHelper.accessor('created_at', {
+        header: t('loyalty_created_at'),
+        size: 160,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDateTime(info.getValue(), timezone)}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('expires_at', {
+        header: t('loyalty_expires_at'),
+        size: 160,
+        cell: (info) => {
+          const expired =
+            (parseApiDate(info.getValue())?.getTime() ?? 0) < Date.now()
+          return (
+            <span
+              className={`text-sm ${expired ? 'text-red-500' : 'text-muted-foreground'}`}
+            >
+              {formatDateTime(info.getValue(), timezone)}
+            </span>
+          )
+        },
+      }),
+    ],
+    [t, timezone],
+  )
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize: 10 } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize: 10 })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((listData?.total || 0) / 10)),
+  })
+
   if (!hydrated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/10">
@@ -243,9 +439,6 @@ export default function LoyaltyPage() {
   }
 
   if (!can(user, 'loyalty.view')) return null
-
-  const totalPages = listData ? Math.ceil(listData.total / 10) : 0
-  const items = listData?.items || []
 
   return (
     <TooltipProvider>
@@ -322,149 +515,45 @@ export default function LoyaltyPage() {
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm table-fixed">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b bg-muted/50">
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[130px]">
-                          {t('loyalty_code')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[70px]">
-                          {t('loyalty_discount_percent')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[120px]">
-                          {t('loyalty_type')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">
-                          {t('loyalty_client')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
-                          {t('loyalty_reason')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[140px]">
-                          {t('status')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">
-                          {t('loyalty_staff')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">
-                          {t('loyalty_created_at')}
-                        </th>
-                        <th className="text-left p-3 font-medium text-muted-foreground w-[160px]">
-                          {t('loyalty_expires_at')}
-                        </th>
-                      </tr>
+                      {table.getHeaderGroups().map((hg) => (
+                        <tr key={hg.id} className="border-b bg-muted/50">
+                          {hg.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="text-left p-3 font-medium text-muted-foreground"
+                              style={{ width: header.getSize() }}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
                     </thead>
                     <tbody>
-                      {items.map((item: any) => {
-                        const expired =
-                          (parseApiDate(item.expires_at)?.getTime() ?? 0) <
-                          Date.now()
-                        return (
-                          <tr
-                            key={item.id}
-                            className="border-b last:border-0 hover:bg-muted/30"
-                          >
-                            <td className="p-3">
-                              <div className="flex items-center gap-1">
-                                <code className="font-mono text-sm font-bold tracking-wider">
-                                  {item.code}
-                                </code>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-10 w-10"
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(item.code)
-                                        toast.success(t('loyalty_copied'))
-                                      }}
-                                    >
-                                      <Copy className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {t('loyalty_copy')}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
+                      {table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b last:border-0 hover:bg-muted/30"
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="p-3">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
                             </td>
-                            <td className="p-3">
-                              <span className="text-sm font-semibold">
-                                {item.discount_percent || 100}%
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <Badge
-                                className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
-                              >
-                                {item.type === 'delivery'
-                                  ? t('loyalty_type_delivery')
-                                  : t('loyalty_type_margin')}
-                              </Badge>
-                            </td>
-                            <td className="p-3">
-                              <div className="text-sm">
-                                <p className="font-medium truncate">
-                                  {item.user_name || '—'}
-                                </p>
-                                {(item.user_phone || item.user_email) && (
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {formatPhone(item.user_phone) ||
-                                      item.user_email}
-                                  </p>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-3 text-sm truncate">
-                              {item.reason}
-                            </td>
-                            <td className="p-3">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
-                                  >
-                                    {item.used_at
-                                      ? t('status_used')
-                                      : expired
-                                        ? t('status_expired')
-                                        : t('status_unused')}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {item.used_at
-                                    ? `${t('loyalty_used_at')}: ${formatDateTime(item.used_at, timezone)}`
-                                    : ''}
-                                  {!item.used_at && expired
-                                    ? `${t('loyalty_expired_at')}: ${formatDateTime(item.expires_at, timezone)}`
-                                    : ''}
-                                  {!item.used_at && !expired
-                                    ? `${t('loyalty_valid_until')}: ${formatDateTime(item.expires_at, timezone)}`
-                                    : ''}
-                                </TooltipContent>
-                              </Tooltip>
-                            </td>
-                            <td className="p-3 text-sm">
-                              {item.issued_by_name || '—'}
-                            </td>
-                            <td className="p-3 text-sm text-muted-foreground">
-                              {formatDateTime(item.created_at, timezone)}
-                            </td>
-                            <td className="p-3">
-                              <span
-                                className={`text-sm ${expired ? 'text-red-500' : 'text-muted-foreground'}`}
-                              >
-                                {formatDateTime(item.expires_at, timezone)}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                          ))}
+                        </tr>
+                      ))}
                       {items.length === 0 && (
                         <tr>
                           <td
-                            colSpan={7}
+                            colSpan={columns.length}
                             className="p-6 text-center text-muted-foreground text-sm"
                           >
                             {t('loyalty_empty')}
@@ -484,7 +573,7 @@ export default function LoyaltyPage() {
                         variant="outline"
                         size="sm"
                         disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
+                        onClick={() => table.previousPage()}
                       >
                         {t('prev_page')}
                       </Button>
@@ -502,7 +591,7 @@ export default function LoyaltyPage() {
                               key={p}
                               variant={p === page ? 'default' : 'outline'}
                               size="sm"
-                              onClick={() => setPage(p)}
+                              onClick={() => table.setPageIndex(p - 1)}
                             >
                               {p}
                             </Button>
@@ -513,7 +602,7 @@ export default function LoyaltyPage() {
                         variant="outline"
                         size="sm"
                         disabled={page >= totalPages}
-                        onClick={() => setPage(page + 1)}
+                        onClick={() => table.nextPage()}
                       >
                         {t('next_page')}
                       </Button>

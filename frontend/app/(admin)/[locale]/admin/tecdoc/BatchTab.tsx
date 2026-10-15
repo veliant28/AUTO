@@ -1,8 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import {
   Search,
   Play,
@@ -39,6 +47,8 @@ import { ArticleItem } from './tecdocHelpers'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
+
+const columnHelper = createColumnHelper<ArticleItem>()
 
 export default function BatchTab({
   t,
@@ -149,6 +159,125 @@ export default function BatchTab({
   }
 
   const totalPages = data ? Math.ceil(data.total / pageSize) : 0
+
+  // Колонки — те же дефиниции и рендер, что в таблице заказов
+  const batchRows = useMemo(() => data?.items || [], [data])
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'select',
+        header: () => (
+          <Checkbox
+            checked={
+              data?.items &&
+              data.items.length > 0 &&
+              selected.size === data.items.length
+            }
+            onCheckedChange={toggleAll}
+          />
+        ),
+        size: 40,
+        cell: ({ row }) => (
+          <Checkbox
+            checked={selected.has(row.original.id)}
+            onCheckedChange={() => toggleSelect(row.original.id)}
+            className="cursor-pointer"
+          />
+        ),
+      }),
+      columnHelper.accessor('article', {
+        header: t('tecdoc_col_article'),
+        size: 200,
+        cell: (info) => (
+          <span className="font-mono text-sm">{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('name', {
+        header: t('tecdoc_col_name'),
+        size: 320,
+        cell: (info) => (
+          <span className="text-sm max-w-[200px] truncate block">
+            {info.getValue() || '—'}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('brand', {
+        header: t('tecdoc_col_brand'),
+        size: 200,
+        cell: (info) => (
+          <span className="text-sm font-semibold">
+            {info.getValue() || '—'}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('match_status', {
+        header: t('tecdoc_col_status'),
+        size: 140,
+        cell: (info) => {
+          const status = info.getValue()
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  className={`border-0 gap-1.5 px-3 h-7 w-fit flex items-center cursor-pointer text-sm font-normal whitespace-nowrap ${
+                    status === 'matched_app'
+                      ? 'bg-green-500 text-white'
+                      : status === 'matched'
+                        ? 'bg-blue-500 text-white'
+                        : status === 'unmatched'
+                          ? 'bg-yellow-500 text-white'
+                          : status === 'not_found'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-400 text-white'
+                  }`}
+                >
+                  {statusIcons[status]}
+                  {t('tecdoc_' + status) || status}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>{t('tecdoc_' + status) || status}</TooltipContent>
+            </Tooltip>
+          )
+        },
+      }),
+      columnHelper.accessor('attempts', {
+        header: t('tecdoc_col_attempts'),
+        size: 100,
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('last_attempt_at', {
+        header: t('tecdoc_col_last'),
+        size: 180,
+        cell: (info) => {
+          const at = info.getValue()
+          return (
+            <span className="text-sm text-muted-foreground">
+              {at ? formatDateTime(at, timezone) : '—'}
+            </span>
+          )
+        },
+      }),
+    ],
+    [t, timezone, data, selected, statusIcons, toggleAll, toggleSelect],
+  )
+
+  const table = useReactTable({
+    data: data?.items || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize } },
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const next = updater({ pageIndex: page - 1, pageSize })
+        setPage(next.pageIndex + 1)
+      }
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((data?.total || 0) / pageSize)),
+  })
 
   return (
     <div className="space-y-4">
@@ -290,94 +419,43 @@ export default function BatchTab({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50 whitespace-nowrap">
-                  <th className="p-3 w-10">
-                    <Checkbox
-                      checked={
-                        data?.items &&
-                        data.items.length > 0 &&
-                        selected.size === data.items.length
-                      }
-                      onCheckedChange={toggleAll}
-                    />
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_article')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_name')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_brand')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_status')}
-                  </th>
-                  <th className="text-center p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_attempts')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">
-                    {t('tecdoc_col_last')}
-                  </th>
-                </tr>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {data?.items?.map((a) => (
+                {table.getRowModel().rows.map((row) => (
                   <tr
-                    key={a.id}
+                    key={row.id}
                     className="border-b last:border-0 hover:bg-muted/30"
                   >
-                    <td className="p-3">
-                      <Checkbox
-                        checked={selected.has(a.id)}
-                        onCheckedChange={() => toggleSelect(a.id)}
-                        className="cursor-pointer"
-                      />
-                    </td>
-                    <td className="p-3 font-mono text-sm">{a.article}</td>
-                    <td className="p-3 text-sm max-w-[200px] truncate">
-                      {a.name || '—'}
-                    </td>
-                    <td className="p-3 text-sm font-semibold">
-                      {a.brand || '—'}
-                    </td>
-                    <td className="p-3">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            className={`border-0 gap-1.5 px-3 h-7 w-fit flex items-center cursor-pointer text-sm font-normal whitespace-nowrap ${
-                              a.match_status === 'matched_app'
-                                ? 'bg-green-500 text-white'
-                                : a.match_status === 'matched'
-                                  ? 'bg-blue-500 text-white'
-                                  : a.match_status === 'unmatched'
-                                    ? 'bg-yellow-500 text-white'
-                                    : a.match_status === 'not_found'
-                                      ? 'bg-red-500 text-white'
-                                      : 'bg-gray-400 text-white'
-                            }`}
-                          >
-                            {statusIcons[a.match_status]}
-                            {t('tecdoc_' + a.match_status) || a.match_status}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t('tecdoc_' + a.match_status) || a.match_status}
-                        </TooltipContent>
-                      </Tooltip>
-                    </td>
-                    <td className="p-3 text-center text-sm">{a.attempts}</td>
-                    <td className="p-3 text-sm text-muted-foreground">
-                      {a.last_attempt_at
-                        ? formatDateTime(a.last_attempt_at, timezone)
-                        : '—'}
-                    </td>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
                 {(!data?.items || data.items.length === 0) && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={columns.length}
                       className="p-6 text-center text-muted-foreground text-sm"
                     >
                       {t('tecdoc_articles_empty')}
@@ -397,7 +475,7 @@ export default function BatchTab({
                   variant="outline"
                   size="sm"
                   disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => table.previousPage()}
                 >
                   {t('prev_page')}
                 </Button>
@@ -405,7 +483,7 @@ export default function BatchTab({
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => table.nextPage()}
                 >
                   {t('next_page')}
                 </Button>

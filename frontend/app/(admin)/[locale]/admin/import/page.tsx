@@ -2,9 +2,17 @@
 import { can } from '@/lib/permissions'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import {
   FileDown,
   Search,
@@ -78,6 +86,8 @@ function formatBytes(bytes: number | null | undefined): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+const columnHelper = createColumnHelper<any>()
 
 export default function ImportPage() {
   const { user } = useAuthStore()
@@ -166,6 +176,192 @@ export default function ImportPage() {
     enabled: hydrated && !!user,
   })
 
+  const imports = useMemo(() => data?.items || [], [data])
+
+  const columns = useMemo(() => {
+    function getImportError(item: any): string | null {
+      if (!item.error_message) return null
+      try {
+        const parsed = JSON.parse(item.error_message)
+        if (parsed.code && parsed.params) {
+          const key = `import_error_${parsed.code}`
+          return t(key, parsed.params) as string
+        }
+      } catch {
+        // not JSON — show as-is
+      }
+      return item.error_message
+    }
+
+    return [
+      columnHelper.accessor('supplier', {
+        header: t('import_supplier'),
+        size: 100,
+        cell: (info) => (
+          <Badge
+            className={`${supplierColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
+          >
+            {info.getValue()}
+          </Badge>
+        ),
+      }),
+      columnHelper.accessor('status', {
+        header: t('import_status'),
+        size: 110,
+        cell: (info) => {
+          const item = info.row.original
+          const StatusIcon = statusIcons[item.status] || Clock
+          return item.matched_items > 0 ? (
+            <Badge className="bg-green-500 text-white border-0 text-sm gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {t('import_promoted')}
+            </Badge>
+          ) : (
+            <>
+              <Badge
+                className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
+              >
+                <StatusIcon
+                  className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
+                />
+                {t(`import_${item.status}`)}
+              </Badge>
+              {item.status === 'failed' && getImportError(item) && (
+                <div className="text-xs text-red-400 mt-1 max-w-[200px] leading-tight">
+                  {getImportError(item)}
+                </div>
+              )}
+            </>
+          )
+        },
+      }),
+      columnHelper.accessor('progress', {
+        header: t('import_progress'),
+        size: 200,
+        cell: (info) => {
+          const item = info.row.original
+          return (
+            <div className="flex items-center gap-3 pr-4">
+              <Progress
+                value={item.progress || 0}
+                className="h-2 flex-1"
+                indicatorClassName={
+                  item.status === 'failed'
+                    ? 'bg-red-500'
+                    : item.status === 'complete' || item.status === 'promoted'
+                      ? 'bg-green-500'
+                      : 'bg-blue-500'
+                }
+              />
+              <span className="text-sm font-mono text-muted-foreground w-8 text-right">
+                {item.progress || 0}%
+              </span>
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('total_items', {
+        header: t('import_items'),
+        size: 80,
+        cell: (info) => (info.getValue() > 0 ? fmt(info.getValue()) : '—'),
+      }),
+      columnHelper.accessor('file_size', {
+        header: t('import_size'),
+        size: 80,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {formatBytes(info.getValue())}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('created_at', {
+        header: t('import_date'),
+        size: 170,
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDate(info.getValue(), tz)}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: t('actions'),
+        size: 80,
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            {(row.original.status === 'complete' ||
+              row.original.status === 'promoted') && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        if (!reqPerm('imports.create')) return
+                        promoteMutation.mutate(row.original.id)
+                      }}
+                      disabled={promoteMutation.isPending}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('import_promote')}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/imports/${row.original.id}/download`}
+                      target="_blank"
+                    >
+                      <Button variant="outline" size="icon">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('import_download')}</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => {
+                    if (!reqPerm('imports.delete')) return
+                    setDeleteTarget(row.original)
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('delete')}</TooltipContent>
+            </Tooltip>
+          </div>
+        ),
+      }),
+    ]
+  }, [t, tz, promoteMutation, reqPerm])
+
+  const table = useReactTable({
+    data: imports,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((data?.total || 0) / pageSize)),
+  })
+
   const loadExportParams = async (supplierName: string) => {
     setExportSupplier(supplierName)
     setExportParams(null)
@@ -205,20 +401,6 @@ export default function ImportPage() {
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     )
-  }
-
-  function getImportError(item: any): string | null {
-    if (!item.error_message) return null
-    try {
-      const parsed = JSON.parse(item.error_message)
-      if (parsed.code && parsed.params) {
-        const key = `import_error_${parsed.code}`
-        return t(key, parsed.params) as string
-      }
-    } catch {
-      // not JSON — show as-is
-    }
-    return item.error_message
   }
 
   if (!can(user, 'imports.view')) return null
@@ -293,164 +475,45 @@ export default function ImportPage() {
       <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
-                    {supplierLabel}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[110px]">
-                    {t('import_status')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[200px]">
-                    {t('import_progress')}
-                  </th>
-                  <th className="text-right p-3 font-medium text-muted-foreground w-[80px]">
-                    {t('import_items')}
-                  </th>
-                  <th className="text-right p-3 font-medium text-muted-foreground w-[80px]">
-                    {t('import_size')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[170px]">
-                    {t('import_date')}
-                  </th>
-                  <th className="text-left p-3 font-medium text-muted-foreground w-[80px]">
-                    {t('actions')}
-                  </th>
-                </tr>
+                {table.getHeaderGroups().map((hg) => (
+                  <tr key={hg.id} className="border-b bg-muted/50">
+                    {hg.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="text-left p-3 font-medium text-muted-foreground"
+                        style={{ width: header.getSize() }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {data?.items?.map((item: any) => {
-                  const StatusIcon = statusIcons[item.status] || Clock
-                  return (
-                    <tr
-                      key={item.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      <td className="p-3">
-                        <Badge
-                          className={`${supplierColors[item.supplier] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                        >
-                          {item.supplier}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        {item.matched_items > 0 ? (
-                          <Badge className="bg-green-500 text-white border-0 text-sm gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            {t('import_promoted')}
-                          </Badge>
-                        ) : (
-                          <>
-                            <Badge
-                              className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
-                            >
-                              <StatusIcon
-                                className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
-                              />
-                              {t(`import_${item.status}`)}
-                            </Badge>
-                            {item.status === 'failed' &&
-                              getImportError(item) && (
-                                <div className="text-xs text-red-400 mt-1 max-w-[200px] leading-tight">
-                                  {getImportError(item)}
-                                </div>
-                              )}
-                          </>
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b last:border-0 hover:bg-muted/30"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
                       </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-3 pr-4">
-                          <Progress
-                            value={item.progress || 0}
-                            className="h-2 flex-1"
-                            indicatorClassName={
-                              item.status === 'failed'
-                                ? 'bg-red-500'
-                                : item.status === 'complete' ||
-                                    item.status === 'promoted'
-                                  ? 'bg-green-500'
-                                  : 'bg-blue-500'
-                            }
-                          />
-                          <span className="text-sm font-mono text-muted-foreground w-8 text-right">
-                            {item.progress || 0}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3 text-right text-sm">
-                        {item.total_items > 0 ? fmt(item.total_items) : '—'}
-                      </td>
-                      <td className="p-3 text-right text-sm text-muted-foreground">
-                        {formatBytes(item.file_size)}
-                      </td>
-                      <td className="p-3 text-sm text-muted-foreground">
-                        {formatDate(item.created_at, tz)}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          {(item.status === 'complete' ||
-                            item.status === 'promoted') && (
-                            <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => {
-                                      if (!reqPerm('imports.create')) return
-                                      promoteMutation.mutate(item.id)
-                                    }}
-                                    disabled={promoteMutation.isPending}
-                                  >
-                                    <RefreshCw className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('import_promote')}
-                                </TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <a
-                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/imports/${item.id}/download`}
-                                    target="_blank"
-                                  >
-                                    <Button variant="outline" size="icon">
-                                      <Download className="w-4 h-4" />
-                                    </Button>
-                                  </a>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {t('import_download')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </>
-                          )}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => {
-                                  if (!reqPerm('imports.delete')) return
-                                  setDeleteTarget(item)
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('delete')}</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
+                    ))}
+                  </tr>
+                ))}
                 {(!data?.items || data.items.length === 0) && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={columns.length}
                       className="p-6 text-center text-muted-foreground text-sm"
                     >
                       {t('import_empty')}
@@ -472,7 +535,7 @@ export default function ImportPage() {
                   variant="outline"
                   size="sm"
                   disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => table.previousPage()}
                 >
                   {t('prev_page')}
                 </Button>
@@ -487,7 +550,7 @@ export default function ImportPage() {
                       key={p}
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setPage(p)}
+                      onClick={() => table.setPageIndex(p - 1)}
                     >
                       {p}
                     </Button>
@@ -497,7 +560,7 @@ export default function ImportPage() {
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => table.nextPage()}
                 >
                   {t('next_page')}
                 </Button>

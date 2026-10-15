@@ -4,6 +4,14 @@ import { can } from '@/lib/permissions'
 import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { Car, Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +53,8 @@ interface VolumeItem {
 interface EngineItem {
   engine: string
 }
+
+const columnHelper = createColumnHelper<any>()
 
 export default function AdminCatalogPage() {
   const { user } = useAuthStore()
@@ -172,6 +182,100 @@ export default function AdminCatalogPage() {
       return data
     },
     enabled: hydrated && !!user && makeId != null,
+  })
+
+  const catalogItems = React.useMemo(() => itemsData?.items || [], [itemsData])
+
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor('constructioninterval', {
+        header: t('catalog_year'),
+        size: 100,
+        cell: (info) => (
+          <span className="text-sm whitespace-nowrap">
+            {(info.getValue() || '').replace(
+              /^\d{2}\.(\d{4}) - \d{2}\.(\d{4})$/,
+              '$1 – $2',
+            ) || '—'}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('brand', {
+        header: t('catalog_make'),
+        size: 150,
+        cell: (info) => (
+          <span className="text-sm font-semibold block truncate max-w-[120px]">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('model', {
+        header: t('catalog_model'),
+        size: 250,
+        cell: (info) => (
+          <span className="text-sm block truncate max-w-[150px]">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('modification', {
+        header: t('catalog_modification'),
+        size: 320,
+        cell: (info) => (
+          <span className="text-sm block truncate">{info.getValue()}</span>
+        ),
+      }),
+      ...(hasEngine
+        ? [
+            columnHelper.accessor('capacity', {
+              header: t('catalog_volume'),
+              size: 70,
+              cell: (info) => (
+                <span className="text-sm whitespace-nowrap">
+                  {info.getValue() || '—'}
+                </span>
+              ),
+            }),
+            columnHelper.accessor('engine', {
+              header: t('catalog_engine'),
+              size: 500,
+              cell: (info) => (
+                <span className="text-sm font-mono block truncate">
+                  {info.getValue() || '—'}
+                </span>
+              ),
+            }),
+            columnHelper.accessor('power', {
+              header: t('catalog_power'),
+              size: 100,
+              cell: (info) => (
+                <span className="text-sm whitespace-nowrap">
+                  {info.getValue() || '—'}
+                </span>
+              ),
+            }),
+          ]
+        : []),
+    ],
+    [t, hasEngine],
+  )
+
+  const table = useReactTable({
+    data: catalogItems,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex: page - 1, pageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater
+      setPage(next.pageIndex + 1)
+    },
+    manualPagination: true,
+    pageCount: Math.max(1, Math.ceil((itemsData?.total || 0) / pageSize)),
   })
 
   if (!hydrated) {
@@ -380,78 +484,43 @@ export default function AdminCatalogPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[100px]">
-                      {t('catalog_year')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[150px]">
-                      {t('catalog_make')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground w-[250px]">
-                      {t('catalog_model')}
-                    </th>
-                    <th className="text-left p-3 font-medium text-muted-foreground">
-                      {t('catalog_modification')}
-                    </th>
-                    {hasEngine && (
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[70px]">
-                        {t('catalog_volume')}
-                      </th>
-                    )}
-                    {hasEngine && (
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[500px]">
-                        {t('catalog_engine')}
-                      </th>
-                    )}
-                    {hasEngine && (
-                      <th className="text-center p-3 font-medium text-muted-foreground w-[100px]">
-                        {t('catalog_power')}
-                      </th>
-                    )}
-                  </tr>
+                  {table.getHeaderGroups().map((hg) => (
+                    <tr key={hg.id} className="border-b bg-muted/50">
+                      {hg.headers.map((header) => (
+                        <th
+                          key={header.id}
+                          className="text-left p-3 font-medium text-muted-foreground"
+                          style={{ width: header.getSize() }}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
                 </thead>
                 <tbody>
-                  {itemsData?.items?.map((item: any) => (
+                  {table.getRowModel().rows.map((row) => (
                     <tr
-                      key={item.id}
+                      key={row.id}
                       className="border-b last:border-0 hover:bg-muted/30"
                     >
-                      <td className="p-3 text-sm whitespace-nowrap">
-                        {(item.constructioninterval || '').replace(
-                          /^\d{2}\.(\d{4}) - \d{2}\.(\d{4})$/,
-                          '$1 – $2',
-                        ) || '—'}
-                      </td>
-                      <td className="p-3 text-sm font-semibold truncate max-w-[120px]">
-                        {item.brand}
-                      </td>
-                      <td className="p-3 text-sm truncate max-w-[150px]">
-                        {item.model}
-                      </td>
-                      <td className="p-3 text-sm truncate">
-                        {item.modification}
-                      </td>
-                      {hasEngine && (
-                        <td className="p-3 text-center text-sm whitespace-nowrap">
-                          {item.capacity || '—'}
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-3">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </td>
-                      )}
-                      {hasEngine && (
-                        <td className="p-3 text-center text-sm font-mono truncate">
-                          {item.engine || '—'}
-                        </td>
-                      )}
-                      {hasEngine && (
-                        <td className="p-3 text-center text-sm whitespace-nowrap">
-                          {item.power || '—'}
-                        </td>
-                      )}
+                      ))}
                     </tr>
                   ))}
                   {(!itemsData?.items || itemsData.items.length === 0) && (
                     <tr>
                       <td
-                        colSpan={hasEngine ? 7 : 4}
+                        colSpan={columns.length}
                         className="p-6 text-center text-muted-foreground text-sm"
                       >
                         {t('catalog_empty')}
@@ -472,7 +541,7 @@ export default function AdminCatalogPage() {
                   variant="outline"
                   size="sm"
                   disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => table.previousPage()}
                 >
                   {t('prev_page')}
                 </Button>
@@ -487,7 +556,7 @@ export default function AdminCatalogPage() {
                       key={p}
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setPage(p)}
+                      onClick={() => table.setPageIndex(p - 1)}
                     >
                       {p}
                     </Button>
@@ -497,7 +566,7 @@ export default function AdminCatalogPage() {
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => table.nextPage()}
                 >
                   {t('next_page')}
                 </Button>
