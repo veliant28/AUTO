@@ -1,13 +1,41 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { DayPicker } from 'react-day-picker'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { DayPicker, type DropdownProps } from 'react-day-picker'
 
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
+
+// Заголовок с выпадающими списками месяца и года (captionLayout="dropdown").
+// Дефолтный Dropdown рисует нативный <select> без стилей темы и вдобавок
+// выводит выбранное значение подписью поверх него — здесь только <select>.
+function CalendarDropdown({ options, className, ...props }: DropdownProps) {
+  return (
+    <span className="relative inline-flex items-center">
+      <select
+        {...props}
+        className={cn(
+          'h-8 cursor-pointer appearance-none rounded-md border border-input bg-transparent pl-2.5 pr-7 text-sm capitalize shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+          className,
+        )}
+      >
+        {options?.map((option) => (
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 size-3.5 opacity-60" />
+    </span>
+  )
+}
 
 function Calendar({
   className,
@@ -25,6 +53,8 @@ function Calendar({
         month: 'flex flex-col gap-2 relative',
         month_caption: 'flex justify-center pt-1 relative items-center w-full',
         caption_label: 'text-sm font-medium',
+        // Заголовок с dropdown-списками: месяц и год в ряд по центру
+        dropdowns: 'flex items-center justify-center gap-2',
         nav: 'flex items-center gap-1',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
@@ -62,6 +92,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        Dropdown: CalendarDropdown,
         Chevron: ({ orientation }) => {
           const Icon = orientation === 'left' ? ChevronLeft : ChevronRight
           return <Icon className="size-4" />

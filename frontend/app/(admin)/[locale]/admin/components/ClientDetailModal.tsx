@@ -26,7 +26,6 @@ import {
   Activity,
   ArrowLeft,
   Building2,
-  CalendarIcon,
   Copy,
   Eye,
   Gift,
@@ -46,15 +45,6 @@ import {
 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { format as formatDf } from 'date-fns'
-import type { Locale as DateFnsLocale } from 'date-fns'
-import { ru as dfRu, uk as dfUk, enUS as dfEn } from 'date-fns/locale'
 import {
   Tooltip,
   TooltipTrigger,
@@ -98,23 +88,6 @@ const DELIVERY_BADGE_COLORS: Record<string, string> = {
   other: 'bg-gray-500 text-white',
 }
 
-// Локали date-fns для календаря месяцев и подписи месяца в режиме B2B
-const DATE_FNS_LOCALE: Record<string, DateFnsLocale> = {
-  ru: dfRu,
-  ua: dfUk,
-  en: dfEn,
-}
-
-/** Date → 'YYYY-MM' */
-const monthKeyOf = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-
-/** 'YYYY-MM' → Date (первое число месяца) */
-const monthDateOf = (key: string) => {
-  const [y, m] = key.split('-').map(Number)
-  return new Date(y, (m || 1) - 1, 1)
-}
-
 // Цвета статусов B2B-заявок — как у бейджей журнала заявок
 const B2B_STATUS_COLORS: Record<string, string> = {
   new: 'bg-blue-500 text-white',
@@ -130,6 +103,17 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
+}
+
+// Поле только для чтения — как поля «Личных данных» в основном режиме
+function ReadonlyField({ value }: { value: string | null }) {
+  return (
+    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+      <span className={value ? 'truncate' : 'truncate text-muted-foreground'}>
+        {value || '—'}
+      </span>
+    </div>
+  )
 }
 
 interface MonitorViewItem {
@@ -335,6 +319,8 @@ interface MonitorB2BApplication {
   company: string | null
   edrpou: string | null
   contact_name: string | null
+  contact_last_name: string | null
+  contact_first_name: string | null
   phone: string | null
   email: string | null
   city: string | null
@@ -347,17 +333,14 @@ interface MonitorClientB2BResponse {
   total: number
 }
 
-interface MonitorTurnoverDay {
-  day: string // 'YYYY-MM-DD'
+interface MonitorTurnoverMonth {
+  month: string // 'YYYY-MM'
   total: number
   orders: number
 }
 
 interface MonitorClientTurnoverResponse {
-  month: string // 'YYYY-MM'
-  days: MonitorTurnoverDay[]
-  month_total: number
-  month_orders: number
+  months: MonitorTurnoverMonth[]
 }
 
 interface ClientDetailModalProps {
@@ -451,10 +434,10 @@ const fetchClientB2b = async (clientKey: string) => {
   return data
 }
 
-const fetchClientTurnover = async (clientKey: string, month: string) => {
+/** Оборот клиента по месяцам за 12 месяцев (без отменённых заказов) */
+const fetchClientTurnover = async (clientKey: string) => {
   const { data } = await api.get<MonitorClientTurnoverResponse>(
     `/admin/monitor/clients/${clientKey}/turnover`,
-    { params: { month } },
   )
   return data
 }
@@ -483,18 +466,16 @@ export default function ClientDetailModal({
   onOpenChange,
 }: ClientDetailModalProps) {
   const t = useTranslations('admin')
+  // Подписи полей заявки — как в форме на витрине, поэтому словарь витрины
+  const tb = useTranslations('b2b')
   const locale = useLocale()
   const tz = useTimezone()
   const queryClient = useQueryClient()
-  const dateLocale = DATE_FNS_LOCALE[locale] || dfRu
   // Переключатель вида: просмотр товаров <-> корзина <-> индекс <-> IP <-> лояльность <-> доставка <-> B2B
   const [mode, setMode] = useState<
     'main' | 'cart' | 'index' | 'ip' | 'loyalty' | 'delivery' | 'b2b'
   >('main')
   const [listTab, setListTab] = useState<'orders' | 'returns'>('orders')
-  // Месяц графика оборота в режиме B2B ('YYYY-MM')
-  const [b2bMonth, setB2bMonth] = useState<string>(() => monthKeyOf(new Date()))
-  const [b2bMonthOpen, setB2bMonthOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-monitor-client', clientKey],
@@ -606,8 +587,8 @@ export default function ClientDetailModal({
   })
 
   const turnover = useQuery({
-    queryKey: ['admin-monitor-client-turnover', clientKey, b2bMonth],
-    queryFn: () => fetchClientTurnover(clientKey!, b2bMonth),
+    queryKey: ['admin-monitor-client-turnover', clientKey],
+    queryFn: () => fetchClientTurnover(clientKey!),
     enabled: !!clientKey && open && mode === 'b2b',
     staleTime: 0,
     refetchOnWindowFocus: false,
@@ -619,6 +600,9 @@ export default function ClientDetailModal({
   // почти бесплатны, а вход в режим всё равно делает рефетч (staleTime 0).
   const mainLoaded = !!data
   const clientIsAnonymous = data?.client?.is_anonymous
+  // Режим B2B — только по роли: заявку на доступ может подать и обычный
+  // клиент, которому доступ ещё не открыли, и тогда в режиме нечего смотреть
+  const clientIsB2b = data?.client?.role === 'b2b'
   useEffect(() => {
     if (!open || !clientKey || !mainLoaded) return
     const key = clientKey
@@ -666,16 +650,19 @@ export default function ClientDetailModal({
         queryKey: ['admin-monitor-client-delivery', key],
         queryFn: () => fetchClientDelivery(key),
       })
-      void queryClient.prefetchQuery({
-        queryKey: ['admin-monitor-client-b2b', key],
-        queryFn: () => fetchClientB2b(key),
-      })
-      void queryClient.prefetchQuery({
-        queryKey: ['admin-monitor-client-turnover', key, b2bMonth],
-        queryFn: () => fetchClientTurnover(key, b2bMonth),
-      })
+      // Режим B2B доступен только клиентам с ролью b2b — остальным не тянем
+      if (clientIsB2b) {
+        void queryClient.prefetchQuery({
+          queryKey: ['admin-monitor-client-b2b', key],
+          queryFn: () => fetchClientB2b(key),
+        })
+        void queryClient.prefetchQuery({
+          queryKey: ['admin-monitor-client-turnover', key],
+          queryFn: () => fetchClientTurnover(key),
+        })
+      }
     }
-  }, [open, clientKey, mainLoaded, clientIsAnonymous, queryClient, b2bMonth])
+  }, [open, clientKey, mainLoaded, clientIsAnonymous, clientIsB2b, queryClient])
 
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -992,9 +979,9 @@ export default function ClientDetailModal({
     }
   }, [deliveryStats.data, isDark, t, chartBg, axisTextColor, borderColor])
 
-  // ── Bar-график оборота клиента по дням месяца (режим B2B) ─────────────
+  // ── Bar-график оборота клиента за 12 месяцев (режим B2B) ───────────────
   const turnoverOption = useMemo(() => {
-    const days = turnover.data?.days ?? []
+    const months = turnover.data?.months ?? []
     return {
       backgroundColor: chartBg,
       tooltip: {
@@ -1005,10 +992,10 @@ export default function ClientDetailModal({
         formatter: (params: any[]) => {
           const p = params?.[0]
           if (!p) return ''
-          const d = days[p.dataIndex]?.day ?? ''
-          // "2026-08-06" -> "06.08.2026"
-          const full = d ? `${d.slice(8)}.${d.slice(5, 7)}.${d.slice(0, 4)}` : d
-          const orders = days[p.dataIndex]?.orders ?? 0
+          const m = months[p.dataIndex]?.month ?? ''
+          // "2026-08" -> "08.2026"
+          const full = m ? `${m.slice(5, 7)}.${m.slice(0, 4)}` : m
+          const orders = months[p.dataIndex]?.orders ?? 0
           return (
             `<b>${full}</b><br/>` +
             `${t('monitor_turnover_series')}: <b>${fmt.format(p.value || 0)} ₴</b><br/>` +
@@ -1019,9 +1006,11 @@ export default function ClientDetailModal({
       grid: { top: 30, right: 20, bottom: 30, left: 60 },
       xAxis: {
         type: 'category' as const,
-        // сначала день, потом месяц: "06.08"; подписи через каждые 5 дней
-        data: days.map((d) => `${d.day.slice(8)}.${d.day.slice(5, 7)}`),
-        axisLabel: { color: axisTextColor, interval: 4 },
+        // "2026-08" -> "08.26"
+        data: months.map(
+          (m) => `${m.month.slice(5, 7)}.${m.month.slice(2, 4)}`,
+        ),
+        axisLabel: { color: axisTextColor },
         axisLine: { lineStyle: { color: borderColor } },
       },
       yAxis: {
@@ -1033,9 +1022,23 @@ export default function ClientDetailModal({
         {
           name: t('monitor_turnover_series'),
           type: 'bar' as const,
-          data: days.map((d) => d.total),
-          itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] },
-          barMaxWidth: 22,
+          data: months.map((m) => m.total),
+          // Градиент вместо плоской заливки: столбцы читаются как «сумма за месяц»
+          itemStyle: {
+            borderRadius: [4, 4, 0, 0],
+            color: {
+              type: 'linear' as const,
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: '#3b82f6' },
+                { offset: 1, color: isDark ? '#1e40af' : '#bfdbfe' },
+              ],
+            },
+          },
+          barMaxWidth: 40,
         },
       ],
     }
@@ -1059,6 +1062,8 @@ export default function ClientDetailModal({
   const promoTotal = loyalty.data?.pages[0]?.total ?? 0
   const deliveryVariants = deliveryStats.data?.variants ?? []
   const b2bApplications = b2bApps.data?.applications ?? []
+  // Данные заявки — из последней (бэкенд отдаёт список от новых к старым)
+  const b2bApplication = b2bApplications[0] ?? null
 
   // Подпись типа доставки для бейджа плитки (короткая, как в блоке «Доставка»)
   const deliveryTypeLabel = (v: MonitorDeliveryVariant) => {
@@ -1089,6 +1094,268 @@ export default function ClientDetailModal({
     // Самовывоз — без деталей; неизвестный тип — как сохранено в заказе
     return v.type === 'other' ? v.raw_type || '' : ''
   }
+
+  // Карточка «Личные данные» — основной режим модалки
+  const renderPersonalData = () => (
+    <div className="border rounded-lg p-3 flex flex-col min-h-0">
+      <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+        <User className="w-5 h-5" /> {t('monitor_personal_data')}
+        {c && c.success_index != null && (
+          <AnimatedSuccessBadge
+            value={c.success_index}
+            totalOrders={c.total_orders}
+          />
+        )}
+      </h4>
+      <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-sm">{t('phone_label')}</p>
+          <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+            <span className="truncate">{formatPhone(c?.phone)}</span>
+          </div>
+        </div>
+        {['last_name', 'first_name', 'middle_name'].map((field) => (
+          <div key={field} className="space-y-1">
+            <p className="text-muted-foreground text-sm">{t(field)}</p>
+            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+              <span
+                className={
+                  (c as any)?.[field]
+                    ? 'truncate'
+                    : 'truncate text-muted-foreground'
+                }
+              >
+                {(c as any)?.[field] || '—'}
+              </span>
+            </div>
+          </div>
+        ))}
+        <Separator />
+        <div>
+          <h5 className="font-semibold text-sm flex items-center gap-2 mb-3">
+            <MapPin className="w-4 h-4" /> {t('delivery_info')}
+          </h5>
+          <div className="space-y-3">
+            <RadioGroup
+              value={deliveryType || ''}
+              disabled
+              className="grid grid-cols-3 gap-2"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
+                    <RadioGroupItem
+                      value="pickup"
+                      id="cdel-pickup"
+                      className="cursor-pointer"
+                      disabled
+                    />
+                    <Label htmlFor="cdel-pickup" className="cursor-pointer">
+                      <Package className="w-5 h-5" />
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{t('pickup')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
+                    <RadioGroupItem
+                      value="warehouse"
+                      id="cdel-warehouse"
+                      className="cursor-pointer"
+                      disabled
+                    />
+                    <Label htmlFor="cdel-warehouse" className="cursor-pointer">
+                      <Building2 className="w-5 h-5" />
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{t('warehouse')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
+                    <RadioGroupItem
+                      value="courier"
+                      id="cdel-courier"
+                      className="cursor-pointer"
+                      disabled
+                    />
+                    <Label htmlFor="cdel-courier" className="cursor-pointer">
+                      <Truck className="w-5 h-5" />
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{t('courier')}</TooltipContent>
+              </Tooltip>
+            </RadioGroup>
+            {(deliveryType === 'warehouse' || deliveryType === 'courier') && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {t('delivery_city')}
+                </p>
+                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                  <span
+                    className={
+                      c?.delivery?.delivery_city_label
+                        ? 'truncate'
+                        : 'truncate text-muted-foreground'
+                    }
+                  >
+                    {c?.delivery?.delivery_city_label || '—'}
+                  </span>
+                </div>
+              </div>
+            )}
+            {deliveryType === 'warehouse' && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {t('warehouse')}
+                </p>
+                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                  <span
+                    className={
+                      c?.delivery?.delivery_warehouse_label
+                        ? 'truncate'
+                        : 'truncate text-muted-foreground'
+                    }
+                  >
+                    {c?.delivery?.delivery_warehouse_label || '—'}
+                  </span>
+                </div>
+              </div>
+            )}
+            {deliveryType === 'courier' && (
+              <>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-sm">
+                    {t('monitor_delivery_street')}
+                  </p>
+                  <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                    <span
+                      className={
+                        c?.delivery?.delivery_street_label
+                          ? 'truncate'
+                          : 'truncate text-muted-foreground'
+                      }
+                    >
+                      {c?.delivery?.delivery_street_label || '—'}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-sm">
+                      {t('monitor_delivery_house')}
+                    </p>
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                      <span
+                        className={
+                          c?.delivery?.delivery_house
+                            ? 'truncate'
+                            : 'truncate text-muted-foreground'
+                        }
+                      >
+                        {c?.delivery?.delivery_house || '—'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-sm">
+                      {t('monitor_delivery_apartment')}
+                    </p>
+                    <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
+                      <span
+                        className={
+                          c?.delivery?.delivery_apartment
+                            ? 'truncate'
+                            : 'truncate text-muted-foreground'
+                        }
+                      >
+                        {c?.delivery?.delivery_apartment || '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Карточка «Данные компании» в режиме B2B: поля и раскладка как в форме
+  // заявки на витрине — Компания, ЕДРПОУ + Город, Фамилия + Телефон, Имя + Email
+  const b2bCompanyCard = (
+    <div className="border rounded-lg p-3 flex flex-col min-h-0">
+      <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+        <Building2 className="w-5 h-5" /> {t('client_b2b_company_title')}
+        {c && c.success_index != null && (
+          <AnimatedSuccessBadge
+            value={c.success_index}
+            totalOrders={c.total_orders}
+          />
+        )}
+      </h4>
+      <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+        {!b2bApplication ? (
+          <p className="text-sm text-muted-foreground">
+            {t('client_b2b_no_application')}
+          </p>
+        ) : (
+          <>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">{tb('company')}</p>
+              <ReadonlyField value={b2bApplication.company} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{tb('edrpou')}</p>
+                <ReadonlyField value={b2bApplication.edrpou} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{tb('city')}</p>
+                <ReadonlyField value={b2bApplication.city} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {tb('contact_last_name')}
+                </p>
+                <ReadonlyField value={b2bApplication.contact_last_name} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{tb('phone')}</p>
+                {/* Маска как в форме заявки: +38 (0XX) XXX-XX-XX */}
+                <ReadonlyField
+                  value={
+                    b2bApplication.phone
+                      ? formatPhone(b2bApplication.phone)
+                      : null
+                  }
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {tb('contact_first_name')}
+                </p>
+                <ReadonlyField value={b2bApplication.contact_first_name} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{tb('email')}</p>
+                <ReadonlyField value={b2bApplication.email} />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <TooltipProvider>
@@ -1842,7 +2109,7 @@ export default function ClientDetailModal({
                   </div>
                 </div>
               </div>
-            ) : mode === 'b2b' ? (
+            ) : mode === 'b2b' && clientIsB2b ? (
               <div className="p-6 h-full min-h-0">
                 <div
                   className="grid gap-6 h-full min-h-0"
@@ -1851,190 +2118,23 @@ export default function ClientDetailModal({
                       'calc((100% - 48px) * 2 / 3 + 24px) calc((100% - 48px) / 3)',
                   }}
                 >
-                  {/* Заявки клиента на B2B из журнала */}
-                  <div className="border rounded-lg p-3 flex flex-col min-h-0">
-                    <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                      <Building2 className="w-5 h-5" />{' '}
-                      {t('client_b2b_applications')}
-                      {b2bApplications.length > 0 && (
-                        <Badge className="bg-blue-500 text-white border-0">
-                          {b2bApplications.length}
-                        </Badge>
-                      )}
-                    </h4>
-                    <div className="flex-1 overflow-y-auto pr-1 mt-3 space-y-2">
-                      {b2bApps.isLoading && !b2bApps.data ? (
-                        <Skeleton className="h-24 w-full" />
-                      ) : b2bApplications.length === 0 ? (
-                        <div className="text-sm text-muted-foreground py-8 text-center">
-                          {t('client_b2b_no_application')}
-                        </div>
-                      ) : (
-                        b2bApplications.map((a) => (
-                          <div
-                            key={a.id}
-                            className="p-3 rounded-lg border bg-card space-y-2"
-                          >
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono text-xs text-muted-foreground">
-                                {a.number}
-                              </span>
-                              <Badge
-                                className={`${B2B_STATUS_COLORS[a.status] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                              >
-                                {t(`requests_status_${a.status}`)}
-                              </Badge>
-                              <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                                {formatDateTime(a.created_at, tz)}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1 text-sm">
-                              {a.company && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_company')}
-                                  </span>
-                                  <span className="font-medium">
-                                    {a.company}
-                                  </span>
-                                </>
-                              )}
-                              {a.edrpou && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_edrpou')}
-                                  </span>
-                                  <span>{a.edrpou}</span>
-                                </>
-                              )}
-                              {a.contact_name && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_contact')}
-                                  </span>
-                                  <span>{a.contact_name}</span>
-                                </>
-                              )}
-                              {a.phone && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_phone')}
-                                  </span>
-                                  <span>{a.phone}</span>
-                                </>
-                              )}
-                              {a.email && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_email')}
-                                  </span>
-                                  <span className="break-all">{a.email}</span>
-                                </>
-                              )}
-                              {a.city && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_city')}
-                                  </span>
-                                  <span>{a.city}</span>
-                                </>
-                              )}
-                              {a.comment && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_fields_comment')}
-                                  </span>
-                                  <span className="whitespace-pre-wrap">
-                                    {a.comment}
-                                  </span>
-                                </>
-                              )}
-                              {a.resolved_at && (
-                                <>
-                                  <span className="text-muted-foreground">
-                                    {t('requests_resolved_at')}
-                                  </span>
-                                  <span className="tabular-nums">
-                                    {formatDateTime(a.resolved_at, tz)}
-                                    {a.decided_by ? ` — ${a.decided_by}` : ''}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Оборот: итог месяца + календарь + график по дням */}
+                  {/* Оборот B2B-клиента: график по месяцам за 12 месяцев */}
                   <div className="border rounded-lg p-3 flex flex-col min-h-0">
                     <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
                       <Activity className="w-5 h-5" />{' '}
                       {t('client_b2b_turnover')}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {t('client_b2b_by_months')}
+                      </span>
                     </h4>
 
-                    {/* Итог месяца */}
-                    <div className="grid grid-cols-2 gap-2 mt-3 flex-shrink-0">
-                      <div className="rounded-lg border bg-muted/30 p-2.5">
-                        <p className="text-xs text-muted-foreground">
-                          {t('client_b2b_total')}
-                        </p>
-                        <p className="text-xl font-bold tabular-nums">
-                          {fmt.format(turnover.data?.month_total ?? 0)} ₴
-                        </p>
-                      </div>
-                      <div className="rounded-lg border bg-muted/30 p-2.5">
-                        <p className="text-xs text-muted-foreground">
-                          {t('client_b2b_orders')}
-                        </p>
-                        <p className="text-xl font-bold tabular-nums">
-                          {turnover.data?.month_orders ?? 0}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Переключатель месяца календарём */}
-                    <Popover
-                      open={b2bMonthOpen}
-                      onOpenChange={setB2bMonthOpen}
-                      modal={false}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="mt-3 justify-start text-left font-normal capitalize flex-shrink-0"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                          {formatDf(monthDateOf(b2bMonth), 'LLLL yyyy', {
-                            locale: dateLocale,
-                          })}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <div style={{ pointerEvents: 'auto' }}>
-                          <Calendar
-                            className="rounded-md"
-                            navLayout="around"
-                            captionLayout="dropdown"
-                            locale={dateLocale}
-                            startMonth={new Date(2023, 0)}
-                            endMonth={new Date()}
-                            month={monthDateOf(b2bMonth)}
-                            onMonthChange={(m) => {
-                              setB2bMonth(monthKeyOf(m))
-                              setB2bMonthOpen(false)
-                            }}
-                          />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-
-                    <div className="flex-1 min-h-0 mt-3 flex items-center justify-center">
+                    <div className="flex-1 min-h-0 mt-3 flex">
                       {turnover.isLoading && !turnover.data ? (
-                        <Skeleton className="h-full w-full min-h-[200px]" />
-                      ) : (turnover.data?.month_total ?? 0) === 0 ? (
-                        <div className="text-sm text-muted-foreground">
+                        <Skeleton className="h-full w-full" />
+                      ) : (turnover.data?.months ?? []).every(
+                          (m) => m.total === 0,
+                        ) ? (
+                        <div className="m-auto text-sm text-muted-foreground">
                           {t('monitor_no_data')}
                         </div>
                       ) : (
@@ -2044,13 +2144,15 @@ export default function ClientDetailModal({
                             style={{
                               height: '100%',
                               width: '100%',
-                              minHeight: 200,
+                              minHeight: 240,
                             }}
                           />
                         </ChartErrorBoundary>
                       )}
                     </div>
                   </div>
+
+                  {b2bCompanyCard}
                 </div>
               </div>
             ) : isLoading && !data ? (
@@ -2162,210 +2264,7 @@ export default function ClientDetailModal({
                   </div>
                 </div>
 
-                {/* Личные данные */}
-                <div className="border rounded-lg p-3 flex flex-col min-h-0">
-                  <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                    <User className="w-5 h-5" /> {t('monitor_personal_data')}
-                    {c && c.success_index != null && (
-                      <AnimatedSuccessBadge
-                        value={c.success_index}
-                        totalOrders={c.total_orders}
-                      />
-                    )}
-                  </h4>
-                  <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-sm">
-                        {t('phone_label')}
-                      </p>
-                      <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                        <span className="truncate">
-                          {formatPhone(c?.phone)}
-                        </span>
-                      </div>
-                    </div>
-                    {['last_name', 'first_name', 'middle_name'].map((field) => (
-                      <div key={field} className="space-y-1">
-                        <p className="text-muted-foreground text-sm">
-                          {t(field)}
-                        </p>
-                        <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                          <span
-                            className={
-                              (c as any)?.[field]
-                                ? 'truncate'
-                                : 'truncate text-muted-foreground'
-                            }
-                          >
-                            {(c as any)?.[field] || '—'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    <Separator />
-                    <div>
-                      <h5 className="font-semibold text-sm flex items-center gap-2 mb-3">
-                        <MapPin className="w-4 h-4" /> {t('delivery_info')}
-                      </h5>
-                      <div className="space-y-3">
-                        <RadioGroup
-                          value={deliveryType || ''}
-                          disabled
-                          className="grid grid-cols-3 gap-2"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
-                                <RadioGroupItem
-                                  value="pickup"
-                                  id="cdel-pickup"
-                                  className="cursor-pointer"
-                                  disabled
-                                />
-                                <Label
-                                  htmlFor="cdel-pickup"
-                                  className="cursor-pointer"
-                                >
-                                  <Package className="w-5 h-5" />
-                                </Label>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('pickup')}</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
-                                <RadioGroupItem
-                                  value="warehouse"
-                                  id="cdel-warehouse"
-                                  className="cursor-pointer"
-                                  disabled
-                                />
-                                <Label
-                                  htmlFor="cdel-warehouse"
-                                  className="cursor-pointer"
-                                >
-                                  <Building2 className="w-5 h-5" />
-                                </Label>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('warehouse')}</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center justify-center gap-2 rounded-lg border p-3 has-data-[state=checked]:border-primary cursor-pointer">
-                                <RadioGroupItem
-                                  value="courier"
-                                  id="cdel-courier"
-                                  className="cursor-pointer"
-                                  disabled
-                                />
-                                <Label
-                                  htmlFor="cdel-courier"
-                                  className="cursor-pointer"
-                                >
-                                  <Truck className="w-5 h-5" />
-                                </Label>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>{t('courier')}</TooltipContent>
-                          </Tooltip>
-                        </RadioGroup>
-                        {(deliveryType === 'warehouse' ||
-                          deliveryType === 'courier') && (
-                          <div className="space-y-1">
-                            <p className="text-muted-foreground text-sm">
-                              {t('delivery_city')}
-                            </p>
-                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                              <span
-                                className={
-                                  c?.delivery?.delivery_city_label
-                                    ? 'truncate'
-                                    : 'truncate text-muted-foreground'
-                                }
-                              >
-                                {c?.delivery?.delivery_city_label || '—'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {deliveryType === 'warehouse' && (
-                          <div className="space-y-1">
-                            <p className="text-muted-foreground text-sm">
-                              {t('warehouse')}
-                            </p>
-                            <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                              <span
-                                className={
-                                  c?.delivery?.delivery_warehouse_label
-                                    ? 'truncate'
-                                    : 'truncate text-muted-foreground'
-                                }
-                              >
-                                {c?.delivery?.delivery_warehouse_label || '—'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {deliveryType === 'courier' && (
-                          <>
-                            <div className="space-y-1">
-                              <p className="text-muted-foreground text-sm">
-                                {t('monitor_delivery_street')}
-                              </p>
-                              <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                                <span
-                                  className={
-                                    c?.delivery?.delivery_street_label
-                                      ? 'truncate'
-                                      : 'truncate text-muted-foreground'
-                                  }
-                                >
-                                  {c?.delivery?.delivery_street_label || '—'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <p className="text-muted-foreground text-sm">
-                                  {t('monitor_delivery_house')}
-                                </p>
-                                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                                  <span
-                                    className={
-                                      c?.delivery?.delivery_house
-                                        ? 'truncate'
-                                        : 'truncate text-muted-foreground'
-                                    }
-                                  >
-                                    {c?.delivery?.delivery_house || '—'}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-muted-foreground text-sm">
-                                  {t('monitor_delivery_apartment')}
-                                </p>
-                                <div className="flex items-center rounded-md border bg-muted/30 px-3 py-2 text-sm min-w-0 overflow-hidden h-10">
-                                  <span
-                                    className={
-                                      c?.delivery?.delivery_apartment
-                                        ? 'truncate'
-                                        : 'truncate text-muted-foreground'
-                                    }
-                                  >
-                                    {c?.delivery?.delivery_apartment || '—'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {renderPersonalData()}
               </div>
             )}
           </div>
@@ -2527,11 +2426,7 @@ export default function ClientDetailModal({
                       queryKey: ['admin-monitor-client-b2b', clientKey],
                     })
                     queryClient.invalidateQueries({
-                      queryKey: [
-                        'admin-monitor-client-turnover',
-                        clientKey,
-                        b2bMonth,
-                      ],
+                      queryKey: ['admin-monitor-client-turnover', clientKey],
                     })
                     toast.info(t('monitor_refreshed'))
                   }}
@@ -2582,14 +2477,15 @@ export default function ClientDetailModal({
                   >
                     <Truck className="w-4 h-4" /> {t('monitor_delivery_button')}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="gap-1.5"
-                    onClick={() => setMode('b2b')}
-                    disabled={!data || c?.is_anonymous}
-                  >
-                    <Building2 className="w-4 h-4" /> {t('client_mode_b2b')}
-                  </Button>
+                  {clientIsB2b && (
+                    <Button
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => setMode('b2b')}
+                    >
+                      <Building2 className="w-4 h-4" /> {t('client_mode_b2b')}
+                    </Button>
+                  )}
                 </div>
                 <Button
                   variant="outline"
