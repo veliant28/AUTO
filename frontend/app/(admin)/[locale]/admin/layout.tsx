@@ -1670,12 +1670,6 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       perm: 'orders.view',
     },
     {
-      href: '/admin/requests',
-      icon: ClipboardCheck,
-      label: t('requests_title'),
-      perm: 'requests.view',
-    },
-    {
       href: '/admin/loyalty',
       icon: Gift,
       label: t('loyalty_title'),
@@ -1770,6 +1764,12 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       icon: FileText,
       label: t('footer_title'),
       perm: 'footer.edit',
+    },
+    {
+      href: '/admin/requests',
+      icon: ClipboardCheck,
+      label: t('requests_title'),
+      perm: 'requests.view',
     },
     {
       href: '/admin/timesheet',
