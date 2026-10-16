@@ -321,6 +321,7 @@ interface MonitorB2BApplication {
   contact_name: string | null
   contact_last_name: string | null
   contact_first_name: string | null
+  contact_middle_name: string | null
   phone: string | null
   email: string | null
   city: string | null
@@ -1306,14 +1307,22 @@ export default function ClientDetailModal({
           </p>
         ) : (
           <>
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-sm">{tb('company')}</p>
-              <ReadonlyField value={b2bApplication.company} />
-            </div>
             <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">{tb('company')}</p>
+                <ReadonlyField value={b2bApplication.company} />
+              </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">{tb('edrpou')}</p>
                 <ReadonlyField value={b2bApplication.edrpou} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {tb('contact_last_name')}
+                </p>
+                <ReadonlyField value={b2bApplication.contact_last_name} />
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">{tb('city')}</p>
@@ -1323,9 +1332,9 @@ export default function ClientDetailModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">
-                  {tb('contact_last_name')}
+                  {tb('contact_first_name')}
                 </p>
-                <ReadonlyField value={b2bApplication.contact_last_name} />
+                <ReadonlyField value={b2bApplication.contact_first_name} />
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">{tb('phone')}</p>
@@ -1342,9 +1351,9 @@ export default function ClientDetailModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">
-                  {tb('contact_first_name')}
+                  {tb('contact_middle_name')}
                 </p>
-                <ReadonlyField value={b2bApplication.contact_first_name} />
+                <ReadonlyField value={b2bApplication.contact_middle_name} />
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground text-sm">{tb('email')}</p>

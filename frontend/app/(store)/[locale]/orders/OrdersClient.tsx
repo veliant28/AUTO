@@ -12,6 +12,7 @@ import api from '@/lib/api'
 import { novaPoshtaApi } from '@/lib/api/nova-poshta'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import CatalogPagination from '@/components/features/CatalogPagination'
@@ -223,11 +224,13 @@ export default function OrdersPage() {
                       <span className="font-bold font-mono">
                         {order.order_number || `#${order.id}`}
                       </span>
-                      <Badge
-                        className={`${statusInfo.className} border-0 text-sm w-fit`}
-                      >
-                        {t(statusInfo.labelKey)}
-                      </Badge>
+                      <AnimatedBadge swapKey={order.status} className="w-fit">
+                        <Badge
+                          className={`${statusInfo.className} border-0 text-sm w-fit`}
+                        >
+                          {t(statusInfo.labelKey)}
+                        </Badge>
+                      </AnimatedBadge>
                       <span className="text-sm text-muted-foreground">
                         {date}
                       </span>

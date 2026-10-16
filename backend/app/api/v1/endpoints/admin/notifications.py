@@ -58,6 +58,8 @@ class NotificationRequestItem(BaseModel):
     number: str | None = None
     title: str | None = None
     category_name: str | None = None
+    # Код категории — фронтенд показывает локализованное название по коду
+    category_code: str | None = None
     status: str | None = None
     created_at: datetime | None = None
     deadline_state: str = "ok"
@@ -71,7 +73,7 @@ class NotificationsResponse(BaseModel):
 
 
 @router.get("/notifications", response_model=NotificationsResponse)
-async def get_notifications(
+def get_notifications(
     current_user: User = Depends(require_permission("orders.view")),
     db: Session = Depends(get_db),
 ):
@@ -144,6 +146,7 @@ async def get_notifications(
                     number=r.number,
                     title=r.title,
                     category_name=r.category.name if r.category else None,
+                    category_code=r.category.code if r.category else None,
                     status=r.status.value if hasattr(r.status, "value") else str(r.status),
                     created_at=r.created_at,
                     deadline_state=state["state"],

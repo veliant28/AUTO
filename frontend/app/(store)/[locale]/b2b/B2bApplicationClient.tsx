@@ -37,6 +37,7 @@ export default function B2bApplicationClient() {
   const [city, setCity] = useState('')
   const [contactLastName, setContactLastName] = useState('')
   const [contactFirstName, setContactFirstName] = useState('')
+  const [contactMiddleName, setContactMiddleName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [comment, setComment] = useState('')
@@ -71,6 +72,7 @@ export default function B2bApplicationClient() {
       !company.trim() ||
       !contactLastName.trim() ||
       !contactFirstName.trim() ||
+      !contactMiddleName.trim() ||
       !city.trim()
     ) {
       toast.error(t('error_required'))
@@ -101,6 +103,7 @@ export default function B2bApplicationClient() {
         edrpou: edrpou.trim(),
         contact_last_name: contactLastName.trim(),
         contact_first_name: contactFirstName.trim(),
+        contact_middle_name: contactMiddleName.trim(),
         phone: phoneToApi(phone),
         email: email.trim(),
         city: city.trim(),
@@ -279,6 +282,17 @@ export default function B2bApplicationClient() {
                     />
                   </div>
                   <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('contact_middle_name')} *
+                    </label>
+                    <Input
+                      value={contactMiddleName}
+                      onChange={(e) => setContactMiddleName(e.target.value)}
+                      placeholder={t('contact_middle_name_placeholder')}
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
                     <label className="text-sm text-muted-foreground mb-2 block">
                       {t('email')} *
                     </label>

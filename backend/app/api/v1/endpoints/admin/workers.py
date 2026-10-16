@@ -108,9 +108,13 @@ def _collect_tasks(
         # Assign slots 1..4 to first 4 active tasks (non-service)
         slot_counter = 1
         for worker_name, task in all_in_source:
-            tid = task.get("id", "")
-            tname = task.get("name", "")
+            # У отложенных (scheduled) задач поля лежат во вложенном request
+            req = task.get("request") or {}
+            tid = task.get("id") or req.get("id", "")
+            tname = task.get("name") or req.get("name", "")
             tstart = task.get("time_start")
+            if tstart is None:
+                tstart = req.get("time_start")
             runtime = round(now - tstart, 0) if tstart else 0.0
 
             if assign_slot and tname not in SERVICE_TASKS and slot_counter <= 4:
@@ -179,11 +183,15 @@ def _collect_tasks(
 
 
 @router.get("/workers", response_model=WorkersResponse)
-async def get_workers(
+def get_workers(
     current_user: User = Depends(require_permission("workers.view")),
     db: Session = Depends(get_db),
 ):
-    """Получить статус Celery воркеров и активных задач."""
+    """Получить статус Celery воркеров и активных задач.
+
+    Синхронный обработчик: celery-inspect и docker-stats блокирующие и
+    могут занимать секунды, в пуле потоков они не тормозят остальные запросы.
+    """
     inspect = celery_app.control.inspect()
     active_raw = inspect.active() or {}
     reserved_raw = inspect.reserved() or {}
@@ -227,7 +235,7 @@ async def get_workers(
 
 
 @router.post("/workers/tasks/{task_id}/revoke")
-async def revoke_task(
+def revoke_task(
     task_id: str,
     current_user: User = Depends(require_permission("workers.restart")),
 ):
@@ -241,7 +249,7 @@ async def revoke_task(
 
 
 @router.post("/workers/restart")
-async def restart_worker(
+def restart_worker(
     current_user: User = Depends(require_permission("workers.restart")),
 ):
     """Перезапустить Celery воркер."""

@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
@@ -497,15 +498,17 @@ export default function AdminProductsPage() {
         cell: (info) => (
           <Tooltip>
             <TooltipTrigger asChild>
-              {info.getValue() ? (
-                <Badge className="bg-green-500 text-white border-0 text-sm cursor-pointer">
-                  {t('products_active')}
-                </Badge>
-              ) : (
-                <Badge className="bg-gray-500 text-white border-0 text-sm cursor-pointer">
-                  {t('products_inactive')}
-                </Badge>
-              )}
+              <AnimatedBadge swapKey={String(info.getValue())}>
+                {info.getValue() ? (
+                  <Badge className="bg-green-500 text-white border-0 text-sm cursor-pointer">
+                    {t('products_active')}
+                  </Badge>
+                ) : (
+                  <Badge className="bg-gray-500 text-white border-0 text-sm cursor-pointer">
+                    {t('products_inactive')}
+                  </Badge>
+                )}
+              </AnimatedBadge>
             </TooltipTrigger>
             <TooltipContent>
               {info.getValue()

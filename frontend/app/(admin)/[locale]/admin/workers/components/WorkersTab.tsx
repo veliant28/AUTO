@@ -563,9 +563,9 @@ export default function WorkersTab() {
         const taskName = info.getValue()
         const stage = info.row.original.import_stage
         const isProgressStage = stage?.includes('/')
+        // Подпись задачи из переводов; если её нет — показываем имя задачи
         const key = `workers_task_${taskName}`
-        const translated = t(key as any)
-        const label = translated !== key ? translated : taskName
+        const label = t.has(key as any) ? t(key as any) : taskName
         const display =
           stage && isProgressStage
             ? `${label}: ${stage}`

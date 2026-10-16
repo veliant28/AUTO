@@ -15,6 +15,7 @@ import { Eye, Search, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { formatPhone } from '@/components/ui/PhoneInput'
 import { useTimezoneStore } from '@/store/timezoneStore'
@@ -160,11 +161,13 @@ export default function WaybillsPage() {
             row.status_code ||
             '—'
           return (
-            <Badge
-              className={`${label.length <= 20 ? 'text-sm' : 'text-xs'} border-0 w-fit ${statusColor(row.status_code)}`}
-            >
-              {label}
-            </Badge>
+            <AnimatedBadge swapKey={row.status_code}>
+              <Badge
+                className={`${label.length <= 20 ? 'text-sm' : 'text-xs'} border-0 w-fit ${statusColor(row.status_code)}`}
+              >
+                {label}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),

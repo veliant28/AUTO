@@ -23,6 +23,7 @@ import {
 import { toast } from '@/lib/toast'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/lib/api'
+import { categoryName } from '@/lib/requestCategories'
 import { type AssigneeOption, type RequestCategory } from './shared'
 
 interface ClientOption {
@@ -215,7 +216,7 @@ export default function CreateRequestDialog({
               <SelectContent>
                 {creatable.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
+                    {categoryName(t, c.code, c.name)}
                   </SelectItem>
                 ))}
               </SelectContent>

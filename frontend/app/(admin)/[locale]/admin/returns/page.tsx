@@ -42,6 +42,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -601,9 +602,11 @@ export default function AdminReturnsPage() {
           const statusInfo = RETURN_STATUS_LABELS[info.getValue()]
           const className = statusInfo?.className || 'bg-gray-500 text-white'
           return (
-            <Badge className={`${className} border-0 text-sm`}>
-              {t('return_' + info.getValue())}
-            </Badge>
+            <AnimatedBadge swapKey={info.getValue()}>
+              <Badge className={`${className} border-0 text-sm`}>
+                {t('return_' + info.getValue())}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),
@@ -836,11 +839,13 @@ export default function AdminReturnsPage() {
                           <DialogTitle className="text-2xl font-bold tracking-tight">
                             {returnDetail.return_number}
                           </DialogTitle>
-                          <Badge
-                            className={`${RETURN_STATUS_LABELS[returnDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
-                          >
-                            {t('return_' + returnDetail.status)}
-                          </Badge>
+                          <AnimatedBadge swapKey={returnDetail.status}>
+                            <Badge
+                              className={`${RETURN_STATUS_LABELS[returnDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
+                            >
+                              {t('return_' + returnDetail.status)}
+                            </Badge>
+                          </AnimatedBadge>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {t('return_of_order')}: {returnDetail.order_number}

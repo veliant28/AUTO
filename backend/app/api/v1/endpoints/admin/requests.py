@@ -201,7 +201,7 @@ def _validate_status(status: str) -> RequestStatus:
 # --------------------------------------------------------------------------
 
 @router.get("/requests/categories", response_model=List[RequestCategorySchema])
-async def list_request_categories(
+def list_request_categories(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
 ):
@@ -215,7 +215,7 @@ async def list_request_categories(
 
 
 @router.patch("/requests/categories/{category_id}", response_model=RequestCategorySchema)
-async def update_request_category(
+def update_request_category(
     category_id: int,
     data: RequestCategoryUpdateIn,
     db: Session = Depends(get_db),
@@ -237,6 +237,9 @@ async def update_request_category(
     if data.allowed_roles is not None:
         roles = [r for r in data.allowed_roles if r]
         category.allowed_roles = roles or None
+    if data.take_roles is not None:
+        take_roles = [r for r in data.take_roles if r]
+        category.take_roles = take_roles or None
     if data.sort_order is not None:
         category.sort_order = data.sort_order
 
@@ -250,7 +253,7 @@ async def update_request_category(
 # --------------------------------------------------------------------------
 
 @router.get("/requests/alerts", response_model=RequestAlertsResponse)
-async def request_alerts(
+def request_alerts(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
 ):
@@ -274,7 +277,7 @@ async def request_alerts(
 # --------------------------------------------------------------------------
 
 @router.get("/requests", response_model=RequestListResponse)
-async def list_requests(
+def list_requests(
     category_id: int = Query(0, ge=0),
     status: str = Query("", max_length=20),
     search: str = Query("", max_length=100),
@@ -342,7 +345,7 @@ async def list_requests(
 
 
 @router.get("/requests/assignees")
-async def list_request_assignees(
+def list_request_assignees(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
 ):
@@ -371,7 +374,7 @@ async def list_request_assignees(
 
 
 @router.get("/requests/{request_id}", response_model=RequestDetailResponse)
-async def get_request(
+def get_request(
     request_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
@@ -461,6 +464,12 @@ async def take_request(
     request = _visible_or_404(db, current_user, request_id)
     if request.status in (RequestStatus.RESOLVED, RequestStatus.REJECTED):
         raise HTTPException(400, "Заявка уже закрыта")
+    # Доступ по категории: брать заявку могут только роли из её настроек
+    # (пустой список — любой сотрудник с правом requests.process)
+    take_roles = request.category.take_roles if request.category else None
+    role_name = current_user.role.name if current_user.role else None
+    if take_roles and role_name not in take_roles:
+        raise HTTPException(403, "Ваша роль не может брать заявки этой категории")
     was_status = _status_value(request.status)
     request.assignee_id = current_user.id
     request.status = RequestStatus.IN_PROGRESS
@@ -674,7 +683,7 @@ async def reject_request(
 
 
 @router.delete("/requests/{request_id}")
-async def delete_request(
+def delete_request(
     request_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.delete")),

@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Dialog,
   DialogContent,
@@ -228,17 +229,19 @@ function SendersColumn({
         header: t('novaposhta_status'),
         size: 120,
         cell: (info) => (
-          <Badge
-            className={`border-0 text-sm ${
-              info.getValue()
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-500 text-white'
-            }`}
-          >
-            {info.getValue()
-              ? t('novaposhta_active')
-              : t('novaposhta_inactive')}
-          </Badge>
+          <AnimatedBadge swapKey={String(info.getValue())}>
+            <Badge
+              className={`border-0 text-sm ${
+                info.getValue()
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-500 text-white'
+              }`}
+            >
+              {info.getValue()
+                ? t('novaposhta_active')
+                : t('novaposhta_inactive')}
+            </Badge>
+          </AnimatedBadge>
         ),
       }),
       senderColumnHelper.display({

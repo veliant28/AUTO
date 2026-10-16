@@ -60,5 +60,9 @@ celery_app.conf.beat_schedule = {
         'task': 'notify_overdue_requests',
         'schedule': 300.0,
     },
+    'autoassign-requests': {
+        'task': 'autoassign_requests',
+        'schedule': 300.0,
+    },
 }
 

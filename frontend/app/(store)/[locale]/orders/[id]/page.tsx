@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { toast } from '@/lib/toast'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -204,11 +205,13 @@ export default function OrderDetailPage() {
                     <h1 className="text-3xl font-bold font-mono">
                       {order.order_number || `#${order.id}`}
                     </h1>
-                    <Badge
-                      className={`${statusInfo.className} border-0 text-sm`}
-                    >
-                      {t(statusInfo.labelKey)}
-                    </Badge>
+                    <AnimatedBadge swapKey={order.status}>
+                      <Badge
+                        className={`${statusInfo.className} border-0 text-sm`}
+                      >
+                        {t(statusInfo.labelKey)}
+                      </Badge>
+                    </AnimatedBadge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{date}</p>
                 </div>
@@ -414,9 +417,11 @@ function PaymentBadge({
 }) {
   if (paymentMethod === 'cod') {
     return (
-      <Badge className="bg-green-600 text-white border-0 text-sm">
-        {t('payment_cod')}
-      </Badge>
+      <AnimatedBadge swapKey="cod">
+        <Badge className="bg-green-600 text-white border-0 text-sm">
+          {t('payment_cod')}
+        </Badge>
+      </AnimatedBadge>
     )
   }
 
@@ -424,15 +429,21 @@ function PaymentBadge({
   const cfg = PAYMENT_STATUS_CFG_STORE[status]
   if (cfg) {
     return (
-      <Badge className={`${cfg.className} border-0 text-sm`}>
-        {t(cfg.labelKey)}
-      </Badge>
+      <AnimatedBadge swapKey={status}>
+        <Badge className={`${cfg.className} border-0 text-sm`}>
+          {t(cfg.labelKey)}
+        </Badge>
+      </AnimatedBadge>
     )
   }
 
   // Unknown status — fallback
   return (
-    <Badge className="bg-gray-500 text-white border-0 text-sm">{status}</Badge>
+    <AnimatedBadge swapKey={status}>
+      <Badge className="bg-gray-500 text-white border-0 text-sm">
+        {status}
+      </Badge>
+    </AnimatedBadge>
   )
 }
 

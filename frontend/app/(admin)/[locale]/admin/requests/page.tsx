@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createColumnHelper,
   flexRender,
@@ -12,11 +12,23 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { Plus, Search, Settings2 } from 'lucide-react'
+import { AlertTriangle, Eye, Loader2, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -33,10 +45,12 @@ import {
   type RequestListItem,
   type RequestListResponse,
 } from './shared'
+import { categoryName } from '@/lib/requestCategories'
 import { useAuthStore } from '@/store/authStore'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
+import { toast } from '@/lib/toast'
 import api from '@/lib/api'
-import { DeadlineCell, RequestsStatusBadge } from './RequestsStatusBadge'
+import { DeadlineCell, RequestsStatusCell } from './RequestsStatusBadge'
 import RequestDetailModal from './RequestDetailModal'
 import CreateRequestDialog from './CreateRequestDialog'
 import CategoriesDialog from './CategoriesDialog'
@@ -54,6 +68,7 @@ export default function RequestsPage() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const fmtDate = useRequestDate()
+  const qc = useQueryClient()
 
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -62,6 +77,7 @@ export default function RequestsPage() {
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<RequestListItem | null>(null)
 
   const canView = !!user && can(user, 'requests.view')
   useEffect(() => {
@@ -105,6 +121,23 @@ export default function RequestsPage() {
     enabled: canView,
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/admin/requests/${id}`)
+    },
+    onSuccess: () => {
+      toast.success(t('requests_deleted_ok'))
+      qc.invalidateQueries({ queryKey: ['requests'] })
+      setDeleteTarget(null)
+    },
+    onError: (err: any) => {
+      const detailMsg = err?.response?.data?.detail
+      toast.error(
+        typeof detailMsg === 'string' ? detailMsg : t('requests_action_error'),
+      )
+    },
+  })
+
   const { data, isLoading } = useQuery<RequestListResponse>({
     queryKey: ['requests', statusFilter, categoryFilter, search, page],
     queryFn: async () => {
@@ -126,7 +159,6 @@ export default function RequestsPage() {
   // на каждый рендер и страница крутит лишние перерисовки
   const items = useMemo(() => data?.items || [], [data])
   const total = data?.total || 0
-  const progress = data?.progress || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const statusChips = useMemo(() => {
@@ -150,21 +182,28 @@ export default function RequestsPage() {
     () => [
       columnHelper.accessor('number', {
         header: t('requests_col_number'),
-        size: 160,
-        cell: (info) => (
-          <span className="font-mono whitespace-nowrap">{info.getValue()}</span>
-        ),
+        size: 130,
+        cell: (info) => <span className="font-mono">{info.getValue()}</span>,
       }),
-      columnHelper.accessor('category_name', {
+      columnHelper.display({
+        id: 'category',
         header: t('requests_col_category'),
-        size: 180,
-        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+        size: 130,
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {categoryName(
+              t,
+              row.original.category_code,
+              row.original.category_name,
+            )}
+          </span>
+        ),
       }),
       columnHelper.accessor('title', {
         header: t('requests_col_title'),
-        size: 260,
+        size: 200,
         cell: (info) => (
-          <span className="text-sm block max-w-[280px] truncate">
+          <span className="text-sm block max-w-[150px] truncate">
             {info.getValue()}
           </span>
         ),
@@ -172,7 +211,7 @@ export default function RequestsPage() {
       columnHelper.display({
         id: 'author',
         header: t('requests_col_author'),
-        size: 160,
+        size: 120,
         cell: ({ row }) =>
           row.original.created_by ? (
             <span className="text-sm">
@@ -187,7 +226,7 @@ export default function RequestsPage() {
       columnHelper.display({
         id: 'assignee',
         header: t('requests_col_assignee'),
-        size: 160,
+        size: 120,
         cell: ({ row }) =>
           row.original.assignee ? (
             <span className="text-sm">{actorLabel(row.original.assignee)}</span>
@@ -200,7 +239,7 @@ export default function RequestsPage() {
       columnHelper.display({
         id: 'deadline',
         header: t('requests_col_deadline'),
-        size: 170,
+        size: 140,
         cell: ({ row }) => (
           <DeadlineCell
             deadline={row.original.deadline}
@@ -211,31 +250,75 @@ export default function RequestsPage() {
               row.original.status === 'resolved' ||
               row.original.status === 'rejected'
             }
+            overdueBadge={false}
           />
         ),
       }),
       columnHelper.display({
         id: 'status',
         header: t('requests_col_status'),
-        size: 130,
+        size: 110,
+        // Просрочка — это состояние статуса: она заменяет статус
         cell: ({ row }) => (
-          <RequestsStatusBadge
+          <RequestsStatusCell
             status={row.original.status}
-            className="text-sm"
+            deadlineState={row.original.deadline_state}
+            minutesLate={row.original.minutes_late}
           />
         ),
       }),
       columnHelper.accessor('created_at', {
         header: t('requests_col_created'),
-        size: 150,
+        size: 130,
         cell: (info) => (
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
+          <span className="text-sm text-muted-foreground">
             {fmtDate(info.getValue())}
           </span>
         ),
       }),
+      // Действия — как в таблице заказов: просмотр и удаление
+      columnHelper.display({
+        id: 'actions',
+        header: t('actions'),
+        size: 90,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            {/* Просмотр — по праву «Просмотр журнала заявок» (доступно всем ролям журнала) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setOpenId(row.original.id)}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('requests_view')}</TooltipContent>
+            </Tooltip>
+            {/* Удаление — по праву «Удаление заявок» (по умолчанию только админ) */}
+            {can(user, 'requests.delete') && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => {
+                      if (!reqPerm('requests.delete')) return
+                      setDeleteTarget(row.original)
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('requests_delete')}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        ),
+      }),
     ],
-    [t, fmtDate],
+    [t, fmtDate, reqPerm, user],
   )
 
   const table = useReactTable({
@@ -256,71 +339,39 @@ export default function RequestsPage() {
     pageCount: totalPages,
   })
 
+  // Кнопки «Категории» и «Новая заявка» живут в топ-баре админки
+  useEffect(() => {
+    ;(window as any).__openRequestCategories = () => {
+      if (!reqPerm('requests.manage')) return
+      setCategoriesOpen(true)
+    }
+    ;(window as any).__openCreateRequest = () => {
+      if (!reqPerm('requests.create')) return
+      setCreateOpen(true)
+    }
+    return () => {
+      delete (window as any).__openRequestCategories
+      delete (window as any).__openCreateRequest
+    }
+  }, [reqPerm])
+
+  // Полоса «Выполнено» перенесена в топ-бар: сообщаем прогресс событием
+  useEffect(() => {
+    if (data == null) return
+    ;(window as any).__requestsProgress = data.progress
+    window.dispatchEvent(
+      new CustomEvent('requests-progress', { detail: data.progress }),
+    )
+    return () => {
+      delete (window as any).__requestsProgress
+    }
+  }, [data])
+
   return (
     <div className="p-6 space-y-4">
-      {/* Действия: название страницы показывает топ-бар */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="ml-auto flex items-center gap-2">
-          {can(user, 'requests.manage') && (
-            <Button
-              variant="outline"
-              className="gap-1.5"
-              onClick={() =>
-                reqPerm('requests.manage') && setCategoriesOpen(true)
-              }
-            >
-              <Settings2 className="w-4 h-4" />
-              {t('requests_categories_btn')}
-            </Button>
-          )}
-          {can(user, 'requests.create') && (
-            <Button
-              className="gap-1.5"
-              onClick={() => reqPerm('requests.create') && setCreateOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-              {t('requests_new_btn')}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Счётчики статусов + полоса выполнения */}
-      <div className="flex flex-wrap items-center gap-2">
-        {statusChips.map((chip) => (
-          <button
-            key={chip.key}
-            onClick={() => {
-              setStatusFilter(chip.key)
-              setPage(1)
-            }}
-            className={`px-3 py-1.5 rounded-full text-sm border transition-colors cursor-pointer ${
-              statusFilter === chip.key
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card hover:bg-accent'
-            }`}
-          >
-            {chip.label}
-            {chip.count != null && (
-              <span className="ml-1.5 opacity-80 tabular-nums">
-                {chip.count}
-              </span>
-            )}
-          </button>
-        ))}
-
-        <div className="flex items-center gap-3 ml-auto min-w-[240px]">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {t('requests_progress_label')}
-          </span>
-          <Progress value={progress} className="w-40" />
-          <span className="text-sm font-medium tabular-nums">{progress}%</span>
-        </div>
-      </div>
-
       {/* Фильтры */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative w-full max-w-[260px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={searchInput}
@@ -336,18 +387,41 @@ export default function RequestsPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[240px] h-10">
+          <SelectTrigger className="w-[200px] h-10">
             <SelectValue placeholder={t('requests_filter_category')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('requests_filter_all')}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
-                {c.name}
+                {categoryName(t, c.code, c.name)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+
+        {/* Фильтр статусов — тем же визуалом, что поиск и селект */}
+        {statusChips.map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => {
+              setStatusFilter(chip.key)
+              setPage(1)
+            }}
+            className={`h-10 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+              statusFilter === chip.key
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background border-input shadow-sm hover:bg-accent hover:text-accent-foreground'
+            }`}
+          >
+            {chip.label}
+            {chip.count != null && (
+              <span className="ml-1.5 opacity-80 tabular-nums">
+                {chip.count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Таблица */}
@@ -396,8 +470,7 @@ export default function RequestsPage() {
                   table.getRowModel().rows.map((row) => (
                     <tr
                       key={row.id}
-                      onClick={() => setOpenId(row.original.id)}
-                      className={`cursor-pointer border-b last:border-0 hover:bg-muted/30 ${
+                      className={`border-b last:border-0 hover:bg-muted/30 ${
                         row.original.deadline_state === 'overdue'
                           ? 'bg-red-500/5'
                           : ''
@@ -464,6 +537,59 @@ export default function RequestsPage() {
         open={categoriesOpen}
         onOpenChange={setCategoriesOpen}
       />
+
+      {/* Подтверждение удаления заявки — как в заказах */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle>{t('requests_delete')}</DialogTitle>
+                <DialogDescription>
+                  {t('requests_delete_confirm')}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {deleteTarget && (
+            <div className="rounded-lg bg-muted p-3 text-sm">
+              <div className="flex items-center gap-2">
+                <strong className="font-mono">{deleteTarget.number}</strong>
+                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground truncate">
+                  {deleteTarget.title}
+                </span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                deleteTarget && deleteMutation.mutate(deleteTarget.id)
+              }
+              disabled={deleteMutation.isPending}
+              className="gap-2"
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

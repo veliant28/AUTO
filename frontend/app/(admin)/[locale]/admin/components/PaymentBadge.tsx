@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { getTransaction } from '@/lib/api/payments'
 
 const STATUS_CFG: Record<string, { labelKey: string; className: string }> = {
@@ -45,9 +46,11 @@ export default function PaymentBadge({
   // COD — special green badge
   if (paymentMethod === 'cod') {
     return (
-      <Badge className="bg-green-600 text-white border-0 text-sm">
-        {t('payment_method_cod')}
-      </Badge>
+      <AnimatedBadge swapKey="cod">
+        <Badge className="bg-green-600 text-white border-0 text-sm">
+          {t('payment_method_cod')}
+        </Badge>
+      </AnimatedBadge>
     )
   }
 
@@ -55,14 +58,20 @@ export default function PaymentBadge({
   const cfg = STATUS_CFG[status]
   if (cfg) {
     return (
-      <Badge className={`${cfg.className} border-0 text-sm`}>
-        {t(cfg.labelKey)}
-      </Badge>
+      <AnimatedBadge swapKey={status}>
+        <Badge className={`${cfg.className} border-0 text-sm`}>
+          {t(cfg.labelKey)}
+        </Badge>
+      </AnimatedBadge>
     )
   }
 
   // fallback for unknown statuses
   return (
-    <Badge className="bg-gray-500 text-white border-0 text-sm">{status}</Badge>
+    <AnimatedBadge swapKey={status}>
+      <Badge className="bg-gray-500 text-white border-0 text-sm">
+        {status}
+      </Badge>
+    </AnimatedBadge>
   )
 }

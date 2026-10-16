@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { parseApiDate } from '@/lib/dates'
 import { useRequestsStore } from '@/store/requestsStore'
+import { categoryName } from '@/lib/requestCategories'
 
 const ONE_HOUR = 60 * 60 * 1000
 const TWO_HOURS = 2 * ONE_HOUR
@@ -41,6 +42,7 @@ interface RequestItem {
   number: string
   title: string
   category_name: string | null
+  category_code: string | null
   status: string
   created_at: string | null
   deadline_state: 'ok' | 'due_soon' | 'overdue'
@@ -94,8 +96,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     let cancelled = false
-    const API =
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const API = process.env.NEXT_PUBLIC_API_URL || '/api/v1'
 
     async function fetchNotifs() {
       try {
@@ -205,7 +206,7 @@ export default function NotificationBell() {
                   <p className="text-xs opacity-90 truncate">{r.title}</p>
                   {r.category_name && (
                     <p className="text-xs opacity-75 truncate">
-                      {r.category_name}
+                      {categoryName(t, r.category_code, r.category_name)}
                     </p>
                   )}
                 </div>

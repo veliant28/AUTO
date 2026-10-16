@@ -30,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Card,
   CardContent,
@@ -535,21 +536,23 @@ function ScheduleSection() {
             scheduleStatusColors[s.schedule_status] || 'bg-gray-400 text-white'
           const statusLabel = scheduleStatusLabel(s.schedule_status, t)
           return (
-            <Badge className={`${ssColor} border-0 text-sm gap-1`}>
-              {s.schedule_status === 'in_progress' && (
-                <Loader className="w-3.5 h-3.5 animate-spin" />
-              )}
-              {s.schedule_status === 'done' && (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              )}
-              {s.schedule_status === 'error' && (
-                <XCircle className="w-3.5 h-3.5" />
-              )}
-              {s.schedule_status === 'waiting' && (
-                <Clock className="w-3.5 h-3.5" />
-              )}
-              {statusLabel}
-            </Badge>
+            <AnimatedBadge swapKey={s.schedule_status}>
+              <Badge className={`${ssColor} border-0 text-sm gap-1`}>
+                {s.schedule_status === 'in_progress' && (
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
+                )}
+                {s.schedule_status === 'done' && (
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                )}
+                {s.schedule_status === 'error' && (
+                  <XCircle className="w-3.5 h-3.5" />
+                )}
+                {s.schedule_status === 'waiting' && (
+                  <Clock className="w-3.5 h-3.5" />
+                )}
+                {statusLabel}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),

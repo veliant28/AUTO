@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   const API =
     process.env.INTERNAL_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    'http://backend:8080/api/v1'
+    'http://backend:8000/api/v1'
   let brandName = 'SVOM'
   try {
     const res = await fetch(`${API}/settings`, {
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
 const API =
   process.env.INTERNAL_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  'http://backend:8080/api/v1'
+  'http://backend:8000/api/v1'
 
 async function fetchBrandName(): Promise<string> {
   try {

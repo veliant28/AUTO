@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -335,9 +336,11 @@ export default function ReturnDetailPage() {
                 <h1 className="text-3xl font-bold font-mono">
                   {ret.return_number}
                 </h1>
-                <Badge className={`${statusInfo.className} border-0 text-sm`}>
-                  {t(statusInfo.labelKey)}
-                </Badge>
+                <AnimatedBadge swapKey={ret.status}>
+                  <Badge className={`${statusInfo.className} border-0 text-sm`}>
+                    {t(statusInfo.labelKey)}
+                  </Badge>
+                </AnimatedBadge>
               </div>
               <p className="text-sm text-muted-foreground">{date}</p>
               <p className="font-semibold text-base">

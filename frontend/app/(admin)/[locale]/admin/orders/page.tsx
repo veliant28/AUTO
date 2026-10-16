@@ -52,6 +52,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { NpWaybillBadge } from '@/components/ui/NpWaybillBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -658,9 +659,11 @@ export default function AdminOrdersPage() {
           const statusInfo = ORDER_STATUS_LABELS[info.getValue()]
           const className = statusInfo?.className || 'bg-gray-500 text-white'
           return (
-            <Badge className={`${className} border-0 text-sm`}>
-              {t('order_' + info.getValue())}
-            </Badge>
+            <AnimatedBadge swapKey={info.getValue()}>
+              <Badge className={`${className} border-0 text-sm`}>
+                {t('order_' + info.getValue())}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),

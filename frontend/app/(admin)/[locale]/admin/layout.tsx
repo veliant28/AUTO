@@ -25,6 +25,7 @@ import {
   UserCog,
   FileDown,
   FolderTree,
+  Settings2,
   TrendingUp,
   Play,
   RotateCcw,
@@ -45,6 +46,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -131,6 +133,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const isAdmin =
     pathname === '/admin' || /^\/(?:ru|en|ua)\/admin$/.test(pathname)
   const isOrders = pathname.includes('/admin/orders')
+  const isRequests = pathname.includes('/admin/requests')
   const isReturns = pathname.includes('/admin/returns')
   const isLoyalty = pathname.includes('/admin/loyalty')
   const isStaff = pathname.includes('/admin/staff')
@@ -194,6 +197,15 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
     null,
   )
   const [refreshing, setRefreshing] = useState(false)
+  // Прогресс «Выполнено» страницы заявок: страница сообщает значение событием
+  const [requestsProgress, setRequestsProgress] = useState<number | null>(null)
+  useEffect(() => {
+    const onProgress = (e: Event) =>
+      setRequestsProgress((e as CustomEvent).detail as number)
+    window.addEventListener('requests-progress', onProgress)
+    setRequestsProgress((window as any).__requestsProgress ?? null)
+    return () => window.removeEventListener('requests-progress', onProgress)
+  }, [])
   const reqPerm = useRequirePerm()
   const [restartDialogOpen, setRestartDialogOpen] = useState(false)
   const [restartCounts, setRestartCounts] = useState({ active: 0, reserved: 0 })
@@ -522,6 +534,17 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <h1 className="text-lg font-bold truncate hidden sm:block">
               {ta(meta.titleKey)}
             </h1>
+          </div>
+        )}
+        {isRequests && requestsProgress != null && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">
+              {ta('requests_progress_label')}
+            </span>
+            <Progress value={requestsProgress} className="w-32" />
+            <span className="text-sm font-medium tabular-nums">
+              {requestsProgress}%
+            </span>
           </div>
         )}
         {isTimesheet && settings && (
@@ -1204,6 +1227,37 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               </TooltipTrigger>
               <TooltipContent>{ta('create_order')}</TooltipContent>
             </Tooltip>
+          </div>
+        )}
+        {isRequests && (
+          <div className="border-r pr-2 self-stretch flex items-center gap-1">
+            {can(user, 'requests.manage') && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => (window as any).__openRequestCategories?.()}
+                  >
+                    <Settings2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('requests_categories_btn')}</TooltipContent>
+              </Tooltip>
+            )}
+            {can(user, 'requests.create') && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() => (window as any).__openCreateRequest?.()}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{ta('requests_new_btn')}</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         )}
         {isProtection && (

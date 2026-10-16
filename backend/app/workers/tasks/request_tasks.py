@@ -70,3 +70,22 @@ def notify_overdue_requests():
             logger.info("Notified about %s overdue requests", notified)
     finally:
         db.close()
+
+
+@celery_app.task(name="autoassign_requests")
+def autoassign_requests():
+    """Автоназначение исполнителей открытым заявкам по фиксации входа.
+
+    Кандидаты — на смене (вход зафиксирован, выхода нет), роль позволяет
+    брать заявки категории; берём последнего, кто зафиксировался. Работает,
+    пока не истёк срок заявки; при выключенной фиксации не назначает никого.
+    """
+    db = SessionLocal()
+    try:
+        from app.services.request_autoassign import autoassign_open_requests
+
+        assigned = autoassign_open_requests(db)
+        if assigned:
+            logger.info("Auto-assigned assignees for %s requests", assigned)
+    finally:
+        db.close()

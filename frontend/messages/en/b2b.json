@@ -17,6 +17,8 @@
   "contact_last_name_placeholder": "Smith",
   "contact_first_name": "First name",
   "contact_first_name_placeholder": "John",
+  "contact_middle_name": "Middle name",
+  "contact_middle_name_placeholder": "Ivanovych",
   "phone": "Phone",
   "email": "Login email",
   "email_placeholder": "client@example.com",

@@ -39,6 +39,7 @@ export interface RequestCategory {
   name: string
   code: string
   allowed_roles: string[] | null
+  take_roles: string[] | null
   description: string | null
   response_minutes: number | null
   resolve_minutes: number | null

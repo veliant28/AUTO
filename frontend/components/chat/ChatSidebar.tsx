@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatPhone } from '@/components/ui/PhoneInput'
@@ -131,11 +132,13 @@ export default function ChatSidebar({
                     >
                       {chat.ticket_number || `#${chat.id}`}
                     </span>
-                    <Badge
-                      className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-                    >
-                      {STATUS_LABEL[chat.status] || chat.status}
-                    </Badge>
+                    <AnimatedBadge swapKey={chat.status} className="shrink-0">
+                      <Badge
+                        className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
+                      >
+                        {STATUS_LABEL[chat.status] || chat.status}
+                      </Badge>
+                    </AnimatedBadge>
                   </div>
                 ) : (
                   // Full view: ticket number + badge + user info
@@ -149,11 +152,13 @@ export default function ChatSidebar({
                       >
                         {chat.ticket_number || `#${chat.id}`}
                       </span>
-                      <Badge
-                        className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-                      >
-                        {STATUS_LABEL[chat.status] || chat.status}
-                      </Badge>
+                      <AnimatedBadge swapKey={chat.status} className="shrink-0">
+                        <Badge
+                          className={`${STATUS_BADGE[chat.status] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
+                        >
+                          {STATUS_LABEL[chat.status] || chat.status}
+                        </Badge>
+                      </AnimatedBadge>
                     </div>
                     {(chat.user_name || chat.user_phone || chat.user_email) && (
                       <div className="mt-1 space-y-0.5">

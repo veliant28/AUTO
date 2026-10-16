@@ -13,6 +13,7 @@ import {
 import { usePartDetail } from '@/hooks/usePartDetail'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -291,11 +292,13 @@ export default function ProductClient({ article }: { article: string }) {
                     </Badge>
                   )}
                 </div>
-                <Badge
-                  className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
-                >
-                  {inStock ? tc('in_stock') : tc('out_of_stock')}
-                </Badge>
+                <AnimatedBadge swapKey={String(inStock)} className="shrink-0">
+                  <Badge
+                    className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
+                  >
+                    {inStock ? tc('in_stock') : tc('out_of_stock')}
+                  </Badge>
+                </AnimatedBadge>
               </div>
               {/* Розничная цена зачёркнута — видна только B2B-клиенту */}
               {b2bPct != null && price.retail_price != null && (

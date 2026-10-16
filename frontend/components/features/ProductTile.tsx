@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Heart, ShoppingCart, CircleCheckBig } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -150,11 +151,13 @@ export default function ProductTile({
               <span className="text-xs text-muted-foreground">—</span>
             )}
           </div>
-          <Badge
-            className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
-          >
-            {inStock ? t('in_stock') : t('out_of_stock')}
-          </Badge>
+          <AnimatedBadge swapKey={String(inStock)} className="shrink-0">
+            <Badge
+              className={`${inStock ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} border-0 text-sm shrink-0`}
+            >
+              {inStock ? t('in_stock') : t('out_of_stock')}
+            </Badge>
+          </AnimatedBadge>
         </div>
 
         <div className="flex items-center gap-2 pt-1">

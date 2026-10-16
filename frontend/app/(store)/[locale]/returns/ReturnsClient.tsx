@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import CatalogPagination from '@/components/features/CatalogPagination'
 import { useAuthStore } from '@/store/authStore'
@@ -206,11 +207,13 @@ export default function ReturnsPage() {
                     <span className="font-bold font-mono">
                       {ret.return_number || `#${ret.id}`}
                     </span>
-                    <Badge
-                      className={`${statusInfo.className} border-0 text-sm w-fit`}
-                    >
-                      {t(statusInfo.labelKey)}
-                    </Badge>
+                    <AnimatedBadge swapKey={ret.status} className="w-fit">
+                      <Badge
+                        className={`${statusInfo.className} border-0 text-sm w-fit`}
+                      >
+                        {t(statusInfo.labelKey)}
+                      </Badge>
+                    </AnimatedBadge>
                     <span className="text-sm text-muted-foreground">
                       {date}
                     </span>

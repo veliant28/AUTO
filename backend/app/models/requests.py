@@ -50,6 +50,9 @@ class RequestCategory(Base):
     # Роли, которым разрешено создавать заявки этой категории
     # (["admin","manager"] и т.п.); пустой список = всем сотрудникам с requests.create
     allowed_roles = Column(JSON, nullable=True)
+    # Роли, которые могут взять заявку этой категории в работу
+    # (пусто = любой сотрудник с правом requests.process)
+    take_roles = Column(JSON, nullable=True)
     description = Column(Text, nullable=True)
     # Сроки: реакция (взять в работу) и решение (закрыть), в минутах
     response_minutes = Column(Integer, nullable=True)

@@ -28,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Popover,
   PopoverContent,
@@ -482,14 +483,16 @@ export default function BackupTab() {
         cell: (info) => {
           const status = info.getValue()
           return (
-            <Badge
-              className={`${STATUS_BADGE[status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
-            >
-              {status === 'in_progress' && (
-                <Loader className="w-3.5 h-3.5 animate-spin" />
-              )}
-              {t(STATUS_LABEL_KEY[status] || 'backup_status_unknown')}
-            </Badge>
+            <AnimatedBadge swapKey={status}>
+              <Badge
+                className={`${STATUS_BADGE[status] || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap gap-1`}
+              >
+                {status === 'in_progress' && (
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
+                )}
+                {t(STATUS_LABEL_KEY[status] || 'backup_status_unknown')}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),

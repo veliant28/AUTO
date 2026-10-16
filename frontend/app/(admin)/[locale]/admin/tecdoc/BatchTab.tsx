@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -219,22 +220,24 @@ export default function BatchTab({
           return (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge
-                  className={`border-0 gap-1.5 px-3 h-7 w-fit flex items-center cursor-pointer text-sm font-normal whitespace-nowrap ${
-                    status === 'matched_app'
-                      ? 'bg-green-500 text-white'
-                      : status === 'matched'
-                        ? 'bg-blue-500 text-white'
-                        : status === 'unmatched'
-                          ? 'bg-yellow-500 text-white'
-                          : status === 'not_found'
-                            ? 'bg-red-500 text-white'
-                            : 'bg-gray-400 text-white'
-                  }`}
-                >
-                  {statusIcons[status]}
-                  {t('tecdoc_' + status) || status}
-                </Badge>
+                <AnimatedBadge swapKey={status}>
+                  <Badge
+                    className={`border-0 gap-1.5 px-3 h-7 w-fit flex items-center cursor-pointer text-sm font-normal whitespace-nowrap ${
+                      status === 'matched_app'
+                        ? 'bg-green-500 text-white'
+                        : status === 'matched'
+                          ? 'bg-blue-500 text-white'
+                          : status === 'unmatched'
+                            ? 'bg-yellow-500 text-white'
+                            : status === 'not_found'
+                              ? 'bg-red-500 text-white'
+                              : 'bg-gray-400 text-white'
+                    }`}
+                  >
+                    {statusIcons[status]}
+                    {t('tecdoc_' + status) || status}
+                  </Badge>
+                </AnimatedBadge>
               </TooltipTrigger>
               <TooltipContent>{t('tecdoc_' + status) || status}</TooltipContent>
             </Tooltip>

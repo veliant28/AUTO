@@ -17,6 +17,8 @@
   "contact_last_name_placeholder": "Іванов",
   "contact_first_name": "Ім'я",
   "contact_first_name_placeholder": "Іван",
+  "contact_middle_name": "По батькові",
+  "contact_middle_name_placeholder": "Іванович",
   "phone": "Телефон",
   "email": "Email для входу",
   "email_placeholder": "client@example.com",

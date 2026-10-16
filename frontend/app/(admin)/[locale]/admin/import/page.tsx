@@ -29,6 +29,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -212,20 +213,24 @@ export default function ImportPage() {
           const item = info.row.original
           const StatusIcon = statusIcons[item.status] || Clock
           return item.matched_items > 0 ? (
-            <Badge className="bg-green-500 text-white border-0 text-sm gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {t('import_promoted')}
-            </Badge>
+            <AnimatedBadge swapKey="promoted">
+              <Badge className="bg-green-500 text-white border-0 text-sm gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {t('import_promoted')}
+              </Badge>
+            </AnimatedBadge>
           ) : (
             <>
-              <Badge
-                className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
-              >
-                <StatusIcon
-                  className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
-                />
-                {t(`import_${item.status}`)}
-              </Badge>
+              <AnimatedBadge swapKey={item.status}>
+                <Badge
+                  className={`${statusColors[item.status] || 'bg-gray-500 text-white'} border-0 text-sm gap-1`}
+                >
+                  <StatusIcon
+                    className={`w-3.5 h-3.5 ${item.status === 'processing' ? 'animate-spin' : ''}`}
+                  />
+                  {t(`import_${item.status}`)}
+                </Badge>
+              </AnimatedBadge>
               {item.status === 'failed' && getImportError(item) && (
                 <div className="text-xs text-red-400 mt-1 max-w-[200px] leading-tight">
                   {getImportError(item)}
@@ -311,7 +316,7 @@ export default function ImportPage() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/admin/imports/${row.original.id}/download`}
+                      href={`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/admin/imports/${row.original.id}/download`}
                       target="_blank"
                     >
                       <Button variant="outline" size="icon">

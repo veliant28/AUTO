@@ -33,6 +33,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
@@ -308,13 +309,15 @@ export default function LoyaltyPage() {
         header: t('loyalty_type'),
         size: 120,
         cell: (info) => (
-          <Badge
-            className={`${info.getValue() === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
-          >
-            {info.getValue() === 'delivery'
-              ? t('loyalty_type_delivery')
-              : t('loyalty_type_margin')}
-          </Badge>
+          <AnimatedBadge swapKey={String(info.getValue())}>
+            <Badge
+              className={`${info.getValue() === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
+            >
+              {info.getValue() === 'delivery'
+                ? t('loyalty_type_delivery')
+                : t('loyalty_type_margin')}
+            </Badge>
+          </AnimatedBadge>
         ),
       }),
       columnHelper.accessor('user_name', {
@@ -352,15 +355,17 @@ export default function LoyaltyPage() {
           return (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge
-                  className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
-                >
-                  {item.used_at
-                    ? t('status_used')
-                    : expired
-                      ? t('status_expired')
-                      : t('status_unused')}
-                </Badge>
+                <AnimatedBadge>
+                  <Badge
+                    className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
+                  >
+                    {item.used_at
+                      ? t('status_used')
+                      : expired
+                        ? t('status_expired')
+                        : t('status_unused')}
+                  </Badge>
+                </AnimatedBadge>
               </TooltipTrigger>
               <TooltipContent>
                 {item.used_at

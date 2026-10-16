@@ -10,6 +10,7 @@ class RequestCategorySchema(BaseModel):
     name: str
     code: str
     allowed_roles: Optional[List[str]] = None
+    take_roles: Optional[List[str]] = None
     description: Optional[str] = None
     response_minutes: Optional[int] = None
     resolve_minutes: Optional[int] = None
@@ -140,6 +141,7 @@ class RequestCategoryUpdateIn(BaseModel):
     resolve_minutes: Optional[int] = Field(None, ge=0, le=100000)
     is_active: Optional[bool] = None
     allowed_roles: Optional[List[str]] = None
+    take_roles: Optional[List[str]] = None
     sort_order: Optional[int] = Field(None, ge=0, le=10000)
 
 
@@ -166,6 +168,7 @@ class B2BApplicationIn(BaseModel):
     edrpou: Optional[str] = Field(None, max_length=20)
     contact_last_name: Optional[str] = Field(None, min_length=1, max_length=100)
     contact_first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    contact_middle_name: Optional[str] = Field(None, min_length=1, max_length=100)
     # Старые сборки витрины присылали контакт одним полем — принимаем и так
     contact_name: Optional[str] = Field(None, min_length=2, max_length=150)
     phone: str = Field(..., min_length=10, max_length=30)

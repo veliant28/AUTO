@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -159,27 +160,31 @@ export default function LoyaltyClient() {
                             </div>
                           </td>
                           <td className="p-3">
-                            <Badge
-                              className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
-                            >
-                              {item.type === 'delivery'
-                                ? t('loyalty_type_delivery')
-                                : t('loyalty_type_margin')}
-                            </Badge>
+                            <AnimatedBadge swapKey={item.type}>
+                              <Badge
+                                className={`${item.type === 'delivery' ? 'bg-blue-500' : 'bg-purple-500'} text-white border-0 text-sm`}
+                              >
+                                {item.type === 'delivery'
+                                  ? t('loyalty_type_delivery')
+                                  : t('loyalty_type_margin')}
+                              </Badge>
+                            </AnimatedBadge>
                           </td>
                           <td className="p-3 text-sm">{item.reason}</td>
                           <td className="p-3">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge
-                                  className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
-                                >
-                                  {item.used_at
-                                    ? t('loyalty_status_used')
-                                    : expired
-                                      ? t('loyalty_status_expired')
-                                      : t('loyalty_status_unused')}
-                                </Badge>
+                                <AnimatedBadge>
+                                  <Badge
+                                    className={`${item.used_at ? 'bg-green-500' : expired ? 'bg-red-500' : 'bg-gray-500'} text-white border-0 text-sm cursor-pointer`}
+                                  >
+                                    {item.used_at
+                                      ? t('loyalty_status_used')
+                                      : expired
+                                        ? t('loyalty_status_expired')
+                                        : t('loyalty_status_unused')}
+                                  </Badge>
+                                </AnimatedBadge>
                               </TooltipTrigger>
                               <TooltipContent>
                                 {item.used_at

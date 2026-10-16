@@ -887,6 +887,7 @@ async def monitor_client_b2b(
     )
     from app.services.requests_service import (
         contact_display_name,
+        contact_middle_name,
         contact_name_parts,
     )
 
@@ -950,6 +951,7 @@ async def monitor_client_b2b(
                 contact_name=contact_display_name(payload),
                 contact_last_name=contact_last_name,
                 contact_first_name=contact_first_name,
+                contact_middle_name=contact_middle_name(payload),
                 phone=payload.get("phone"),
                 email=payload.get("email") or user.email,
                 city=payload.get("city"),

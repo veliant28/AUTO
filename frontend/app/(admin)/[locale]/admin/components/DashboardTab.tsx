@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { useAuthStore } from '@/store/authStore'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
@@ -442,9 +443,11 @@ export default function DashboardTab() {
                         <p className="text-sm font-bold">
                           {fmt(order.total || 0)} ₴
                         </p>
-                        <Badge className={`${className} border-0 text-sm`}>
-                          {t('order_' + order.status)}
-                        </Badge>
+                        <AnimatedBadge swapKey={order.status}>
+                          <Badge className={`${className} border-0 text-sm`}>
+                            {t('order_' + order.status)}
+                          </Badge>
+                        </AnimatedBadge>
                       </div>
                     </button>
                   )

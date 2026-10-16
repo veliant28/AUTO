@@ -251,6 +251,7 @@ class MonitorB2BApplication(BaseModel):
     contact_name: Optional[str]
     contact_last_name: Optional[str] = None
     contact_first_name: Optional[str] = None
+    contact_middle_name: Optional[str] = None
     phone: Optional[str]
     email: Optional[str]
     city: Optional[str]

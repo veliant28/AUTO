@@ -18,6 +18,16 @@ from app.models.requests import (
 )
 from app.schemas.requests_schemas import B2BApplicationIn, B2BApplicationResponse
 from app.services import requests_service as rs
+
+
+def _trigger_autoassign() -> None:
+    """Попробовать сразу назначить исполнителя по фиксации (не критично при сбое)."""
+    try:
+        from app.workers.tasks.request_tasks import autoassign_requests
+
+        autoassign_requests.delay()
+    except Exception:
+        pass
 from app.services import telegram_format
 from app.services.email_service import normalize_locale
 from app.services.notifications import send_telegram_notification
@@ -46,6 +56,7 @@ async def submit_b2b_application(
         "edrpou": (data.edrpou or "").strip() or None,
         "contact_last_name": (data.contact_last_name or "").strip() or None,
         "contact_first_name": (data.contact_first_name or "").strip() or None,
+        "contact_middle_name": (data.contact_middle_name or "").strip() or None,
         "phone": data.phone.strip(),
         "email": str(data.email).strip().lower(),
         "city": (data.city or "").strip() or None,
@@ -93,5 +104,7 @@ async def submit_b2b_application(
     except Exception:
         logger.warning("B2B request telegram notify failed", exc_info=True)
     rs.notify_request_event(request, "request_created", db)
+
+    _trigger_autoassign()
 
     return B2BApplicationResponse(request_number=request.number)

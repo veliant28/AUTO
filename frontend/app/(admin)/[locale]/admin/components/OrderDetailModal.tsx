@@ -37,6 +37,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Select,
   SelectContent,
@@ -979,11 +980,13 @@ export default function OrderDetailModal({
                       <DialogTitle className="text-2xl font-bold tracking-tight">
                         {t('new_order')}
                       </DialogTitle>
-                      <Badge
-                        className={`${ORDER_STATUS_LABELS.pending?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
-                      >
-                        {t('order_new')}
-                      </Badge>
+                      <AnimatedBadge>
+                        <Badge
+                          className={`${ORDER_STATUS_LABELS.pending?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
+                        >
+                          {t('order_new')}
+                        </Badge>
+                      </AnimatedBadge>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(new Date().toISOString())}
@@ -1002,11 +1005,13 @@ export default function OrderDetailModal({
                         <DialogTitle className="text-2xl font-bold tracking-tight">
                           {orderDetail.order_number}
                         </DialogTitle>
-                        <Badge
-                          className={`${ORDER_STATUS_LABELS[orderDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
-                        >
-                          {t('order_' + orderDetail.status)}
-                        </Badge>
+                        <AnimatedBadge swapKey={orderDetail.status}>
+                          <Badge
+                            className={`${ORDER_STATUS_LABELS[orderDetail.status]?.className || 'bg-gray-500 text-white'} border-0 text-sm`}
+                          >
+                            {t('order_' + orderDetail.status)}
+                          </Badge>
+                        </AnimatedBadge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {formatDate(orderDetail.created_at)}
@@ -1989,13 +1994,15 @@ export default function OrderDetailModal({
                     <div className="flex items-center gap-2">
                       {orderDetail!.payment_method !== 'cod' &&
                         orderDetail!.payment_method && (
-                          <Badge
-                            className={paymentBadgeClass(
-                              orderDetail!.payment_method,
-                            )}
-                          >
-                            {paymentMethodLabel(orderDetail!.payment_method)}
-                          </Badge>
+                          <AnimatedBadge swapKey={orderDetail!.payment_method}>
+                            <Badge
+                              className={paymentBadgeClass(
+                                orderDetail!.payment_method,
+                              )}
+                            >
+                              {paymentMethodLabel(orderDetail!.payment_method)}
+                            </Badge>
+                          </AnimatedBadge>
                         )}
                       <Button
                         variant="outline"

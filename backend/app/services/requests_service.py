@@ -45,13 +45,28 @@ def actor_group(user: Optional[User]) -> Optional[str]:
 
 
 def contact_display_name(payload: Optional[dict]) -> str:
-    """Контакт B2B-заявки одной строкой: «Фамилия Имя».
+    """Контакт B2B-заявки одной строкой: «Фамилия Имя Отчество».
 
-    Свежие заявки приходят двумя полями, старые хранят контакт одной строкой
+    Свежие заявки приходят тремя полями, старые хранят контакт одной строкой
     в `contact_name` — читаем оба варианта, чтобы журнал показывал и те, и те.
     """
     last, first = contact_name_parts(payload)
-    return f"{last or ''} {first or ''}".strip()
+    middle = contact_middle_name(payload)
+    return f"{last or ''} {first or ''} {middle or ''}".strip()
+
+
+def contact_middle_name(payload: Optional[dict]) -> Optional[str]:
+    """Отчество контакта B2B-заявки.
+
+    У старых заявок контакт одной строкой «Фамилия Имя Отчество» — берём
+    третье слово, если оно есть.
+    """
+    data = payload or {}
+    middle = (data.get("contact_middle_name") or "").strip() or None
+    if middle:
+        return middle
+    parts = (data.get("contact_name") or "").split()
+    return parts[2] if len(parts) > 2 else None
 
 
 def contact_name_parts(

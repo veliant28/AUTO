@@ -24,6 +24,7 @@ import {
 import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -317,11 +318,13 @@ export default function MonitorTab() {
           const role = info.getValue()
           if (!role) return '—'
           return (
-            <Badge
-              className={`${ROLE_BADGE_COLORS[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-            >
-              {t(role) || role}
-            </Badge>
+            <AnimatedBadge swapKey={role}>
+              <Badge
+                className={`${ROLE_BADGE_COLORS[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {t(role) || role}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),
@@ -330,11 +333,13 @@ export default function MonitorTab() {
         cell: (info) => {
           const online = info.getValue() === 'online'
           return (
-            <Badge
-              className={`${online ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'} border-0 text-sm`}
-            >
-              {online ? t('monitor_online') : t('monitor_offline')}
-            </Badge>
+            <AnimatedBadge swapKey={String(online)}>
+              <Badge
+                className={`${online ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'} border-0 text-sm`}
+              >
+                {online ? t('monitor_online') : t('monitor_offline')}
+              </Badge>
+            </AnimatedBadge>
           )
         },
       }),
@@ -420,9 +425,13 @@ export default function MonitorTab() {
           <CardTitle className="text-base flex items-center gap-2">
             {t('monitor_chart_title')}
             {isArchive && (
-              <Badge className="bg-gray-500 text-white border-0 text-sm">
-                {format(monitorDate!, 'dd.MM.yyyy')}
-              </Badge>
+              <AnimatedBadge
+                key={monitorDate ? monitorDate.toISOString() : 'live'}
+              >
+                <Badge className="bg-gray-500 text-white border-0 text-sm">
+                  {format(monitorDate!, 'dd.MM.yyyy')}
+                </Badge>
+              </AnimatedBadge>
             )}
           </CardTitle>
         </CardHeader>
