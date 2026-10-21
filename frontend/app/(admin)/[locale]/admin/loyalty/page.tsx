@@ -44,6 +44,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import {
   Tooltip,
   TooltipTrigger,
@@ -120,6 +122,7 @@ export default function LoyaltyPage() {
 
   // ── List state ──
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
   const [search, setSearch] = useState('')
   const [staffFilter, setStaffFilter] = useState('')
   const [hydrated, setHydrated] = useState(false)
@@ -161,9 +164,9 @@ export default function LoyaltyPage() {
 
   // ── Queries ──
   const { data: listData, isLoading } = useQuery({
-    queryKey: ['admin-loyalty', page, search, staffFilter],
+    queryKey: ['admin-loyalty', page, pageSize, search, staffFilter],
     queryFn: async () => {
-      const params: any = { page, page_size: 10 }
+      const params: any = { page, page_size: pageSize }
       if (search) params.search = search
       if (staffFilter) params.staff_id = staffFilter
       const { data } = await api.get('/admin/loyalty', { params })
@@ -265,7 +268,6 @@ export default function LoyaltyPage() {
   }, [statsData])
 
   const items: Promocode[] = listData?.items || []
-  const totalPages = listData ? Math.ceil(listData.total / 10) : 0
 
   const columns = useMemo(
     () => [
@@ -423,16 +425,16 @@ export default function LoyaltyPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: { pageIndex: page - 1, pageSize: 10 } },
+    state: { pagination: { pageIndex: page - 1, pageSize } },
     onPaginationChange: (updater) => {
       const next =
         typeof updater === 'function'
-          ? updater({ pageIndex: page - 1, pageSize: 10 })
+          ? updater({ pageIndex: page - 1, pageSize })
           : updater
       setPage(next.pageIndex + 1)
     },
     manualPagination: true,
-    pageCount: Math.max(1, Math.ceil((listData?.total || 0) / 10)),
+    pageCount: Math.max(1, Math.ceil((listData?.total || 0) / pageSize)),
   })
 
   if (!hydrated) {
@@ -486,6 +488,13 @@ export default function LoyaltyPage() {
               }}
             />
           </div>
+          <PageSizeSelect
+            value={pageSize}
+            onChange={(size) => {
+              setPageSize(size)
+              setPage(1)
+            }}
+          />
           <Select
             value={staffFilter}
             onValueChange={(v) => {
@@ -568,52 +577,7 @@ export default function LoyaltyPage() {
                     </tbody>
                   </table>
                 </div>
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between p-3 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      {t('page_of', { page, total: totalPages })}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => table.previousPage()}
-                      >
-                        {t('prev_page')}
-                      </Button>
-                      {Array.from(
-                        { length: Math.min(totalPages, 5) },
-                        (_, i) => {
-                          let p: number
-                          if (totalPages <= 5) p = i + 1
-                          else if (page <= 3) p = i + 1
-                          else if (page >= totalPages - 2)
-                            p = totalPages - 4 + i
-                          else p = page - 2 + i
-                          return (
-                            <Button
-                              key={p}
-                              variant={p === page ? 'default' : 'outline'}
-                              size="sm"
-                              onClick={() => table.setPageIndex(p - 1)}
-                            >
-                              {p}
-                            </Button>
-                          )
-                        },
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= totalPages}
-                        onClick={() => table.nextPage()}
-                      >
-                        {t('next_page')}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <TablePagination table={table} />
               </>
             )}
           </CardContent>

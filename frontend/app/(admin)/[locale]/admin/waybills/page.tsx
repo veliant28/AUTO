@@ -22,6 +22,8 @@ import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import {
   Tooltip,
   TooltipContent,
@@ -80,13 +82,14 @@ export default function WaybillsPage() {
   const timezone = useTimezoneStore((s) => s.timezone)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(25)
   const [viewWaybillId, setViewWaybillId] = useState<number | null>(null)
 
   // ── Fetch data ───────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-waybills', page, search],
+    queryKey: ['admin-waybills', page, pageSize, search],
     queryFn: async () => {
-      const params: any = { page: page + 1, per_page: 20 }
+      const params: any = { page: page + 1, per_page: pageSize }
       if (search) params.q = search
       const { data } = await novaPoshtaApi.listWaybills(params)
       return data
@@ -239,15 +242,15 @@ export default function WaybillsPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: { pageIndex: page, pageSize: 20 } },
+    state: { pagination: { pageIndex: page, pageSize } },
     onPaginationChange: (updater) => {
       if (typeof updater === 'function') {
-        const newState = updater({ pageIndex: page, pageSize: 20 })
+        const newState = updater({ pageIndex: page, pageSize })
         setPage(newState.pageIndex)
       }
     },
     manualPagination: true,
-    pageCount: Math.ceil((data?.total || 0) / 20),
+    pageCount: Math.ceil((data?.total || 0) / pageSize),
   })
 
   // ── Render ──────────────────────────────────────────────────────
@@ -268,6 +271,13 @@ export default function WaybillsPage() {
               }}
             />
           </div>
+          <PageSizeSelect
+            value={pageSize}
+            onChange={(size) => {
+              setPageSize(size)
+              setPage(0)
+            }}
+          />
         </div>
 
         {/* ── Table ────────────────────────────────────────────────── */}
@@ -322,35 +332,7 @@ export default function WaybillsPage() {
                   </table>
                 </div>
 
-                {/* ── Pagination ──────────────────────────────────── */}
-                {data && data.total > 20 && (
-                  <div className="flex items-center justify-between p-3 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      {t('page_of', {
-                        page: page + 1,
-                        total: Math.ceil(data.total / 20),
-                      })}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        {t('prev_page')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 20 >= data.total}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        {t('next_page')}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <TablePagination table={table} />
               </>
             )}
           </CardContent>

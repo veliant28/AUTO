@@ -64,5 +64,9 @@ celery_app.conf.beat_schedule = {
         'task': 'autoassign_requests',
         'schedule': 300.0,
     },
+    'auto-close-requests': {
+        'task': 'auto_close_requests',
+        'schedule': 3600.0,
+    },
 }
 

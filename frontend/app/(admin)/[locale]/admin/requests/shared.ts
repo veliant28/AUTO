@@ -6,7 +6,13 @@ export const AUTOMATED_CATEGORY_CODES = [
   'ban_unban',
 ]
 
-export const STATUSES = ['new', 'in_progress', 'resolved', 'rejected'] as const
+export const STATUSES = [
+  'new',
+  'in_progress',
+  'resolved',
+  'rejected',
+  'closed',
+] as const
 
 export interface RequestActorInfo {
   user_id: number

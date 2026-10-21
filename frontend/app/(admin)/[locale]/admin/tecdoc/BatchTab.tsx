@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useTranslations } from 'next-intl'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   createColumnHelper,
@@ -36,6 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import {
   Tooltip,
   TooltipTrigger,
@@ -158,8 +159,6 @@ export default function BatchTab({
       prev.size === allIds.length ? new Set() : new Set(allIds),
     )
   }
-
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0
 
   // Колонки — те же дефиниции и рендер, что в таблице заказов
   const batchRows = useMemo(() => data?.items || [], [data])
@@ -298,22 +297,13 @@ export default function BatchTab({
           />
         </div>
 
-        <Select
-          value={String(pageSize)}
-          onValueChange={(v) => {
-            setPageSize(Number(v))
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size)
             setPage(1)
           }}
-        >
-          <SelectTrigger className="w-[80px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="25">25</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-            <SelectItem value="100">100</SelectItem>
-          </SelectContent>
-        </Select>
+        />
 
         <Select
           value={brand || 'all'}
@@ -468,31 +458,7 @@ export default function BatchTab({
               </tbody>
             </table>
           </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between p-3 border-t">
-              <span className="text-sm text-muted-foreground">
-                {t('page_of', { page, total: totalPages })}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 1}
-                  onClick={() => table.previousPage()}
-                >
-                  {t('prev_page')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => table.nextPage()}
-                >
-                  {t('next_page')}
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination table={table} />
         </CardContent>
       </Card>
     </div>

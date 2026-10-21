@@ -11,10 +11,12 @@ import {
 import { useRequestDate } from './useRequestDate'
 
 const STATUS_CLASS: Record<string, string> = {
-  new: 'bg-blue-500',
-  in_progress: 'bg-orange-500',
-  resolved: 'bg-green-500',
-  rejected: 'bg-red-500',
+  new: 'bg-blue-500 text-white',
+  in_progress: 'bg-orange-500 text-white',
+  resolved: 'bg-green-500 text-white',
+  rejected: 'bg-red-500 text-white',
+  // Закрыта: чёрный бейдж днём, белый ночью
+  closed: 'bg-black text-white dark:bg-white dark:text-black',
 }
 
 const STATUS_KEY: Record<string, string> = {
@@ -22,6 +24,7 @@ const STATUS_KEY: Record<string, string> = {
   in_progress: 'requests_status_in_progress',
   resolved: 'requests_status_resolved',
   rejected: 'requests_status_rejected',
+  closed: 'requests_status_closed',
 }
 
 /** Цветной бейдж статуса заявки: появляется с анимацией, «в работе» пульсирует */
@@ -33,11 +36,11 @@ export function RequestsStatusBadge({
   className?: string
 }) {
   const t = useTranslations('admin')
-  const cls = STATUS_CLASS[status] ?? 'bg-gray-500'
+  const cls = STATUS_CLASS[status] ?? 'bg-gray-500 text-white'
   return (
     <AnimatedBadge swapKey={status}>
       <Badge
-        className={`${cls} text-white border-0 transition-colors duration-500 ${
+        className={`${cls} border-0 transition-colors duration-500 ${
           status === 'in_progress' ? 'animate-pulse' : ''
         } ${className ?? ''}`}
       >
@@ -61,9 +64,10 @@ export function RequestsStatusCell({
   minutesLate?: number | null
 }) {
   const t = useTranslations('admin')
-  const closed = status === 'resolved' || status === 'rejected'
+  const closed =
+    status === 'resolved' || status === 'rejected' || status === 'closed'
   const overdue = !closed && deadlineState === 'overdue'
-  const cls = STATUS_CLASS[status] ?? 'bg-gray-500'
+  const cls = STATUS_CLASS[status] ?? 'bg-gray-500 text-white'
 
   return (
     <AnimatedBadge swapKey={overdue ? 'overdue' : status} className="w-fit">
@@ -78,7 +82,7 @@ export function RequestsStatusCell({
         </Tooltip>
       ) : (
         <Badge
-          className={`${cls} text-white border-0 text-sm transition-colors duration-500 ${
+          className={`${cls} border-0 text-sm transition-colors duration-500 ${
             status === 'in_progress' ? 'animate-pulse' : ''
           }`}
         >

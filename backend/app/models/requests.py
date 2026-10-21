@@ -39,6 +39,8 @@ class RequestStatus(enum.Enum):
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
     REJECTED = "rejected"
+    # Автоматический статус: заявка закрыта спустя 7 дней после решения
+    CLOSED = "closed"
 
 
 class RequestCategory(Base):
@@ -125,7 +127,7 @@ class RequestEvent(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     author_name = Column(String, nullable=True)
     author_group = Column(String, nullable=True)
-    # created | taken | assigned | status_changed | comment | approved | rejected | email_sent | automation
+    # created | taken | assigned | status_changed | comment | approved | rejected | email_sent | automation | closed
     event_type = Column(String(40), nullable=False)
     details = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

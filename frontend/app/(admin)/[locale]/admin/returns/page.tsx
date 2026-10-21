@@ -51,6 +51,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import {
   Dialog,
   DialogContent,
@@ -237,6 +239,7 @@ export default function AdminReturnsPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(25)
   const [search, setSearch] = useState('')
   const [viewReturnId, setViewReturnId] = useState<number | null>(null)
   const [adminNotes, setAdminNotes] = useState('')
@@ -263,9 +266,9 @@ export default function AdminReturnsPage() {
     formatDateTime(d, timezone, { locale: localeKey, seconds: false })
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-returns', statusFilter, page, search],
+    queryKey: ['admin-returns', statusFilter, page, pageSize, search],
     queryFn: async () => {
-      const params: any = { page: page + 1, page_size: 20 }
+      const params: any = { page: page + 1, page_size: pageSize }
       if (statusFilter) params.status = statusFilter
       if (search) params.search = search
       const { data } = await api.get('/admin/returns', { params })
@@ -669,15 +672,15 @@ export default function AdminReturnsPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: { pageIndex: page, pageSize: 20 } },
+    state: { pagination: { pageIndex: page, pageSize } },
     onPaginationChange: (updater) => {
       if (typeof updater === 'function') {
-        const newState = updater({ pageIndex: page, pageSize: 20 })
+        const newState = updater({ pageIndex: page, pageSize })
         setPage(newState.pageIndex)
       }
     },
     manualPagination: true,
-    pageCount: Math.ceil((data?.total || 0) / 20),
+    pageCount: Math.ceil((data?.total || 0) / pageSize),
   })
 
   if (!can(user, 'returns.view')) {
@@ -721,6 +724,13 @@ export default function AdminReturnsPage() {
               ))}
             </SelectContent>
           </Select>
+          <PageSizeSelect
+            value={pageSize}
+            onChange={(size) => {
+              setPageSize(size)
+              setPage(0)
+            }}
+          />
         </div>
 
         <Card className="overflow-hidden">
@@ -773,32 +783,7 @@ export default function AdminReturnsPage() {
                     </tbody>
                   </table>
                 </div>
-                {data && data.total > 20 && (
-                  <div className="flex items-center justify-between p-3 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      {page * 20 + 1}–{Math.min((page + 1) * 20, data.total)} of{' '}
-                      {data.total}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 0}
-                        onClick={() => setPage(page - 1)}
-                      >
-                        Prev
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={(page + 1) * 20 >= data.total}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <TablePagination table={table} />
               </>
             )}
           </CardContent>

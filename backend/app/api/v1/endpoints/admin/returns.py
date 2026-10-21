@@ -162,7 +162,7 @@ def _admin_return_to_detail_dict(r: ReturnRequest, db: Optional[Session] = None)
 @router.get("/returns", response_model=AdminReturnListResponse)
 async def list_returns(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=500),
+    page_size: int = Query(20, ge=1, le=1000),
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),

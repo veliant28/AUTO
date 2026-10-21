@@ -71,7 +71,7 @@ def _promocode_to_response(p: Promocode) -> PromocodeResponse:
 @router.get("/loyalty", response_model=PromocodeListResponse)
 async def list_promocodes(
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=1000),
     search: str = Query("", max_length=200),
     staff_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),

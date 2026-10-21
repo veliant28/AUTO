@@ -55,8 +55,8 @@ import RequestDetailModal from './RequestDetailModal'
 import CreateRequestDialog from './CreateRequestDialog'
 import CategoriesDialog from './CategoriesDialog'
 import { useRequestDate } from './useRequestDate'
-
-const PAGE_SIZE = 20
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 
 const columnHelper = createColumnHelper<RequestListItem>()
 
@@ -75,6 +75,7 @@ export default function RequestsPage() {
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
   const [createOpen, setCreateOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<RequestListItem | null>(null)
@@ -139,11 +140,18 @@ export default function RequestsPage() {
   })
 
   const { data, isLoading } = useQuery<RequestListResponse>({
-    queryKey: ['requests', statusFilter, categoryFilter, search, page],
+    queryKey: [
+      'requests',
+      statusFilter,
+      categoryFilter,
+      search,
+      page,
+      pageSize,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams()
       params.set('page', String(page))
-      params.set('page_size', String(PAGE_SIZE))
+      params.set('page_size', String(pageSize))
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (categoryFilter !== 'all') params.set('category_id', categoryFilter)
       if (search) params.set('search', search)
@@ -159,7 +167,7 @@ export default function RequestsPage() {
   // на каждый рендер и страница крутит лишние перерисовки
   const items = useMemo(() => data?.items || [], [data])
   const total = data?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   const statusChips = useMemo(() => {
     const counts = data?.counts || {}
@@ -248,7 +256,8 @@ export default function RequestsPage() {
             minutesLate={row.original.minutes_late}
             closed={
               row.original.status === 'resolved' ||
-              row.original.status === 'rejected'
+              row.original.status === 'rejected' ||
+              row.original.status === 'closed'
             }
             overdueBadge={false}
           />
@@ -327,11 +336,11 @@ export default function RequestsPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination: { pageIndex: page - 1, pageSize: PAGE_SIZE } },
+    state: { pagination: { pageIndex: page - 1, pageSize } },
     onPaginationChange: (updater) => {
       const next =
         typeof updater === 'function'
-          ? updater({ pageIndex: page - 1, pageSize: PAGE_SIZE })
+          ? updater({ pageIndex: page - 1, pageSize })
           : updater
       setPage(next.pageIndex + 1)
     },
@@ -380,6 +389,13 @@ export default function RequestsPage() {
             className="pl-9 h-10"
           />
         </div>
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size)
+            setPage(1)
+          }}
+        />
         <Select
           value={categoryFilter}
           onValueChange={(v) => {
@@ -490,31 +506,7 @@ export default function RequestsPage() {
             </table>
           </div>
 
-          {!isLoading && total > PAGE_SIZE && (
-            <div className="flex items-center justify-between p-3 border-t">
-              <span className="text-sm text-muted-foreground">
-                {t('page_of', { page, total: totalPages })}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  {t('pagination_prev')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {t('pagination_next')}
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination table={table} />
         </CardContent>
       </Card>
 

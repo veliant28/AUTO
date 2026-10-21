@@ -711,7 +711,7 @@ async def get_order_waybill_summary(
 @router.get("/waybills", response_model=PaginatedWaybillListResponse)
 async def list_waybills(
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    per_page: int = Query(20, ge=1, le=1000),
     q: str = Query("", description="Search by TTN number, phone, name, city"),
     status_code: str = Query("", description="Filter by NP status code"),
     sort_by: str = Query("created_at"),

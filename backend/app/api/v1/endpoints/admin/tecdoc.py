@@ -112,7 +112,7 @@ async def get_dashboard(
 @router.get("/articles", response_model=SupplierPriceListResponse)
 async def list_articles(
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(25, ge=1, le=1000),
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     brand: str = Query("", max_length=100),

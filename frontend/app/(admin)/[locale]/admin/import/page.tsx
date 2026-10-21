@@ -39,6 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import {
   Tooltip,
   TooltipTrigger,
@@ -410,7 +412,6 @@ export default function ImportPage() {
 
   if (!can(user, 'imports.view')) return null
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0
   const supplierLabel = t('import_supplier')
 
   return (
@@ -428,24 +429,13 @@ export default function ImportPage() {
             }}
           />
         </div>
-        <Select
-          value={String(pageSize)}
-          onValueChange={(v) => {
-            setPageSize(Number(v))
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size)
             setPage(1)
           }}
-        >
-          <SelectTrigger className="w-[80px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="25">25</SelectItem>
-            <SelectItem value="50">50</SelectItem>
-            <SelectItem value="100">100</SelectItem>
-            <SelectItem value="500">500</SelectItem>
-            <SelectItem value="1000">1000</SelectItem>
-          </SelectContent>
-        </Select>
+        />
         <Select
           value={status}
           onValueChange={(v) => setStatus(v === 'all' ? '' : v)}
@@ -528,50 +518,7 @@ export default function ImportPage() {
               </tbody>
             </table>
           </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between p-3 border-t">
-              <span className="text-sm text-muted-foreground">
-                {(page - 1) * pageSize + 1}–
-                {Math.min(page * pageSize, data?.total || 0)} of{' '}
-                {data?.total || 0}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 1}
-                  onClick={() => table.previousPage()}
-                >
-                  {t('prev_page')}
-                </Button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let p: number
-                  if (totalPages <= 7) p = i + 1
-                  else if (page <= 4) p = i + 1
-                  else if (page >= totalPages - 3) p = totalPages - 6 + i
-                  else p = page - 3 + i
-                  return (
-                    <Button
-                      key={p}
-                      variant={p === page ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => table.setPageIndex(p - 1)}
-                    >
-                      {p}
-                    </Button>
-                  )
-                })}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => table.nextPage()}
-                >
-                  {t('next_page')}
-                </Button>
-              </div>
-            </div>
-          )}
+          <TablePagination table={table} />
         </CardContent>
       </Card>
 

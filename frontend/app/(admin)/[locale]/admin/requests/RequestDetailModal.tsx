@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Archive,
   ArrowLeft,
   Building2,
   Check,
@@ -77,6 +78,7 @@ const EVENT_ICON: Record<
   rejected: X,
   deleted: Trash2,
   overdue: Timer,
+  closed: Archive,
 }
 
 const EVENT_KEY: Record<string, string> = {
@@ -89,6 +91,7 @@ const EVENT_KEY: Record<string, string> = {
   rejected: 'requests_ev_rejected',
   deleted: 'requests_ev_deleted',
   overdue: 'requests_ev_overdue',
+  closed: 'requests_ev_closed',
 }
 
 interface RequestComment {
@@ -465,6 +468,7 @@ export default function RequestDetailModal({
   const canManage = can(user, 'requests.manage')
   const openStatuses = ['new', 'in_progress']
   const isOpen = !!detail && openStatuses.includes(detail.status)
+  const isClosed = detail?.status === 'closed'
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
@@ -544,7 +548,7 @@ export default function RequestDetailModal({
                   )}
                   {/* Исполнитель — как селект статуса в модалке заказа;
                       менять исполнителя может только администратор */}
-                  {canManage && (
+                  {canManage && !isClosed && (
                     <Select
                       value={
                         detail.assignee
@@ -625,9 +629,11 @@ export default function RequestDetailModal({
                           e.event_type === 'deleted' ||
                           e.event_type === 'overdue'
                         ? 'bg-red-500'
-                        : idx === 0
-                          ? 'bg-green-500'
-                          : 'bg-blue-500'
+                        : e.event_type === 'closed'
+                          ? 'bg-gray-500'
+                          : idx === 0
+                            ? 'bg-green-500'
+                            : 'bg-blue-500'
                   const IconComponent = EVENT_ICON[e.event_type] ?? Timer
                   return (
                     <div key={e.id} className="relative pb-6">
@@ -775,6 +781,11 @@ export default function RequestDetailModal({
                 </div>
 
                 {/* Комментарий — внизу колонки: поле как в поддержке, Enter отправляет */}
+                {isClosed && (
+                  <div className="border-t p-4 text-sm text-muted-foreground flex-shrink-0">
+                    {t('requests_closed_readonly')}
+                  </div>
+                )}
                 {canProcess && isOpen && (
                   <div className="flex items-end gap-2 border-t p-4 flex-shrink-0">
                     <textarea

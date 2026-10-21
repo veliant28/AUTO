@@ -177,7 +177,7 @@ def _find_or_create_customer(
 @router.get("/orders", response_model=AdminAdminOrderListResponse)
 async def list_orders(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=500),
+    page_size: int = Query(20, ge=1, le=1000),
     status: str = Query("", max_length=50),
     search: str = Query("", max_length=100),
     db: Session = Depends(get_db),

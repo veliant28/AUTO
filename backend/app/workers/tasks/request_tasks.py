@@ -1,13 +1,14 @@
-"""Журнал заявок: уведомление в Telegram о просроченных заявках.
+"""Журнал заявок: фоновые задачи по срокам и авто-закрытию.
 
 Раз в 5 минут проверяем открытые заявки с истёкшим сроком и, если по ним
 ещё не уведомляли (overdue_notified_at пуст), пишем в Telegram-чат магазина.
+Раз в час закрываем заявки, по которым решение принято 7 дней назад.
 В приложении просрочка видна мгновенно (WS + alerts), это — страховка для
 тех, кто не держит админку открытой.
 """
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.core.db import SessionLocal
 from app.models.requests import Request, RequestStatus
@@ -17,6 +18,9 @@ from app.services.notifications import send_telegram_notification
 from app.workers import celery_app
 
 logger = logging.getLogger(__name__)
+
+# Через сколько дней после решения заявка закрывается автоматически
+AUTO_CLOSE_AFTER_DAYS = 7
 
 
 @celery_app.task(name="notify_overdue_requests")
@@ -68,6 +72,41 @@ def notify_overdue_requests():
         if notified:
             db.commit()
             logger.info("Notified about %s overdue requests", notified)
+    finally:
+        db.close()
+
+
+@celery_app.task(name="auto_close_requests")
+def auto_close_requests():
+    """Закрыть заявки, по которым решение принято 7 дней назад."""
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        cutoff = now - timedelta(days=AUTO_CLOSE_AFTER_DAYS)
+        decided_requests = (
+            db.query(Request)
+            .filter(
+                Request.status.in_([RequestStatus.RESOLVED, RequestStatus.REJECTED]),
+                Request.resolved_at.isnot(None),
+                Request.resolved_at <= cutoff,
+            )
+            .all()
+        )
+
+        for request in decided_requests:
+            request.status = RequestStatus.CLOSED
+            request.updated_at = now
+            rs.log_event(
+                db,
+                request,
+                None,
+                "closed",
+                f"закрыта автоматически спустя {AUTO_CLOSE_AFTER_DAYS} дней после решения",
+            )
+
+        if decided_requests:
+            db.commit()
+            logger.info("Auto-closed %s requests", len(decided_requests))
     finally:
         db.close()
 

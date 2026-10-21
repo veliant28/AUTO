@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table'
@@ -23,6 +24,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TablePagination } from '@/components/admin/TablePagination'
+import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -72,6 +75,8 @@ export default function AdminRolesPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editRole, setEditRole] = useState<Role | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null)
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(25)
 
   const [form, setForm] = useState({
     name: '',
@@ -261,6 +266,16 @@ export default function AdminRolesPage() {
     data: roles || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { pagination: { pageIndex, pageSize } },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater({ pageIndex, pageSize })
+          : updater
+      setPageIndex(next.pageIndex)
+      setPageSize(next.pageSize)
+    },
   })
 
   if (!can(user, 'roles.view')) {
@@ -351,6 +366,17 @@ export default function AdminRolesPage() {
         </DialogContent>
       </Dialog>
 
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1" />
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size)
+            setPageIndex(0)
+          }}
+        />
+      </div>
+
       {rolesLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> {t('loading')}
@@ -402,6 +428,7 @@ export default function AdminRolesPage() {
                 </div>
               )}
             </div>
+            <TablePagination table={table} />
           </CardContent>
         </Card>
       )}

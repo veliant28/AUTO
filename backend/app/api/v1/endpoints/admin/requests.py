@@ -196,6 +196,12 @@ def _validate_status(status: str) -> RequestStatus:
         raise HTTPException(400, "Некорректный статус заявки")
 
 
+def _ensure_editable(request: Request) -> None:
+    """Закрытая заявка доступна только для чтения."""
+    if request.status == RequestStatus.CLOSED:
+        raise HTTPException(400, "Заявка закрыта и недоступна для изменений")
+
+
 # --------------------------------------------------------------------------
 # Категории
 # --------------------------------------------------------------------------
@@ -282,7 +288,7 @@ def list_requests(
     status: str = Query("", max_length=20),
     search: str = Query("", max_length=100),
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
 ):
@@ -315,7 +321,10 @@ def list_requests(
         counts[_status_value(value)] = int(cnt)
 
     total_all = sum(counts.values())
-    progress = round(counts.get("resolved", 0) * 100 / total_all) if total_all else 0
+    # «Выполнено»: решённые + закрытые после решения — прогресс не падает,
+    # когда заявка переходит из RESOLVED в автоматический CLOSED
+    done = counts.get("resolved", 0) + counts.get("closed", 0)
+    progress = round(done * 100 / total_all) if total_all else 0
 
     q = _apply_filters(
         rs.visible_requests_query(db, current_user).options(
@@ -438,6 +447,7 @@ async def comment_request(
 ):
     """Добавить комментарий к заявке."""
     request = _visible_or_404(db, current_user, request_id)
+    _ensure_editable(request)
     db.add(
         RequestComment(
             request_id=request.id,
@@ -462,7 +472,11 @@ async def take_request(
 ):
     """Взять заявку в работу: исполнитель — текущий пользователь, статус — в работе."""
     request = _visible_or_404(db, current_user, request_id)
-    if request.status in (RequestStatus.RESOLVED, RequestStatus.REJECTED):
+    if request.status in (
+        RequestStatus.RESOLVED,
+        RequestStatus.REJECTED,
+        RequestStatus.CLOSED,
+    ):
         raise HTTPException(400, "Заявка уже закрыта")
     # Доступ по категории: брать заявку могут только роли из её настроек
     # (пустой список — любой сотрудник с правом requests.process)
@@ -495,6 +509,7 @@ async def assign_request(
 ):
     """Назначить исполнителя заявки (или снять, assignee_id=null)."""
     request = _visible_or_404(db, current_user, request_id)
+    _ensure_editable(request)
 
     if data.assignee_id is None:
         request.assignee_id = None
@@ -533,6 +548,10 @@ async def change_request_status(
     """
     request = _visible_or_404(db, current_user, request_id)
     new_status = _validate_status(data.status)
+
+    _ensure_editable(request)
+    if new_status == RequestStatus.CLOSED:
+        raise HTTPException(400, "Заявка закрывается автоматически")
 
     category_code = request.category.code if request.category else None
     if new_status in (RequestStatus.RESOLVED, RequestStatus.REJECTED) and category_code in AUTOMATED_CATEGORY_CODES:
@@ -574,7 +593,11 @@ async def _decide(
     )
 
     request = _visible_or_404(db, current_user, request_id)
-    if request.status in (RequestStatus.RESOLVED, RequestStatus.REJECTED):
+    if request.status in (
+        RequestStatus.RESOLVED,
+        RequestStatus.REJECTED,
+        RequestStatus.CLOSED,
+    ):
         raise HTTPException(400, "Заявка уже закрыта")
 
     note = (data.note or "").strip()
