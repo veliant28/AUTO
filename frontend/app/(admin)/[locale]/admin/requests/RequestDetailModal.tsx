@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Archive,
@@ -12,6 +12,8 @@ import {
   History,
   Loader2,
   MessageSquare,
+  Pencil,
+  Plus,
   RefreshCw,
   Send,
   ShieldBan,
@@ -45,6 +47,7 @@ import { can } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
 import api from '@/lib/api'
+import { formatMinutes, parseHoursToMinutes } from '@/lib/timesheetTime'
 import { formatPhone } from '@/lib/phone'
 import { DeadlineCell, RequestsStatusCell } from './RequestsStatusBadge'
 import {
@@ -54,6 +57,10 @@ import {
 } from './shared'
 import { categoryName } from '@/lib/requestCategories'
 import { useRequestDate } from './useRequestDate'
+import RequestFormFields, {
+  requestFormError,
+  type RequestFormValues,
+} from './RequestFormFields'
 
 /** Цвета бейджей ролей — как в модалке заказа */
 const ROLE_BADGE_COLORS: Record<string, string> = {
@@ -73,6 +80,8 @@ const EVENT_ICON: Record<
   taken: UserCheck,
   assigned: UserCheck,
   status: RefreshCw,
+  status_changed: RefreshCw,
+  updated: Pencil,
   comment: MessageSquare,
   approved: Check,
   rejected: X,
@@ -86,6 +95,8 @@ const EVENT_KEY: Record<string, string> = {
   taken: 'requests_ev_taken',
   assigned: 'requests_ev_assigned',
   status: 'requests_ev_status',
+  status_changed: 'requests_ev_status',
+  updated: 'requests_ev_updated',
   comment: 'requests_ev_comment',
   approved: 'requests_ev_approved',
   rejected: 'requests_ev_rejected',
@@ -116,7 +127,6 @@ interface RequestDetail {
   number: string
   category: RequestCategory
   status: string
-  title: string
   description: string | null
   payload: Record<string, any> | null
   created_at: string | null
@@ -153,9 +163,8 @@ function PayloadCard({
   const tb = useTranslations('b2b')
   if (!payload || Object.keys(payload).length === 0) return null
 
-  // B2B-заявка: названия полей и раскладка — как в карточке компании
-  // модалки пользователя (режим B2B): Компания + ЕДРПОУ; Фамилия + Город;
-  // Имя + Телефон; Отчество + Email
+  // B2B-заявка: компания; ЕДРПОУ + город; телефон + фамилия;
+  // имя + отчество; email на всю ширину
   if (code === 'b2b_registration') {
     // Старые заявки: контакт одной строкой «Фамилия Имя Отчество»
     const legacy = (payload.contact_name || '')
@@ -176,37 +185,23 @@ function PayloadCard({
     ) : null
     return (
       <div className="space-y-3">
+        <Field label={tb('company')} value={payload.company} />
         <div className="grid grid-cols-2 gap-3">
-          {payload.company && (
-            <Field label={tb('company')} value={payload.company} />
-          )}
-          {payload.edrpou && (
-            <Field label={tb('edrpou')} value={payload.edrpou} />
-          )}
+          <Field label={tb('edrpou')} value={payload.edrpou} />
+          <Field label={tb('city')} value={payload.city} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {lastName && (
-            <Field label={tb('contact_last_name')} value={lastName} />
-          )}
-          {payload.city && <Field label={tb('city')} value={payload.city} />}
+          <Field
+            label={tb('phone')}
+            value={payload.phone ? formatPhone(payload.phone) : null}
+          />
+          <Field label={tb('contact_last_name')} value={lastName} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {firstName && (
-            <Field label={tb('contact_first_name')} value={firstName} />
-          )}
-          {payload.phone && (
-            <Field label={tb('phone')} value={formatPhone(payload.phone)} />
-          )}
+          <Field label={tb('contact_first_name')} value={firstName} />
+          <Field label={tb('contact_middle_name')} value={middleName} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {middleName && (
-            <Field label={tb('contact_middle_name')} value={middleName} />
-          )}
-          {emailField && <Field label={tb('email')} value={emailField} />}
-        </div>
-        {payload.comment && (
-          <Field label={t('requests_fields_comment')} value={payload.comment} />
-        )}
+        <Field label={tb('email')} value={emailField} />
       </div>
     )
   }
@@ -240,10 +235,8 @@ function PayloadCard({
       rows.push({ label: t('requests_fields_date'), value: payload.work_date })
     if (payload.minutes != null)
       rows.push({
-        label: t('requests_fields_minutes'),
-        value: `${payload.minutes} (${Math.floor(Number(payload.minutes) / 60)}ч ${String(
-          Number(payload.minutes) % 60,
-        ).padStart(2, '0')}м)`,
+        label: t('requests_fields_hours'),
+        value: formatMinutes(Number(payload.minutes)),
       })
   } else {
     for (const [key, value] of Object.entries(payload)) {
@@ -300,13 +293,18 @@ function ReadonlyField({ value }: { value: React.ReactNode }) {
 
 export default function RequestDetailModal({
   requestId,
+  categories,
   onClose,
+  onCreated,
 }: {
-  requestId: number
+  requestId: number | null
   categories: RequestCategory[]
   onClose: () => void
+  onCreated?: (id: number) => void
 }) {
   const t = useTranslations('admin')
+  const tb = useTranslations('b2b')
+  const locale = useLocale()
   const { user } = useAuthStore()
   const reqPerm = useRequirePerm()
   const qc = useQueryClient()
@@ -316,14 +314,56 @@ export default function RequestDetailModal({
   const [decision, setDecision] = useState<null | 'approve' | 'reject'>(null)
   const [decisionNote, setDecisionNote] = useState('')
   const [showHistory, setShowHistory] = useState(false)
+  const [createdId, setCreatedId] = useState<number | null>(null)
+  const [createCategoryId, setCreateCategoryId] = useState('')
+  const [createAssigneeId, setCreateAssigneeId] = useState('none')
+  const [isEditing, setIsEditing] = useState(false)
+  const [form, setForm] = useState<RequestFormValues>({
+    description: '',
+    payload: {},
+  })
+
+  const activeId = requestId ?? createdId
+  const isCreate = activeId == null
+
+  const creatable = useMemo(
+    () =>
+      categories.filter(
+        (c) =>
+          c.is_active &&
+          (!c.allowed_roles ||
+            c.allowed_roles.length === 0 ||
+            (user?.role && c.allowed_roles.includes(user.role))),
+      ),
+    [categories, user?.role],
+  )
+  const createCategory =
+    creatable.find((c) => String(c.id) === createCategoryId) || null
+
+  useEffect(() => {
+    if (!isCreate || createCategoryId || creatable.length === 0) return
+    setCreateCategoryId(String(creatable[0].id))
+  }, [isCreate, createCategoryId, creatable])
 
   const { data: detail, isLoading } = useQuery<RequestDetail>({
-    queryKey: ['requests', 'detail', requestId],
+    queryKey: ['requests', 'detail', activeId],
     queryFn: async () => {
-      const { data } = await api.get(`/admin/requests/${requestId}`)
+      const { data } = await api.get(`/admin/requests/${activeId}`)
       return data
     },
+    enabled: activeId != null,
   })
+
+  const formCode = isCreate ? createCategory?.code : detail?.category?.code
+
+  const isAdmin = user?.role === 'admin'
+  const canEditRequest = can(user, 'requests.edit')
+  const canEditDetail =
+    !!detail &&
+    canEditRequest &&
+    (isAdmin
+      ? ['new', 'in_progress'].includes(detail.status)
+      : detail.status === 'new' && !detail.assignee)
 
   const { data: assignees = [] } = useQuery<
     { id: number; name: string; email: string; role: string | null }[]
@@ -360,17 +400,140 @@ export default function RequestDetailModal({
     },
   })
 
+  const buildFormPayload = () => {
+    const payload = { ...(form.payload || {}) }
+    if (formCode === 'b2b_registration') {
+      payload.locale = payload.locale || locale
+      payload.email = String(payload.email || '')
+        .trim()
+        .toLowerCase()
+      payload.company = String(payload.company || '').trim()
+      payload.phone = String(payload.phone || '').trim()
+      delete payload.comment
+    }
+    if (formCode === 'timesheet_manual') {
+      payload.user_id = Number(payload.user_id)
+      const minutes = parseHoursToMinutes(String(payload.minutes ?? ''))
+      payload.minutes = minutes === -1 || minutes === null ? 0 : minutes
+    }
+    if (formCode === 'ban_unban') {
+      payload.action = payload.action || 'ban'
+      payload.reason = String(payload.reason || '').trim() || null
+    }
+    return payload
+  }
+
+  const buildFormDescription = () => {
+    if (formCode === 'b2b_registration' || formCode === 'timesheet_manual')
+      return null
+    if (formCode === 'ban_unban')
+      return String(form.payload.reason || '').trim() || null
+    return form.description.trim() || null
+  }
+
+  const checkForm = () => {
+    if (isCreate && !createCategoryId) {
+      toast.info(t('requests_form_required'))
+      return false
+    }
+    const error = requestFormError(formCode, form)
+    if (!error) return true
+    if (error === 'email') toast.error(tb('error_email'))
+    else if (error === 'phone') toast.error(tb('error_phone_required'))
+    else if (error === 'time') toast.warning(t('requests_time_invalid'))
+    else toast.info(t('requests_form_required'))
+    return false
+  }
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/admin/requests', {
+        category_id: Number(createCategoryId),
+        description: buildFormDescription(),
+        payload: buildFormPayload(),
+        assignee_id:
+          createAssigneeId === 'none' ? null : Number(createAssigneeId),
+      })
+      return data as RequestDetail
+    },
+    onSuccess: (created) => {
+      invalidateAll(qc)
+      qc.setQueryData(['requests', 'detail', created.id], created)
+      toast.success(t('requests_created_ok', { number: created?.number || '' }))
+      setCreatedId(created.id)
+      setIsEditing(false)
+      setShowHistory(false)
+      onCreated?.(created.id)
+    },
+    onError: (err: any) => {
+      const detailMsg = err?.response?.data?.detail
+      toast.error(
+        typeof detailMsg === 'string' ? detailMsg : t('requests_action_error'),
+      )
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.patch(`/admin/requests/${activeId}`, {
+        description: buildFormDescription(),
+        payload: buildFormPayload(),
+      })
+      return data as RequestDetail
+    },
+    onSuccess: (fresh) => {
+      qc.setQueryData(['requests', 'detail', activeId], fresh)
+      invalidateAll(qc)
+      setIsEditing(false)
+      toast.success(t('requests_updated_ok'))
+    },
+    onError: (err: any) => {
+      const detailMsg = err?.response?.data?.detail
+      toast.error(
+        typeof detailMsg === 'string' ? detailMsg : t('requests_action_error'),
+      )
+    },
+  })
+
+  const submitForm = () => {
+    if (!checkForm()) return
+    if (isCreate) createMutation.mutate()
+    else updateMutation.mutate()
+  }
+  const formPending = isCreate
+    ? createMutation.isPending
+    : updateMutation.isPending
+
+  const startEditing = () => {
+    if (!canEditDetail) return
+    setForm({
+      description: detail?.description ?? '',
+      payload: { ...(detail?.payload || {}) },
+    })
+    setIsEditing(true)
+    setShowHistory(false)
+  }
+
+  const changeCreateCategory = (id: string) => {
+    setCreateCategoryId(id)
+    setForm({ description: '', payload: {} })
+  }
+
+  useEffect(() => {
+    if (isEditing && !canEditDetail) setIsEditing(false)
+  }, [canEditDetail, isEditing])
+
   // Комментарий отправляем оптимистично: он появляется в списке сразу,
   // запрос улетает в фоне, при ошибке — откат и возврат текста в поле.
   const commentMutation = useMutation({
     mutationFn: async (text: string) => {
-      const { data } = await api.post(`/admin/requests/${requestId}/comment`, {
+      const { data } = await api.post(`/admin/requests/${activeId}/comment`, {
         text,
       })
       return data as RequestDetail
     },
     onMutate: async (text) => {
-      const key = ['requests', 'detail', requestId]
+      const key = ['requests', 'detail', activeId]
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<RequestDetail>(key)
       if (prev) {
@@ -391,13 +554,13 @@ export default function RequestDetailModal({
       return { prev, text }
     },
     onSuccess: (fresh) => {
-      qc.setQueryData(['requests', 'detail', requestId], fresh)
+      qc.setQueryData(['requests', 'detail', activeId], fresh)
       qc.invalidateQueries({ queryKey: ['admin-notifications'] })
       toast.success(t('requests_comment_ok'))
     },
     onError: (err: any, _text, ctx) => {
       if (ctx?.prev !== undefined) {
-        qc.setQueryData(['requests', 'detail', requestId], ctx.prev)
+        qc.setQueryData(['requests', 'detail', activeId], ctx.prev)
       }
       setComment(ctx?.text ?? '')
       const detailMsg = err?.response?.data?.detail
@@ -435,7 +598,7 @@ export default function RequestDetailModal({
     if (!decision) return
     actionMutation.mutate(
       {
-        url: `/admin/requests/${requestId}/${decision}`,
+        url: `/admin/requests/${activeId}/${decision}`,
         body: { note: decisionNote.trim() || null },
         okKey:
           decision === 'approve'
@@ -460,6 +623,7 @@ export default function RequestDetailModal({
   }, [detail?.events])
 
   const canProcess = can(user, 'requests.process')
+  const canComment = can(user, 'requests.comment')
   // Доступ по категории: пустой список ролей — могут все с правом обработки
   const categoryTakeRoles = detail?.category?.take_roles || []
   const canTakeInCategory =
@@ -469,6 +633,176 @@ export default function RequestDetailModal({
   const openStatuses = ['new', 'in_progress']
   const isOpen = !!detail && openStatuses.includes(detail.status)
   const isClosed = detail?.status === 'closed'
+
+  const renderComments = (data: RequestDetail | null) => {
+    const closed = data?.status === 'closed'
+    const open = !!data && openStatuses.includes(data.status)
+    return (
+      <div className="border rounded-lg flex flex-col min-h-0 overflow-hidden">
+        <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0 px-4 pt-4">
+          <Send className="w-5 h-5" />
+          {t('requests_comments_title')}
+        </h4>
+
+        <div className="space-y-2 flex-1 min-h-0 overflow-y-auto px-4 pb-4 mt-3">
+          {!data ? (
+            <p className="text-sm text-muted-foreground">
+              {t('requests_comments_after_create')}
+            </p>
+          ) : (
+            <>
+              {data.comments.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {t('requests_comment_empty')}
+                </p>
+              )}
+              {data.comments.map((c) => (
+                <div key={c.id} className="rounded-lg border p-3 bg-card">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    {c.author_group && (
+                      <Badge
+                        className={`${ROLE_BADGE_COLORS[c.author_group] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {t(c.author_group)}
+                      </Badge>
+                    )}
+                    <span className="font-medium text-foreground">
+                      {c.author_name || t('system_actor')}
+                    </span>
+                    <span className="ml-auto tabular-nums">
+                      {fmtDate(c.created_at, true)}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{c.text}</p>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+
+        {closed && (
+          <div className="border-t p-4 text-sm text-muted-foreground flex-shrink-0">
+            {t('requests_closed_readonly')}
+          </div>
+        )}
+        {data && open && canComment && (
+          <div className="flex items-end gap-2 border-t p-4 flex-shrink-0">
+            <textarea
+              ref={commentRef}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  if (!reqPerm('requests.comment')) return
+                  if (!comment.trim()) return
+                  sendComment()
+                }
+              }}
+              placeholder={t('requests_comment_placeholder')}
+              rows={1}
+              className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[38px] max-h-[120px]"
+              style={{ height: 'auto' }}
+            />
+            <Button
+              size="icon"
+              className="shrink-0"
+              disabled={!comment.trim()}
+              onClick={() => reqPerm('requests.comment') && sendComment()}
+            >
+              {commentMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  /** Детали события истории — локализованные, без сырых статусов */
+  const formatEventDetails = (e: RequestEvent): string | null => {
+    const d = e.details || ''
+    const statusKey: Record<string, string> = {
+      new: 'requests_status_new',
+      in_progress: 'requests_status_in_progress',
+      resolved: 'requests_status_resolved',
+      rejected: 'requests_status_rejected',
+      closed: 'requests_status_closed',
+    }
+    const statusLabel = (value: string) =>
+      statusKey[value] ? t(statusKey[value] as any) : value
+
+    if (e.event_type === 'taken') {
+      const m = d.match(/\(статус:\s*(\w+)\s*→\s*(\w+)\)/)
+      return m ? `${statusLabel(m[1])} → ${statusLabel(m[2])}` : null
+    }
+
+    if (e.event_type === 'status_changed' || e.event_type === 'status') {
+      const m = d.match(/статус:\s*(\w+)\s*→\s*(\w+)/)
+      return m ? `${statusLabel(m[1])} → ${statusLabel(m[2])}` : null
+    }
+
+    if (e.event_type === 'updated') {
+      return t('requests_ev_updated_details')
+    }
+
+    if (e.event_type === 'closed') {
+      return t('requests_ev_auto_closed')
+    }
+
+    if (e.event_type === 'created') {
+      if (!detail?.category) return null
+      return `${t('requests_col_category')}: ${categoryName(
+        t,
+        detail.category.code,
+        detail.category.name,
+      )}`
+    }
+
+    if (e.event_type === 'assigned') {
+      if (d === 'исполнитель снят') {
+        return t('requests_ev_assignee_removed')
+      }
+      for (const prefix of [
+        'исполнитель: ',
+        'исполнитель назначен системой: ',
+      ]) {
+        if (d.startsWith(prefix)) {
+          return d.slice(prefix.length).split(' (')[0]
+        }
+      }
+      return null
+    }
+
+    if (e.event_type === 'overdue') {
+      const m = d.match(/срок истёк\s+(\d+)\s+мин/)
+      return m
+        ? t('requests_ev_overdue_details', { minutes: Number(m[1]) })
+        : null
+    }
+
+    if (
+      e.event_type === 'email_sent' ||
+      e.event_type === 'email_skipped' ||
+      e.event_type === 'email_error'
+    ) {
+      const m =
+        d.match(/письмо на\s+(\S+)/) || d.match(/ошибка отправки на\s+(\S+)/)
+      if (!m) return null
+      const key =
+        e.event_type === 'email_sent'
+          ? 'requests_ev_email_sent_details'
+          : e.event_type === 'email_skipped'
+            ? 'requests_ev_email_skipped_details'
+            : 'requests_ev_email_error_details'
+      return t(key as any, { email: m[1] })
+    }
+
+    return e.details
+  }
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
@@ -481,7 +815,7 @@ export default function RequestDetailModal({
           {showHistory ? (
             <div className="flex items-center gap-3">
               <DialogTitle className="text-2xl font-bold tracking-tight">
-                {detail?.number ?? `#${requestId}`}
+                {detail?.number ?? `#${activeId}`}
               </DialogTitle>
             </div>
           ) : (
@@ -489,9 +823,11 @@ export default function RequestDetailModal({
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <DialogTitle className="text-2xl font-bold tracking-tight">
-                    {detail?.number ?? `#${requestId}`}
+                    {isCreate
+                      ? t('requests_create_title')
+                      : (detail?.number ?? `#${activeId}`)}
                   </DialogTitle>
-                  {detail && (
+                  {detail && !isCreate && (
                     // Бейдж статуса как в таблице: просрочка заменяет статус
                     <RequestsStatusCell
                       status={detail.status}
@@ -499,14 +835,34 @@ export default function RequestDetailModal({
                       minutesLate={detail.minutes_late}
                     />
                   )}
-                  {detail?.category?.name && (
-                    <Badge variant="outline" className="font-normal text-sm">
-                      {categoryName(
-                        t,
-                        detail.category.code,
-                        detail.category.name,
-                      )}
-                    </Badge>
+                  {isCreate ? (
+                    <Select
+                      value={createCategoryId}
+                      onValueChange={changeCreateCategory}
+                    >
+                      <SelectTrigger className="w-[220px] h-10">
+                        <SelectValue
+                          placeholder={t('requests_filter_category')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {creatable.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {categoryName(t, c.code, c.name)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    detail?.category?.name && (
+                      <Badge variant="outline" className="font-normal text-sm">
+                        {categoryName(
+                          t,
+                          detail.category.code,
+                          detail.category.name,
+                        )}
+                      </Badge>
+                    )
                   )}
                 </div>
                 {detail && (
@@ -518,13 +874,13 @@ export default function RequestDetailModal({
               {detail && (
                 <div className="flex items-center gap-3 shrink-0">
                   {/* Статус — только тому, кто назначен исполнителем */}
-                  {isOpen && !automated && isAssignedToMe && (
+                  {isOpen && !isEditing && !automated && isAssignedToMe && (
                     <Select
                       value=""
                       onValueChange={(v) => {
                         if (!reqPerm('requests.process')) return
                         actionMutation.mutate({
-                          url: `/admin/requests/${requestId}/status`,
+                          url: `/admin/requests/${activeId}/status`,
                           body: { status: v },
                           okKey: 'requests_status_changed_ok',
                         })
@@ -546,9 +902,8 @@ export default function RequestDetailModal({
                       </SelectContent>
                     </Select>
                   )}
-                  {/* Исполнитель — как селект статуса в модалке заказа;
-                      менять исполнителя может только администратор */}
-                  {canManage && !isClosed && (
+                  {/* Исполнитель — назначает тот, кто обрабатывает заявку */}
+                  {canProcess && !isClosed && !isEditing && (
                     <Select
                       value={
                         detail.assignee
@@ -558,7 +913,7 @@ export default function RequestDetailModal({
                       onValueChange={(v) => {
                         if (!reqPerm('requests.process')) return
                         actionMutation.mutate({
-                          url: `/admin/requests/${requestId}/assign`,
+                          url: `/admin/requests/${activeId}/assign`,
                           body: {
                             assignee_id: v === 'none' ? null : Number(v),
                           },
@@ -601,76 +956,38 @@ export default function RequestDetailModal({
                   )}
                 </div>
               )}
+              {isCreate && (
+                <div className="flex items-center gap-3 shrink-0">
+                  <Select
+                    value={createAssigneeId}
+                    onValueChange={setCreateAssigneeId}
+                  >
+                    <SelectTrigger className="w-[180px] h-10">
+                      <SelectValue>{t('requests_col_assignee')}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        <span className="text-muted-foreground">
+                          {t('requests_assignee_none')}
+                        </span>
+                      </SelectItem>
+                      {assignees.map((a) => (
+                        <SelectItem key={a.id} value={String(a.id)}>
+                          {a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
         </DialogHeader>
 
         <Separator className="flex-shrink-0" />
 
-        {isLoading || !detail ? (
-          <div className="p-6 space-y-4 flex-1">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </div>
-        ) : showHistory ? (
-          // История — таймлайн как в модалке заказа
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6">
-            <div className="relative pl-12 space-y-0">
-              <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
-              {detail.events.length === 0 ? (
-                <p className="text-muted-foreground py-8 text-center">—</p>
-              ) : (
-                // Свежие события — сверху, как в истории заказа
-                [...detail.events].reverse().map((e, idx) => {
-                  const dotColor =
-                    e.event_type === 'approved' || e.event_type === 'created'
-                      ? 'bg-green-500'
-                      : e.event_type === 'rejected' ||
-                          e.event_type === 'deleted' ||
-                          e.event_type === 'overdue'
-                        ? 'bg-red-500'
-                        : e.event_type === 'closed'
-                          ? 'bg-gray-500'
-                          : idx === 0
-                            ? 'bg-green-500'
-                            : 'bg-blue-500'
-                  const IconComponent = EVENT_ICON[e.event_type] ?? Timer
-                  return (
-                    <div key={e.id} className="relative pb-6">
-                      <div
-                        className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
-                      />
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {e.author_group && (
-                          <Badge
-                            className={`${ROLE_BADGE_COLORS[e.author_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
-                          >
-                            {t(e.author_group)}
-                          </Badge>
-                        )}
-                        <span className="font-medium">
-                          {e.author_name || t('system_actor')}
-                        </span>
-                        <span className="text-sm text-muted-foreground tabular-nums">
-                          {fmtDate(e.created_at, true)}
-                        </span>
-                      </div>
-                      <div className="text-muted-foreground pl-1 flex items-start gap-2">
-                        <IconComponent className="w-4 h-4 mt-0.5 shrink-0" />
-                        <span className="break-words">
-                          {t(EVENT_KEY[e.event_type] ?? 'requests_ev_status')}
-                          {e.details ? ` · ${e.details}` : ''}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        ) : (
+        {isCreate ? (
           <div className="flex-1 min-h-0 p-6">
-            {/* Два блока: слева меньше (детали), справа больше (комментарии и история) */}
             <div
               className="grid gap-6 h-full min-h-0"
               style={{
@@ -678,14 +995,41 @@ export default function RequestDetailModal({
                   'calc((100% - 48px) / 3) calc((100% - 48px) * 2 / 3 + 24px)',
               }}
             >
-              {/* Блок 1: детали и данные заявки */}
               <div className="border rounded-lg p-4 flex flex-col min-h-0">
                 <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                  <Building2 className="w-5 h-5" />
+                  <Pencil className="w-5 h-5" />
                   {t('requests_details_title')}
                 </h4>
-
-                <div className="flex-1 min-h-0 overflow-y-auto pr-1 mt-3 space-y-3">
+                <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3">
+                  <RequestFormFields
+                    inline
+                    code={formCode}
+                    values={form}
+                    onChange={(patch) =>
+                      setForm((prev) => ({ ...prev, ...patch }))
+                    }
+                    staff={assignees}
+                  />
+                </div>
+              </div>
+              {renderComments(null)}
+            </div>
+          </div>
+        ) : isEditing && detail ? (
+          <div className="flex-1 min-h-0 p-6">
+            <div
+              className="grid gap-6 h-full min-h-0"
+              style={{
+                gridTemplateColumns:
+                  'calc((100% - 48px) / 3) calc((100% - 48px) * 2 / 3 + 24px)',
+              }}
+            >
+              <div className="border rounded-lg p-4 flex flex-col min-h-0">
+                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                  <Pencil className="w-5 h-5" />
+                  {t('requests_edit_title')}
+                </h4>
+                <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <Field
                       label={t('requests_col_author')}
@@ -714,18 +1058,128 @@ export default function RequestDetailModal({
                       }
                     />
                   </div>
-                  {detail.resolved_at && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field
-                        label={t('requests_resolved_at')}
-                        value={`${fmtDate(detail.resolved_at, true)}${
-                          detail.resolved_by
-                            ? ` — ${actorLabel(detail.resolved_by)}`
-                            : ''
-                        }`}
+                  <RequestFormFields
+                    inline
+                    code={formCode}
+                    values={form}
+                    onChange={(patch) =>
+                      setForm((prev) => ({ ...prev, ...patch }))
+                    }
+                    staff={assignees}
+                  />
+                </div>
+              </div>
+              {renderComments(detail)}
+            </div>
+          </div>
+        ) : isLoading || !detail ? (
+          <div className="p-6 space-y-4 flex-1">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+        ) : showHistory ? (
+          // История — таймлайн как в модалке заказа
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6">
+            <div className="relative pl-12 space-y-0">
+              <div className="absolute left-[22px] top-2 bottom-2 w-[3px] bg-border" />
+              {detail.events.length === 0 ? (
+                <p className="text-muted-foreground py-8 text-center">—</p>
+              ) : (
+                // Свежие события — сверху, как в истории заказа
+                [...detail.events].reverse().map((e, idx) => {
+                  const dotColor =
+                    e.event_type === 'approved' || e.event_type === 'created'
+                      ? 'bg-green-500'
+                      : e.event_type === 'rejected' ||
+                          e.event_type === 'deleted' ||
+                          e.event_type === 'overdue'
+                        ? 'bg-red-500'
+                        : e.event_type === 'closed'
+                          ? 'bg-gray-500'
+                          : idx === 0
+                            ? 'bg-green-500'
+                            : 'bg-blue-500'
+                  const IconComponent = EVENT_ICON[e.event_type] ?? Timer
+                  const detailsText = formatEventDetails(e)
+                  return (
+                    <div key={e.id} className="relative pb-6">
+                      <div
+                        className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
                       />
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {e.author_group && (
+                          <Badge
+                            className={`${ROLE_BADGE_COLORS[e.author_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
+                          >
+                            {t(e.author_group)}
+                          </Badge>
+                        )}
+                        <span className="font-medium">
+                          {e.author_name || t('system_actor')}
+                        </span>
+                        <span className="text-sm text-muted-foreground tabular-nums">
+                          {fmtDate(e.created_at, true)}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground pl-1 flex items-start gap-2">
+                        <IconComponent className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span className="break-words">
+                          {t(EVENT_KEY[e.event_type] ?? 'requests_ev_status')}
+                          {detailsText ? ` · ${detailsText}` : ''}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                  )
+                })
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 p-6">
+            {/* Два блока: слева меньше (детали), справа больше (комментарии и история) */}
+            <div
+              className="grid gap-6 h-full min-h-0"
+              style={{
+                gridTemplateColumns:
+                  'calc((100% - 48px) / 3) calc((100% - 48px) * 2 / 3 + 24px)',
+              }}
+            >
+              {/* Блок 1: детали и данные заявки */}
+              <div className="border rounded-lg p-4 flex flex-col min-h-0">
+                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
+                  <Building2 className="w-5 h-5" />
+                  {t('requests_details_title')}
+                </h4>
+
+                <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label={t('requests_col_author')}
+                      value={
+                        detail.created_by
+                          ? actorLabel(detail.created_by)
+                          : t('requests_source_storefront')
+                      }
+                    />
+                    <Field
+                      label={t('requests_col_created')}
+                      value={fmtDate(detail.created_at, true)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field
+                      label={t('requests_assigned_at')}
+                      value={assignedAt ? fmtDate(assignedAt, true) : '—'}
+                    />
+                    <Field
+                      label={t('requests_col_assignee')}
+                      value={
+                        detail.assignee
+                          ? actorLabel(detail.assignee)
+                          : t('requests_assignee_none')
+                      }
+                    />
+                  </div>
 
                   {detail.description && (
                     <div className="space-y-1">
@@ -746,82 +1200,7 @@ export default function RequestDetailModal({
               </div>
 
               {/* Блок 2: комментарии и история */}
-              <div className="border rounded-lg flex flex-col min-h-0 overflow-hidden">
-                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0 px-4 pt-4">
-                  <Send className="w-5 h-5" />
-                  {t('requests_comments_title')}
-                </h4>
-
-                <div className="space-y-2 flex-1 min-h-0 overflow-y-auto px-4 pb-4 mt-3">
-                  {detail.comments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {t('requests_comment_empty')}
-                    </p>
-                  )}
-                  {detail.comments.map((c) => (
-                    <div key={c.id} className="rounded-lg border p-3 bg-card">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        {c.author_group && (
-                          <Badge
-                            className={`${ROLE_BADGE_COLORS[c.author_group] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                          >
-                            {t(c.author_group)}
-                          </Badge>
-                        )}
-                        <span className="font-medium text-foreground">
-                          {c.author_name || t('system_actor')}
-                        </span>
-                        <span className="ml-auto tabular-nums">
-                          {fmtDate(c.created_at, true)}
-                        </span>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{c.text}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Комментарий — внизу колонки: поле как в поддержке, Enter отправляет */}
-                {isClosed && (
-                  <div className="border-t p-4 text-sm text-muted-foreground flex-shrink-0">
-                    {t('requests_closed_readonly')}
-                  </div>
-                )}
-                {canProcess && isOpen && (
-                  <div className="flex items-end gap-2 border-t p-4 flex-shrink-0">
-                    <textarea
-                      ref={commentRef}
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault()
-                          if (!reqPerm('requests.process')) return
-                          if (!comment.trim()) return
-                          sendComment()
-                        }
-                      }}
-                      placeholder={t('requests_comment_placeholder')}
-                      rows={1}
-                      className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[38px] max-h-[120px]"
-                      style={{ height: 'auto' }}
-                    />
-                    <Button
-                      size="icon"
-                      className="shrink-0"
-                      disabled={!comment.trim()}
-                      onClick={() =>
-                        reqPerm('requests.process') && sendComment()
-                      }
-                    >
-                      {commentMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
+              {renderComments(detail ?? null)}
             </div>
           </div>
         )}
@@ -836,8 +1215,43 @@ export default function RequestDetailModal({
               <ArrowLeft className="w-4 h-4" />
               {t('back')}
             </Button>
+          ) : isCreate || isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => (isCreate ? onClose() : setIsEditing(false))}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                className="gap-1.5 ml-auto"
+                disabled={formPending}
+                onClick={submitForm}
+              >
+                {formPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isCreate ? (
+                  <Plus className="w-4 h-4" />
+                ) : (
+                  <Pencil className="w-4 h-4" />
+                )}
+                {isCreate ? t('requests_create_submit') : t('requests_save')}
+              </Button>
+            </>
           ) : (
             <>
+              {/* Редактировать — администратор до решения, остальные до взятия/назначения */}
+              {detail && canEditDetail && (
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={startEditing}
+                >
+                  <Pencil className="w-4 h-4" />
+                  {t('requests_edit')}
+                </Button>
+              )}
+
               {/* История */}
               {detail && (
                 <Button
@@ -861,7 +1275,7 @@ export default function RequestDetailModal({
                     onClick={() =>
                       reqPerm('requests.process') &&
                       actionMutation.mutate({
-                        url: `/admin/requests/${requestId}/take`,
+                        url: `/admin/requests/${activeId}/take`,
                         okKey: 'requests_taken_ok',
                       })
                     }
@@ -913,17 +1327,27 @@ export default function RequestDetailModal({
                 </p>
               )}
 
-              {/* Срок — на месте прежней кнопки удаления, без бейджа просрочки */}
+              {/* Справа: срок открытой заявки или фактическая дата решения */}
               {detail && (
                 <div className="ml-auto">
-                  <DeadlineCell
-                    deadline={detail.deadline}
-                    state={detail.deadline_state}
-                    minutesLeft={detail.minutes_left}
-                    minutesLate={detail.minutes_late}
-                    closed={!isOpen}
-                    overdueBadge={false}
-                  />
+                  {detail.resolved_at &&
+                  ['resolved', 'rejected', 'closed'].includes(detail.status) ? (
+                    <span
+                      className="text-sm tabular-nums"
+                      title={t('requests_decision_date')}
+                    >
+                      {fmtDate(detail.resolved_at, true)}
+                    </span>
+                  ) : (
+                    <DeadlineCell
+                      deadline={detail.deadline}
+                      state={detail.deadline_state}
+                      minutesLeft={detail.minutes_left}
+                      minutesLate={detail.minutes_late}
+                      closed={!isOpen}
+                      overdueBadge={false}
+                    />
+                  )}
                 </div>
               )}
             </>
@@ -970,7 +1394,7 @@ export default function RequestDetailModal({
                 <strong className="font-mono">{detail.number}</strong>
                 <span className="text-muted-foreground">—</span>
                 <span className="text-muted-foreground truncate">
-                  {detail.title}
+                  {categoryName(t, detail.category.code, detail.category.name)}
                 </span>
               </div>
             </div>

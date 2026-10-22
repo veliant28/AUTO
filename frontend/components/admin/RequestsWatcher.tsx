@@ -16,7 +16,6 @@ const SEEN_LIMIT = 300
 interface AlertItem {
   id: number
   number: string
-  title: string
   category_name: string
   status: string
   minutes_left: number | null

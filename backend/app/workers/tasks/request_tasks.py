@@ -50,7 +50,6 @@ def notify_overdue_requests():
                     send_telegram_notification(
                         telegram_format.request_overdue(
                             number=request.number or f"REQ-{request.id:010d}",
-                            title=request.title,
                             category=request.category.name if request.category else "—",
                             minutes_late=minutes_late,
                         )

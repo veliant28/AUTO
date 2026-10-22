@@ -56,7 +56,6 @@ class NotificationMessageItem(BaseModel):
 class NotificationRequestItem(BaseModel):
     id: int
     number: str | None = None
-    title: str | None = None
     category_name: str | None = None
     # Код категории — фронтенд показывает локализованное название по коду
     category_code: str | None = None
@@ -144,7 +143,6 @@ def get_notifications(
                 NotificationRequestItem(
                     id=r.id,
                     number=r.number,
-                    title=r.title,
                     category_name=r.category.name if r.category else None,
                     category_code=r.category.code if r.category else None,
                     status=r.status.value if hasattr(r.status, "value") else str(r.status),

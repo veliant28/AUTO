@@ -182,6 +182,7 @@ def _approve_timesheet(db: Session, request: Request, actor: User) -> Automation
             minutes_before=before,
             minutes_after=minutes,
             changed_by_id=actor.id,
+            is_automated=True,
             changed_at=now,
         )
     )

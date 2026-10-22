@@ -52,7 +52,6 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { DeadlineCell, RequestsStatusCell } from './RequestsStatusBadge'
 import RequestDetailModal from './RequestDetailModal'
-import CreateRequestDialog from './CreateRequestDialog'
 import CategoriesDialog from './CategoriesDialog'
 import { useRequestDate } from './useRequestDate'
 import { TablePagination } from '@/components/admin/TablePagination'
@@ -105,6 +104,7 @@ export default function RequestsPage() {
 
   const closeModal = () => {
     setOpenId(null)
+    setCreateOpen(false)
     if (openIdParam) {
       const params = new URLSearchParams(searchParams.toString())
       params.delete('id')
@@ -204,15 +204,6 @@ export default function RequestsPage() {
               row.original.category_code,
               row.original.category_name,
             )}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('title', {
-        header: t('requests_col_title'),
-        size: 200,
-        cell: (info) => (
-          <span className="text-sm block max-w-[150px] truncate">
-            {info.getValue()}
           </span>
         ),
       }),
@@ -510,20 +501,17 @@ export default function RequestsPage() {
         </CardContent>
       </Card>
 
-      {openId != null && (
+      {(openId != null || createOpen) && (
         <RequestDetailModal
           requestId={openId}
           categories={categories}
           onClose={closeModal}
+          onCreated={(id) => {
+            setCreateOpen(false)
+            setOpenId(id)
+          }}
         />
       )}
-
-      <CreateRequestDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        categories={categories}
-        onCreated={(id) => setOpenId(id)}
-      />
 
       <CategoriesDialog
         open={categoriesOpen}
@@ -555,7 +543,11 @@ export default function RequestsPage() {
                 <strong className="font-mono">{deleteTarget.number}</strong>
                 <span className="text-muted-foreground">—</span>
                 <span className="text-muted-foreground truncate">
-                  {deleteTarget.title}
+                  {categoryName(
+                    t,
+                    deleteTarget.category_code,
+                    deleteTarget.category_name,
+                  )}
                 </span>
               </div>
             </div>

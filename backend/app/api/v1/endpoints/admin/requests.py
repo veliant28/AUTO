@@ -36,6 +36,7 @@ from app.schemas.requests_schemas import (
     RequestListItem,
     RequestListResponse,
     RequestStatusIn,
+    RequestUpdateIn,
 )
 from app.services import requests_service as rs
 from app.services.request_automations import AutomationError, apply_approval
@@ -114,7 +115,6 @@ def _list_item(r: Request, now: Optional[datetime] = None) -> RequestListItem:
         category_name=r.category.name if r.category else "",
         category_code=r.category.code if r.category else "",
         status=_status_value(r.status),
-        title=r.title,
         created_at=r.created_at,
         created_by=_actor_info(r.created_by),
         assignee=_actor_info(r.assignee),
@@ -130,7 +130,6 @@ def _alert_item(r: Request, now: datetime) -> RequestAlertItem:
     return RequestAlertItem(
         id=r.id,
         number=r.number or f"REQ-{r.id:010d}",
-        title=r.title,
         category_name=r.category.name if r.category else "",
         status=_status_value(r.status),
         deadline=rs.effective_deadline(r),
@@ -146,7 +145,6 @@ def _detail(r: Request) -> RequestDetailResponse:
         number=r.number or f"REQ-{r.id:010d}",
         category=RequestCategorySchema.model_validate(r.category),
         status=_status_value(r.status),
-        title=r.title,
         description=r.description,
         payload=r.payload,
         created_at=r.created_at,
@@ -200,6 +198,34 @@ def _ensure_editable(request: Request) -> None:
     """Закрытая заявка доступна только для чтения."""
     if request.status == RequestStatus.CLOSED:
         raise HTTPException(400, "Заявка закрыта и недоступна для изменений")
+
+
+def _normalize_timesheet_payload(payload: dict) -> dict:
+    """Проверить и нормализовать обязательные поля правки часов."""
+    p = dict(payload or {})
+    if not p.get("user_id") or not str(p.get("work_date") or "").strip():
+        raise HTTPException(400, "Укажите сотрудника и дату")
+    if p.get("minutes") in (None, ""):
+        raise HTTPException(400, "Укажите часы")
+
+    try:
+        p["user_id"] = int(p["user_id"])
+        p["minutes"] = int(p["minutes"])
+    except (TypeError, ValueError):
+        raise HTTPException(400, "Некорректные сотрудник или часы")
+
+    if p["user_id"] <= 0:
+        raise HTTPException(400, "Некорректный сотрудник")
+    if p["minutes"] < 0 or p["minutes"] > 1440:
+        raise HTTPException(400, "Часы должны быть от 0 до 24")
+
+    p["work_date"] = str(p["work_date"]).strip()
+    try:
+        datetime.strptime(p["work_date"], "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(400, "Некорректная дата (ожидается YYYY-MM-DD)")
+
+    return p
 
 
 # --------------------------------------------------------------------------
@@ -303,7 +329,6 @@ def list_requests(
             q = q.filter(
                 or_(
                     Request.number.ilike(like),
-                    Request.title.ilike(like),
                     Request.description.ilike(like),
                     # поиск по данным заявки (email/компания B2B-анкеты и т.п.)
                     func.cast(Request.payload, String).ilike(like),
@@ -414,12 +439,20 @@ async def create_request(
 
     now = rs.now_utc()
     response_due, due = rs.category_due_snapshot(category, now)
+    payload = dict(data.payload or {})
+    description = (data.description or "").strip() or None
+    if category.code == CATEGORY_B2B_REGISTRATION:
+        # Комментарии живут только в RequestComment (правая колонка)
+        payload.pop("comment", None)
+        description = None
+    elif category.code == CATEGORY_TIMESHEET_MANUAL:
+        payload = _normalize_timesheet_payload(payload)
+        description = None
     request = Request(
         category_id=category.id,
         status=RequestStatus.NEW,
-        title=data.title.strip(),
-        description=(data.description or "").strip() or None,
-        payload=data.payload or None,
+        description=description,
+        payload=payload or None,
         created_by_id=current_user.id,
         assignee_id=assignee.id if assignee else None,
         response_due_at=response_due,
@@ -435,6 +468,52 @@ async def create_request(
     db.refresh(request)
 
     rs.notify_request_event(request, "request_created", db, current_user.id)
+    return _detail(_visible_or_404(db, current_user, request.id))
+
+
+@router.patch("/requests/{request_id}", response_model=RequestDetailResponse)
+def update_request(
+    request_id: int,
+    data: RequestUpdateIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("requests.edit")),
+):
+    """Изменить поля заявки до принятия решения.
+
+    Администратор может править и после взятия в работу/назначения,
+    остальные роли — только пока заявка новая и без исполнителя.
+    """
+    request = _visible_or_404(db, current_user, request_id)
+    _ensure_editable(request)
+
+    is_admin = bool(current_user.role and current_user.role.name == "admin")
+    if is_admin:
+        if request.status not in (RequestStatus.NEW, RequestStatus.IN_PROGRESS):
+            raise HTTPException(400, "Заявку можно изменить только до принятия решения")
+    elif request.status != RequestStatus.NEW or request.assignee_id is not None:
+        raise HTTPException(
+            400,
+            "Заявку можно изменить только до взятия в работу или назначения исполнителя",
+        )
+
+    payload = dict(data.payload or {})
+    description = (data.description or "").strip() or None
+    if request.category and request.category.code == CATEGORY_B2B_REGISTRATION:
+        # Комментарии живут только в RequestComment (правая колонка)
+        payload.pop("comment", None)
+        description = None
+    elif (
+        request.category
+        and request.category.code == CATEGORY_TIMESHEET_MANUAL
+    ):
+        payload = _normalize_timesheet_payload(payload)
+        description = None
+    request.description = description
+    request.payload = payload or None
+    request.updated_at = rs.now_utc()
+    rs.log_event(db, request, current_user, "updated", "данные заявки изменены")
+    db.commit()
+    rs.notify_request_event(request, "request_updated", db, current_user.id)
     return _detail(_visible_or_404(db, current_user, request.id))
 
 

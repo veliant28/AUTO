@@ -40,7 +40,6 @@ interface MessageItem {
 interface RequestItem {
   id: number
   number: string
-  title: string
   category_name: string | null
   category_code: string | null
   status: string
@@ -203,7 +202,6 @@ export default function NotificationBell() {
                 <ClipboardList className="w-5 h-5 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{r.number}</p>
-                  <p className="text-xs opacity-90 truncate">{r.title}</p>
                   {r.category_name && (
                     <p className="text-xs opacity-75 truncate">
                       {categoryName(t, r.category_code, r.category_name)}

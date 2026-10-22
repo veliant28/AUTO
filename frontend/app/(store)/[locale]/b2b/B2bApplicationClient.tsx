@@ -240,17 +240,6 @@ export default function B2bApplicationClient() {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-muted-foreground mb-2 block">
-                      {t('contact_last_name')} *
-                    </label>
-                    <Input
-                      value={contactLastName}
-                      onChange={(e) => setContactLastName(e.target.value)}
-                      placeholder={t('contact_last_name_placeholder')}
-                      required
-                    />
-                  </div>
-                  <div>
                     <div className="flex items-center gap-2 mb-2">
                       <label className="text-sm text-muted-foreground">
                         {t('phone')} *
@@ -264,10 +253,27 @@ export default function B2bApplicationClient() {
                     <PhoneInput
                       value={phone}
                       onChange={(value) => {
-                        setPhone(value)
+                        const digits = value.replace(/\D/g, '')
+                        // Локальный номер 0XX… дополняем кодом страны
+                        setPhone(
+                          digits.length === 10 && digits.startsWith('0')
+                            ? `+38${digits}`
+                            : value,
+                        )
                         if (phoneError) setPhoneError(null)
                       }}
                       className={phoneError ? 'border-destructive' : undefined}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {t('contact_last_name')} *
+                    </label>
+                    <Input
+                      value={contactLastName}
+                      onChange={(e) => setContactLastName(e.target.value)}
+                      placeholder={t('contact_last_name_placeholder')}
+                      required
                     />
                   </div>
                   <div>

@@ -14,6 +14,7 @@ from app.models.requests import (
     CATEGORY_B2B_REGISTRATION,
     Request,
     RequestCategory,
+    RequestComment,
     RequestStatus,
 )
 from app.schemas.requests_schemas import B2BApplicationIn, B2BApplicationResponse
@@ -51,6 +52,7 @@ async def submit_b2b_application(
     if not category or not category.is_active:
         raise HTTPException(400, "Приём B2B-заявок временно недоступен")
 
+    comment_text = (data.comment or "").strip()
     payload = {
         "company": data.company.strip(),
         "edrpou": (data.edrpou or "").strip() or None,
@@ -60,7 +62,6 @@ async def submit_b2b_application(
         "phone": data.phone.strip(),
         "email": str(data.email).strip().lower(),
         "city": (data.city or "").strip() or None,
-        "comment": (data.comment or "").strip() or None,
         "locale": normalize_locale(data.locale),
     }
     legacy_contact = (data.contact_name or "").strip()
@@ -73,8 +74,7 @@ async def submit_b2b_application(
     request = Request(
         category_id=category.id,
         status=RequestStatus.NEW,
-        title=f"B2B: {payload['company']}",
-        description=payload.get("comment"),
+        description=None,
         payload=payload,
         created_by_id=None,
         response_due_at=response_due,
@@ -85,6 +85,18 @@ async def submit_b2b_application(
     db.add(request)
     db.flush()
     request.number = f"REQ-{request.id:010d}"
+    if comment_text:
+        # Комментарий клиента — обычный комментарий заявки (правая колонка)
+        db.add(
+            RequestComment(
+                request_id=request.id,
+                user_id=None,
+                author_name=rs.contact_display_name(payload) or "Клиент",
+                author_group=None,
+                text=comment_text,
+                created_at=now,
+            )
+        )
     rs.log_event(db, request, None, "created", "заявка с витрины (B2B-регистрация)")
     db.commit()
     db.refresh(request)
@@ -95,7 +107,6 @@ async def submit_b2b_application(
             send_telegram_notification(
                 telegram_format.new_request(
                     number=request.number,
-                    title=f"{payload['company']} · {rs.contact_display_name(payload)}, {payload['phone']}",
                     category=category.name,
                     author=payload["email"],
                 )

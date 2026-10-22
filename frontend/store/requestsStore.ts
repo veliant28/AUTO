@@ -8,7 +8,6 @@ export interface RequestWsEvent {
   type: 'request_created' | 'request_comment' | 'request_updated' | string
   request_id: number
   number: string | null
-  title: string | null
   status: string
   created_by_id: number | null
   assignee_id: number | null

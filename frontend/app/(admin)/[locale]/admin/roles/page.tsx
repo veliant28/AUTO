@@ -187,6 +187,43 @@ export default function AdminRolesPage() {
     return groups
   }, [permissions])
 
+  const permissionKey = (codename: string) =>
+    `perms.${codename.replace(/\./g, '_')}`
+
+  const permissionGroupKey = (group: string) =>
+    group === 'Заявки'
+      ? 'perm_groups.requests'
+      : `perm_groups.${group.toLowerCase().replace(/\s+/g, '_')}`
+
+  const renderPermissionGroups = () =>
+    Object.entries(groupedPermissions).map(([group, perms]) => (
+      <div key={group} className="mb-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
+          {t.has(permissionGroupKey(group) as any)
+            ? t(permissionGroupKey(group) as any)
+            : group}
+        </p>
+        <div className="grid grid-cols-2 gap-1">
+          {perms.map((p) => (
+            <label
+              key={p.id}
+              className="flex items-center gap-2 text-sm cursor-pointer py-0.5"
+            >
+              <Checkbox
+                checked={form.permission_ids.includes(p.id)}
+                onCheckedChange={() => togglePermission(p.id)}
+              />
+              <span>
+                {t.has(permissionKey(p.codename) as any)
+                  ? t(permissionKey(p.codename) as any)
+                  : p.description || p.codename}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    ))
+
   const openEdit = (role: Role) => {
     setEditRole(role)
     setForm({
@@ -327,27 +364,7 @@ export default function AdminRolesPage() {
               <label className="text-sm text-muted-foreground mb-2 block">
                 {t('roles_permissions')}
               </label>
-              {Object.entries(groupedPermissions).map(([group, perms]) => (
-                <div key={group} className="mb-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    {group}
-                  </p>
-                  <div className="grid grid-cols-2 gap-1">
-                    {perms.map((p) => (
-                      <label
-                        key={p.id}
-                        className="flex items-center gap-2 text-sm cursor-pointer py-0.5"
-                      >
-                        <Checkbox
-                          checked={form.permission_ids.includes(p.id)}
-                          onCheckedChange={() => togglePermission(p.id)}
-                        />
-                        <span>{p.description || p.codename}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              {renderPermissionGroups()}
             </div>
             <Button
               className="w-full"
@@ -476,27 +493,7 @@ export default function AdminRolesPage() {
                 <label className="text-sm text-muted-foreground mb-2 block">
                   {t('roles_permissions')}
                 </label>
-                {Object.entries(groupedPermissions).map(([group, perms]) => (
-                  <div key={group} className="mb-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
-                      {group}
-                    </p>
-                    <div className="grid grid-cols-2 gap-1">
-                      {perms.map((p) => (
-                        <label
-                          key={p.id}
-                          className="flex items-center gap-2 text-sm cursor-pointer py-0.5"
-                        >
-                          <Checkbox
-                            checked={form.permission_ids.includes(p.id)}
-                            onCheckedChange={() => togglePermission(p.id)}
-                          />
-                          <span>{p.description || p.codename}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                {renderPermissionGroups()}
               </div>
               <Button
                 className="w-full"

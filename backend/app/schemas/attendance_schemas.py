@@ -114,6 +114,7 @@ class TimesheetManualHistoryItem(BaseModel):
     changed_at: str  # naive UTC ISO
     employee: TimesheetActorInfo
     changed_by: TimesheetActorInfo
+    is_automated: bool = False
 
 
 class TimesheetManualHistoryResponse(BaseModel):

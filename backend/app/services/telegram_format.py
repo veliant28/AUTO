@@ -58,26 +58,24 @@ def new_return(return_number: str, order_number: str) -> str:
     )
 
 
-def new_request(number: str, title: str, category: str, author: str | None = None) -> str:
+def new_request(number: str, category: str, author: str | None = None) -> str:
     """📩 Новая заявка в журнале."""
     lines = [
         f"📩 <b>Новая заявка {number}</b>",
         f"Категория: {category}",
-        title,
     ]
     if author:
         lines.append(f"Автор: {author}")
     return "\n".join(lines)
 
 
-def request_overdue(number: str, title: str, category: str, minutes_late: int) -> str:
+def request_overdue(number: str, category: str, minutes_late: int) -> str:
     """⏰ Заявка просрочена."""
     hours = minutes_late // 60
     late = f"{hours} ч {minutes_late % 60} мин" if hours else f"{minutes_late} мин"
     return (
         f"⏰ <b>Заявка просрочена: {number}</b>\n"
         f"Категория: {category}\n"
-        f"{title}\n"
         f"Просрочка: {late}"
     )
 

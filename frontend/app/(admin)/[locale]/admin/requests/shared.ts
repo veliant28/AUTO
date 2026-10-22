@@ -30,7 +30,6 @@ export interface RequestListItem {
   category_name: string
   category_code: string
   status: string
-  title: string
   created_at: string | null
   created_by: RequestActorInfo | null
   assignee: RequestActorInfo | null

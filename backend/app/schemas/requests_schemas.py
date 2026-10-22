@@ -37,7 +37,6 @@ class RequestListItem(BaseModel):
     category_name: str
     category_code: str
     status: str
-    title: str
     created_at: Optional[datetime] = None
     created_by: Optional[RequestActorInfo] = None
     assignee: Optional[RequestActorInfo] = None
@@ -89,7 +88,6 @@ class RequestDetailResponse(BaseModel):
     number: str
     category: RequestCategorySchema
     status: str
-    title: str
     description: Optional[str] = None
     payload: Optional[Dict[str, Any]] = None
     created_at: Optional[datetime] = None
@@ -111,10 +109,16 @@ class RequestDetailResponse(BaseModel):
 class RequestCreateIn(BaseModel):
     category_id: Optional[int] = None
     category_code: Optional[str] = None
-    title: str = Field(..., min_length=3, max_length=200)
     description: Optional[str] = Field(None, max_length=5000)
     payload: Optional[Dict[str, Any]] = None
     assignee_id: Optional[int] = None
+
+
+class RequestUpdateIn(BaseModel):
+    """Правка полей заявки до принятия решения (категория не меняется)."""
+
+    description: Optional[str] = Field(None, max_length=5000)
+    payload: Optional[Dict[str, Any]] = None
 
 
 class RequestCommentIn(BaseModel):
@@ -148,7 +152,6 @@ class RequestCategoryUpdateIn(BaseModel):
 class RequestAlertItem(BaseModel):
     id: int
     number: str
-    title: str
     category_name: str
     status: str
     deadline: Optional[datetime] = None

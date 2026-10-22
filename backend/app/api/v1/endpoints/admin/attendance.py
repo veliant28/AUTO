@@ -641,6 +641,7 @@ async def timesheet_manual_history(
                 changed_at=log.changed_at.isoformat(),
                 employee=_actor_item(users.get(log.user_id), log.user_id),
                 changed_by=_actor_item(users.get(log.changed_by_id), log.changed_by_id),
+                is_automated=log.is_automated,
             )
             for log in logs
         ],

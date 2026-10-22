@@ -214,7 +214,6 @@ def notify_request_event(
         "type": event_type,
         "request_id": request.id,
         "number": request.number,
-        "title": request.title,
         "status": (
             request.status.value if hasattr(request.status, "value") else str(request.status)
         ),

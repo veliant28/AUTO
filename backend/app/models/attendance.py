@@ -58,10 +58,11 @@ class TimesheetOverride(Base):
 
 
 class TimesheetOverrideLog(Base):
-    """История ручных правок табеля: кто (админ), когда, что было → стало.
+    """История правок табеля: кто, когда, что было → стало.
 
     minutes_before == NULL — до правки день считался автоматически;
     minutes_after == NULL — правка сброшена, день снова на авторасчёте.
+    is_automated=True — часы проставлены автоматически при одобрении заявки.
     changed_at — naive UTC (как остальной бэкенд).
     """
 
@@ -73,4 +74,7 @@ class TimesheetOverrideLog(Base):
     minutes_before = Column(Integer, nullable=True)
     minutes_after = Column(Integer, nullable=True)
     changed_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_automated = Column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     changed_at = Column(DateTime, nullable=False, default=func.now())

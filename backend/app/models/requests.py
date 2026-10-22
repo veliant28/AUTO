@@ -71,7 +71,6 @@ class Request(Base):
     number = Column(String(20), unique=True, index=True)
     category_id = Column(Integer, ForeignKey("request_categories.id"), nullable=False, index=True)
     status = Column(Enum(RequestStatus), default=RequestStatus.NEW, nullable=False, index=True)
-    title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     # Данные заявки: поля B2B-анкеты, часы для табеля, клиент для бана и т.п.
     payload = Column(JSON, nullable=True)
@@ -127,7 +126,7 @@ class RequestEvent(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     author_name = Column(String, nullable=True)
     author_group = Column(String, nullable=True)
-    # created | taken | assigned | status_changed | comment | approved | rejected | email_sent | automation | closed
+    # created | taken | assigned | status_changed | updated | comment | approved | rejected | email_sent | automation | closed
     event_type = Column(String(40), nullable=False)
     details = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

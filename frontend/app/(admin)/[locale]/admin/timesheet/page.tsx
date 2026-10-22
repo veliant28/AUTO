@@ -12,6 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { TablePagination } from '@/components/admin/TablePagination'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from '@/lib/toast'
 import { formatDateTime } from '@/lib/dates'
+import { formatMinutes, parseHoursToMinutes } from '@/lib/timesheetTime'
 import { formatPhone } from '@/components/ui/PhoneInput'
 import api from '@/lib/api'
 import { can } from '@/lib/permissions'
@@ -76,6 +78,7 @@ type HistoryItem = {
   changed_at: string
   employee: ActorInfo
   changed_by: ActorInfo
+  is_automated: boolean
 }
 
 const columnHelper = createColumnHelper<TimesheetUser>()
@@ -101,46 +104,6 @@ const roleBadgeColors: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
-}
-
-/** Минуты → «9:00» / «8:30» */
-function formatMinutes(min: number): string {
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return `${h}:${String(m).padStart(2, '0')}`
-}
-
-/**
- * Парсинг ввода часов. Возвращает минуты 0..1440;
- * null — пустая строка (вернуть авторасчёт); -1 — невалидный ввод.
- */
-function parseHoursToMinutes(raw: string): number | null | -1 {
-  const s = raw.trim().replace(',', '.')
-  if (s === '') return null
-  let h = 0
-  let m = 0
-  if (s.includes(':')) {
-    const [hh, mm] = s.split(':')
-    if (!/^\d{1,2}$/.test(hh.trim()) || !/^\d{1,2}$/.test((mm || '').trim())) {
-      return -1
-    }
-    h = Number(hh)
-    m = Number(mm)
-  } else {
-    if (!/^\d{1,2}(\.\d{1,2})?$/.test(s)) return -1
-    const v = Number(s)
-    if (!Number.isFinite(v) || v > 24) return -1
-    h = Math.floor(v)
-    m = Math.round((v - h) * 60)
-    if (m === 60) {
-      h += 1
-      m = 0
-    }
-  }
-  if (!Number.isInteger(h) || h < 0 || h > 24) return -1
-  if (!Number.isInteger(m) || m < 0 || m > 59) return -1
-  const total = h * 60 + m
-  return total > 1440 ? -1 : total
 }
 
 /** Подсветка ячейки дня: выходной или ручная/несохранённая правка */
@@ -626,7 +589,7 @@ export default function TimesheetPage() {
         size: 80,
         cell: (info) => (
           <span className="font-mono text-muted-foreground whitespace-nowrap">
-            {info.getValue()}
+            {info.row.original.is_automated ? '—' : info.getValue()}
           </span>
         ),
       }),
@@ -634,6 +597,9 @@ export default function TimesheetPage() {
         header: t('timesheet_history_who'),
         size: 200,
         cell: (info) => {
+          if (info.row.original.is_automated) {
+            return <div className="font-medium">{t('system_actor')}</div>
+          }
           const actor = info.getValue()
           return (
             <>
@@ -649,6 +615,17 @@ export default function TimesheetPage() {
         header: t('timesheet_history_role'),
         size: 140,
         cell: (info) => {
+          if (info.row.original.is_automated) {
+            return (
+              <span className="whitespace-nowrap">
+                <AnimatedBadge swapKey={`system-${info.row.original.id}`}>
+                  <Badge className="bg-black text-white dark:bg-white dark:text-black border-0 text-sm transition-colors duration-500">
+                    {t('system_actor')}
+                  </Badge>
+                </AnimatedBadge>
+              </span>
+            )
+          }
           const role = info.getValue()
           return role ? (
             <span className="whitespace-nowrap">
