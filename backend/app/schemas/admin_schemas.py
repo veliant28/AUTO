@@ -70,6 +70,7 @@ class AdminUserResponse(BaseModel):
     role: str
     is_active: bool
     phone: Optional[str] = None
+    last_ip: Optional[str] = None
     created_at: Optional[str] = None
     orders_delivered: int = 0
     orders_cancelled: int = 0

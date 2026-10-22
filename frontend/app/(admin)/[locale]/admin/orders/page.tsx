@@ -98,7 +98,7 @@ import {
   paymentMethodLabel,
 } from '../components/PaymentHelpers'
 import { useAuthStore } from '@/store/authStore'
-import { ORDER_STATUS_LABELS } from '@/lib/constants'
+import { EDIT_LOCKED_STATUSES, ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
 import { PhoneInput } from '@/components/ui/PhoneInput'
@@ -527,7 +527,8 @@ export default function AdminOrdersPage() {
       setDeleteTarget(null)
       setViewOrderId(null)
     },
-    onError: () => toast.error(t('error')),
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.detail || t('error')),
   })
 
   const removePromocodeMutation = useMutation({
@@ -705,49 +706,63 @@ export default function AdminOrdersPage() {
         id: 'actions',
         header: t('actions'),
         size: 100,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => openView(row.original.id)}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('view_order')}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleWaybillOpen(row.original.id)}
-                >
-                  <Truck className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('novaposhta_waybill')}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => {
-                    if (!reqPerm('orders.delete')) return
-                    setDeleteTarget(row.original)
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('delete_order')}</TooltipContent>
-            </Tooltip>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const canDelete =
+            can(user, 'orders.delete') &&
+            (user?.role === 'admin' ||
+              !EDIT_LOCKED_STATUSES.includes(row.original.status))
+          return (
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => openView(row.original.id)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('view_order')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleWaybillOpen(row.original.id)}
+                  >
+                    <Truck className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('novaposhta_waybill')}</TooltipContent>
+              </Tooltip>
+              {can(user, 'orders.delete') && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        if (!canDelete) {
+                          toast.warning(t('order_delete_locked'))
+                          return
+                        }
+                        if (!reqPerm('orders.delete')) return
+                        setDeleteTarget(row.original)
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {canDelete ? t('delete_order') : t('order_delete_locked')}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )
+        },
       }),
     ],
     [t, statusMutation, openView, handleWaybillOpen, setDeleteTarget, user],

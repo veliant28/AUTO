@@ -72,6 +72,9 @@ export const ORDER_STATUS_LABELS: Record<
   },
 }
 
+// Статусы, в которых менять заказ и его статус/удалять может только админ
+export const EDIT_LOCKED_STATUSES = ['shipped', 'delivered', 'cancelled']
+
 // Return status labels
 export const RETURN_STATUS_LABELS: Record<
   string,

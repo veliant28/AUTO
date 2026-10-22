@@ -29,6 +29,11 @@ from .vehicles import Base
 CATEGORY_B2B_REGISTRATION = "b2b_registration"
 CATEGORY_TIMESHEET_MANUAL = "timesheet_manual"
 CATEGORY_BAN_UNBAN = "ban_unban"
+CATEGORY_ORDER_FINAL_STATUS = "order_final_status"
+CATEGORY_ORDER_DELETE = "order_delete"
+CATEGORY_SUPPORT_EDIT = "support_edit"
+CATEGORY_PRICING_CHANGE = "pricing_change"
+CATEGORY_OTHER = "other"
 
 # Статусы, в которых заявка считается открытой (срок ещё тикает)
 OPEN_STATUSES = ("new", "in_progress")

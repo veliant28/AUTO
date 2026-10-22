@@ -17,6 +17,7 @@ from app.schemas.auth_schemas import (
 )
 from app.models import User, Role, PasswordReset, OAuthAccount
 from app.models.protection import BanRecord, Whitelist, ProtectionEvent
+from app.services.ban_service import find_active_ban_by_ip, record_ban_ip
 from app.services.permission_service import role_permission_codenames
 
 logger = logging.getLogger(__name__)
@@ -79,14 +80,14 @@ async def register(data: RegisterSchema, request: Request, db: Session = Depends
         BanRecord.email == data.email,
     ).first()
     if active_ban:
+        # Запоминаем новый IP забаненного пользователя
+        if client_ip and record_ban_ip(db, active_ban, client_ip):
+            db.commit()
         raise HTTPException(403, f"Ваш аккаунт заблокирован. Причина: {active_ban.reason}")
     
     # Check if IP is banned
     if client_ip:
-        ip_ban = db.query(BanRecord).filter(
-            BanRecord.is_active == True,
-            BanRecord.ip_address == client_ip,
-        ).first()
+        ip_ban = find_active_ban_by_ip(db, client_ip)
         if ip_ban:
             raise HTTPException(403, f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}")
     
@@ -124,14 +125,14 @@ async def login(data: LoginSchema, request: Request, db: Session = Depends(get_d
         BanRecord.email == data.email,
     ).first()
     if active_ban:
+        # Новый IP забаненного пользователя — добавляем к его блокировке
+        if client_ip and record_ban_ip(db, active_ban, client_ip):
+            db.commit()
         raise HTTPException(403, f"Ваш аккаунт заблокирован. Причина: {active_ban.reason}")
     
     # Check if IP is banned
     if client_ip:
-        ip_ban = db.query(BanRecord).filter(
-            BanRecord.is_active == True,
-            BanRecord.ip_address == client_ip,
-        ).first()
+        ip_ban = find_active_ban_by_ip(db, client_ip)
         if ip_ban:
             raise HTTPException(403, f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}")
     

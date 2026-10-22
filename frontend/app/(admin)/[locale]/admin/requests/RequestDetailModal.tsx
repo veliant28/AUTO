@@ -49,6 +49,7 @@ import { useRequirePerm } from '@/hooks/useRequirePerm'
 import api from '@/lib/api'
 import { formatMinutes, parseHoursToMinutes } from '@/lib/timesheetTime'
 import { formatPhone } from '@/lib/phone'
+import { ORDER_STATUS_LABELS, RETURN_STATUS_LABELS } from '@/lib/constants'
 import { DeadlineCell, RequestsStatusCell } from './RequestsStatusBadge'
 import {
   actorLabel,
@@ -58,8 +59,10 @@ import {
 import { categoryName } from '@/lib/requestCategories'
 import { useRequestDate } from './useRequestDate'
 import RequestFormFields, {
+  SupportChatTile,
   requestFormError,
   type RequestFormValues,
+  type SupportChatOption,
 } from './RequestFormFields'
 
 /** Цвета бейджей ролей — как в модалке заказа */
@@ -69,6 +72,7 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
+  system: 'bg-black text-white dark:bg-white dark:text-black',
 }
 
 /** Иконки событий для истории */
@@ -214,7 +218,9 @@ function PayloadCard({
       value:
         payload.action === 'unban'
           ? t('requests_ban_action_unban')
-          : t('requests_ban_action_ban'),
+          : payload.action === 'whitelist'
+            ? t('requests_ban_action_whitelist')
+            : t('requests_ban_action_ban'),
     })
     if (payload.client_name || payload.email)
       rows.push({
@@ -238,6 +244,211 @@ function PayloadCard({
         label: t('requests_fields_hours'),
         value: formatMinutes(Number(payload.minutes)),
       })
+  } else if (code === 'order_final_status' || code === 'order_delete') {
+    const statusInfo = ORDER_STATUS_LABELS[payload.order_status]
+    const deliveryType = payload.delivery_type
+    return (
+      <div className="space-y-3">
+        {payload.order_id && (
+          <div className="flex items-center justify-between py-3 px-3 gap-2 rounded-lg border bg-muted/20">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-mono font-semibold truncate">
+                {payload.order_number || `#${payload.order_id}`}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {payload.order_full_name ||
+                  [payload.last_name, payload.first_name]
+                    .filter(Boolean)
+                    .join(' ') ||
+                  '—'}
+              </p>
+              {payload.phone && (
+                <p className="text-[10px] text-muted-foreground/60 font-mono">
+                  {formatPhone(payload.phone)}
+                </p>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold whitespace-nowrap">
+                {new Intl.NumberFormat('uk-UA', {
+                  maximumFractionDigits: 0,
+                }).format(Number(payload.order_total || 0))}{' '}
+                ₴
+              </p>
+              <Badge
+                className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+              >
+                {payload.order_status
+                  ? t(`order_${payload.order_status}`)
+                  : '—'}
+              </Badge>
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label={t('requests_fields_phone')}
+            value={payload.phone ? formatPhone(payload.phone) : null}
+          />
+          <Field
+            label={tb('contact_last_name')}
+            value={payload.last_name || null}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label={tb('contact_first_name')}
+            value={payload.first_name || null}
+          />
+          <Field
+            label={tb('contact_middle_name')}
+            value={payload.middle_name || null}
+          />
+        </div>
+        {deliveryType && (
+          <>
+            <Field label={t('delivery_info')} value={t(deliveryType as any)} />
+            <Field label={t('city')} value={payload.delivery_city || null} />
+            {deliveryType === 'warehouse' && (
+              <Field
+                label={t('warehouse')}
+                value={payload.delivery_warehouse || null}
+              />
+            )}
+            {deliveryType === 'courier' && (
+              <>
+                <Field
+                  label={t('street')}
+                  value={payload.delivery_street_label || null}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Field
+                    label={t('house')}
+                    value={payload.delivery_house || null}
+                  />
+                  <Field
+                    label={t('apartment')}
+                    value={payload.delivery_apartment || null}
+                  />
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    )
+  } else if (code === 'support_edit') {
+    const chat: SupportChatOption | null = payload.chat_id
+      ? {
+          id: payload.chat_id,
+          ticket_number: payload.ticket_number || `#${payload.chat_id}`,
+          user_name: payload.client_name || '',
+          user_phone: payload.client_phone || null,
+          user_email: payload.client_email || null,
+          status: payload.chat_status || 'new',
+          last_message: payload.chat_last_message || null,
+          last_message_at: payload.chat_last_message_at || null,
+          created_at: payload.chat_last_message_at || '',
+        }
+      : null
+    if (!chat) return null
+    return (
+      <div className="rounded-lg border bg-muted/20 px-3 py-3">
+        <SupportChatTile chat={chat} />
+      </div>
+    )
+  } else if (code === 'pricing_change') {
+    const targetName =
+      payload.pricing_target === 'category'
+        ? payload.pricing_target_name ||
+          (payload.pricing_category_id
+            ? `#${payload.pricing_category_id}`
+            : '—')
+        : t('pricing_general')
+    const oldMargin = payload.pricing_old_margin
+    const newMargin = payload.margin_percent
+    return (
+      <div className="rounded-lg border bg-muted/20 px-3 py-3 space-y-1">
+        <p className="text-sm font-semibold truncate">{targetName}</p>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('pricing_margin')}:</span>
+          <span className="font-mono">
+            {oldMargin != null ? `${oldMargin}%` : '—'}
+          </span>
+          <span className="text-muted-foreground">→</span>
+          <span className="font-mono font-semibold text-primary">
+            {newMargin != null ? `${newMargin}%` : '—'}
+          </span>
+        </div>
+      </div>
+    )
+  } else if (code === 'return_change') {
+    const statusInfo = RETURN_STATUS_LABELS[payload.return_status]
+    return (
+      <div className="space-y-3">
+        {payload.return_id && (
+          <div className="flex items-center justify-between py-3 px-3 gap-2 rounded-lg border bg-muted/20">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-mono font-semibold truncate">
+                {payload.return_number || `#${payload.return_id}`}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {t('return_of_order')}: {payload.return_order_number || '—'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {payload.client_name || '—'}
+              </p>
+              {payload.client_phone && (
+                <p className="text-[10px] text-muted-foreground/60 font-mono">
+                  {formatPhone(payload.client_phone)}
+                </p>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold whitespace-nowrap">
+                {new Intl.NumberFormat('uk-UA', {
+                  maximumFractionDigits: 0,
+                }).format(Number(payload.return_total_refund || 0))}{' '}
+                ₴
+              </p>
+              <Badge
+                className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+              >
+                {payload.return_status
+                  ? t(`return_${payload.return_status}`)
+                  : '—'}
+              </Badge>
+            </div>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label={t('requests_fields_phone')}
+            value={
+              payload.client_phone ? formatPhone(payload.client_phone) : null
+            }
+          />
+          <Field
+            label={tb('contact_last_name')}
+            value={payload.client_last_name || null}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label={tb('contact_first_name')}
+            value={payload.client_first_name || null}
+          />
+          <Field
+            label={tb('contact_middle_name')}
+            value={payload.client_middle_name || null}
+          />
+        </div>
+        <Field
+          label={t('requests_fields_email')}
+          value={payload.client_email || null}
+        />
+      </div>
+    )
   } else {
     for (const [key, value] of Object.entries(payload)) {
       rows.push({
@@ -356,6 +567,28 @@ export default function RequestDetailModal({
 
   const formCode = isCreate ? createCategory?.code : detail?.category?.code
 
+  // Роль выбранного клиента — бейдж рядом с заголовком левой колонки
+  const selectedClientRole =
+    formCode === 'ban_unban'
+      ? (isCreate || isEditing ? form.payload?.role : detail?.payload?.role) ||
+        null
+      : null
+
+  const descriptionBlock =
+    detail?.description && detail.category?.code !== 'ban_unban' ? (
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-sm">
+          {detail.category?.code === 'order_delete' ||
+          detail.category?.code === 'pricing_change'
+            ? t('requests_fields_reason')
+            : t('requests_desc_label')}
+        </p>
+        <p className="text-sm whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
+          {detail.description}
+        </p>
+      </div>
+    ) : null
+
   const isAdmin = user?.role === 'admin'
   const canEditRequest = can(user, 'requests.edit')
   const canEditDetail =
@@ -393,7 +626,16 @@ export default function RequestDetailModal({
       toast.success(t(okKey))
     },
     onError: (err: any) => {
+      const status = err?.response?.status
       const detailMsg = err?.response?.data?.detail
+      if (status === 409) {
+        toast.warning(
+          typeof detailMsg === 'string'
+            ? detailMsg
+            : t('protection_cannot_ban_admin'),
+        )
+        return
+      }
       toast.error(
         typeof detailMsg === 'string' ? detailMsg : t('requests_action_error'),
       )
@@ -420,14 +662,30 @@ export default function RequestDetailModal({
       payload.action = payload.action || 'ban'
       payload.reason = String(payload.reason || '').trim() || null
     }
+    if (formCode === 'pricing_change') {
+      const target =
+        payload.pricing_target === 'category' ? 'category' : 'general'
+      payload.pricing_target = target
+      payload.pricing_category_id =
+        target === 'category' ? Number(payload.pricing_category_id) : null
+      payload.margin_percent = Number(payload.margin_percent ?? 0)
+      payload.pricing_old_margin =
+        payload.pricing_old_margin == null
+          ? null
+          : Number(payload.pricing_old_margin)
+    }
     return payload
   }
 
   const buildFormDescription = () => {
-    if (formCode === 'b2b_registration' || formCode === 'timesheet_manual')
+    // У автоматизированных категорий описание не используется:
+    // у защиты причина живёт только в payload.reason.
+    if (
+      formCode === 'b2b_registration' ||
+      formCode === 'timesheet_manual' ||
+      formCode === 'ban_unban'
+    )
       return null
-    if (formCode === 'ban_unban')
-      return String(form.payload.reason || '').trim() || null
     return form.description.trim() || null
   }
 
@@ -516,6 +774,7 @@ export default function RequestDetailModal({
 
   const changeCreateCategory = (id: string) => {
     setCreateCategoryId(id)
+    setCreateAssigneeId('none')
     setForm({ description: '', payload: {} })
   }
 
@@ -630,6 +889,18 @@ export default function RequestDetailModal({
     categoryTakeRoles.length === 0 ||
     categoryTakeRoles.includes(user?.role || '')
   const canManage = can(user, 'requests.manage')
+  // Назначать исполнителя вручную может только admin, и только если
+  // настройки категории разрешают его роль и роль исполнителя.
+  const assigneeRoles =
+    (isCreate ? createCategory?.take_roles : detail?.category?.take_roles) || []
+  const assigneeOptions = assignees.filter(
+    (a) =>
+      assigneeRoles.length === 0 ||
+      (a.role != null && assigneeRoles.includes(a.role)),
+  )
+  const canAssignInCategory =
+    user?.role === 'admin' &&
+    (assigneeRoles.length === 0 || assigneeRoles.includes('admin'))
   const openStatuses = ['new', 'in_progress']
   const isOpen = !!detail && openStatuses.includes(detail.status)
   const isClosed = detail?.status === 'closed'
@@ -902,43 +1173,48 @@ export default function RequestDetailModal({
                       </SelectContent>
                     </Select>
                   )}
-                  {/* Исполнитель — назначает тот, кто обрабатывает заявку */}
-                  {canProcess && !isClosed && !isEditing && (
-                    <Select
-                      value={
-                        detail.assignee
-                          ? String(detail.assignee.user_id)
-                          : 'none'
-                      }
-                      onValueChange={(v) => {
-                        if (!reqPerm('requests.process')) return
-                        actionMutation.mutate({
-                          url: `/admin/requests/${activeId}/assign`,
-                          body: {
-                            assignee_id: v === 'none' ? null : Number(v),
-                          },
-                          okKey: 'requests_assigned_ok',
-                        })
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px] h-10">
-                        {/* Подпись-лейбл: имя исполнителя показываем рядом с бейджем */}
-                        <SelectValue>{t('requests_col_assignee')}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">
-                          <span className="text-muted-foreground">
-                            {t('requests_assignee_none')}
-                          </span>
-                        </SelectItem>
-                        {assignees.map((a) => (
-                          <SelectItem key={a.id} value={String(a.id)}>
-                            {a.name}
+                  {/* Исполнитель — вручную назначает только администратор */}
+                  {canProcess &&
+                    !isClosed &&
+                    !isEditing &&
+                    canAssignInCategory && (
+                      <Select
+                        value={
+                          detail.assignee
+                            ? String(detail.assignee.user_id)
+                            : 'none'
+                        }
+                        onValueChange={(v) => {
+                          if (!reqPerm('requests.process')) return
+                          actionMutation.mutate({
+                            url: `/admin/requests/${activeId}/assign`,
+                            body: {
+                              assignee_id: v === 'none' ? null : Number(v),
+                            },
+                            okKey: 'requests_assigned_ok',
+                          })
+                        }}
+                      >
+                        <SelectTrigger className="w-[180px] h-10">
+                          {/* Подпись-лейбл: имя исполнителя показываем рядом с бейджем */}
+                          <SelectValue>
+                            {t('requests_col_assignee')}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            <span className="text-muted-foreground">
+                              {t('requests_assignee_none')}
+                            </span>
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                          {assigneeOptions.map((a) => (
+                            <SelectItem key={a.id} value={String(a.id)}>
+                              {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   {/* Роль и имя исполнителя — как «кто изменил» в модалке заказа */}
                   {detail.assignee && (
                     <div className="flex flex-col items-end gap-0.5">
@@ -956,7 +1232,7 @@ export default function RequestDetailModal({
                   )}
                 </div>
               )}
-              {isCreate && (
+              {isCreate && canAssignInCategory && (
                 <div className="flex items-center gap-3 shrink-0">
                   <Select
                     value={createAssigneeId}
@@ -971,7 +1247,7 @@ export default function RequestDetailModal({
                           {t('requests_assignee_none')}
                         </span>
                       </SelectItem>
-                      {assignees.map((a) => (
+                      {assigneeOptions.map((a) => (
                         <SelectItem key={a.id} value={String(a.id)}>
                           {a.name}
                         </SelectItem>
@@ -996,10 +1272,19 @@ export default function RequestDetailModal({
               }}
             >
               <div className="border rounded-lg p-4 flex flex-col min-h-0">
-                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                  <Pencil className="w-5 h-5" />
-                  {t('requests_details_title')}
-                </h4>
+                <div className="flex items-center justify-between gap-2 flex-shrink-0">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <Pencil className="w-5 h-5" />
+                    {t('requests_details_title')}
+                  </h4>
+                  {selectedClientRole && (
+                    <Badge
+                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                    >
+                      {t(selectedClientRole)}
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3">
                   <RequestFormFields
                     inline
@@ -1025,10 +1310,19 @@ export default function RequestDetailModal({
               }}
             >
               <div className="border rounded-lg p-4 flex flex-col min-h-0">
-                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                  <Pencil className="w-5 h-5" />
-                  {t('requests_edit_title')}
-                </h4>
+                <div className="flex items-center justify-between gap-2 flex-shrink-0">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <Pencil className="w-5 h-5" />
+                    {t('requests_edit_title')}
+                  </h4>
+                  {selectedClientRole && (
+                    <Badge
+                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                    >
+                      {t(selectedClientRole)}
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <Field
@@ -1101,21 +1395,33 @@ export default function RequestDetailModal({
                             : 'bg-blue-500'
                   const IconComponent = EVENT_ICON[e.event_type] ?? Timer
                   const detailsText = formatEventDetails(e)
+                  const isSystem =
+                    e.event_type === 'automation' ||
+                    e.author_group === 'system' ||
+                    (!e.author_group && !e.author_name)
                   return (
                     <div key={e.id} className="relative pb-6">
                       <div
                         className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
                       />
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {e.author_group && (
+                        {isSystem ? (
+                          <Badge
+                            className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
+                          >
+                            {t('system')}
+                          </Badge>
+                        ) : e.author_group ? (
                           <Badge
                             className={`${ROLE_BADGE_COLORS[e.author_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
                           >
                             {t(e.author_group)}
                           </Badge>
-                        )}
+                        ) : null}
                         <span className="font-medium">
-                          {e.author_name || t('system_actor')}
+                          {isSystem
+                            ? t('system_actor')
+                            : e.author_name || t('system_actor')}
                         </span>
                         <span className="text-sm text-muted-foreground tabular-nums">
                           {fmtDate(e.created_at, true)}
@@ -1146,10 +1452,19 @@ export default function RequestDetailModal({
             >
               {/* Блок 1: детали и данные заявки */}
               <div className="border rounded-lg p-4 flex flex-col min-h-0">
-                <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0">
-                  <Building2 className="w-5 h-5" />
-                  {t('requests_details_title')}
-                </h4>
+                <div className="flex items-center justify-between gap-2 flex-shrink-0">
+                  <h4 className="font-semibold text-lg flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    {t('requests_details_title')}
+                  </h4>
+                  {selectedClientRole && (
+                    <Badge
+                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                    >
+                      {t(selectedClientRole)}
+                    </Badge>
+                  )}
+                </div>
 
                 <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
@@ -1181,21 +1496,36 @@ export default function RequestDetailModal({
                     />
                   </div>
 
-                  {detail.description && (
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-sm">
-                        {t('requests_desc_label')}
-                      </p>
-                      <p className="text-sm whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
-                        {detail.description}
-                      </p>
-                    </div>
+                  {detail.category?.code !== 'return_change' &&
+                    detail.category?.code !== 'order_delete' &&
+                    detail.category?.code !== 'support_edit' &&
+                    detail.category?.code !== 'pricing_change' &&
+                    descriptionBlock}
+
+                  {detail.category?.code === 'ban_unban' ? (
+                    <RequestFormFields
+                      inline
+                      readOnly
+                      code={detail.category.code}
+                      values={{
+                        description: detail.description || '',
+                        payload: detail.payload || {},
+                      }}
+                      onChange={() => {}}
+                      staff={assignees}
+                    />
+                  ) : (
+                    <PayloadCard
+                      code={detail.category?.code}
+                      payload={detail.payload}
+                    />
                   )}
 
-                  <PayloadCard
-                    code={detail.category?.code}
-                    payload={detail.payload}
-                  />
+                  {(detail.category?.code === 'return_change' ||
+                    detail.category?.code === 'order_delete' ||
+                    detail.category?.code === 'support_edit' ||
+                    detail.category?.code === 'pricing_change') &&
+                    descriptionBlock}
                 </div>
               </div>
 

@@ -305,7 +305,7 @@ export default function SupportAdminPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по имени, телефону, email..."
+            placeholder="Поиск по номеру, имени, телефону, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-10"

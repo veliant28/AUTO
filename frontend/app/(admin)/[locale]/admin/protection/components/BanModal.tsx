@@ -206,6 +206,14 @@ export default function BanModal({
       onSuccess?.()
     },
     onError: (err: any) => {
+      if (err?.response?.status === 409) {
+        toast.warning(
+          typeof err?.response?.data?.detail === 'string'
+            ? err.response.data.detail
+            : t('protection_cannot_ban_admin'),
+        )
+        return
+      }
       toast.error(getTranslatedError(t, err, 'protection_ban_error'))
     },
   })
@@ -219,7 +227,7 @@ export default function BanModal({
       return
     }
     if (selectedUser?.role === 'admin') {
-      toast.error(t('protection_cannot_ban_admin'))
+      toast.warning(t('protection_cannot_ban_admin'))
       return
     }
     banMutation.mutate({ email: searchQuery.trim(), reason: reason.trim() })

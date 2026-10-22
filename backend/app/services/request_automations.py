@@ -5,6 +5,8 @@
 - timesheet_manual: применяет часы в табеле (та же запись, что ручная правка,
   с записью в историю правок).
 - ban_unban: применяет бан или разбан через механизмы защиты.
+- pricing_change: меняет общую наценку или наценку одной категории и ставит
+  в очередь применение наценки (та же задача, что на странице «Цена»).
 
 Автоматизация выполняется в момент одобрения админом; ошибки применения
 показываются админу (AutomationError), заявка при этом не закрывается.
@@ -13,19 +15,26 @@ import logging
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import List, Optional, Tuple
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
-from app.models import Role, User
+from app.core.order_rules import can_delete_order, can_edit_order
+from app.models import Order, OrderChangeLog, Role, User
 from app.models.attendance import TimesheetOverride, TimesheetOverrideLog
 from app.models.protection import BanRecord, ProtectionEvent, Whitelist
+from app.services.ban_service import add_ban_ips, collect_known_ips
+from app.services.order_service import delete_order_cascade
+from app.services.permission_service import user_has_permission
 from app.models.requests import (
     CATEGORY_B2B_REGISTRATION,
     CATEGORY_BAN_UNBAN,
+    CATEGORY_ORDER_DELETE,
+    CATEGORY_ORDER_FINAL_STATUS,
+    CATEGORY_PRICING_CHANGE,
     CATEGORY_TIMESHEET_MANUAL,
     Request,
 )
@@ -35,6 +44,10 @@ logger = logging.getLogger(__name__)
 
 class AutomationError(Exception):
     """Автоматизация не смогла примениться — причина показывается админу."""
+
+
+class ProtectedUserError(AutomationError):
+    """Действие запрещено для защищённой учётной записи (администратор)."""
 
 
 @dataclass
@@ -55,6 +68,12 @@ def apply_approval(db: Session, request: Request, actor: User) -> AutomationResu
         return _approve_timesheet(db, request, actor)
     if code == CATEGORY_BAN_UNBAN:
         return _approve_ban_unban(db, request, actor)
+    if code == CATEGORY_ORDER_FINAL_STATUS:
+        return _approve_order_change(db, request, actor)
+    if code == CATEGORY_ORDER_DELETE:
+        return _approve_order_delete(db, request, actor)
+    if code == CATEGORY_PRICING_CHANGE:
+        return _approve_pricing_change(db, request, actor)
     return AutomationResult()
 
 
@@ -205,8 +224,8 @@ def _approve_ban_unban(db: Session, request: Request, actor: User) -> Automation
     user_id = payload.get("user_id")
     email = (payload.get("email") or "").strip() or None
 
-    if action not in ("ban", "unban"):
-        raise AutomationError("Не указано действие: ban или unban")
+    if action not in ("ban", "unban", "whitelist"):
+        raise AutomationError("Не указано действие: ban, unban или whitelist")
 
     user = None
     if user_id:
@@ -221,6 +240,11 @@ def _approve_ban_unban(db: Session, request: Request, actor: User) -> Automation
     now = datetime.utcnow()
 
     if action == "ban":
+        # Администратора нельзя блокировать ни через заявку, ни через API
+        if user and user.role and user.role.name == "admin":
+            raise ProtectedUserError("Нельзя заблокировать администратора")
+        if user and user.id == actor.id:
+            raise ProtectedUserError("Нельзя заблокировать самого себя")
         if not reason:
             raise AutomationError("Для бана нужна причина")
 
@@ -263,18 +287,26 @@ def _approve_ban_unban(db: Session, request: Request, actor: User) -> Automation
             if last_event:
                 last_ip = last_event[0]
 
-        db.add(
-            BanRecord(
-                user_id=user_id,
-                email=email,
-                ip_address=last_ip,
-                reason=reason,
-                banned_by_id=actor.id,
-                banned_at=now,
-                is_active=True,
-                block_count=block_count,
-                ban_type="manual",
-            )
+        ban = BanRecord(
+            user_id=user_id,
+            email=email,
+            ip_address=last_ip,
+            reason=reason,
+            banned_by_id=actor.id,
+            banned_at=now,
+            is_active=True,
+            block_count=block_count,
+            ban_type="manual",
+        )
+        db.add(ban)
+        db.flush()
+        # Блокируем все известные IP клиента, а не только последний
+        add_ban_ips(
+            db,
+            ban,
+            collect_known_ips(
+                db, user_id=user_id, email=email, fallback_ip=last_ip
+            ),
         )
         if user:
             user.is_active = False
@@ -291,6 +323,68 @@ def _approve_ban_unban(db: Session, request: Request, actor: User) -> Automation
         return AutomationResult(
             events=[f"применён бан: {email or user_id} — {reason}"]
         )
+
+    if action == "whitelist":
+        # Разбанить, если активный бан есть, и добавить в белый список
+        ban_conditions = []
+        if user_id:
+            ban_conditions.append(BanRecord.user_id == user_id)
+        if email:
+            ban_conditions.append(BanRecord.email == email)
+        active_bans = (
+            db.query(BanRecord)
+            .filter(BanRecord.is_active == True, or_(*ban_conditions))
+            .all()
+            if ban_conditions
+            else []
+        )
+        for ban in active_bans:
+            ban.is_active = False
+            ban.unbanned_at = now
+        if user:
+            user.is_active = True
+
+        wl_conditions = []
+        if user_id:
+            wl_conditions.append(Whitelist.user_id == user_id)
+        if email:
+            wl_conditions.append(Whitelist.email == email)
+        existing_wl = (
+            db.query(Whitelist).filter(or_(*wl_conditions)).first()
+            if wl_conditions
+            else None
+        )
+        if not existing_wl:
+            db.add(
+                Whitelist(
+                    user_id=user_id,
+                    email=email,
+                    reason=reason or None,
+                    added_by_id=actor.id,
+                    added_at=now,
+                )
+            )
+
+        db.add(
+            ProtectionEvent(
+                user_id=user_id,
+                email=email,
+                ip_address=(payload.get("last_ip") or "").strip() or None,
+                event_type="manual_whitelist",
+                description="Added to whitelist by approved request"
+                + (f". Reason: {reason}" if reason else ""),
+                created_at=now,
+            )
+        )
+
+        events = []
+        if active_bans:
+            events.append(f"применён разбан: {email or user_id}")
+        if existing_wl:
+            events.append(f"уже в белом списке: {email or user_id}")
+        else:
+            events.append(f"добавлен в белый список: {email or user_id}")
+        return AutomationResult(events=events)
 
     # unban
     ban_q = db.query(BanRecord).filter(BanRecord.is_active == True)
@@ -318,3 +412,246 @@ def _approve_ban_unban(db: Session, request: Request, actor: User) -> Automation
         )
     )
     return AutomationResult(events=[f"применён разбан: {ban.email or ban.user_id}"])
+
+
+# ── Изменение заказа ────────────────────────────────────────────────────────
+
+_ORDER_CHANGE_LABELS = {
+    "phone": "телефон",
+    "last_name": "фамилия",
+    "first_name": "имя",
+    "middle_name": "отчество",
+    "delivery_type": "доставка",
+    "delivery_city": "город",
+    "delivery_warehouse": "отделение",
+    "delivery_street_label": "улица",
+    "delivery_house": "дом",
+    "delivery_apartment": "квартира",
+}
+
+_ORDER_CHANGE_FIELDS = [
+    "phone",
+    "last_name",
+    "first_name",
+    "middle_name",
+    "delivery_type",
+    "delivery_city",
+    "delivery_warehouse",
+    "delivery_city_ref",
+    "delivery_settlement_ref",
+    "delivery_city_label",
+    "delivery_warehouse_ref",
+    "delivery_warehouse_label",
+    "delivery_street_ref",
+    "delivery_street_label",
+    "delivery_house",
+    "delivery_apartment",
+]
+
+
+def _format_percent(value: Decimal) -> str:
+    return format(value.normalize(), "f")
+
+
+def _approve_pricing_change(
+    db: Session, request: Request, actor: User
+) -> AutomationResult:
+    """Применить наценку из заявки: общую или одной категории.
+
+    Для категории 0% означает снятие персональной наценки — товары категории
+    снова используют общую наценку (как при сохранении таблицы на странице
+    «Цена»). После изменения правила запускается та же задача применения,
+    что и по кнопке на странице «Цена».
+    """
+    from app.models.parts import PartCategory
+    from app.models.pricing import PriceRuleHistory
+    from app.services.pricing_service import (
+        get_or_create_category_rule,
+        get_or_create_general_rule,
+        update_rule,
+    )
+
+    payload = request.payload or {}
+    target = payload.get("pricing_target")
+    if target not in ("general", "category"):
+        raise AutomationError("не выбрана общая наценка или категория")
+
+    raw_margin = payload.get("margin_percent")
+    if raw_margin is None or isinstance(raw_margin, bool):
+        raise AutomationError("не указана наценка")
+    try:
+        margin = Decimal(str(raw_margin))
+    except (InvalidOperation, TypeError, ValueError):
+        raise AutomationError("некорректная наценка")
+    if not margin.is_finite() or margin < 0 or margin > 100:
+        raise AutomationError("наценка должна быть от 0 до 100%")
+
+    if target == "general":
+        rule = get_or_create_general_rule(db)
+        target_name = "Общая наценка"
+        old_margin = rule.margin_percent or Decimal(0)
+        rule.is_active = True
+        update_rule(db, rule, margin)
+        db.commit()
+    else:
+        try:
+            category_id = int(payload.get("pricing_category_id"))
+        except (TypeError, ValueError):
+            raise AutomationError("не выбрана категория")
+        category = (
+            db.query(PartCategory)
+            .filter(PartCategory.id == category_id)
+            .first()
+        )
+        if not category:
+            raise AutomationError("категория не найдена")
+
+        target_name = category.name
+        rule = get_or_create_category_rule(db, category.id)
+        old_margin = rule.margin_percent or Decimal(0)
+        if margin == 0:
+            if rule.margin_percent != 0:
+                db.add(
+                    PriceRuleHistory(
+                        price_rule_id=rule.id,
+                        old_percent=rule.margin_percent,
+                        new_percent=Decimal(0),
+                    )
+                )
+            rule.margin_percent = Decimal(0)
+            rule.is_active = False
+            db.commit()
+        else:
+            rule.is_active = True
+            update_rule(db, rule, margin)
+            db.commit()
+
+    events = [
+        f"наценка «{target_name}»: "
+        f"{_format_percent(old_margin)}% → {_format_percent(margin)}%",
+    ]
+    try:
+        from app.workers.tasks.pricing_tasks import apply_margins_task
+
+        task = apply_margins_task.delay()
+        events.append(
+            f"применение наценки поставлено в очередь (задача {task.id})"
+        )
+    except Exception as exc:  # брокер недоступен — решение не откатываем
+        logger.error(
+            "Failed to enqueue pricing apply after request %s: %s",
+            request.id,
+            exc,
+        )
+        events.append(
+            "не удалось поставить применение наценки в очередь — "
+            "примените вручную на странице «Цена»"
+        )
+
+    return AutomationResult(events=events)
+
+
+def _approve_order_change(
+    db: Session, request: Request, actor: User
+) -> AutomationResult:
+    """Применить изменения получателя и доставки из одобренной заявки."""
+    payload = request.payload or {}
+    raw_order_id = payload.get("order_id")
+    if not raw_order_id:
+        raise AutomationError("В заявке не выбран заказ")
+    try:
+        order_id = int(raw_order_id)
+    except (TypeError, ValueError):
+        raise AutomationError("Некорректный номер заказа")
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise AutomationError("Заказ не найден")
+
+    if not user_has_permission(db, actor, "orders.edit_status"):
+        raise AutomationError("Нет прав на изменение заказа")
+
+    if not can_edit_order(order, actor):
+        raise AutomationError(
+            "Заказ в этом статусе может изменить только администратор"
+        )
+
+    now = datetime.utcnow()
+    changes = []
+    for field in _ORDER_CHANGE_FIELDS:
+        if field not in payload:
+            continue
+        old = getattr(order, field, None)
+        new = payload.get(field)
+        if (old or "") != (new or ""):
+            label = _ORDER_CHANGE_LABELS.get(field)
+            if label:
+                changes.append(f"{label}: {old or '—'} → {new or '—'}")
+        setattr(order, field, new)
+
+    # Изменение сделала автоматизация — в истории и хедере будет «Система»
+    order.updated_by_user_id = None
+    order.updated_by_name = None
+    order.updated_by_group = "system"
+    order.updated_at = now
+
+    request_label = request.number or f"#{request.id}"
+    details = "; ".join(changes) if changes else "данные не изменились"
+    db.add(
+        OrderChangeLog(
+            order_id=order.id,
+            user_id=None,
+            user_name=None,
+            user_group="system",
+            action="edit",
+            details=f"Изменение по заявке {request_label}: {details}",
+            created_at=now,
+        )
+    )
+    return AutomationResult(
+        events=[
+            f"изменён заказ {order.order_number or order.id} "
+            f"по заявке {request_label}: {details}"
+        ]
+    )
+
+
+# ── Удаление заказа ─────────────────────────────────────────────────────────
+
+def _approve_order_delete(
+    db: Session, request: Request, actor: User
+) -> AutomationResult:
+    """Удалить заказ по одобренной заявке (права orders.delete)."""
+    payload = request.payload or {}
+    raw_order_id = payload.get("order_id")
+    if not raw_order_id:
+        raise AutomationError("В заявке не выбран заказ")
+    try:
+        order_id = int(raw_order_id)
+    except (TypeError, ValueError):
+        raise AutomationError("Некорректный номер заказа")
+
+    reason = (request.description or "").strip()
+    if not reason:
+        raise AutomationError("Укажите причину удаления заказа")
+
+    if not user_has_permission(db, actor, "orders.delete"):
+        raise AutomationError("Нет прав на удаление заказа")
+
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise AutomationError("Заказ не найден")
+
+    if not can_delete_order(order, actor):
+        raise AutomationError(
+            "Заказ в этом статусе может удалить только администратор"
+        )
+
+    order_label = order.order_number or f"#{order.id}"
+    request_label = request.number or f"#{request.id}"
+    delete_order_cascade(db, order)
+    return AutomationResult(
+        events=[
+            f"удалён заказ {order_label} по заявке {request_label}: {reason}"
+        ]
+    )

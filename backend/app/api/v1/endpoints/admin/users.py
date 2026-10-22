@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
@@ -7,11 +8,86 @@ from app.schemas.admin_schemas import (
 )
 from app.schemas.user_schemas import AdminUserCreate, AdminUserUpdate
 from app.models import User, Role
+from app.models.presence import ClientIp
+from app.models.protection import BanRecord, ProtectionEvent
 from app.services.client_index import compute_client_index_stats_bulk
 from app.core.security import get_password_hash
 from datetime import datetime
 
 router = APIRouter()
+
+
+def _last_ip_map(db: Session, user_ids: list[int]) -> dict[int, str]:
+    """Последний известный IP каждого пользователя.
+
+    Берём самый свежий из трёх источников: визит на сайт (client_ips,
+    пишется по WS-присутствию), последний бан или событие защиты.
+    """
+    if not user_ids:
+        return {}
+
+    best: dict[int, tuple] = {}
+
+    def consider(uid: int | None, ip: str | None, ts) -> None:
+        if not uid or not ip or not ts:
+            return
+        current = best.get(uid)
+        if current is None or ts > current[0]:
+            best[uid] = (ts, ip)
+
+    keys = [f"u{uid}" for uid in user_ids]
+    latest_visit = (
+        db.query(
+            ClientIp.client_key.label("key"),
+            func.max(ClientIp.last_seen).label("ts"),
+        )
+        .filter(ClientIp.client_key.in_(keys))
+        .group_by(ClientIp.client_key)
+        .subquery()
+    )
+    for key, ip, ts in (
+        db.query(ClientIp.client_key, ClientIp.ip, ClientIp.last_seen)
+        .join(
+            latest_visit,
+            and_(
+                ClientIp.client_key == latest_visit.c.key,
+                ClientIp.last_seen == latest_visit.c.ts,
+            ),
+        )
+        .all()
+    ):
+        try:
+            consider(int(key[1:]), ip, ts)
+        except (TypeError, ValueError):
+            continue
+
+    for model in (BanRecord, ProtectionEvent):
+        time_col = (
+            BanRecord.banned_at if model is BanRecord else ProtectionEvent.created_at
+        )
+        latest = (
+            db.query(
+                model.user_id.label("uid"),
+                func.max(time_col).label("ts"),
+            )
+            .filter(
+                model.user_id.in_(user_ids),
+                model.ip_address.isnot(None),
+            )
+            .group_by(model.user_id)
+            .subquery()
+        )
+        for uid, ip, ts in (
+            db.query(model.user_id, model.ip_address, time_col)
+            .join(
+                latest,
+                and_(model.user_id == latest.c.uid, time_col == latest.c.ts),
+            )
+            .all()
+        ):
+            consider(uid, ip, ts)
+
+    return {uid: ip for uid, (_, ip) in best.items()}
 
 
 @router.get("/users", response_model=AdminUserListResponse)
@@ -25,7 +101,10 @@ async def list_users(
     """Список пользователей с пагинацией и поиском."""
     query = db.query(User)
     if search:
-            like = f"%{search}%"
+        # Каждое слово должно найтись хотя бы в одном поле: так работают
+        # составные запросы вида «Фамилия Имя», «Имя телефон», «email фамилия».
+        for token in search.split():
+            like = f"%{token}%"
             query = query.filter(
                 User.email.ilike(like) |
                 User.full_name.ilike(like) |
@@ -40,6 +119,7 @@ async def list_users(
     # та же, что в карточке клиента и модалке заказа
     user_ids = [u.id for u in users]
     stats_map = compute_client_index_stats_bulk(db, user_ids)
+    last_ip_map = _last_ip_map(db, user_ids)
 
     items = []
     for u in users:
@@ -54,6 +134,7 @@ async def list_users(
             role=u.role.name,
             is_active=u.is_active,
             phone=u.phone,
+            last_ip=last_ip_map.get(u.id),
             created_at=u.created_at,
             orders_delivered=stats.get("delivered_count", 0),
             orders_cancelled=stats.get("cancelled_count", 0),

@@ -6,12 +6,18 @@ import time
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.models import User
-from app.models.protection import BanRecord, ProtectionEvent, Whitelist
+from app.models.presence import ClientIp
+from app.models.protection import BanIp, BanRecord, ProtectionEvent, Whitelist
+from app.services.ban_service import (
+    add_ban_ips,
+    collect_known_ips,
+    sync_ban_ips,
+)
 from app.schemas.protection_schemas import (
     BanListResponse, BanRecordResponse, BanCreateRequest, UnbanResponse,
     BanStatsResponse, ProtectionEventResponse,
     WhitelistListResponse, WhitelistResponse, WhitelistCreateRequest,
-    DashboardStatsResponse,
+    DashboardStatsResponse, BanIpItem, BanIpListResponse,
 )
 from app.core.redis_client import redis_client
 from pydantic import BaseModel
@@ -26,6 +32,17 @@ def get_user_name(user: User) -> str:
     if user.full_name:
         return user.full_name
     return user.email
+
+
+def user_search_filter(like: str):
+    """Совпадение пользователя по фамилии, имени, телефону или email."""
+    return (
+        User.email.ilike(like) |
+        User.full_name.ilike(like) |
+        User.first_name.ilike(like) |
+        User.last_name.ilike(like) |
+        User.phone.ilike(like)
+    )
 
 
 # ─── Blacklist ───────────────────────────────────────────────────────────────
@@ -47,12 +64,16 @@ async def list_blacklist(
         query = query.filter(BanRecord.is_active == True)
     
     if search:
-        like = f"%{search}%"
-        query = query.filter(
-            BanRecord.email.ilike(like) |
-            BanRecord.ip_address.ilike(like) |
-            BanRecord.reason.ilike(like)
-        )
+        # Каждое слово должно найтись хотя бы в одном поле записи или
+        # связанного пользователя: «Фамилия Имя», «Имя телефон» и т.п.
+        for token in search.split():
+            like = f"%{token}%"
+            query = query.filter(
+                BanRecord.email.ilike(like) |
+                BanRecord.ip_address.ilike(like) |
+                BanRecord.reason.ilike(like) |
+                BanRecord.user.has(user_search_filter(like))
+            )
     
     total = query.count()
     records = (
@@ -147,6 +168,12 @@ async def ban_user(
     
     email = data.email or (user.email if user else None)
     user_id = user.id if user else None
+
+    # Администратора нельзя банить и через прямой API
+    if user and user.role and user.role.name == "admin":
+        raise HTTPException(409, "Нельзя заблокировать администратора")
+    if user and user.id == current_user.id:
+        raise HTTPException(409, "Нельзя заблокировать самого себя")
     
     # Check if already actively banned
     existing = db.query(BanRecord).filter(
@@ -204,6 +231,13 @@ async def ban_user(
         ban_type="manual",
     )
     db.add(ban)
+    db.flush()
+    # Блокируем не только последний IP, но и все известные IP пользователя
+    add_ban_ips(
+        db,
+        ban,
+        collect_known_ips(db, user_id=user_id, email=email, fallback_ip=last_ip),
+    )
     
     # Also deactivate user if exists
     if user:
@@ -381,6 +415,93 @@ async def get_ban_stats(
     )
 
 
+@router.get("/protection/blacklist/{ban_id}/ips", response_model=BanIpListResponse)
+async def list_ban_ips(
+    ban_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("protection.view")),
+):
+    """Все известные IP клиента по бану + признак блокировки."""
+    ban = db.query(BanRecord).filter(BanRecord.id == ban_id).first()
+    if not ban:
+        raise HTTPException(404, "Ban record not found")
+
+    user = ban.user
+    if user is None and ban.email:
+        user = db.query(User).filter(User.email == ban.email).first()
+    user_id = ban.user_id or (user.id if user else None)
+    email = ban.email or (user.email if user else None)
+
+    # Активный бан дополняем всеми известными IP: список в модалке
+    # должен совпадать с тем, что реально блокируется.
+    if ban.is_active and sync_ban_ips(db, ban):
+        db.commit()
+
+    visits_map = {}
+    if user_id:
+        for row in (
+            db.query(ClientIp)
+            .filter(ClientIp.client_key == f"u{user_id}")
+            .all()
+        ):
+            visits_map[row.ip] = row
+
+    ban_ips = {
+        row.ip_address
+        for row in db.query(BanIp).filter(BanIp.ban_id == ban.id).all()
+    }
+    known = set(ban_ips) | set(visits_map)
+    if ban.ip_address:
+        known.add(ban.ip_address)
+    if user_id:
+        known.update(
+            ip
+            for (ip,) in db.query(ProtectionEvent.ip_address)
+            .filter(
+                ProtectionEvent.user_id == user_id,
+                ProtectionEvent.ip_address.isnot(None),
+            )
+            .all()
+            if ip
+        )
+    if email:
+        known.update(
+            ip
+            for (ip,) in db.query(ProtectionEvent.ip_address)
+            .filter(
+                ProtectionEvent.email == email,
+                ProtectionEvent.ip_address.isnot(None),
+            )
+            .all()
+            if ip
+        )
+
+    items = []
+    for ip in known:
+        row = visits_map.get(ip)
+        items.append(
+            BanIpItem(
+                ip_address=ip,
+                first_seen=row.first_seen if row else None,
+                last_seen=row.last_seen if row else None,
+                visits=row.visits if row else 0,
+                blocked=bool(ban.is_active and ip in ban_ips),
+            )
+        )
+    items.sort(
+        key=lambda item: (
+            item.last_seen or datetime.min,
+            item.visits,
+        ),
+        reverse=True,
+    )
+    return BanIpListResponse(
+        items=items,
+        total=len(items),
+        active=ban.is_active,
+    )
+
+
 # ─── Whitelist ──────────────────────────────────────────────────────────────
 
 
@@ -396,8 +517,14 @@ async def list_whitelist(
     query = db.query(Whitelist)
     
     if search:
-        like = f"%{search}%"
-        query = query.filter(Whitelist.email.ilike(like))
+        # Поиск по email записи и по данным связанного пользователя:
+        # фамилия, имя, телефон (каждое слово — в любом из полей).
+        for token in search.split():
+            like = f"%{token}%"
+            query = query.filter(
+                Whitelist.email.ilike(like) |
+                Whitelist.user.has(user_search_filter(like))
+            )
     
     total = query.count()
     records = (

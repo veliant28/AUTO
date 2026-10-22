@@ -15,6 +15,11 @@ from sqlalchemy.orm import Session
 from app.core.redis_client import redis_client
 from app.models.presence import PresenceSession, ClientIp
 from app.models.protection import BanRecord
+from app.services.ban_service import (
+    find_active_ban_by_ip,
+    find_active_ban_by_user,
+    record_ban_ip,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -182,21 +187,16 @@ def record_client_ip(db: Session, client_key: str, ip: Optional[str]) -> None:
 
 
 def check_ban(db: Session, ip: Optional[str], user_id: Optional[int]) -> Optional[BanRecord]:
-    """Активный бан по IP или user_id (как в ProtectionMiddleware)."""
-    if ip:
-        ban = db.query(BanRecord).filter(
-            BanRecord.is_active == True,
-            BanRecord.ip_address == ip,
-        ).first()
-        if ban:
-            return ban
-    if user_id:
-        ban = db.query(BanRecord).filter(
-            BanRecord.is_active == True,
-            BanRecord.user_id == user_id,
-        ).first()
-        if ban:
-            return ban
+    """Активный бан по IP (BanRecord или ban_ips) или user_id."""
+    ban = find_active_ban_by_ip(db, ip)
+    if ban:
+        return ban
+    ban = find_active_ban_by_user(db, user_id)
+    if ban:
+        # Забаненный аккаунт подключается с нового IP — запоминаем его
+        if ip and record_ban_ip(db, ban, ip):
+            db.commit()
+        return ban
     return None
 
 

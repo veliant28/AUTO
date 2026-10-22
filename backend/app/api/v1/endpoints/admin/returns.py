@@ -4,11 +4,16 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
+from app.core.return_rules import (
+    can_change_return_status,
+    can_edit_return,
+)
 from app.models import User, Order, OrderItem
 from app.models.returns import ReturnRequest, ReturnItem, ReturnChangeLog, ReturnStatus
 from app.services.notifications import send_telegram_notification, send_customer_telegram_notification
@@ -183,19 +188,29 @@ async def list_returns(
 
     if search:
         like = f"%{search}%"
+        conditions = [
+            ReturnRequest.return_number.ilike(like),
+            ReturnRequest.return_phone.ilike(like),
+            ReturnRequest.return_last_name.ilike(like),
+            ReturnRequest.return_first_name.ilike(like),
+            ReturnRequest.return_middle_name.ilike(like),
+            ReturnRequest.order.has(Order.order_number.ilike(like)),
+            ReturnRequest.order.has(Order.phone.ilike(like)),
+            ReturnRequest.order.has(Order.full_name.ilike(like)),
+            ReturnRequest.order.has(Order.last_name.ilike(like)),
+            ReturnRequest.order.has(Order.first_name.ilike(like)),
+            ReturnRequest.user.has(User.full_name.ilike(like)),
+            ReturnRequest.user.has(User.email.ilike(like)),
+            ReturnRequest.user.has(User.phone.ilike(like)),
+        ]
         try:
             search_id = int(search)
-            query = query.filter(
-                (ReturnRequest.id == search_id) |
-                (ReturnRequest.return_number.ilike(like))
-            )
-        except ValueError:
-            query = query.filter(
-                (ReturnRequest.return_number.ilike(like)) |
-                (ReturnRequest.order.has(Order.order_number.ilike(like))) |
-                (ReturnRequest.user.has(User.full_name.ilike(like))) |
-                (ReturnRequest.user.has(User.email.ilike(like)))
-            )
+            # id в PostgreSQL — 32-битный integer; телефон может быть длиннее
+            if 0 <= search_id <= 2_147_483_647:
+                conditions.append(ReturnRequest.id == search_id)
+        except (TypeError, ValueError):
+            pass
+        query = query.filter(or_(*conditions))
 
     total = query.count()
 
@@ -245,6 +260,13 @@ async def update_return(
 
     if not r:
         raise HTTPException(404, "Return request not found")
+
+    role_name = current_user.role.name if current_user.role else ""
+    if not can_edit_return(r, current_user):
+        raise HTTPException(
+            403,
+            "Завершённый возврат может изменить только администратор",
+        )
 
     if data.admin_notes is not None:
         r.admin_notes = data.admin_notes
@@ -350,6 +372,14 @@ async def update_return_status(
     except ValueError:
         raise HTTPException(400, f"Invalid status: {data.status}")
 
+    old_status = r.status.value if hasattr(r.status, 'value') else str(r.status)
+    role_name = current_user.role.name if current_user.role else ""
+    if not can_change_return_status(r, current_user, new_status):
+        raise HTTPException(
+            403,
+            "Только администратор может изменить статус завершённого возврата",
+        )
+
     # Set timestamps on status transitions
     if new_status == ReturnStatus.APPROVED and r.status != ReturnStatus.APPROVED:
         r.approved_at = datetime.utcnow()
@@ -374,9 +404,7 @@ async def update_return_status(
     elif new_status == ReturnStatus.COMPLETED and r.status != ReturnStatus.COMPLETED:
         r.completed_at = datetime.utcnow()
 
-    old_status = r.status.value if hasattr(r.status, 'value') else str(r.status)
     r.status = new_status
-    role_name = current_user.role.name if current_user.role else ""
     r.updated_by_user_id = current_user.id
     r.updated_by_name = f"{current_user.last_name or ''} {current_user.first_name or ''}".strip()
     r.updated_by_group = role_name

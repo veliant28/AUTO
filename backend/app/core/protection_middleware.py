@@ -16,13 +16,20 @@ from typing import Optional
 
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.core.redis_client import redis_client
 from app.models.protection import BanRecord, ProtectionEvent, Whitelist
+from app.services.ban_service import (
+    add_ban_ips,
+    collect_known_ips,
+    find_active_ban_by_ip,
+    find_active_ban_by_user,
+    record_ban_ip,
+)
 from app.api.v1.endpoints.auth import get_client_ip, verify_token
 
 logger = logging.getLogger(__name__)
@@ -106,14 +113,13 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
             # ── Check if IP is banned ──────────────────────────────────────
             if client_ip and not is_auth_endpoint:
                 db = _get_db()
-                ip_ban = db.query(BanRecord).filter(
-                    BanRecord.is_active == True,
-                    BanRecord.ip_address == client_ip,
-                ).first()
+                ip_ban = find_active_ban_by_ip(db, client_ip)
                 if ip_ban:
-                    raise HTTPException(
+                    return JSONResponse(
                         status_code=403,
-                        detail=f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}",
+                        content={
+                            "detail": f"Ваш IP адрес заблокирован. Причина: {ip_ban.reason}"
+                        },
                     )
 
                 # Check if IP is whitelisted
@@ -136,14 +142,17 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
             if user_id and not is_auth_endpoint:
                 if db is None:
                     db = _get_db()
-                user_ban = db.query(BanRecord).filter(
-                    BanRecord.is_active == True,
-                    BanRecord.user_id == user_id,
-                ).first()
+                user_ban = find_active_ban_by_user(db, user_id)
                 if user_ban:
-                    raise HTTPException(
+                    # Забаненный аккаунт зашёл с нового IP — запоминаем его,
+                    # чтобы блокировка работала и для анонимных заходов.
+                    if client_ip and record_ban_ip(db, user_ban, client_ip):
+                        db.commit()
+                    return JSONResponse(
                         status_code=403,
-                        detail=f"Ваш аккаунт заблокирован. Причина: {user_ban.reason}",
+                        content={
+                            "detail": f"Ваш аккаунт заблокирован. Причина: {user_ban.reason}"
+                        },
                     )
 
             # ── Rate limiting with Redis ───────────────────────────────────
@@ -170,7 +179,12 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                             description=f"IP {client_ip} exceeded {settings.RATE_LIMIT_PER_MINUTE} req/min ({ip_min_count})",
                             path=path,
                         )
-                        raise HTTPException(status_code=429, detail="Слишком много запросов. Попробуйте позже.")
+                        return JSONResponse(
+                            status_code=429,
+                            content={
+                                "detail": "Слишком много запросов. Попробуйте позже."
+                            },
+                        )
 
                     # Track per-hour requests for this IP
                     ip_hour_key = REDIS_IP_HOUR.format(ip=client_ip)
@@ -188,7 +202,12 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                             description=f"IP {client_ip} exceeded {settings.RATE_LIMIT_PER_HOUR} req/hour ({ip_hour_count})",
                             path=path,
                         )
-                        raise HTTPException(status_code=429, detail="Превышен лимит запросов на час. Попробуйте позже.")
+                        return JSONResponse(
+                            status_code=429,
+                            content={
+                                "detail": "Превышен лимит запросов на час. Попробуйте позже."
+                            },
+                        )
 
                     # Track per-endpoint requests for this IP
                     endpoint_key = REDIS_IP_ENDPOINT.format(ip=client_ip, path=path)
@@ -206,7 +225,12 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                             description=f"IP {client_ip} hit {path} {endpoint_count} times/min",
                             path=path,
                         )
-                        raise HTTPException(status_code=429, detail="Слишком много запросов к этому эндпоинту.")
+                        return JSONResponse(
+                            status_code=429,
+                            content={
+                                "detail": "Слишком много запросов к этому эндпоинту."
+                            },
+                        )
 
                     # Track per-minute requests for authenticated user
                     if user_id:
@@ -225,7 +249,12 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                                 description=f"User {user_id} exceeded {(settings.RATE_LIMIT_PER_MINUTE * 2)} req/min ({user_min_count})",
                                 path=path,
                             )
-                            raise HTTPException(status_code=429, detail="Слишком много запросов. Попробуйте позже.")
+                            return JSONResponse(
+                                status_code=429,
+                                content={
+                                    "detail": "Слишком много запросов. Попробуйте позже."
+                                },
+                            )
 
                 except HTTPException:
                     raise
@@ -321,6 +350,13 @@ class ProtectionMiddleware(BaseHTTPMiddleware):
                     ban_type="auto",
                 )
                 db.add(ban)
+                db.flush()
+                # Авто-бан тоже блокирует все известные IP пользователя
+                add_ban_ips(
+                    db,
+                    ban,
+                    collect_known_ips(db, user_id=user_id, fallback_ip=ip),
+                )
 
             db.commit()
         except Exception as e:

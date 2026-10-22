@@ -197,6 +197,7 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
+  system: 'bg-black text-white dark:bg-white dark:text-black',
 }
 
 function formatPhone(phone: string | null | undefined): string {
@@ -359,6 +360,8 @@ export default function AdminReturnsPage() {
       refetchDetail()
       toast.success(t('return_status_changed'))
     },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.detail || t('error')),
   })
 
   const updateMutation = useMutation({
@@ -437,6 +440,10 @@ export default function AdminReturnsPage() {
 
   const enterEditMode = () => {
     if (!returnDetail) return
+    if (returnDetail.status === 'completed' && user?.role !== 'admin') {
+      toast.warning(t('return_edit_locked'))
+      return
+    }
     setEditMode(true)
     setShowHistory(false)
     const q: Record<number, number> = {}
@@ -839,12 +846,20 @@ export default function AdminReturnsPage() {
                       <div className="flex items-center gap-3">
                         <Select
                           value={returnDetail.status}
-                          onValueChange={(val) =>
+                          onValueChange={(val) => {
+                            if (
+                              returnDetail.status === 'completed' &&
+                              val !== 'completed' &&
+                              user?.role !== 'admin'
+                            ) {
+                              toast.warning(t('return_status_locked'))
+                              return
+                            }
                             statusMutation.mutate({
                               returnId: returnDetail.id,
                               status: val,
                             })
-                          }
+                          }}
                         >
                           <SelectTrigger className="w-[160px] h-10">
                             <SelectValue />
@@ -920,21 +935,32 @@ export default function AdminReturnsPage() {
                             dotColor = 'bg-red-500'
                             IconComponent = Trash2
                           }
+                          const isSystemEvent =
+                            ev.user_group === 'system' ||
+                            (!ev.user_group && !ev.user_name)
                           return (
                             <div key={ev.id} className="relative pb-6">
                               <div
                                 className={`absolute -left-[34px] top-1.5 w-5 h-5 rounded-full border-[3px] border-background ${dotColor}`}
                               />
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                {ev.user_group && (
+                                {isSystemEvent ? (
+                                  <Badge
+                                    className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
+                                  >
+                                    {t('system')}
+                                  </Badge>
+                                ) : ev.user_group ? (
                                   <Badge
                                     className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
                                   >
                                     {t(ev.user_group)}
                                   </Badge>
-                                )}
+                                ) : null}
                                 <span className="font-medium">
-                                  {ev.user_name || t('system_actor')}
+                                  {isSystemEvent
+                                    ? t('system_actor')
+                                    : ev.user_name || t('system_actor')}
                                 </span>
                                 <span className="text-sm text-muted-foreground">
                                   {formatDate(ev.created_at)}

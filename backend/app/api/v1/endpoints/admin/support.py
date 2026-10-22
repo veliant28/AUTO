@@ -68,6 +68,8 @@ def get_period_range(period: str, from_date: Optional[str] = None, to_date: Opti
     now = datetime.utcnow()
     if from_date and to_date:
         return datetime.fromisoformat(from_date).replace(tzinfo=None), datetime.fromisoformat(to_date).replace(tzinfo=None)
+    if period == "all":
+        return datetime(2000, 1, 1), now
     if period == "day":
         return now.replace(hour=0, minute=0, second=0, microsecond=0), now
     elif period == "week":
@@ -110,11 +112,14 @@ def list_chats(
     if to_dt:
         query = query.filter(ChatConversation.created_at <= to_dt)
 
-    # Search by user name, phone, or email
+    # Search by ticket number, user name, phone, or email
     if search:
-        search_term = f"%{search}%"
+        needle = search.strip()
+        search_term = f"%{needle}%"
+        number_term = f"%{needle.lstrip('#')}%"
         query = query.join(User, ChatConversation.user_id == User.id).filter(
-            func.concat(User.first_name, ' ', User.last_name).ilike(search_term)
+            func.coalesce(ChatConversation.ticket_number, '').ilike(number_term)
+            | func.concat(User.first_name, ' ', User.last_name).ilike(search_term)
             | func.coalesce(User.full_name, '').ilike(search_term)
             | func.coalesce(User.phone, '').ilike(search_term)
             | func.coalesce(User.email, '').ilike(search_term)

@@ -77,7 +77,7 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
 import { useCopyTtn } from '@/hooks/useCopyTtn'
-import { ORDER_STATUS_LABELS } from '@/lib/constants'
+import { EDIT_LOCKED_STATUSES, ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
 import { supplierBadgeClass } from '@/lib/suppliers'
@@ -156,8 +156,6 @@ interface UnifiedEvent {
 
 const statusKeys = Object.keys(ORDER_STATUS_LABELS)
 
-// Отправленный, доставленный и отменённый заказ не редактируем
-const EDIT_LOCKED_STATUSES = ['shipped', 'delivered', 'cancelled']
 const LOCALE_MAP: Record<string, string> = {
   ru: 'ru-RU',
   ua: 'uk-UA',
@@ -182,6 +180,7 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
   operator: 'bg-orange-500 text-white',
   b2b: 'bg-green-500 text-white',
   retail: 'bg-gray-500 text-white',
+  system: 'bg-black text-white dark:bg-white dark:text-black',
 }
 
 interface OrderDetailModalProps {
@@ -685,6 +684,8 @@ export default function OrderDetailModal({
       refetchOrderDetail()
       toast.success(t('status_updated'))
     },
+    onError: (err: any) =>
+      toast.error(err?.response?.data?.detail || t('error')),
   })
 
   const updateMutation = useMutation({
@@ -861,7 +862,7 @@ export default function OrderDetailModal({
   const enterEditMode = () => {
     if (!orderDetail) return
     if (!canEditOrder) {
-      toast.info(t('edit_locked'))
+      toast.warning(t('edit_locked'))
       return
     }
     setEditMode(true)
@@ -876,7 +877,7 @@ export default function OrderDetailModal({
 
   const handleSave = () => {
     if (!canEditOrder) {
-      toast.info(t('edit_locked'))
+      toast.warning(t('edit_locked'))
       cancelEdit()
       return
     }
@@ -1020,12 +1021,16 @@ export default function OrderDetailModal({
                     <div className="flex items-center gap-3">
                       <Select
                         value={orderDetail.status}
-                        onValueChange={(val) =>
+                        onValueChange={(val) => {
+                          if (!canEditOrder && val !== orderDetail.status) {
+                            toast.warning(t('status_locked'))
+                            return
+                          }
                           statusMutation.mutate({
                             orderId: orderDetail.id,
                             status: val,
                           })
-                        }
+                        }}
                       >
                         <SelectTrigger className="w-[140px] h-10">
                           <SelectValue />
@@ -1038,7 +1043,8 @@ export default function OrderDetailModal({
                           ))}
                         </SelectContent>
                       </Select>
-                      {orderDetail.updated_by_name && (
+                      {(orderDetail.updated_by_name ||
+                        orderDetail.updated_by_group === 'system') && (
                         <div className="flex flex-col items-end gap-0.5">
                           {orderDetail.updated_by_group && (
                             <Badge
@@ -1048,7 +1054,7 @@ export default function OrderDetailModal({
                             </Badge>
                           )}
                           <span className="text-sm font-medium">
-                            {orderDetail.updated_by_name}
+                            {orderDetail.updated_by_name || t('system_actor')}
                           </span>
                         </div>
                       )}

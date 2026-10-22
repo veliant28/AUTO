@@ -15,8 +15,6 @@ export const REQUEST_CATEGORY_CODES = [
   'return_change',
   'pricing_change',
   'support_edit',
-  'imports_suppliers',
-  'protection_change',
   'other',
 ]
 

@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, DateTime, ForeignKey, Index
+from sqlalchemy import (
+    Column, Integer, String, Boolean, Text, DateTime, ForeignKey, Index,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from .vehicles import Base
 from datetime import datetime
@@ -26,6 +29,37 @@ class BanRecord(Base):
 
     user = relationship("User", foreign_keys=[user_id], backref="ban_records")
     banned_by = relationship("User", foreign_keys=[banned_by_id])
+    ips = relationship(
+        "BanIp", back_populates="ban", cascade="all, delete-orphan"
+    )
+
+
+class BanIp(Base):
+    """IP-адреса, заблокированные конкретным баном.
+
+    При бане сюда попадают все известные IP пользователя (история визитов,
+    события защиты, прошлые баны). Новые IP забаненного аккаунта добавляются
+    при попытке входа/запроса. Проверка блокировки идёт только по активным
+    банам (BanRecord.is_active), поэтому история IP сохраняется после разбана.
+    """
+
+    __tablename__ = "ban_ips"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ban_id = Column(
+        Integer,
+        ForeignKey("ban_records.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    ip_address = Column(String, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("ban_id", "ip_address", name="uq_ban_ips_ban_ip"),
+    )
+
+    ban = relationship("BanRecord", back_populates="ips")
 
 
 class ProtectionEvent(Base):

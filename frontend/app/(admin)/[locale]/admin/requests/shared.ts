@@ -4,6 +4,9 @@ export const AUTOMATED_CATEGORY_CODES = [
   'b2b_registration',
   'timesheet_manual',
   'ban_unban',
+  'order_final_status',
+  'order_delete',
+  'pricing_change',
 ]
 
 export const STATUSES = [

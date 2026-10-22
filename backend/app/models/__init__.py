@@ -19,7 +19,7 @@ from .loyalty import Promocode
 from .checkbox import OrderCheckboxReceipt
 from .payments import PaymentTransaction
 from .support import ChatConversation, ChatMessage, ChatStatus, SenderRole
-from .protection import BanRecord, ProtectionEvent, Whitelist
+from .protection import BanRecord, BanIp, ProtectionEvent, Whitelist
 from .backup import BackupRecord
 from .presence import PresenceSession, ProductView, ClientIp
 from .attendance import AttendanceSession
@@ -54,7 +54,7 @@ __all__ = [
     "OrderCheckboxReceipt",
     "PaymentTransaction",
     "ChatConversation", "ChatMessage", "ChatStatus", "SenderRole",
-    "BanRecord", "ProtectionEvent", "Whitelist",
+    "BanRecord", "BanIp", "ProtectionEvent", "Whitelist",
     "BackupRecord",
     "PresenceSession", "ProductView", "ClientIp",
     "AttendanceSession",

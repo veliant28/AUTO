@@ -6,6 +6,11 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import func, case, or_
 from app.core.db import get_db
 from app.core.security import get_password_hash
+from app.core.order_rules import (
+    can_change_order_status,
+    can_delete_order,
+    can_edit_order,
+)
 from app.api.v1.deps import require_permission
 from app.schemas.admin_schemas import (
     AdminOrderItem, AdminAdminOrderListResponse,
@@ -23,6 +28,7 @@ from app.models.nova_poshta import OrderNovaPoshtaWaybillEvent, OrderNovaPoshtaW
 from app.models.returns import ReturnRequest, ReturnStatus
 from datetime import datetime
 from app.services.catalog_utils import best_offer, b2b_margin_for_user
+from app.services.order_service import delete_order_cascade
 from app.services.client_index import compute_client_index_stats
 from app.services.promocode_service import (
     find_customer_by_phone,
@@ -36,9 +42,6 @@ router = APIRouter()
 
 # Учётка, которую заводим клиенту, оформившему заказ по телефону без регистрации
 PHONE_CUSTOMER_EMAIL_DOMAIN = "phone.svom.local"
-
-# Статусы, в которых заказ уже нельзя менять
-EDIT_LOCKED_STATUSES = {"shipped", "delivered", "cancelled"}
 
 
 def _actor_name(user: User) -> str:
@@ -540,8 +543,7 @@ async def update_order(
 
     # Отправленный, доставленный и отменённый заказ правит только администратор
     role_name = current_user.role.name if current_user.role else ""
-    order_status = order.status.value if hasattr(order.status, "value") else order.status
-    if order_status in EDIT_LOCKED_STATUSES and role_name != "admin":
+    if not can_edit_order(order, current_user):
         raise HTTPException(400, "Заказ в этом статусе может изменить только администратор")
 
     changes = []
@@ -798,26 +800,13 @@ async def delete_order(
     if not order:
         raise HTTPException(404, "Order not found")
 
-    # Delete TTN (waybill + seats + events)
-    waybill = db.query(OrderNovaPoshtaWaybill).filter(
-        OrderNovaPoshtaWaybill.order_id == order_id
-    ).first()
-    if waybill:
-        db.query(OrderNovaPoshtaWaybillEvent).filter(
-            OrderNovaPoshtaWaybillEvent.waybill_id == waybill.id
-        ).delete()
-        db.query(OrderNovaPoshtaWaybillSeat).filter(
-            OrderNovaPoshtaWaybillSeat.waybill_id == waybill.id
-        ).delete()
-        db.delete(waybill)
+    if not can_delete_order(order, current_user):
+        raise HTTPException(
+            403,
+            "Заказ в этом статусе может удалить только администратор",
+        )
 
-    # Delete change logs
-    db.query(OrderChangeLog).filter(OrderChangeLog.order_id == order_id).delete()
-
-    # Delete order items
-    db.query(OrderItem).filter(OrderItem.order_id == order_id).delete()
-
-    db.delete(order)
+    delete_order_cascade(db, order)
     db.commit()
     return {"ok": True}
 
@@ -976,6 +965,12 @@ async def update_order_status(
         new_status = OrderStatus(data.status)
     except ValueError:
         raise HTTPException(400, f"Invalid status. Must be one of: {', '.join(s.value for s in OrderStatus)}")
+
+    if not can_change_order_status(order, current_user, new_status):
+        raise HTTPException(
+            403,
+            "Только администратор может изменить статус заказа из этого состояния",
+        )
 
     old_status = order.status.value if hasattr(order.status, "value") else order.status
     order.status = new_status

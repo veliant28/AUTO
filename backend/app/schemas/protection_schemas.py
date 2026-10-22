@@ -66,6 +66,20 @@ class BanStatsResponse(BaseModel):
     total_events: int
 
 
+class BanIpItem(BaseModel):
+    ip_address: str
+    first_seen: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
+    visits: int = 0
+    blocked: bool = False
+
+
+class BanIpListResponse(BaseModel):
+    items: List[BanIpItem]
+    total: int
+    active: bool
+
+
 class WhitelistResponse(BaseModel):
     id: int
     user_id: Optional[int] = None

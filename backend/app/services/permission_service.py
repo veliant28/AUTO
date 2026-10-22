@@ -13,3 +13,20 @@ def role_permission_codenames(db: Session, role_id: int) -> List[str]:
         .all()
     )
     return [r[0] for r in rows]
+
+
+def user_has_permission(db: Session, user, codename: str) -> bool:
+    """Есть ли у роли пользователя конкретное право."""
+    role_id = getattr(user, "role_id", None)
+    if not role_id:
+        return False
+    return (
+        db.query(RolePermission)
+        .join(Permission)
+        .filter(
+            RolePermission.role_id == role_id,
+            Permission.codename == codename,
+        )
+        .first()
+        is not None
+    )

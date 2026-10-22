@@ -12,7 +12,14 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { TablePagination } from '@/components/admin/TablePagination'
-import { Loader2, User, ScrollText, Unlock, ShieldCheck } from 'lucide-react'
+import {
+  Loader2,
+  User,
+  ScrollText,
+  Unlock,
+  ShieldCheck,
+  Network,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
@@ -68,7 +75,16 @@ interface ProtectionEvent {
   created_at: string | null
 }
 
+interface BanIpRow {
+  ip_address: string
+  first_seen: string | null
+  last_seen: string | null
+  visits: number
+  blocked: boolean
+}
+
 const columnHelper = createColumnHelper<ProtectionEvent>()
+const ipColumnHelper = createColumnHelper<BanIpRow>()
 
 function formatPhone(phone: string | null | undefined): string {
   if (!phone) return ''
@@ -85,6 +101,11 @@ export default function StatsModal({
 }: StatsModalProps) {
   const t = useTranslations('admin')
   const timezone = useTimezoneStore((s) => s.timezone)
+  const [showIps, setShowIps] = React.useState(false)
+
+  React.useEffect(() => {
+    setShowIps(false)
+  }, [banId])
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-protection-stats', banId],
@@ -95,6 +116,15 @@ export default function StatsModal({
       return data
     },
     enabled: open && !!banId,
+  })
+
+  const { data: ipsData, isLoading: ipsLoading } = useQuery({
+    queryKey: ['admin-protection-ban-ips', banId],
+    queryFn: async () => {
+      const { data } = await api.get(`/admin/protection/blacklist/${banId}/ips`)
+      return data as { items: BanIpRow[]; total: number; active: boolean }
+    },
+    enabled: open && !!banId && showIps,
   })
 
   const queryClient = useQueryClient()
@@ -113,6 +143,9 @@ export default function StatsModal({
       })
       queryClient.invalidateQueries({
         queryKey: ['admin-protection-stats', banId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['admin-protection-ban-ips', banId],
       })
     },
     onError: (err: any) =>
@@ -202,6 +235,61 @@ export default function StatsModal({
   const table = useReactTable({
     data: eventRows,
     columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+  })
+
+  const ipColumns = React.useMemo(
+    () => [
+      ipColumnHelper.accessor('ip_address', {
+        header: t('protection_ip'),
+        size: 180,
+        cell: (info) => (
+          <span className="font-mono text-xs">{info.getValue()}</span>
+        ),
+      }),
+      ipColumnHelper.accessor('last_seen', {
+        header: t('protection_ip_last_seen'),
+        size: 180,
+        cell: (info) => (
+          <span className="whitespace-nowrap text-sm">
+            {info.getValue() ? formatDate(info.getValue()) : '—'}
+          </span>
+        ),
+      }),
+      ipColumnHelper.accessor('visits', {
+        header: t('protection_ip_visits'),
+        size: 100,
+        cell: (info) => (
+          <span className="tabular-nums text-sm">{info.getValue()}</span>
+        ),
+      }),
+      ipColumnHelper.accessor('blocked', {
+        header: t('protection_status'),
+        size: 160,
+        cell: (info) => (
+          <Badge
+            className={`${
+              info.getValue()
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-400 text-white'
+            } border-0 text-sm whitespace-nowrap`}
+          >
+            {info.getValue()
+              ? t('protection_ip_blocked')
+              : t('protection_ip_not_blocked')}
+          </Badge>
+        ),
+      }),
+    ],
+    [t],
+  )
+
+  const ipTable = useReactTable({
+    data: ipsData?.items || [],
+    columns: ipColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -384,67 +472,146 @@ export default function StatsModal({
                   </div>
                 </div>
 
-                {/* Right: Events table */}
+                {/* Right: events or IP history */}
                 <div className="border rounded-lg p-4 flex flex-col h-full overflow-hidden">
                   <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0 mb-3">
-                    <ScrollText className="w-5 h-5" /> События
-                    <Badge variant="outline" className="text-sm ml-1">
-                      {data.total_events}
-                    </Badge>
+                    {showIps ? (
+                      <>
+                        <Network className="w-5 h-5" /> {t('protection_ips')}
+                        <Badge variant="outline" className="text-sm ml-1">
+                          {ipsData?.total ?? 0}
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <ScrollText className="w-5 h-5" />{' '}
+                        {t('protection_events')}
+                        <Badge variant="outline" className="text-sm ml-1">
+                          {data.total_events}
+                        </Badge>
+                      </>
+                    )}
                   </h4>
                   <div className="flex-1 overflow-y-auto">
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            {table.getHeaderGroups().map((hg) => (
-                              <tr key={hg.id} className="border-b bg-muted/50">
-                                {hg.headers.map((header) => (
-                                  <th
-                                    key={header.id}
-                                    className="text-left p-3 font-medium text-muted-foreground"
-                                    style={{ width: header.getSize() }}
+                    {showIps ? (
+                      ipsLoading ? (
+                        <div className="flex items-center justify-center py-10">
+                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <div className="border rounded-lg overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                {ipTable.getHeaderGroups().map((hg) => (
+                                  <tr
+                                    key={hg.id}
+                                    className="border-b bg-muted/50"
                                   >
-                                    {flexRender(
-                                      header.column.columnDef.header,
-                                      header.getContext(),
-                                    )}
-                                  </th>
+                                    {hg.headers.map((header) => (
+                                      <th
+                                        key={header.id}
+                                        className="text-left p-3 font-medium text-muted-foreground"
+                                        style={{ width: header.getSize() }}
+                                      >
+                                        {flexRender(
+                                          header.column.columnDef.header,
+                                          header.getContext(),
+                                        )}
+                                      </th>
+                                    ))}
+                                  </tr>
                                 ))}
-                              </tr>
-                            ))}
-                          </thead>
-                          <tbody>
-                            {table.getRowModel().rows.map((row) => (
-                              <tr
-                                key={row.id}
-                                className="border-b last:border-0 hover:bg-muted/30"
-                              >
-                                {row.getVisibleCells().map((cell) => (
-                                  <td key={cell.id} className="p-3">
-                                    {flexRender(
-                                      cell.column.columnDef.cell,
-                                      cell.getContext(),
-                                    )}
-                                  </td>
+                              </thead>
+                              <tbody>
+                                {ipTable.getRowModel().rows.map((row) => (
+                                  <tr
+                                    key={row.id}
+                                    className="border-b last:border-0 hover:bg-muted/30"
+                                  >
+                                    {row.getVisibleCells().map((cell) => (
+                                      <td key={cell.id} className="p-3">
+                                        {flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext(),
+                                        )}
+                                      </td>
+                                    ))}
+                                  </tr>
                                 ))}
-                              </tr>
-                            ))}
-                            {!data.events?.length && (
-                              <tr>
-                                <td
-                                  colSpan={columns.length}
-                                  className="p-6 text-center text-muted-foreground text-sm"
+                                {!ipsData?.items?.length && (
+                                  <tr>
+                                    <td
+                                      colSpan={ipColumns.length}
+                                      className="p-6 text-center text-muted-foreground text-sm"
+                                    >
+                                      {t('protection_no_ips')}
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                          <TablePagination table={ipTable} />
+                        </div>
+                      )
+                    ) : (
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              {table.getHeaderGroups().map((hg) => (
+                                <tr
+                                  key={hg.id}
+                                  className="border-b bg-muted/50"
                                 >
-                                  {t('protection_empty_blacklist')}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                                  {hg.headers.map((header) => (
+                                    <th
+                                      key={header.id}
+                                      className="text-left p-3 font-medium text-muted-foreground"
+                                      style={{ width: header.getSize() }}
+                                    >
+                                      {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
+                                    </th>
+                                  ))}
+                                </tr>
+                              ))}
+                            </thead>
+                            <tbody>
+                              {table.getRowModel().rows.map((row) => (
+                                <tr
+                                  key={row.id}
+                                  className="border-b last:border-0 hover:bg-muted/30"
+                                >
+                                  {row.getVisibleCells().map((cell) => (
+                                    <td key={cell.id} className="p-3">
+                                      {flexRender(
+                                        cell.column.columnDef.cell,
+                                        cell.getContext(),
+                                      )}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                              {!data.events?.length && (
+                                <tr>
+                                  <td
+                                    colSpan={columns.length}
+                                    className="p-6 text-center text-muted-foreground text-sm"
+                                  >
+                                    {t('protection_empty_blacklist')}
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                        <TablePagination table={table} />
                       </div>
-                      <TablePagination table={table} />
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -454,6 +621,28 @@ export default function StatsModal({
             <Separator className="flex-shrink-0" />
             <div className="flex-shrink-0 p-4 pt-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={showIps ? 'default' : 'outline'}
+                      size="icon"
+                      className={
+                        showIps ? '' : 'text-violet-600 hover:text-violet-700'
+                      }
+                      aria-label={
+                        showIps ? t('protection_events') : t('protection_ips')
+                      }
+                      onClick={() => setShowIps((value) => !value)}
+                    >
+                      <Network className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>
+                      {showIps ? t('protection_events') : t('protection_ips')}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
                 {data.ban?.is_active && (
                   <>
                     <Tooltip>

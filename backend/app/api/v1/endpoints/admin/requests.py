@@ -1,6 +1,7 @@
 """Admin endpoints for the requests journal (журнал заявок)."""
 import logging
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,9 +11,16 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.db import get_db
 from app.api.v1.deps import require_permission
 from app.models import Permission, RolePermission, User
+from app.models.parts import PartCategory
+from app.models.pricing import PriceRule
 from app.models.requests import (
     CATEGORY_B2B_REGISTRATION,
     CATEGORY_BAN_UNBAN,
+    CATEGORY_ORDER_DELETE,
+    CATEGORY_ORDER_FINAL_STATUS,
+    CATEGORY_OTHER,
+    CATEGORY_PRICING_CHANGE,
+    CATEGORY_SUPPORT_EDIT,
     CATEGORY_TIMESHEET_MANUAL,
     Request,
     RequestCategory,
@@ -39,7 +47,11 @@ from app.schemas.requests_schemas import (
     RequestUpdateIn,
 )
 from app.services import requests_service as rs
-from app.services.request_automations import AutomationError, apply_approval
+from app.services.request_automations import (
+    AutomationError,
+    ProtectedUserError,
+    apply_approval,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +62,72 @@ AUTOMATED_CATEGORY_CODES = (
     CATEGORY_B2B_REGISTRATION,
     CATEGORY_TIMESHEET_MANUAL,
     CATEGORY_BAN_UNBAN,
+    CATEGORY_ORDER_FINAL_STATUS,
+    CATEGORY_ORDER_DELETE,
+    CATEGORY_PRICING_CHANGE,
 )
 
 
 def _status_value(value) -> str:
     return value.value if hasattr(value, "value") else str(value)
+
+
+def _validate_pricing_payload(db: Session, payload: dict) -> None:
+    """Проверить и нормализовать наценку: общая или одна категория, 0–100%."""
+    target = payload.get("pricing_target")
+    if target not in ("general", "category"):
+        raise HTTPException(400, "Выберите общую наценку или категорию")
+
+    raw_margin = payload.get("margin_percent")
+    if raw_margin is None or isinstance(raw_margin, bool):
+        raise HTTPException(400, "Укажите наценку")
+    try:
+        margin = Decimal(str(raw_margin))
+    except (InvalidOperation, TypeError, ValueError):
+        raise HTTPException(400, "Укажите наценку")
+    if not margin.is_finite() or margin < 0 or margin > 100:
+        raise HTTPException(400, "Наценка должна быть от 0 до 100%")
+
+    if target == "category":
+        raw_id = payload.get("pricing_category_id")
+        try:
+            category_id = int(raw_id)
+        except (TypeError, ValueError):
+            raise HTTPException(400, "Выберите категорию")
+        category = (
+            db.query(PartCategory)
+            .filter(PartCategory.id == category_id)
+            .first()
+        )
+        if not category:
+            raise HTTPException(400, "Категория не найдена")
+        payload["pricing_category_id"] = category.id
+        payload["pricing_target_name"] = category.name
+    else:
+        payload["pricing_category_id"] = None
+        payload["pricing_target_name"] = str(
+            payload.get("pricing_target_name") or "Общая наценка"
+        )
+
+    payload["pricing_target"] = target
+    payload["margin_percent"] = float(margin)
+
+    if target == "category":
+        rule = (
+            db.query(PriceRule)
+            .filter(
+                PriceRule.type == "category",
+                PriceRule.category_id == payload["pricing_category_id"],
+            )
+            .first()
+        )
+    else:
+        rule = db.query(PriceRule).filter(PriceRule.type == "general").first()
+    payload["pricing_old_margin"] = (
+        float(rule.margin_percent)
+        if rule and rule.margin_percent is not None
+        else 0.0
+    )
 
 
 def _actor_info(u: Optional[User]) -> Optional[RequestActorInfo]:
@@ -345,10 +418,23 @@ def list_requests(
     ):
         counts[_status_value(value)] = int(cnt)
 
-    total_all = sum(counts.values())
-    # «Выполнено»: решённые + закрытые после решения — прогресс не падает,
-    # когда заявка переходит из RESOLVED в автоматический CLOSED
-    done = counts.get("resolved", 0) + counts.get("closed", 0)
+    # Прогресс — по всем видимым заявкам, без фильтров категории и поиска.
+    # «Выполнено»: решённые, отклонённые и закрытые после решения.
+    all_counts = {s.value: 0 for s in RequestStatus}
+    for value, cnt in (
+        rs.visible_requests_query(db, current_user)
+        .with_entities(Request.status, func.count(Request.id))
+        .group_by(Request.status)
+        .all()
+    ):
+        all_counts[_status_value(value)] = int(cnt)
+
+    total_all = sum(all_counts.values())
+    done = (
+        all_counts.get("resolved", 0)
+        + all_counts.get("rejected", 0)
+        + all_counts.get("closed", 0)
+    )
     progress = round(done * 100 / total_all) if total_all else 0
 
     q = _apply_filters(
@@ -436,6 +522,21 @@ async def create_request(
         assignee = db.query(User).filter(User.id == data.assignee_id).first()
         if not assignee or not _user_can_view_requests(db, assignee.id):
             raise HTTPException(400, "Исполнитель не имеет доступа к журналу")
+        take_roles = category.take_roles
+        actor_role = current_user.role.name if current_user.role else None
+        if actor_role != "admin":
+            raise HTTPException(
+                403, "Назначать исполнителя может только администратор"
+            )
+        if take_roles and actor_role not in take_roles:
+            raise HTTPException(
+                403, "Настройки категории не разрешают назначать исполнителя"
+            )
+        assignee_role = assignee.role.name if assignee.role else None
+        if take_roles and assignee_role not in take_roles:
+            raise HTTPException(
+                403, "Роль исполнителя не может брать заявки этой категории"
+            )
 
     now = rs.now_utc()
     response_due, due = rs.category_due_snapshot(category, now)
@@ -448,6 +549,18 @@ async def create_request(
     elif category.code == CATEGORY_TIMESHEET_MANUAL:
         payload = _normalize_timesheet_payload(payload)
         description = None
+    elif category.code == CATEGORY_SUPPORT_EDIT:
+        if not payload.get("chat_id"):
+            raise HTTPException(400, "Выберите обращение")
+        if not description:
+            raise HTTPException(400, "Опишите, что нужно исправить")
+    elif category.code == CATEGORY_PRICING_CHANGE:
+        if not description:
+            raise HTTPException(400, "Укажите причину изменения наценки")
+        _validate_pricing_payload(db, payload)
+    elif category.code == CATEGORY_OTHER:
+        if not description:
+            raise HTTPException(400, "Укажите описание заявки")
     request = Request(
         category_id=category.id,
         status=RequestStatus.NEW,
@@ -508,6 +621,24 @@ def update_request(
     ):
         payload = _normalize_timesheet_payload(payload)
         description = None
+    elif (
+        request.category
+        and request.category.code == CATEGORY_SUPPORT_EDIT
+    ):
+        if not payload.get("chat_id"):
+            raise HTTPException(400, "Выберите обращение")
+        if not description:
+            raise HTTPException(400, "Опишите, что нужно исправить")
+    elif (
+        request.category
+        and request.category.code == CATEGORY_PRICING_CHANGE
+    ):
+        if not description:
+            raise HTTPException(400, "Укажите причину изменения наценки")
+        _validate_pricing_payload(db, payload)
+    elif request.category and request.category.code == CATEGORY_OTHER:
+        if not description:
+            raise HTTPException(400, "Укажите описание заявки")
     request.description = description
     request.payload = payload or None
     request.updated_at = rs.now_utc()
@@ -590,6 +721,17 @@ async def assign_request(
     request = _visible_or_404(db, current_user, request_id)
     _ensure_editable(request)
 
+    take_roles = request.category.take_roles if request.category else None
+    actor_role = current_user.role.name if current_user.role else None
+    if actor_role != "admin":
+        raise HTTPException(
+            403, "Назначать исполнителя может только администратор"
+        )
+    if take_roles and actor_role not in take_roles:
+        raise HTTPException(
+            403, "Настройки категории не разрешают назначать исполнителя"
+        )
+
     if data.assignee_id is None:
         request.assignee_id = None
         rs.log_event(db, request, current_user, "assigned", "исполнитель снят")
@@ -599,6 +741,11 @@ async def assign_request(
             raise HTTPException(404, "Сотрудник не найден")
         if not _user_can_view_requests(db, assignee.id):
             raise HTTPException(400, "Сотрудник не имеет доступа к журналу")
+        assignee_role = assignee.role.name if assignee.role else None
+        if take_roles and assignee_role not in take_roles:
+            raise HTTPException(
+                403, "Роль исполнителя не может брать заявки этой категории"
+            )
         request.assignee_id = assignee.id
         rs.log_event(
             db,
@@ -636,6 +783,17 @@ async def change_request_status(
     if new_status in (RequestStatus.RESOLVED, RequestStatus.REJECTED) and category_code in AUTOMATED_CATEGORY_CODES:
         raise HTTPException(
             400, "Эту заявку закрывает только одобрение или отклонение администратором"
+        )
+
+    take_roles = request.category.take_roles if request.category else None
+    role_name = current_user.role.name if current_user.role else None
+    if take_roles and role_name not in take_roles:
+        raise HTTPException(
+            403, "Ваша роль не может обрабатывать заявки этой категории"
+        )
+    if request.assignee_id != current_user.id:
+        raise HTTPException(
+            403, "Статус может менять только назначенный исполнитель"
         )
 
     was_status = _status_value(request.status)
@@ -685,6 +843,8 @@ async def _decide(
     if approve:
         try:
             result = apply_approval(db, request, current_user)
+        except ProtectedUserError as e:
+            raise HTTPException(409, str(e))
         except AutomationError as e:
             raise HTTPException(400, f"Автоматизация не применилась: {e}")
         if result and result.email:
