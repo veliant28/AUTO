@@ -26,10 +26,12 @@ import {
   Loader,
   CheckCircle2,
   XCircle,
+  HelpCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Card,
@@ -51,9 +53,17 @@ import api from '@/lib/api'
 import { useTimezone, formatDate } from '@/hooks/useTimezone'
 import { useRequirePerm } from '@/hooks/useRequirePerm'
 
-const supplierMeta: Record<string, { label: string; color: string }> = {
-  GPL: { label: 'GPL', color: 'bg-orange-500' },
-  UTR: { label: 'UTR', color: 'bg-red-500' },
+const supplierMeta: Record<
+  string,
+  { label: string; fullName: string; color: string }
+> = {
+  GPL: { label: 'GPL', fullName: 'GPL', color: 'bg-orange-500' },
+  UTR: { label: 'UTR', fullName: 'UTR', color: 'bg-red-500' },
+  'AUTONOVA-D': {
+    label: 'AND',
+    fullName: 'AUTONOVA-D',
+    color: 'bg-blue-500',
+  },
 }
 
 const scheduleStatusColors: Record<string, string> = {
@@ -143,18 +153,27 @@ function TokenBadge({
     const isWarning = secondsLeft < 3600
     const isCritical = secondsLeft < 300
     return (
-      <Badge
-        className={`gap-1.5 text-sm font-mono border-0 min-w-[85px] justify-center ${
-          isCritical
-            ? 'bg-red-500 text-white'
-            : isWarning
-              ? 'bg-yellow-500 text-white'
-              : 'bg-green-500 text-white'
-        }`}
-      >
-        <Clock className="w-3.5 h-3.5" />
-        {formatCountdown(secondsLeft)}
-      </Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex shrink-0">
+            <Badge
+              className={`supplier-token-badge gap-1.5 text-sm font-mono border-0 justify-center ${
+                isCritical
+                  ? 'bg-red-500 text-white'
+                  : isWarning
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-green-500 text-white'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="supplier-token-text">
+                {formatCountdown(secondsLeft)}
+              </span>
+            </Badge>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{formatCountdown(secondsLeft)}</TooltipContent>
+      </Tooltip>
     )
   }
 
@@ -180,10 +199,19 @@ function TokenBadge({
   }
 
   return (
-    <Badge className="gap-1.5 text-sm bg-muted text-muted-foreground border-0">
-      <Key className="w-3.5 h-3.5" />
-      {ta('settings_token_none')}
-    </Badge>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex shrink-0">
+          <Badge className="supplier-token-badge gap-1.5 whitespace-nowrap text-sm bg-muted text-muted-foreground border-0">
+            <Key className="w-3.5 h-3.5" />
+            <span className="supplier-token-text">
+              {ta('settings_token_none')}
+            </span>
+          </Badge>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{ta('settings_token_none')}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -193,11 +221,15 @@ function SupplierCard({ supplier }: { supplier: string }) {
   const queryClient = useQueryClient()
   const meta = supplierMeta[supplier] || {
     label: supplier,
+    fullName: supplier,
     color: 'bg-gray-500',
   }
+  const isAutonova = supplier === 'AUTONOVA-D'
   const [login, setLogin] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
+  const [clientId, setClientId] = React.useState('')
+  const [environment, setEnvironment] = React.useState<'dev' | 'stable'>('dev')
 
   const { data: config, isLoading } = useQuery({
     queryKey: ['supplier-config', supplier],
@@ -212,6 +244,16 @@ function SupplierCard({ supplier }: { supplier: string }) {
   React.useEffect(() => {
     if (config?.login) setLogin(config.login)
   }, [config?.login])
+
+  React.useEffect(() => {
+    if (config?.client_id) setClientId(config.client_id)
+  }, [config?.client_id])
+
+  React.useEffect(() => {
+    if (isAutonova) {
+      setEnvironment(config?.api_url?.includes('/stable') ? 'stable' : 'dev')
+    }
+  }, [config?.api_url, isAutonova])
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
@@ -244,11 +286,43 @@ function SupplierCard({ supplier }: { supplier: string }) {
     },
   })
 
+  const environmentMutation = useMutation({
+    mutationFn: async (next: 'dev' | 'stable') => {
+      const apiUrl =
+        next === 'dev'
+          ? 'https://api.autonovad.ua/dev'
+          : 'https://api.autonovad.ua/stable'
+      await api.put(`/admin/suppliers/${supplier}`, { api_url: apiUrl })
+      return next
+    },
+    onSuccess: (next) => {
+      setEnvironment(next)
+      queryClient.invalidateQueries({
+        queryKey: ['supplier-config', supplier],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['token-status', supplier],
+      })
+      toast.success(ta('settings_environment_changed'))
+    },
+    onError: (err: any, next) => {
+      setEnvironment(next === 'dev' ? 'stable' : 'dev')
+      const msg = err?.response?.data?.detail || err?.message || ''
+      toast.error(msg || ta('settings_environment_error'))
+    },
+  })
+
+  const handleTokenRefresh = () => {
+    if (!reqPerm('suppliers.edit')) return
+    refreshMutation.mutate()
+  }
+
   const authMutation = useMutation({
     mutationFn: async () => {
       if (login) {
         const payload: any = { login }
         if (password) payload.password = password
+        if (isAutonova) payload.client_id = clientId.trim()
         await api.put(`/admin/suppliers/${supplier}`, payload)
       }
       const { data } = await api.post(`/admin/suppliers/${supplier}/auth`)
@@ -285,7 +359,7 @@ function SupplierCard({ supplier }: { supplier: string }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="supplier-token-row flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <Badge
               className={`${meta.color} border-0 text-white text-sm shrink-0`}
@@ -296,19 +370,48 @@ function SupplierCard({ supplier }: { supplier: string }) {
               {ta('settings_supplier_title', { supplier: meta.label })}
             </CardTitle>
           </div>
-          <TokenBadge
-            supplier={supplier}
-            onRefresh={() => {
-              if (!reqPerm('suppliers.edit')) return
-              refreshMutation.mutate()
-            }}
-          />
+          <TokenBadge supplier={supplier} onRefresh={handleTokenRefresh} />
         </div>
-        {config?.api_url && (
+        {isAutonova ? (
+          config?.api_url ? (
+            <div className="mt-1 flex items-center gap-1.5">
+              <CardDescription
+                className="min-w-0 flex-1 truncate text-sm text-muted-foreground"
+                title={config.api_url}
+              >
+                {config.api_url}
+              </CardDescription>
+              <div className="flex shrink-0 items-center gap-1">
+                <Switch
+                  checked={environment === 'dev'}
+                  onCheckedChange={(enabled) => {
+                    if (!reqPerm('suppliers.edit')) return
+                    const next = enabled ? 'dev' : 'stable'
+                    if (next === environment) return
+                    setEnvironment(next)
+                    environmentMutation.mutate(next)
+                  }}
+                  disabled={
+                    environmentMutation.isPending || authMutation.isPending
+                  }
+                  aria-label={ta('settings_environment')}
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="w-4 h-4 shrink-0 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {ta('settings_environment_hint')}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          ) : null
+        ) : config?.api_url ? (
           <CardDescription className="text-sm text-muted-foreground truncate mt-1">
             {config.api_url}
           </CardDescription>
-        )}
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
@@ -326,19 +429,37 @@ function SupplierCard({ supplier }: { supplier: string }) {
         ) : (
           <>
             <div className="space-y-4">
-              <div>
-                <label className="text-sm text-muted-foreground mb-2 block">
-                  {ta('settings_login')}
-                </label>
-                <Input
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  placeholder={
-                    supplier === 'GPL'
-                      ? '123456 (числовой ID)'
-                      : 'email@example.com'
-                  }
-                />
+              <div
+                className={isAutonova ? 'grid grid-cols-3 gap-2' : undefined}
+              >
+                {isAutonova && (
+                  <div className="col-span-1">
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      {ta('settings_client_id')}
+                    </label>
+                    <Input
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      placeholder={ta('settings_client_id_placeholder')}
+                    />
+                  </div>
+                )}
+                <div className={isAutonova ? 'col-span-2' : undefined}>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    {ta('settings_login')}
+                  </label>
+                  <Input
+                    value={login}
+                    onChange={(e) => setLogin(e.target.value)}
+                    placeholder={
+                      supplier === 'GPL'
+                        ? ta('settings_login_placeholder_gpl')
+                        : isAutonova
+                          ? ta('settings_login_placeholder_username')
+                          : ta('settings_login_placeholder_email')
+                    }
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">
@@ -373,7 +494,12 @@ function SupplierCard({ supplier }: { supplier: string }) {
                 if (!reqPerm('suppliers.edit')) return
                 authMutation.mutate()
               }}
-              disabled={authMutation.isPending || !login}
+              disabled={
+                authMutation.isPending ||
+                environmentMutation.isPending ||
+                !login ||
+                (isAutonova && !clientId.trim())
+              }
               className="w-full gap-2"
             >
               {authMutation.isPending ? (
@@ -421,7 +547,7 @@ export default function SuppliersPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SupplierCard supplier="GPL" />
         <SupplierCard supplier="UTR" />
-        <PlaceholderCard />
+        <SupplierCard supplier="AUTONOVA-D" />
         <PlaceholderCard />
       </div>
 
@@ -503,10 +629,14 @@ function ScheduleSection() {
         size: 85,
         cell: (info) => {
           const s = info.row.original
-          const color = supplierMeta[s.supplier]?.color || 'bg-gray-500'
+          const meta = supplierMeta[s.supplier]
+          const color = meta?.color || 'bg-gray-500'
           return (
-            <Badge className={`${color} border-0 text-white text-sm`}>
-              {s.supplier}
+            <Badge
+              className={`${color} border-0 text-white text-sm`}
+              title={meta?.fullName || s.supplier}
+            >
+              {meta?.label || s.supplier}
             </Badge>
           )
         },

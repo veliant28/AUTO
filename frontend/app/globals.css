@@ -194,3 +194,27 @@ input[type='number'] {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-muted-foreground);
 }
+
+/* Supplier card token badge: icon-only when the card header is narrow. */
+.supplier-token-row {
+  container-type: inline-size;
+  container-name: supplier-token;
+}
+
+.supplier-token-text {
+  display: none;
+}
+
+.supplier-token-badge {
+  min-width: 0;
+}
+
+@container supplier-token (min-width: 260px) {
+  .supplier-token-text {
+    display: inline;
+  }
+
+  .supplier-token-badge {
+    min-width: 85px;
+  }
+}
