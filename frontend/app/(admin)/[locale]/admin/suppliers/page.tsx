@@ -602,6 +602,37 @@ export default function SuppliersPage() {
   )
 }
 
+function ScheduleProgress({
+  progress,
+  status,
+}: {
+  progress: number
+  status: string | null | undefined
+}) {
+  // 0 on mount → the Progress CSS transition fills the bar once; after that
+  // live progress values update directly without replaying the animation.
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  return (
+    <Progress
+      value={mounted ? progress : 0}
+      className="h-2 flex-1"
+      indicatorClassName={
+        status === 'failed'
+          ? 'bg-red-500'
+          : status === 'complete'
+            ? 'bg-green-500'
+            : 'bg-blue-500'
+      }
+    />
+  )
+}
+
 function ScheduleSection() {
   const t = useTranslations('admin')
   const tz = useTimezone()
@@ -760,16 +791,9 @@ function ScheduleSection() {
           const s = info.row.original
           return (
             <div className="flex items-center gap-2 pr-2">
-              <Progress
-                value={s.last_import_progress || 0}
-                className="h-2 flex-1"
-                indicatorClassName={
-                  s.last_import_status === 'failed'
-                    ? 'bg-red-500'
-                    : s.last_import_status === 'complete'
-                      ? 'bg-green-500'
-                      : 'bg-blue-500'
-                }
+              <ScheduleProgress
+                progress={s.last_import_progress || 0}
+                status={s.last_import_status}
               />
               <span className="text-sm font-mono text-muted-foreground w-8 text-right">
                 {s.last_import_progress || 0}%
