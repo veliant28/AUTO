@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.core.db import get_db
@@ -7,14 +7,14 @@ from app.models import User
 from app.models.imports import SupplierConfig
 from app.schemas.import_schemas import (
     SupplierConfigResponse, SupplierConfigUpdate, SupplierAuthResponse,
-    TokenStatusResponse, ExportParamsResponse,
+    SupplierPasswordResponse, TokenStatusResponse, ExportParamsResponse,
 )
 from app.services.supplier_api import (
     AUTONOVA_D_SUPPLIER,
     build_supplier_client,
     normalize_autonova_api_url,
 )
-from app.services.crypto_util import encrypt_password
+from app.services.crypto_util import decrypt_password, encrypt_password
 
 router = APIRouter()
 
@@ -33,6 +33,7 @@ def _config_to_response(c: SupplierConfig) -> SupplierConfigResponse:
         client_id=c.client_id,
         api_url=c.api_url,
         is_active=c.is_active,
+        has_password=bool(c.password_encrypted),
         token_status=token_status,
         token_expires_at=c.token_expires_at,
         created_at=c.created_at,
@@ -86,6 +87,30 @@ async def update_supplier(
     db.commit()
     db.refresh(config)
     return _config_to_response(config)
+
+
+@router.get("/suppliers/{supplier}/password", response_model=SupplierPasswordResponse)
+async def reveal_supplier_password(
+    supplier: str,
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("suppliers.edit")),
+):
+    """Показать сохранённый пароль поставщика (только для редактирования)."""
+    config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="Supplier config not found")
+    if not config.password_encrypted:
+        raise HTTPException(status_code=404, detail="Password not configured")
+
+    try:
+        password = decrypt_password(config.password_encrypted)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Stored supplier password cannot be decrypted")
+
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Pragma"] = "no-cache"
+    return SupplierPasswordResponse(password=password)
 
 
 @router.post("/suppliers/{supplier}/auth", response_model=SupplierAuthResponse)

@@ -10,6 +10,7 @@ class SupplierConfigResponse(BaseModel):
     client_id: Optional[str] = None
     api_url: Optional[str] = None
     is_active: bool
+    has_password: bool = False
     token_status: str = "none"
     token_expires_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
@@ -24,6 +25,10 @@ class SupplierConfigUpdate(BaseModel):
     password: Optional[str] = None
     client_id: Optional[str] = None
     api_url: Optional[str] = None
+
+
+class SupplierPasswordResponse(BaseModel):
+    password: str
 
 
 class SupplierAuthResponse(BaseModel):

@@ -2,6 +2,7 @@ import pytest
 from app.core.security import get_password_hash
 from app.models import Role, User
 from app.models.imports import SupplierConfig
+from app.services.crypto_util import encrypt_password
 
 
 @pytest.fixture
@@ -37,6 +38,50 @@ class TestListSuppliers:
     def test_requires_admin(self, client, auth_headers):
         resp = client.get("/api/v1/admin/suppliers", headers=auth_headers)
         assert resp.status_code == 403
+
+    def test_reports_saved_password(self, client, db, admin_headers):
+        sc = SupplierConfig(
+            supplier="GPL",
+            login="user",
+            password_encrypted=encrypt_password("secret"),
+        )
+        db.add(sc)
+        db.commit()
+        resp = client.get("/api/v1/admin/suppliers", headers=admin_headers)
+        assert resp.status_code == 200
+        assert resp.json()[0]["has_password"] is True
+
+
+class TestRevealSupplierPassword:
+    def test_reveal_saved_password(self, client, db, admin_headers):
+        sc = SupplierConfig(
+            supplier="GPL",
+            login="user",
+            password_encrypted=encrypt_password("secret"),
+        )
+        db.add(sc)
+        db.commit()
+        resp = client.get(
+            "/api/v1/admin/suppliers/GPL/password", headers=admin_headers
+        )
+        assert resp.status_code == 200
+        assert resp.json()["password"] == "secret"
+        assert resp.headers["cache-control"] == "no-store"
+
+    def test_reveal_not_configured(self, client, db, admin_headers):
+        sc = SupplierConfig(supplier="GPL", login="user")
+        db.add(sc)
+        db.commit()
+        resp = client.get(
+            "/api/v1/admin/suppliers/GPL/password", headers=admin_headers
+        )
+        assert resp.status_code == 404
+
+    def test_reveal_not_found(self, client, admin_headers):
+        resp = client.get(
+            "/api/v1/admin/suppliers/UNKNOWN/password", headers=admin_headers
+        )
+        assert resp.status_code == 404
 
 
 class TestUpdateSupplier:
