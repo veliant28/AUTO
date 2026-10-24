@@ -94,6 +94,77 @@ def _resolve_tecdoc_brand(tecdoc_db, brand_name: str) -> int | None:
     return row[0] if row else None
 
 
+def _upsert_supplier_price_rows(
+    db: Session,
+    supplier: str,
+    rows: list[dict],
+    tecdoc_db: Session | None = None,
+    brand_cache: dict | None = None,
+) -> int:
+    """Deduplicate and upsert canonical price rows for one supplier."""
+    if not rows:
+        return 0
+    if brand_cache is None:
+        brand_cache = {}
+
+    deduped: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        article = str(row.get("article") or "").strip()
+        if not article:
+            continue
+        brand = str(row.get("brand") or "").strip()
+        deduped[(article, brand)] = {**row, "article": article, "brand": brand}
+
+    prepared = []
+    for row in deduped.values():
+        brand = row["brand"]
+        if brand not in brand_cache:
+            brand_cache[brand] = (
+                _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
+            )
+        tecdoc_brand_id = brand_cache[brand]
+        stock_regions = row.get("stock_regions") or None
+        prepared.append({
+            "supplier": supplier,
+            "article": row["article"][:100],
+            "brand": row["brand"][:100] if row["brand"] else None,
+            "name": (str(row.get("name") or "")[:500] or None),
+            "price": row.get("price"),
+            "retail_price": row.get("retail_price"),
+            "currency": str(row.get("currency") or "UAH").upper(),
+            "stock_total": int(row.get("stock_total") or 0),
+            "stock_regions": stock_regions,
+            "tecdoc_brand_id": tecdoc_brand_id,
+            "match_status": "matched" if tecdoc_brand_id else "pending",
+            "category": row.get("category") or None,
+            "image_url": row.get("image_url") or None,
+        })
+
+    if not prepared:
+        return 0
+
+    stmt = pg_insert(SupplierPrice).values(prepared)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["supplier", "article", sa.text("COALESCE(brand, '')")],
+        set_={
+            "brand": stmt.excluded.brand,
+            "name": stmt.excluded.name,
+            "price": stmt.excluded.price,
+            "retail_price": stmt.excluded.retail_price,
+            "currency": stmt.excluded.currency,
+            "stock_total": stmt.excluded.stock_total,
+            "stock_regions": stmt.excluded.stock_regions,
+            "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
+            "match_status": stmt.excluded.match_status,
+            "category": stmt.excluded.category,
+            "image_url": stmt.excluded.image_url,
+        },
+    )
+    db.execute(stmt)
+    db.commit()
+    return len(prepared)
+
+
 def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db: Session | None = None) -> int:
     from openpyxl import load_workbook
     wb = load_workbook(io.BytesIO(file_data), read_only=True)
@@ -111,32 +182,9 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
         nonlocal batch
         if not batch:
             return
-        # Deduplicate within batch — keep the last row for each (supplier, article, brand)
-        seen = {}
-        for row in batch:
-            key = (row["supplier"], row["article"], row["brand"] or "")
-            seen[key] = row
-        batch = list(seen.values())
-        if not batch:
-            return
-        stmt = pg_insert(SupplierPrice).values(batch)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["supplier", "article", sa.text("COALESCE(brand, '')")],
-            set_={
-                "brand": stmt.excluded.brand,
-                "name": stmt.excluded.name,
-                "price": stmt.excluded.price,
-                "currency": stmt.excluded.currency,
-                "stock_total": stmt.excluded.stock_total,
-                "stock_regions": stmt.excluded.stock_regions,
-                "tecdoc_brand_id": stmt.excluded.tecdoc_brand_id,
-                "match_status": stmt.excluded.match_status,
-                "category": stmt.excluded.category,
-                "image_url": stmt.excluded.image_url,
-            },
+        _upsert_supplier_price_rows(
+            db, supplier, batch, tecdoc_db=tecdoc_db, brand_cache=brand_cache
         )
-        db.execute(stmt)
-        db.commit()
         batch = []
 
     for row in rows[1:]:
@@ -156,6 +204,12 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             price = float(price_str) if price_str else None
         except (ValueError, TypeError):
             price = None
+
+        retail_price_str = str(values.get("retail_price", values.get("ррц", ""))).replace(",", ".")
+        try:
+            retail_price = float(retail_price_str) if retail_price_str else None
+        except (ValueError, TypeError):
+            retail_price = None
 
         stock_total = 0
         stock_regions = {}
@@ -188,26 +242,18 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
                     pass
 
         currency = str(values.get("currency", values.get("currency_code", "UAH"))).upper()
-
-        if brand not in brand_cache:
-            brand_cache[brand] = _resolve_tecdoc_brand(tecdoc_db, brand) if tecdoc_db else None
-        tecdoc_brand_id = brand_cache.get(brand)
-        match_status = "matched" if tecdoc_brand_id else "pending"
-
         category = str(values.get("category", "")).strip() or None
         image_url = str(values.get("image_url", "")).strip() or None
 
         batch.append({
-            "supplier": supplier,
-            "article": article[:100],
-            "brand": brand[:100] if brand else None,
-            "name": name[:500] if name else None,
+            "article": article,
+            "brand": brand,
+            "name": name,
             "price": price,
+            "retail_price": retail_price,
             "currency": currency,
             "stock_total": stock_total,
             "stock_regions": stock_regions if stock_regions else None,
-            "tecdoc_brand_id": tecdoc_brand_id,
-            "match_status": match_status,
             "category": category,
             "image_url": image_url,
         })
@@ -217,6 +263,31 @@ def parse_xlsx_to_prices(db: Session, supplier: str, file_data: bytes, tecdoc_db
             flush_batch()
 
     flush_batch()
+    wb.close()
+    return total
+
+
+def parse_autonova_price_to_prices(
+    db: Session,
+    supplier: str,
+    file_data: bytes,
+    tecdoc_db: Session | None = None,
+    warehouses: list[dict] | None = None,
+) -> int:
+    """Parse an Autonova D XLSX price list and upsert SupplierPrice rows."""
+    from app.services.autonova_price_parser import parse_autonova_price
+
+    rows = parse_autonova_price(file_data, warehouses=warehouses)
+    brand_cache: dict = {}
+    total = 0
+    for start in range(0, len(rows), 1000):
+        total += _upsert_supplier_price_rows(
+            db,
+            supplier,
+            rows[start:start + 1000],
+            tecdoc_db=tecdoc_db,
+            brand_cache=brand_cache,
+        )
     return total
 
 

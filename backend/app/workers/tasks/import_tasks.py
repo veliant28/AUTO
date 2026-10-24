@@ -3,13 +3,17 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from app.workers import celery_app
 from app.core.db import SessionLocal, TecDocSessionLocal
-from app.models.imports import SupplierConfig, PriceImport, ImportSchedule
+from app.models.imports import PriceImport, ImportSchedule
 from app.models.settings import SiteSettings
 from app.models.backup import BackupRecord
-from app.services.supplier_api import GPLAPIClient, UTRAPIClient
+from app.services.supplier_api import (
+    AUTONOVA_D_SUPPLIER,
+    AutonovaError,
+    get_supplier_client_and_token,
+)
 from app.services.import_processor import (
-    build_xlsx_from_json, parse_xlsx_to_prices, promote_all_to_catalog,
-    assign_gpl_categories, _ensure_import_dir, IMPORT_DIR
+    build_xlsx_from_json, parse_xlsx_to_prices, parse_autonova_price_to_prices,
+    promote_all_to_catalog, assign_gpl_categories, _ensure_import_dir, IMPORT_DIR,
 )
 from app.services.pricing_service import apply_margins_bulk
 from app.services.sku_generator import bulk_generate_skus, sync_skus_to_parts
@@ -58,77 +62,7 @@ def _snapshot_margins(db):
 
 
 def _get_client(supplier: str, db) -> tuple:
-    config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
-    if not config:
-        LOG(f"{supplier}: supplier config not found")
-        return None, None
-
-    now = datetime.utcnow()
-    token = config.token
-    expires_at = config.token_expires_at
-    expires_in_hours = (expires_at - now).total_seconds() / 3600 if expires_at and token else 0
-
-    LOG(f"{supplier}: token expires_at={expires_at}, expires_in={expires_in_hours:.1f}h")
-
-    # Нужно обновить если: истёк ИЛИ expires < 1ч
-    needs_refresh = not (token and expires_at and expires_at > now)
-    needs_preemptive = token and expires_at and expires_at > now and expires_in_hours < 1
-
-    if needs_refresh:
-        LOG(f"{supplier}: token EXPIRED — need full auth")
-    elif needs_preemptive:
-        LOG(f"{supplier}: token expires in {expires_in_hours:.1f}h (< 1h) — preemptive auth")
-    else:
-        LOG(f"{supplier}: token valid ({expires_in_hours:.1f}h remaining) — using existing")
-        if supplier.upper() == "GPL":
-            return GPLAPIClient(config), token
-        elif supplier.upper() == "UTR":
-            return UTRAPIClient(config), token
-        return None, None
-
-    if supplier.upper() == "GPL":
-        client = GPLAPIClient(config)
-    elif supplier.upper() == "UTR":
-        client = UTRAPIClient(config)
-    else:
-        return None, None
-
-    result = None
-
-    # GPL: только полная авторизация (refresh токена нет)
-    if supplier.upper() == "GPL":
-        LOG(f"{supplier}: performing full auth...")
-        result = client.auth()
-    else:
-        # UTR: сначала refresh, при неудаче — полная авторизация
-        if config.refresh_token:
-            LOG(f"{supplier}: trying refresh...")
-            result = client.refresh(config.refresh_token)
-        if not result or not result.success:
-            prev_msg = result.message if result else 'no refresh token'
-            LOG(f"{supplier}: refresh failed ({prev_msg}), performing full auth...")
-            result = client.auth()
-
-    if not result or not result.success:
-        msg = result.message if result else "Auth returned None"
-        LOG(f"{supplier}: AUTH FAILED — {msg}")
-        return None, msg
-
-    # Сохраняем новый токен
-    config.token = result.token
-    config.token_expires_at = result.expires_at
-    if result.refresh_token:
-        config.refresh_token = result.refresh_token
-    db.commit()
-
-    new_expires_in = (result.expires_at - datetime.utcnow()).total_seconds() / 3600 if result.expires_at else 0
-    LOG(f"{supplier}: auth SUCCESS — new token expires in {new_expires_in:.1f}h (at {result.expires_at})")
-
-    if supplier.upper() == "GPL":
-        return GPLAPIClient(config), result.token
-    elif supplier.upper() == "UTR":
-        return UTRAPIClient(config), result.token
-    return None, None
+    return get_supplier_client_and_token(db, supplier)
 
 
 @celery_app.task(
@@ -179,7 +113,7 @@ def process_price_import(self, import_id: int):
 
         if pi.supplier.upper() == "GPL":
             LOG("GPL: fetching prices from API...")
-            gpl_client = GPLAPIClient(client.config)
+            gpl_client = client
             set_stage(pi, db, "Загрузка цен с GPL API")
             # Progress 0→24 during the fetch: keeps the UI bar alive and lets
             # the stale-import watchdog distinguish a working fetch from a
@@ -246,9 +180,140 @@ def process_price_import(self, import_id: int):
             except Exception as e:
                 LOG(f"GPL: post-import tasks failed (non-critical): {e}")
 
+        elif pi.supplier.upper() == AUTONOVA_D_SUPPLIER:
+            LOG("AUTONOVA-D: requesting price list...")
+            autonova_client = client
+            filters = pi.filters or {}
+
+            set_stage(pi, db, "Загрузка списка прайсов Autonova D")
+            prices = autonova_client.list_prices(token)
+            set_progress(pi, db, 5)
+            LOG(f"AUTONOVA-D: available prices: {[p.get('name') or p.get('number') for p in prices]}")
+
+            selected_ids = {
+                str(value)
+                for value in (filters.get("categories_ids") or filters.get("price_ids") or [])
+            }
+            if selected_ids:
+                prices_to_import = [
+                    item for item in prices if str(item.get("id")) in selected_ids
+                ]
+                if not prices_to_import:
+                    raise AutonovaError(
+                        "Выбранные прайсы Autonova D не найдены в аккаунте"
+                    )
+            else:
+                # No explicit selection: import the newest price only, so
+                # different price levels are never mixed in one supplier offer.
+                prices_to_import = prices[:1]
+
+            if not prices_to_import:
+                raise AutonovaError(
+                    "В аккаунте Autonova D нет доступных прайс-листов"
+                )
+
+            LOG(
+                "AUTONOVA-D: importing price(s): "
+                + ", ".join(
+                    str(item.get("name") or item.get("number") or item.get("id"))
+                    for item in prices_to_import
+                )
+            )
+
+            warehouses: list[dict] = []
+            try:
+                set_stage(pi, db, "Загрузка складов Autonova D")
+                warehouses = autonova_client.get_warehouses(token)
+                LOG(f"AUTONOVA-D: warehouses loaded: {len(warehouses)}")
+            except Exception as exc:
+                # Warehouse metadata is optional: price headers often already
+                # contain warehouse names. A failure must not abort the import.
+                LOG(f"AUTONOVA-D: warehouses unavailable ({exc}); using price headers")
+
+            downloaded: list[tuple[str, bytes]] = []
+            for index, price in enumerate(prices_to_import):
+                price_id = str(price.get("id") or "")
+                price_label = str(
+                    price.get("name") or price.get("number") or price_id
+                )
+                set_stage(pi, db, f"Скачивание прайса Autonova D: {price_label}")
+                xlsx_data = autonova_client.download_price_file(
+                    token, price_id, "xlsx"
+                )
+                if index == 0:
+                    file_name = (
+                        f"autonova_{import_id}_"
+                        f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                    )
+                    file_path = os.path.join(IMPORT_DIR, file_name)
+                    with open(file_path, "wb") as f:
+                        f.write(xlsx_data)
+                    pi.file_path = file_path
+                    pi.file_size = len(xlsx_data)
+                set_progress(pi, db, min(25, 10 + index * 5))
+                LOG(
+                    f"AUTONOVA-D: downloaded '{price_label}' "
+                    f"({len(xlsx_data)} bytes)"
+                )
+                downloaded.append((price_label, xlsx_data))
+
+            # Delete old rows only after every file is downloaded, so a
+            # network failure cannot wipe the previous successful import.
+            LOG("AUTONOVA-D: cleaning up old supplier prices...")
+            db.execute(sa_delete(SupplierPrice).where(
+                SupplierPrice.supplier == AUTONOVA_D_SUPPLIER
+            ))
+            db.commit()
+
+            total = 0
+            tecdb = TecDocSessionLocal()
+            try:
+                for price_label, xlsx_data in downloaded:
+                    set_stage(pi, db, f"Разбор прайса Autonova D: {price_label}")
+                    count = parse_autonova_price_to_prices(
+                        db,
+                        AUTONOVA_D_SUPPLIER,
+                        xlsx_data,
+                        tecdoc_db=tecdb,
+                        warehouses=warehouses,
+                    )
+                    total += count
+                    LOG(f"AUTONOVA-D: parsed {count} rows from '{price_label}'")
+            finally:
+                tecdb.close()
+
+            pi.total_items = total
+            set_progress(pi, db, 35)
+            LOG(f"AUTONOVA-D: parsed {total} prices")
+
+            LOG("AUTONOVA-D: promoting to catalog...")
+            set_stage(pi, db, "Обновление каталога")
+            promoted = promote_all_to_catalog(
+                db,
+                AUTONOVA_D_SUPPLIER,
+                progress_cb=make_progress_cb(db, import_id, offset=35, scale=0.30),
+            )
+            pi = db.query(PriceImport).filter(PriceImport.id == import_id).first()
+            pi.matched_items = promoted
+            set_progress(pi, db, 65)
+            LOG(f"AUTONOVA-D: promoted {promoted} offers")
+
+            LOG("AUTONOVA-D: generating SKUs...")
+            set_stage(pi, db, "Создание товаров в каталоге")
+            bulk_generate_skus(db)
+            sync_skus_to_parts(db, supplier=AUTONOVA_D_SUPPLIER)
+            LOG("AUTONOVA-D: SKUs generated")
+
+            complete_import(pi, db)
+            LOG("AUTONOVA-D: import complete — launching parallel tasks")
+            try:
+                queue_post_import_tasks(AUTONOVA_D_SUPPLIER)
+            except Exception as e:
+                LOG(f"AUTONOVA-D: post-import tasks failed (non-critical): {e}")
+
         elif pi.supplier.upper() == "UTR":
             LOG("UTR: requesting export...")
-            utr_client = UTRAPIClient(client.config)
+            utr_client = client
             filters = pi.filters or {}
 
             set_stage(pi, db, "Запрос экспорта с UTR API")

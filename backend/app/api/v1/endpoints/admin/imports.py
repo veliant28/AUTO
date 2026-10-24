@@ -9,9 +9,12 @@ from app.models.imports import SupplierConfig, PriceImport
 from app.schemas.import_schemas import (
     ExportParamsResponse, ExportRequestCreate, PriceImportItem, PriceImportListResponse,
 )
-from app.services.supplier_api import GPLAPIClient, UTRAPIClient
-from app.services.crypto_util import decrypt_password
-from app.services.import_processor import promote_all_to_catalog
+from app.services.supplier_api import (
+    AUTONOVA_D_SUPPLIER,
+    AutonovaError,
+    build_supplier_client,
+    get_supplier_client_and_token,
+)
 
 router = APIRouter()
 
@@ -58,18 +61,37 @@ async def get_export_params(
     current_user: User = Depends(require_permission("imports.view")),
 ):
     """Получить параметры экспорта для поставщика (форматы, бренды, категории)."""
-    config = db.query(SupplierConfig).filter(SupplierConfig.supplier == supplier).first()
-    if not config or not config.token:
-        raise HTTPException(status_code=400, detail=f"No valid config/token for supplier: {supplier}")
-
-    if supplier.upper() == "GPL":
-        client = GPLAPIClient(config)
-    elif supplier.upper() == "UTR":
-        client = UTRAPIClient(config)
+    if supplier.upper() == AUTONOVA_D_SUPPLIER:
+        # Short-lived 300s tokens: refresh/auth once when the dialog opens.
+        client, token = get_supplier_client_and_token(db, supplier)
+        if not client or not token:
+            raise HTTPException(
+                status_code=400,
+                detail=token or f"No valid config/token for supplier: {supplier}",
+            )
     else:
-        raise HTTPException(status_code=400, detail=f"Unknown supplier: {supplier}")
+        # GPL/UTR keep their previous behaviour: no extra API calls here.
+        config = (
+            db.query(SupplierConfig)
+            .filter(SupplierConfig.supplier == supplier)
+            .first()
+        )
+        if not config or not config.token:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No valid config/token for supplier: {supplier}",
+            )
+        try:
+            client = build_supplier_client(supplier, config)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        token = config.token
 
-    result = client.get_export_params(config.token)
+    try:
+        result = client.get_export_params(token)
+    except (AutonovaError, ValueError) as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
     return ExportParamsResponse(
         supplier=supplier,
         supported_formats=result.formats,
@@ -87,7 +109,9 @@ async def request_export(
 ):
     """Запросить выгрузку прайс-листа от поставщика."""
     config = db.query(SupplierConfig).filter(SupplierConfig.supplier == body.supplier).first()
-    if not config or not config.token:
+    if not config:
+        raise HTTPException(status_code=400, detail="Supplier not configured")
+    if body.supplier.upper() != AUTONOVA_D_SUPPLIER and not config.token:
         raise HTTPException(status_code=400, detail="Supplier not configured or no valid token")
 
     pimport = PriceImport(
