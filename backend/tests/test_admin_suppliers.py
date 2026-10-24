@@ -54,6 +54,44 @@ class TestUpdateSupplier:
                           json={"login": "x"})
         assert resp.status_code == 404
 
+    def test_update_autonova_environment_and_client_id(self, client, db, admin_headers):
+        sc = SupplierConfig(
+            supplier="AUTONOVA-D",
+            login="partner",
+            api_url="https://api.autonovad.ua/dev",
+            token="old-token",
+            refresh_token="old-refresh",
+        )
+        db.add(sc)
+        db.commit()
+        resp = client.put(
+            "/api/v1/admin/suppliers/AUTONOVA-D",
+            headers=admin_headers,
+            json={
+                "client_id": "99",
+                "api_url": "https://api.autonovad.ua/stable",
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["client_id"] == "99"
+        assert data["api_url"] == "https://api.autonovad.ua/stable"
+        assert data["token_status"] == "none"
+        db.refresh(sc)
+        assert sc.token is None
+        assert sc.refresh_token is None
+
+    def test_update_autonova_rejects_unknown_environment(self, client, db, admin_headers):
+        sc = SupplierConfig(supplier="AUTONOVA-D", login="")
+        db.add(sc)
+        db.commit()
+        resp = client.put(
+            "/api/v1/admin/suppliers/AUTONOVA-D",
+            headers=admin_headers,
+            json={"api_url": "https://evil.example"},
+        )
+        assert resp.status_code == 400
+
 
 class TestTokenStatus:
     def test_token_status_none(self, client, db, admin_headers):
