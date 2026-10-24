@@ -9,7 +9,11 @@ from app.schemas.import_schemas import (
     SupplierConfigResponse, SupplierConfigUpdate, SupplierAuthResponse,
     TokenStatusResponse, ExportParamsResponse,
 )
-from app.services.supplier_api import GPLAPIClient, UTRAPIClient
+from app.services.supplier_api import (
+    AUTONOVA_D_SUPPLIER,
+    build_supplier_client,
+    normalize_autonova_api_url,
+)
 from app.services.crypto_util import encrypt_password
 
 router = APIRouter()
@@ -26,6 +30,7 @@ def _config_to_response(c: SupplierConfig) -> SupplierConfigResponse:
         id=c.id,
         supplier=c.supplier,
         login=c.login,
+        client_id=c.client_id,
         api_url=c.api_url,
         is_active=c.is_active,
         token_status=token_status,
@@ -57,9 +62,26 @@ async def update_supplier(
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")
     if body.login is not None:
-        config.login = body.login
+        config.login = body.login.strip()
+    if body.client_id is not None:
+        config.client_id = body.client_id.strip() or None
     if body.password is not None and body.password:
         config.password_encrypted = encrypt_password(body.password)
+    if body.api_url is not None:
+        new_url = body.api_url.strip().rstrip("/")
+        if supplier.upper() == AUTONOVA_D_SUPPLIER:
+            try:
+                new_url = normalize_autonova_api_url(new_url)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
+        elif not new_url.startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="Invalid API URL")
+        if new_url != (config.api_url or "").rstrip("/"):
+            config.api_url = new_url
+            # Tokens are environment-specific: never reuse a dev token in stable.
+            config.token = None
+            config.refresh_token = None
+            config.token_expires_at = None
     config.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(config)
@@ -77,12 +99,10 @@ async def authenticate_supplier(
     if not config:
         raise HTTPException(status_code=404, detail="Supplier config not found")
 
-    if supplier.upper() == "GPL":
-        client = GPLAPIClient(config)
-    elif supplier.upper() == "UTR":
-        client = UTRAPIClient(config)
-    else:
-        raise HTTPException(status_code=400, detail=f"Unknown supplier: {supplier}")
+    try:
+        client = build_supplier_client(supplier, config)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
     result = client.auth()
     if not result.success:
@@ -138,16 +158,17 @@ async def refresh_supplier_token(
     if not config.token:
         return SupplierAuthResponse(success=False, message="No token to refresh")
 
+    try:
+        client = build_supplier_client(supplier, config)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if supplier.upper() == "GPL":
-        client = GPLAPIClient(config)
         result = client.refresh(config.token)
-    elif supplier.upper() == "UTR":
+    else:
         if not config.refresh_token:
             return SupplierAuthResponse(success=False, message="No refresh token available")
-        client = UTRAPIClient(config)
         result = client.refresh(config.refresh_token)
-    else:
-        raise HTTPException(status_code=400, detail=f"Unknown supplier: {supplier}")
 
     if not result.success:
         return SupplierAuthResponse(success=False, message=result.message)

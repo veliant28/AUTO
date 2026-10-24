@@ -7,6 +7,7 @@ class SupplierConfigResponse(BaseModel):
     id: int
     supplier: str
     login: str
+    client_id: Optional[str] = None
     api_url: Optional[str] = None
     is_active: bool
     token_status: str = "none"
@@ -21,6 +22,8 @@ class SupplierConfigResponse(BaseModel):
 class SupplierConfigUpdate(BaseModel):
     login: Optional[str] = None
     password: Optional[str] = None
+    client_id: Optional[str] = None
+    api_url: Optional[str] = None
 
 
 class SupplierAuthResponse(BaseModel):

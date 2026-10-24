@@ -39,6 +39,7 @@ class SupplierPrice(Base):
     brand = Column(String, nullable=True)
     name = Column(String, nullable=True)
     price = Column(Numeric(10, 2), nullable=True)
+    retail_price = Column(Numeric(10, 2), nullable=True)
     currency = Column(String, nullable=True)
     stock_total = Column(Integer, default=0, nullable=False)
     stock_regions = Column(JSON, nullable=True)

@@ -1,9 +1,139 @@
-import httpx
+import base64
+import logging
+import time
 from datetime import datetime, timedelta
 from typing import Optional
+from urllib.parse import quote
+
+import httpx
 from sqlalchemy.orm import Session
+
 from app.models.imports import SupplierConfig
-from app.services.crypto_util import decrypt_password, encrypt_password
+from app.services.crypto_util import decrypt_password
+
+
+AUTONOVA_D_SUPPLIER = "AUTONOVA-D"
+AUTONOVA_D_ENVIRONMENTS = {
+    "dev": "https://api.autonovad.ua/dev",
+    "stable": "https://api.autonovad.ua/stable",
+}
+AUTONOVA_D_DEFAULT_API_URL = AUTONOVA_D_ENVIRONMENTS["dev"]
+
+logger = logging.getLogger(__name__)
+
+
+class AutonovaError(Exception):
+    """Ошибка при обращении к API Autonova D."""
+
+
+def normalize_autonova_api_url(url: str | None) -> str:
+    value = (url or "").strip().rstrip("/")
+    if value not in AUTONOVA_D_ENVIRONMENTS.values():
+        raise ValueError(
+            "Autonova D API URL must be one of: "
+            + ", ".join(AUTONOVA_D_ENVIRONMENTS.values())
+        )
+    return value
+
+
+def build_supplier_client(supplier: str, config: SupplierConfig) -> "SupplierAPIClient":
+    key = (supplier or "").strip().upper()
+    if key == "GPL":
+        return GPLAPIClient(config)
+    if key == "UTR":
+        return UTRAPIClient(config)
+    if key in (AUTONOVA_D_SUPPLIER, "AUTONOVA D", "AUTONOVAD"):
+        return AutonovaDAPIClient(config)
+    raise ValueError(f"Unknown supplier: {supplier}")
+
+
+def get_supplier_client_and_token(
+    db: Session, supplier: str
+) -> tuple["SupplierAPIClient | None", str | None]:
+    """Return a configured client and a valid token (refresh/auth if needed).
+
+    The second value is an error message when the client/token pair is
+    unavailable. Kept supplier-aware because Autonova D tokens live only 300s.
+    """
+    config = (
+        db.query(SupplierConfig)
+        .filter(SupplierConfig.supplier == supplier)
+        .first()
+    )
+    if not config:
+        logger.warning("%s: supplier config not found", supplier)
+        return None, None
+
+    key = supplier.upper()
+    try:
+        client = build_supplier_client(supplier, config)
+    except ValueError as exc:
+        logger.warning("%s: %s", supplier, exc)
+        return None, str(exc)
+
+    now = datetime.utcnow()
+    token = config.token
+    expires_at = config.token_expires_at
+    remaining = (expires_at - now).total_seconds() if expires_at and token else 0
+    logger.info(
+        "%s: token expires_at=%s, expires_in=%.2fh",
+        supplier,
+        expires_at,
+        remaining / 3600,
+    )
+
+    if token and remaining > 30:
+        # Autonova D tokens live only 300 seconds: reuse them until nearly
+        # expired instead of refreshing before every import. Keep a 2-minute
+        # margin so a price download cannot start with an almost-dead token.
+        if key != AUTONOVA_D_SUPPLIER or remaining > 120:
+            logger.info(
+                "%s: token valid (%.1fm remaining), using existing",
+                supplier,
+                remaining / 60,
+            )
+            return client, token
+
+    result = None
+    if key == "GPL":
+        logger.info("%s: performing full auth...", supplier)
+        result = client.auth()
+    else:
+        if config.refresh_token:
+            logger.info("%s: trying refresh...", supplier)
+            result = client.refresh(config.refresh_token)
+        if not result or not result.success:
+            previous = result.message if result else "no refresh token"
+            logger.info(
+                "%s: refresh failed (%s), performing full auth...",
+                supplier,
+                previous,
+            )
+            result = client.auth()
+
+    if not result or not result.success:
+        message = result.message if result else "Auth returned None"
+        logger.warning("%s: AUTH FAILED — %s", supplier, message)
+        return None, message
+
+    config.token = result.token
+    config.token_expires_at = result.expires_at
+    if result.refresh_token:
+        config.refresh_token = result.refresh_token
+    db.commit()
+
+    new_remaining = (
+        (result.expires_at - datetime.utcnow()).total_seconds()
+        if result.expires_at
+        else 0
+    )
+    logger.info(
+        "%s: auth SUCCESS — new token expires in %.1fm (at %s)",
+        supplier,
+        new_remaining / 60,
+        result.expires_at,
+    )
+    return client, result.token
 
 
 class SupplierAuthResult:
@@ -307,3 +437,318 @@ class UTRAPIClient(SupplierAPIClient):
             timeout=120,
         )
         return resp.content
+
+
+class AutonovaDAPIClient(SupplierAPIClient):
+    """
+    Autonova D partner API.
+
+    Price import uses only the official price-list endpoints:
+    GET /api/v1/prices/clients/{clientId} and GET /api/v1/prices/{priceId}.
+    UTR blocked us for aggressive polling, so every request is throttled and
+    retried at most once (only for 429/5xx/network errors).
+    """
+
+    MIN_REQUEST_INTERVAL = 1.0
+    MAX_ATTEMPTS = 2
+
+    def __init__(self, config: SupplierConfig):
+        super().__init__(config)
+        self._last_request_at = 0.0
+
+    @property
+    def api_url(self) -> str:
+        return normalize_autonova_api_url(
+            self.config.api_url or AUTONOVA_D_DEFAULT_API_URL
+        )
+
+    @property
+    def client_id(self) -> str:
+        return (self.config.client_id or "").strip()
+
+    def _require_client_id(self) -> str:
+        if not self.client_id:
+            raise AutonovaError("Autonova D client ID is not configured")
+        return self.client_id
+
+    def _throttle(self) -> None:
+        elapsed = time.monotonic() - self._last_request_at
+        if elapsed < self.MIN_REQUEST_INTERVAL:
+            time.sleep(self.MIN_REQUEST_INTERVAL - elapsed)
+        self._last_request_at = time.monotonic()
+
+    @staticmethod
+    def _error_message(resp: httpx.Response) -> str:
+        try:
+            data = resp.json()
+        except ValueError:
+            return (resp.text or f"HTTP {resp.status_code}")[:500]
+        if isinstance(data, dict):
+            for key in ("message", "error", "detail", "title"):
+                value = data.get(key)
+                if value:
+                    return str(value)[:500]
+        return str(data)[:500]
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        token: str | None = None,
+        timeout: float = 60,
+        **kwargs,
+    ) -> httpx.Response:
+        url = f"{self.api_url}{path}"
+        headers = dict(kwargs.pop("headers", {}))
+        headers.setdefault("Accept", "application/json")
+        headers.setdefault("User-Agent", "AUTO-Parts-Price-Import/1.0")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        last_error: Exception | None = None
+        for attempt in range(self.MAX_ATTEMPTS):
+            self._throttle()
+            try:
+                resp = httpx.request(
+                    method,
+                    url,
+                    headers=headers,
+                    timeout=timeout,
+                    **kwargs,
+                )
+            except httpx.RequestError as exc:
+                last_error = exc
+                if attempt + 1 < self.MAX_ATTEMPTS:
+                    time.sleep(5 * (attempt + 1))
+                    continue
+                raise AutonovaError(
+                    f"Autonova D connection error: {exc}"
+                ) from exc
+
+            if resp.status_code == 429:
+                retry_after = resp.headers.get("Retry-After")
+                try:
+                    wait = min(int(retry_after), 60) if retry_after else 30
+                except ValueError:
+                    wait = 30
+                if attempt + 1 < self.MAX_ATTEMPTS:
+                    time.sleep(wait)
+                    continue
+                raise AutonovaError(
+                    "Autonova D API rate limit exceeded; import aborted to "
+                    "avoid another supplier block"
+                )
+
+            if resp.status_code >= 500 and attempt + 1 < self.MAX_ATTEMPTS:
+                time.sleep(5 * (attempt + 1))
+                continue
+
+            return resp
+
+        raise AutonovaError(str(last_error or "Autonova D request failed"))
+
+    @staticmethod
+    def _token_result(data: dict) -> SupplierAuthResult:
+        token = data.get("access_token")
+        if not token:
+            return SupplierAuthResult(
+                success=False,
+                message=f"Unexpected Autonova D auth response: {data}",
+            )
+        try:
+            expires_in = int(data.get("expires_in") or 300)
+        except (TypeError, ValueError):
+            expires_in = 300
+        return SupplierAuthResult(
+            success=True,
+            token=token,
+            expires_at=datetime.utcnow() + timedelta(seconds=expires_in),
+            refresh_token=data.get("refresh_token", ""),
+        )
+
+    def auth(self) -> SupplierAuthResult:
+        if not self.config.login:
+            return SupplierAuthResult(
+                success=False,
+                message="Autonova D username is not configured",
+            )
+        try:
+            resp = self._request(
+                "POST",
+                "/api/v1/auth/token",
+                json={"username": self.config.login, "password": self.password},
+                timeout=20,
+            )
+        except (AutonovaError, ValueError) as exc:
+            return SupplierAuthResult(success=False, message=str(exc))
+
+        if resp.status_code != 200:
+            return SupplierAuthResult(
+                success=False,
+                message=f"HTTP {resp.status_code}: {self._error_message(resp)}",
+            )
+        try:
+            data = resp.json()
+        except ValueError:
+            return SupplierAuthResult(
+                success=False,
+                message="Autonova D returned a non-JSON auth response",
+            )
+        return self._token_result(data)
+
+    def refresh(self, refresh_token: str) -> SupplierAuthResult:
+        if not refresh_token:
+            return SupplierAuthResult(
+                success=False, message="No refresh token available",
+            )
+        try:
+            resp = self._request(
+                "GET",
+                f"/api/v1/auth/token/refresh/{quote(refresh_token, safe='')}",
+                timeout=20,
+            )
+        except (AutonovaError, ValueError) as exc:
+            return SupplierAuthResult(success=False, message=str(exc))
+
+        if resp.status_code != 200:
+            return SupplierAuthResult(
+                success=False,
+                message=f"HTTP {resp.status_code}: {self._error_message(resp)}",
+            )
+        try:
+            data = resp.json()
+        except ValueError:
+            return SupplierAuthResult(
+                success=False,
+                message="Autonova D returned a non-JSON refresh response",
+            )
+        return self._token_result(data)
+
+    def list_prices(self, token: str) -> list[dict]:
+        client_id = self._require_client_id()
+        resp = self._request(
+            "GET",
+            f"/api/v1/prices/clients/{quote(client_id, safe='')}",
+            token=token,
+            timeout=30,
+        )
+        if resp.status_code != 200:
+            raise AutonovaError(
+                f"Autonova D price list request failed: HTTP {resp.status_code}: "
+                f"{self._error_message(resp)}"
+            )
+        try:
+            payload = resp.json()
+        except ValueError as exc:
+            raise AutonovaError(
+                "Autonova D returned a non-JSON price list response"
+            ) from exc
+        items = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(items, list):
+            raise AutonovaError(
+                f"Unexpected Autonova D price list response: {payload}"
+            )
+        return [item for item in items if isinstance(item, dict)]
+
+    def get_warehouses(self, token: str) -> list[dict]:
+        resp = self._request("GET", "/api/v1/warehouses", token=token, timeout=30)
+        if resp.status_code != 200:
+            return []
+        try:
+            payload = resp.json()
+        except ValueError:
+            return []
+        items = payload.get("data") if isinstance(payload, dict) else None
+        return [item for item in items if isinstance(item, dict)] if isinstance(items, list) else []
+
+    def download_price_file(
+        self,
+        token: str,
+        price_id: str,
+        extension: str = "xlsx",
+    ) -> bytes:
+        resp = self._request(
+            "GET",
+            f"/api/v1/prices/{quote(str(price_id), safe='')}",
+            token=token,
+            params={"extension": extension},
+            timeout=120,
+        )
+        if resp.status_code != 200:
+            raise AutonovaError(
+                f"Autonova D price download failed: HTTP {resp.status_code}: "
+                f"{self._error_message(resp)}"
+            )
+
+        content = resp.content or b""
+        content_type = (resp.headers.get("content-type") or "").lower()
+        if "json" in content_type or content.lstrip()[:1] in (b"{", b"["):
+            try:
+                payload = resp.json()
+            except ValueError as exc:
+                raise AutonovaError(
+                    "Autonova D returned an invalid price file response"
+                ) from exc
+            data = payload.get("data") if isinstance(payload, dict) else None
+            if isinstance(data, dict):
+                encoded = (
+                    data.get("fileData")
+                    or data.get("filedata")
+                    or data.get("file_data")
+                )
+                if encoded:
+                    if encoded.startswith("data:") and "," in encoded:
+                        encoded = encoded.split(",", 1)[1]
+                    try:
+                        return base64.b64decode(encoded)
+                    except (ValueError, TypeError) as exc:
+                        raise AutonovaError(
+                            "Autonova D returned invalid base64 price data"
+                        ) from exc
+            raise AutonovaError(
+                f"Autonova D price response has no fileData: {payload}"
+            )
+
+        if content[:2] == b"PK":
+            return content
+        if content[:4] == b"\xd0\xcf\x11\xe0":
+            raise AutonovaError(
+                "Autonova D returned an old .xls file; xlsx is required"
+            )
+        raise AutonovaError(
+            f"Unexpected Autonova D price file content (HTTP {resp.status_code})"
+        )
+
+    def get_export_params(self, token: str) -> ExportParamsResult:
+        # One request is enough for the import dialog. Price lists are exposed
+        # as selectable "categories" so the admin can pin the exact price.
+        prices = self.list_prices(token)
+
+        def _price_key(item: dict) -> datetime:
+            raw = str(item.get("lastUpdate") or "").strip()
+            for fmt in ("%d.%m.%Y %H:%M:%S", "%d.%m.%Y %H:%M", "%Y-%m-%dT%H:%M:%S"):
+                try:
+                    return datetime.strptime(raw, fmt)
+                except ValueError:
+                    continue
+            return datetime.min
+
+        prices.sort(key=_price_key, reverse=True)
+        categories = []
+        for item in prices:
+            price_id = item.get("id")
+            if not price_id:
+                continue
+            name = str(item.get("name") or "").strip()
+            number = str(item.get("number") or "").strip()
+            label = name or (f"Прайс {number}" if number else str(price_id))
+            if name and number and number not in name:
+                label = f"{name} (№{number})"
+            categories.append({"id": str(price_id), "name": label})
+
+        return ExportParamsResult(
+            brands=[],
+            categories=categories,
+            models=[],
+            formats=["xlsx"],
+        )

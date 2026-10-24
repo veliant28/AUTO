@@ -10,6 +10,7 @@ class SupplierConfig(Base):
     supplier = Column(String, nullable=False, unique=True)
     login = Column(String, nullable=False, default="")
     password_encrypted = Column(Text, nullable=True)
+    client_id = Column(String, nullable=True)
     api_url = Column(String, nullable=True)
     token = Column(Text, nullable=True)
     token_expires_at = Column(DateTime, nullable=True)
