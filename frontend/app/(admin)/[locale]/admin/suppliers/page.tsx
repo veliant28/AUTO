@@ -161,8 +161,9 @@ function TokenBadge({
   let tooltip: string
 
   if (activeSeconds !== null) {
-    const isWarning = activeSeconds < 3600
-    const isCritical = activeSeconds < 300
+    const shortLived = supplier === 'AUTONOVA-D'
+    const isWarning = activeSeconds < (shortLived ? 180 : 3600)
+    const isCritical = activeSeconds < (shortLived ? 60 : 300)
     content = (
       <Badge
         className={`supplier-token-badge gap-1.5 text-sm font-mono border-0 justify-center ${
