@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import api from '@/lib/api'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
-import { supplierBadgeClass } from '@/lib/suppliers'
+import { supplierBadgeClass, supplierBadgeLabel } from '@/lib/suppliers'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 }).format(n)
@@ -199,8 +199,9 @@ export default function OrderProductSearch({
                         {item.supplier_name && (
                           <Badge
                             className={`${supplierBadgeClass(item.supplier_name)} border-0 text-xs`}
+                            title={item.supplier_name}
                           >
-                            {item.supplier_name}
+                            {supplierBadgeLabel(item.supplier_name)}
                           </Badge>
                         )}
                         {inOrder ? (

@@ -80,7 +80,7 @@ import { useCopyTtn } from '@/hooks/useCopyTtn'
 import { EDIT_LOCKED_STATUSES, ORDER_STATUS_LABELS } from '@/lib/constants'
 import { broadcastStatusChange } from '@/lib/orderSync'
 import { getBrandColor, getBrandInitial } from '@/lib/brand'
-import { supplierBadgeClass } from '@/lib/suppliers'
+import { supplierBadgeClass, supplierBadgeLabel } from '@/lib/suppliers'
 import { PhoneInput } from '@/components/ui/PhoneInput'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
 import PaymentBlock from './PaymentBlock'
@@ -267,8 +267,9 @@ function OrderItemCard({
               {supplierName && (
                 <Badge
                   className={`${supplierBadgeClass(supplierName)} border-0 text-sm`}
+                  title={supplierName}
                 >
-                  {supplierName}
+                  {supplierBadgeLabel(supplierName)}
                 </Badge>
               )}
             </div>

@@ -62,6 +62,7 @@ import { formatDateTime, parseApiDate } from '@/lib/dates'
 import { formatPhone } from '@/lib/phone'
 import { useTimezone } from '@/hooks/useTimezone'
 import { toast } from '@/lib/toast'
+import { supplierBadgeClass, supplierBadgeLabel } from '@/lib/suppliers'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false })
 
@@ -73,11 +74,6 @@ const SLICE_COLORS: Record<string, string> = {
   cancelled: '#ef4444',
   returned_full: '#f97316',
   returned_partial: '#eab308',
-}
-
-const supplierColors: Record<string, string> = {
-  UTR: 'bg-red-500 text-white',
-  GPL: 'bg-orange-500 text-white',
 }
 
 // Цвета бейджей способов доставки — в тон сериям графика
@@ -1498,9 +1494,10 @@ export default function ClientDetailModal({
                                   </span>
                                   {item.supplier_name && (
                                     <Badge
-                                      className={`${supplierColors[item.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                      className={`${supplierBadgeClass(item.supplier_name)} border-0 text-sm`}
+                                      title={item.supplier_name}
                                     >
-                                      {item.supplier_name}
+                                      {supplierBadgeLabel(item.supplier_name)}
                                     </Badge>
                                   )}
                                 </div>
@@ -2237,9 +2234,10 @@ export default function ClientDetailModal({
                                   </span>
                                   {item.supplier_name && (
                                     <Badge
-                                      className={`${supplierColors[item.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                      className={`${supplierBadgeClass(item.supplier_name)} border-0 text-sm`}
+                                      title={item.supplier_name}
                                     >
-                                      {item.supplier_name}
+                                      {supplierBadgeLabel(item.supplier_name)}
                                     </Badge>
                                   )}
                                 </div>

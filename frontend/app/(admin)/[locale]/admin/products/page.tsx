@@ -62,11 +62,7 @@ import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
-
-const supplierColors: Record<string, string> = {
-  UTR: 'bg-red-500 text-white',
-  GPL: 'bg-orange-500 text-white',
-}
+import { supplierBadgeClass, supplierBadgeLabel } from '@/lib/suppliers'
 
 const SNAKE_COLORS = [
   '#3b82f6',
@@ -481,9 +477,10 @@ export default function AdminProductsPage() {
             {row.original.offers?.map((o: any) => (
               <Badge
                 key={o.supplier_name}
-                className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                className={`${supplierBadgeClass(o.supplier_name)} border-0 text-sm`}
+                title={o.supplier_name}
               >
-                {o.supplier_name}
+                {supplierBadgeLabel(o.supplier_name)}
               </Badge>
             ))}
             {(!row.original.offers || row.original.offers.length === 0) && (
@@ -710,6 +707,7 @@ export default function AdminProductsPage() {
             <SelectItem value="all">{t('products_filter_all')}</SelectItem>
             <SelectItem value="UTR">UTR</SelectItem>
             <SelectItem value="GPL">GPL</SelectItem>
+            <SelectItem value="AUTONOVA-D">AUTONOVA-D</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1070,9 +1068,10 @@ export default function AdminProductsPage() {
                   {deleteTarget.offers?.map((o: any) => (
                     <Badge
                       key={o.supplier_name}
-                      className={`${supplierColors[o.supplier_name] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      className={`${supplierBadgeClass(o.supplier_name)} border-0 text-sm`}
+                      title={o.supplier_name}
                     >
-                      {o.supplier_name}
+                      {supplierBadgeLabel(o.supplier_name)}
                     </Badge>
                   ))}
                 </div>
