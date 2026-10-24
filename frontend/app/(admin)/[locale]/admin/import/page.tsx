@@ -391,8 +391,15 @@ export default function ImportPage() {
             : data.categories
         setExportCategories(initial.map((c: any) => String(c.id)))
       }
-    } catch {
-      toast.error(t('import_export_params_error'))
+    } catch (err: any) {
+      const detail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        ''
+      toast.error(
+        String(detail).slice(0, 500) || t('import_export_params_error'),
+      )
     } finally {
       setExportParamsLoading(false)
     }
