@@ -149,71 +149,70 @@ function TokenBadge({
     return () => clearInterval(id)
   }, [])
 
-  if (secondsLeft !== null && secondsLeft > 0) {
-    const isWarning = secondsLeft < 3600
-    const isCritical = secondsLeft < 300
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex shrink-0">
-            <Badge
-              className={`supplier-token-badge gap-1.5 text-sm font-mono border-0 justify-center ${
-                isCritical
-                  ? 'bg-red-500 text-white'
-                  : isWarning
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-green-500 text-white'
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span className="supplier-token-text">
-                {formatCountdown(secondsLeft)}
-              </span>
-            </Badge>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{formatCountdown(secondsLeft)}</TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  if (
+  const activeSeconds =
+    secondsLeft !== null && secondsLeft > 0 ? secondsLeft : null
+  const isExpired =
     data?.token_status === 'expired' ||
     (secondsLeft === 0 && data?.token_status)
-  ) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={onRefresh}
-            aria-label={ta('settings_token_refresh')}
-            className="supplier-token-badge inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-orange-500 px-2.5 py-0.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="supplier-token-text">
-              {ta('settings_token_refresh')}
-            </span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
-      </Tooltip>
+  const stateKey =
+    activeSeconds !== null ? 'active' : isExpired ? 'expired' : 'none'
+
+  let content: React.ReactNode
+  let tooltip: string
+
+  if (activeSeconds !== null) {
+    const isWarning = activeSeconds < 3600
+    const isCritical = activeSeconds < 300
+    content = (
+      <Badge
+        className={`supplier-token-badge gap-1.5 text-sm font-mono border-0 justify-center ${
+          isCritical
+            ? 'bg-red-500 text-white'
+            : isWarning
+              ? 'bg-yellow-500 text-white'
+              : 'bg-green-500 text-white'
+        }`}
+      >
+        <Clock className="w-3.5 h-3.5" />
+        <span className="supplier-token-text">
+          {formatCountdown(activeSeconds)}
+        </span>
+      </Badge>
     )
+    tooltip = formatCountdown(activeSeconds)
+  } else if (isExpired) {
+    content = (
+      <button
+        type="button"
+        onClick={onRefresh}
+        aria-label={ta('settings_token_refresh')}
+        className="supplier-token-badge inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-orange-500 px-2.5 py-0.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        <RefreshCw className="w-3.5 h-3.5" />
+        <span className="supplier-token-text">
+          {ta('settings_token_refresh')}
+        </span>
+      </button>
+    )
+    tooltip = ta('settings_token_refresh')
+  } else {
+    content = (
+      <Badge className="supplier-token-badge gap-1.5 whitespace-nowrap text-sm bg-muted text-muted-foreground border-0">
+        <Key className="w-3.5 h-3.5" />
+        <span className="supplier-token-text">{ta('settings_token_none')}</span>
+      </Badge>
+    )
+    tooltip = ta('settings_token_none')
   }
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="inline-flex shrink-0">
-          <Badge className="supplier-token-badge gap-1.5 whitespace-nowrap text-sm bg-muted text-muted-foreground border-0">
-            <Key className="w-3.5 h-3.5" />
-            <span className="supplier-token-text">
-              {ta('settings_token_none')}
-            </span>
-          </Badge>
+          <AnimatedBadge swapKey={stateKey}>{content}</AnimatedBadge>
         </span>
       </TooltipTrigger>
-      <TooltipContent>{ta('settings_token_none')}</TooltipContent>
+      <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
   )
 }
