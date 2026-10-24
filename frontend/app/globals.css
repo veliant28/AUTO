@@ -218,3 +218,21 @@ input[type='number'] {
     min-width: 85px;
   }
 }
+
+/* TTN badge: in a narrow table cell show only the scan icon; the full number
+   stays available in the tooltip. No container = full badge (modals, storefront). */
+.waybill-badge-container {
+  container-type: inline-size;
+  container-name: waybill-badge;
+  min-width: 34px;
+}
+
+.waybill-badge-text {
+  white-space: nowrap;
+}
+
+@container waybill-badge (max-width: 183px) {
+  .waybill-badge-text {
+    display: none;
+  }
+}

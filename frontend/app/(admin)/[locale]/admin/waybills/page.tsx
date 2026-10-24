@@ -108,12 +108,14 @@ export default function WaybillsPage() {
         cell: (info) => {
           const row = info.row.original
           return (
-            <NpWaybillBadge
-              npNumber={row.np_number}
-              exists
-              isDeleted={row.is_deleted}
-              animationKey={`waybill-${row.id}-ttn`}
-            />
+            <div className="waybill-badge-container">
+              <NpWaybillBadge
+                npNumber={row.np_number}
+                exists
+                isDeleted={row.is_deleted}
+                animationKey={`waybill-${row.id}-ttn`}
+              />
+            </div>
           )
         },
       }),

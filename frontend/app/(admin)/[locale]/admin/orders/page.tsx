@@ -692,12 +692,14 @@ export default function AdminOrdersPage() {
           const idx = orderIds.indexOf(row.original.id)
           const summary = idx >= 0 ? npSummaries[idx] : null
           return summary ? (
-            <NpWaybillBadge
-              npNumber={summary.np_number}
-              exists={summary.exists}
-              isDeleted={summary.is_deleted}
-              animationKey={`order-${row.original.id}-ttn`}
-            />
+            <div className="waybill-badge-container">
+              <NpWaybillBadge
+                npNumber={summary.np_number}
+                exists={summary.exists}
+                isDeleted={summary.is_deleted}
+                animationKey={`order-${row.original.id}-ttn`}
+              />
+            </div>
           ) : (
             <span className="text-muted-foreground text-sm">—</span>
           )

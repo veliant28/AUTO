@@ -3,6 +3,11 @@
 import { ScanBarcode, ScanLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import AnimatedBadge from '@/components/ui/AnimatedBadge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 /** Format NP number from "20400048799000" → "204 000 4879 9000" */
@@ -41,23 +46,33 @@ export function NpWaybillBadge({
   const stateKey = `${
     isDeleted ? 'deleted' : hasNumber ? 'active' : 'empty'
   }:${npNumber || ''}`
+  const displayNumber = npNumber
+    ? formatNpNumber(npNumber)
+    : '204 000 0000 0000'
 
   return (
-    <AnimatedBadge swapKey={stateKey} animationKey={animationKey}>
-      <Badge
-        className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass} ${
-          npNumber ? 'cursor-pointer' : ''
-        }`}
-        // Реальная ТТН (не маска) — по клику копируем номер без пробелов
-        onClick={npNumber ? () => copyTtn(npNumber) : undefined}
-      >
-        {hasNumber || isDeleted ? (
-          <ScanBarcode className="w-3.5 h-3.5" />
-        ) : (
-          <ScanLine className="w-3.5 h-3.5" />
-        )}
-        {npNumber ? formatNpNumber(npNumber) : '204 000 0000 0000'}
-      </Badge>
-    </AnimatedBadge>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex min-w-0 max-w-full">
+          <AnimatedBadge swapKey={stateKey} animationKey={animationKey}>
+            <Badge
+              className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass} ${
+                npNumber ? 'cursor-pointer' : ''
+              }`}
+              // Реальная ТТН (не маска) — по клику копируем номер без пробелов
+              onClick={npNumber ? () => copyTtn(npNumber) : undefined}
+            >
+              {hasNumber || isDeleted ? (
+                <ScanBarcode className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <ScanLine className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span className="waybill-badge-text">{displayNumber}</span>
+            </Badge>
+          </AnimatedBadge>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{displayNumber}</TooltipContent>
+    </Tooltip>
   )
 }

@@ -214,27 +214,37 @@ function TtnCell({ ttn, returnId }: { ttn: string | null; returnId: number }) {
   const formatted = ttn
     ? ttn.replace(/(\d{2})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4')
     : null
+  const display = formatted ?? 'XX XXXX XXXX XXXX'
 
   return (
-    <AnimatedBadge
-      swapKey={ttn ? `active:${ttn}` : 'empty'}
-      animationKey={`return-${returnId}-ttn`}
-    >
-      {formatted ? (
-        <Badge
-          className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
-          onClick={() => copyTtn(ttn!)}
-        >
-          <ScanBarcode className="w-3.5 h-3.5" />
-          {formatted}
-        </Badge>
-      ) : (
-        <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
-          <ScanLine className="w-3.5 h-3.5" />
-          XX XXXX XXXX XXXX
-        </Badge>
-      )}
-    </AnimatedBadge>
+    <div className="waybill-badge-container">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex min-w-0 max-w-full">
+            <AnimatedBadge
+              swapKey={ttn ? `active:${ttn}` : 'empty'}
+              animationKey={`return-${returnId}-ttn`}
+            >
+              {formatted ? (
+                <Badge
+                  className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
+                  onClick={() => copyTtn(ttn!)}
+                >
+                  <ScanBarcode className="w-3.5 h-3.5 shrink-0" />
+                  <span className="waybill-badge-text">{formatted}</span>
+                </Badge>
+              ) : (
+                <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
+                  <ScanLine className="w-3.5 h-3.5 shrink-0" />
+                  <span className="waybill-badge-text">{display}</span>
+                </Badge>
+              )}
+            </AnimatedBadge>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{display}</TooltipContent>
+      </Tooltip>
+    </div>
   )
 }
 
