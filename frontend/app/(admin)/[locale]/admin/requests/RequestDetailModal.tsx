@@ -276,13 +276,15 @@ function PayloadCard({
                 }).format(Number(payload.order_total || 0))}{' '}
                 ₴
               </p>
-              <Badge
-                className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
-              >
-                {payload.order_status
-                  ? t(`order_${payload.order_status}`)
-                  : '—'}
-              </Badge>
+              <AnimatedBadge swapKey={payload.order_status}>
+                <Badge
+                  className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+                >
+                  {payload.order_status
+                    ? t(`order_${payload.order_status}`)
+                    : '—'}
+                </Badge>
+              </AnimatedBadge>
             </div>
           </div>
         )}
@@ -412,13 +414,15 @@ function PayloadCard({
                 }).format(Number(payload.return_total_refund || 0))}{' '}
                 ₴
               </p>
-              <Badge
-                className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
-              >
-                {payload.return_status
-                  ? t(`return_${payload.return_status}`)
-                  : '—'}
-              </Badge>
+              <AnimatedBadge swapKey={payload.return_status}>
+                <Badge
+                  className={`${statusInfo?.className || 'bg-gray-500 text-white'} border-0 text-sm whitespace-nowrap`}
+                >
+                  {payload.return_status
+                    ? t(`return_${payload.return_status}`)
+                    : '—'}
+                </Badge>
+              </AnimatedBadge>
             </div>
           </div>
         )}

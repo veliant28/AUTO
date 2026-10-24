@@ -21,6 +21,7 @@ import { enUS, ru, uk } from 'date-fns/locale'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Calendar } from '@/components/ui/calendar'
 import { Separator } from '@/components/ui/separator'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -184,11 +185,13 @@ export function SupportChatTile({ chat }: { chat: SupportChatOption }) {
         <span className="text-sm font-mono font-bold truncate">
           {chat.ticket_number || `#${chat.id}`}
         </span>
-        <Badge
-          className={`${supportStatusBadgeClass(chat.status)} border-0 text-sm shrink-0`}
-        >
-          {statusLabel}
-        </Badge>
+        <AnimatedBadge swapKey={chat.status} className="shrink-0">
+          <Badge
+            className={`${supportStatusBadgeClass(chat.status)} border-0 text-sm`}
+          >
+            {statusLabel}
+          </Badge>
+        </AnimatedBadge>
       </div>
       {(chat.user_name || chat.user_phone || chat.user_email) && (
         <div className="mt-1 space-y-0.5">
@@ -859,11 +862,13 @@ function OrderPicker({
                       <p className="text-sm font-semibold whitespace-nowrap">
                         {formatMoney(o.total)} ₴
                       </p>
-                      <Badge
-                        className={`${orderStatusBadgeClass(o.status)} border-0 text-xs whitespace-nowrap`}
-                      >
-                        {o.status ? t(`order_${o.status}`) : '—'}
-                      </Badge>
+                      <AnimatedBadge swapKey={o.status}>
+                        <Badge
+                          className={`${orderStatusBadgeClass(o.status)} border-0 text-xs whitespace-nowrap`}
+                        >
+                          {o.status ? t(`order_${o.status}`) : '—'}
+                        </Badge>
+                      </AnimatedBadge>
                     </div>
                   </div>
                 </div>
@@ -896,11 +901,15 @@ function OrderPicker({
             <p className="text-sm font-bold whitespace-nowrap">
               {formatMoney(payload.order_total)} ₴
             </p>
-            <Badge
-              className={`${orderStatusBadgeClass(payload.order_status)} border-0 text-sm whitespace-nowrap`}
-            >
-              {payload.order_status ? t(`order_${payload.order_status}`) : '—'}
-            </Badge>
+            <AnimatedBadge swapKey={payload.order_status}>
+              <Badge
+                className={`${orderStatusBadgeClass(payload.order_status)} border-0 text-sm whitespace-nowrap`}
+              >
+                {payload.order_status
+                  ? t(`order_${payload.order_status}`)
+                  : '—'}
+              </Badge>
+            </AnimatedBadge>
           </div>
         </div>
       )}
@@ -1112,11 +1121,13 @@ function ReturnPicker({
                       <p className="text-sm font-semibold whitespace-nowrap">
                         {formatMoney(r.total_refund)} ₴
                       </p>
-                      <Badge
-                        className={`${returnStatusBadgeClass(r.status)} border-0 text-xs whitespace-nowrap`}
-                      >
-                        {r.status ? t(`return_${r.status}`) : '—'}
-                      </Badge>
+                      <AnimatedBadge swapKey={r.status}>
+                        <Badge
+                          className={`${returnStatusBadgeClass(r.status)} border-0 text-xs whitespace-nowrap`}
+                        >
+                          {r.status ? t(`return_${r.status}`) : '—'}
+                        </Badge>
+                      </AnimatedBadge>
                     </div>
                   </div>
                 </div>
@@ -1148,13 +1159,15 @@ function ReturnPicker({
             <p className="text-sm font-bold whitespace-nowrap">
               {formatMoney(payload.return_total_refund)} ₴
             </p>
-            <Badge
-              className={`${returnStatusBadgeClass(payload.return_status)} border-0 text-sm whitespace-nowrap`}
-            >
-              {payload.return_status
-                ? t(`return_${payload.return_status}`)
-                : '—'}
-            </Badge>
+            <AnimatedBadge swapKey={payload.return_status}>
+              <Badge
+                className={`${returnStatusBadgeClass(payload.return_status)} border-0 text-sm whitespace-nowrap`}
+              >
+                {payload.return_status
+                  ? t(`return_${payload.return_status}`)
+                  : '—'}
+              </Badge>
+            </AnimatedBadge>
           </div>
         </div>
       )}
