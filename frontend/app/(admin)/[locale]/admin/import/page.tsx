@@ -58,11 +58,7 @@ import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { useTimezone, formatDate } from '@/hooks/useTimezone'
-
-const supplierColors: Record<string, string> = {
-  UTR: 'bg-red-500 text-white',
-  GPL: 'bg-orange-500 text-white',
-}
+import { supplierBadgeClass, supplierBadgeLabel } from '@/lib/suppliers'
 
 const statusIcons: Record<string, any> = {
   complete: CheckCircle2,
@@ -110,6 +106,7 @@ export default function ImportPage() {
   const [exportCategories, setExportCategories] = useState<string[]>([])
   const [exportParams, setExportParams] = useState<any>(null)
   const [exportParamsLoading, setExportParamsLoading] = useState(false)
+  const [exportParamsLoaded, setExportParamsLoaded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<any>(null)
 
   useEffect(() => {
@@ -202,9 +199,10 @@ export default function ImportPage() {
         size: 100,
         cell: (info) => (
           <Badge
-            className={`${supplierColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
+            className={`${supplierBadgeClass(info.getValue())} border-0 text-sm`}
+            title={info.getValue()}
           >
-            {info.getValue()}
+            {supplierBadgeLabel(info.getValue())}
           </Badge>
         ),
       }),
@@ -298,37 +296,39 @@ export default function ImportPage() {
           <div className="flex gap-2">
             {(row.original.status === 'complete' ||
               row.original.status === 'promoted') && (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        if (!reqPerm('imports.create')) return
-                        promoteMutation.mutate(row.original.id)
-                      }}
-                      disabled={promoteMutation.isPending}
-                    >
-                      <RefreshCw className="w-4 h-4" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (!reqPerm('imports.create')) return
+                      promoteMutation.mutate(row.original.id)
+                    }}
+                    disabled={promoteMutation.isPending}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('import_promote')}</TooltipContent>
+              </Tooltip>
+            )}
+            {(row.original.status === 'complete' ||
+              row.original.status === 'promoted' ||
+              (row.original.status === 'failed' && row.original.file_size)) && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/admin/imports/${row.original.id}/download`}
+                    target="_blank"
+                  >
+                    <Button variant="outline" size="icon">
+                      <Download className="w-4 h-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('import_promote')}</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/admin/imports/${row.original.id}/download`}
-                      target="_blank"
-                    >
-                      <Button variant="outline" size="icon">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('import_download')}</TooltipContent>
-                </Tooltip>
-              </>
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>{t('import_download')}</TooltipContent>
+              </Tooltip>
             )}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -372,6 +372,7 @@ export default function ImportPage() {
   const loadExportParams = async (supplierName: string) => {
     setExportSupplier(supplierName)
     setExportParams(null)
+    setExportParamsLoaded(false)
     setExportBrands([])
     setExportCategories([])
     try {
@@ -380,8 +381,15 @@ export default function ImportPage() {
         `/admin/imports/export-params/${supplierName}`,
       )
       setExportParams(data)
+      setExportParamsLoaded(true)
       if (data.categories?.length > 0) {
-        setExportCategories(data.categories.map((c: any) => String(c.id)))
+        // Autonova returns price lists as categories. Preselect only the
+        // newest one so different price levels are not mixed together.
+        const initial =
+          supplierName === 'AUTONOVA-D'
+            ? data.categories.slice(0, 1)
+            : data.categories
+        setExportCategories(initial.map((c: any) => String(c.id)))
       }
     } catch {
       toast.error(t('import_export_params_error'))
@@ -401,6 +409,11 @@ export default function ImportPage() {
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     )
   }
+
+  const noAutonovaPriceLists =
+    exportSupplier === 'AUTONOVA-D' &&
+    exportParamsLoaded &&
+    !(exportParams?.categories?.length > 0)
 
   if (!hydrated) {
     return (
@@ -463,6 +476,7 @@ export default function ImportPage() {
             <SelectItem value="all">{t('products_filter_all')}</SelectItem>
             <SelectItem value="GPL">GPL</SelectItem>
             <SelectItem value="UTR">UTR</SelectItem>
+            <SelectItem value="AUTONOVA-D">AUTONOVA-D</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -544,18 +558,19 @@ export default function ImportPage() {
           <div className="space-y-4">
             <div className="rounded-lg bg-muted p-4 space-y-4">
               <div className="flex justify-center gap-3">
-                {['GPL', 'UTR'].map((s) => (
+                {['GPL', 'UTR', 'AUTONOVA-D'].map((s) => (
                   <Button
                     key={s}
                     variant={exportSupplier === s ? undefined : 'outline'}
                     className={
                       exportSupplier === s
-                        ? `${supplierColors[s] || 'bg-gray-500'} text-white hover:opacity-90`
+                        ? `${supplierBadgeClass(s)} hover:opacity-90`
                         : ''
                     }
+                    title={s}
                     onClick={() => loadExportParams(s)}
                   >
-                    {s}
+                    {supplierBadgeLabel(s)}
                   </Button>
                 ))}
               </div>
@@ -589,7 +604,9 @@ export default function ImportPage() {
                   {exportParams.categories?.length > 0 && (
                     <div>
                       <label className="text-sm font-medium mb-1 block">
-                        {t('import_categories')}
+                        {exportSupplier === 'AUTONOVA-D'
+                          ? t('import_price_lists')
+                          : t('import_categories')}
                       </label>
                       <div className="flex flex-wrap gap-1 max-h-40 overflow-y-auto border rounded-lg p-2 bg-background">
                         {exportParams.categories.slice(0, 100).map((c: any) => (
@@ -610,6 +627,12 @@ export default function ImportPage() {
                     </div>
                   )}
                 </>
+              )}
+
+              {noAutonovaPriceLists && (
+                <p className="text-sm text-muted-foreground text-center">
+                  {t('import_no_price_lists')}
+                </p>
               )}
             </div>
           </div>
@@ -633,7 +656,12 @@ export default function ImportPage() {
                 if (!reqPerm('imports.create')) return
                 exportRequestMutation.mutate()
               }}
-              disabled={!exportSupplier || exportRequestMutation.isPending}
+              disabled={
+                !exportSupplier ||
+                !exportParamsLoaded ||
+                noAutonovaPriceLists ||
+                exportRequestMutation.isPending
+              }
               className="gap-2"
             >
               {exportRequestMutation.isPending ? (
@@ -669,9 +697,10 @@ export default function ImportPage() {
             <div className="rounded-lg bg-muted p-3 text-sm">
               <div className="flex items-center gap-2">
                 <Badge
-                  className={`${supplierColors[deleteTarget.supplier] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                  className={`${supplierBadgeClass(deleteTarget.supplier)} border-0 text-sm`}
+                  title={deleteTarget.supplier}
                 >
-                  {deleteTarget.supplier}
+                  {supplierBadgeLabel(deleteTarget.supplier)}
                 </Badge>
                 <span className="text-muted-foreground text-sm">
                   {formatDate(deleteTarget.created_at, tz)}
