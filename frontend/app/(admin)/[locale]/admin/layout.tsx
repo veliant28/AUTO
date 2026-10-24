@@ -46,7 +46,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Progress } from '@/components/ui/progress'
+import { AnimatedProgress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -541,7 +541,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline">
               {ta('requests_progress_label')}
             </span>
-            <Progress value={requestsProgress} className="w-32" />
+            <AnimatedProgress value={requestsProgress} className="w-32" />
             <span className="text-sm font-medium tabular-nums">
               {requestsProgress}%
             </span>
