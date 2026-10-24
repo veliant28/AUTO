@@ -184,14 +184,14 @@ function TokenBadge({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 text-red-500 border-red-300"
+          <button
+            type="button"
             onClick={onRefresh}
+            aria-label={ta('settings_token_refresh')}
+            className="inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-500 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:bg-red-950/30 dark:hover:bg-red-950/50"
           >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+            <RefreshCw className="w-3 h-3" />
+          </button>
         </TooltipTrigger>
         <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
       </Tooltip>
