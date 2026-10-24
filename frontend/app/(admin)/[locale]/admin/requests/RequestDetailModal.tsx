@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
@@ -931,11 +932,13 @@ export default function RequestDetailModal({
                 <div key={c.id} className="rounded-lg border p-3 bg-card">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     {c.author_group && (
-                      <Badge
-                        className={`${ROLE_BADGE_COLORS[c.author_group] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                      >
-                        {t(c.author_group)}
-                      </Badge>
+                      <AnimatedBadge swapKey={c.author_group}>
+                        <Badge
+                          className={`${ROLE_BADGE_COLORS[c.author_group] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                        >
+                          {t(c.author_group)}
+                        </Badge>
+                      </AnimatedBadge>
                     )}
                     <span className="font-medium text-foreground">
                       {c.author_name || t('system_actor')}
@@ -1219,11 +1222,13 @@ export default function RequestDetailModal({
                   {detail.assignee && (
                     <div className="flex flex-col items-end gap-0.5">
                       {detail.assignee.role && (
-                        <Badge
-                          className={`${ROLE_BADGE_COLORS[detail.assignee.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                        >
-                          {t(detail.assignee.role)}
-                        </Badge>
+                        <AnimatedBadge swapKey={detail.assignee.role}>
+                          <Badge
+                            className={`${ROLE_BADGE_COLORS[detail.assignee.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                          >
+                            {t(detail.assignee.role)}
+                          </Badge>
+                        </AnimatedBadge>
                       )}
                       <span className="text-sm font-medium">
                         {actorLabel(detail.assignee)}
@@ -1278,11 +1283,13 @@ export default function RequestDetailModal({
                     {t('requests_details_title')}
                   </h4>
                   {selectedClientRole && (
-                    <Badge
-                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                    >
-                      {t(selectedClientRole)}
-                    </Badge>
+                    <AnimatedBadge swapKey={selectedClientRole}>
+                      <Badge
+                        className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {t(selectedClientRole)}
+                      </Badge>
+                    </AnimatedBadge>
                   )}
                 </div>
                 <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3">
@@ -1316,11 +1323,13 @@ export default function RequestDetailModal({
                     {t('requests_edit_title')}
                   </h4>
                   {selectedClientRole && (
-                    <Badge
-                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                    >
-                      {t(selectedClientRole)}
-                    </Badge>
+                    <AnimatedBadge swapKey={selectedClientRole}>
+                      <Badge
+                        className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {t(selectedClientRole)}
+                      </Badge>
+                    </AnimatedBadge>
                   )}
                 </div>
                 <div className="flex-1 min-h-0 -ml-1 overflow-y-auto pl-1 pr-1 mt-3 space-y-3">
@@ -1406,17 +1415,21 @@ export default function RequestDetailModal({
                       />
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {isSystem ? (
-                          <Badge
-                            className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
-                          >
-                            {t('system')}
-                          </Badge>
+                          <AnimatedBadge swapKey="system">
+                            <Badge
+                              className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
+                            >
+                              {t('system')}
+                            </Badge>
+                          </AnimatedBadge>
                         ) : e.author_group ? (
-                          <Badge
-                            className={`${ROLE_BADGE_COLORS[e.author_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
-                          >
-                            {t(e.author_group)}
-                          </Badge>
+                          <AnimatedBadge swapKey={e.author_group}>
+                            <Badge
+                              className={`${ROLE_BADGE_COLORS[e.author_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
+                            >
+                              {t(e.author_group)}
+                            </Badge>
+                          </AnimatedBadge>
                         ) : null}
                         <span className="font-medium">
                           {isSystem
@@ -1458,11 +1471,13 @@ export default function RequestDetailModal({
                     {t('requests_details_title')}
                   </h4>
                   {selectedClientRole && (
-                    <Badge
-                      className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                    >
-                      {t(selectedClientRole)}
-                    </Badge>
+                    <AnimatedBadge swapKey={selectedClientRole}>
+                      <Badge
+                        className={`${ROLE_BADGE_COLORS[selectedClientRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {t(selectedClientRole)}
+                      </Badge>
+                    </AnimatedBadge>
                   )}
                 </div>
 

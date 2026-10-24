@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -99,9 +100,11 @@ export default function ChatMessage({
         )}
       >
         {isMine && senderGroup && (
-          <Badge className={`${badgeColor} border-0 text-sm mb-0.5`}>
-            {t(senderGroup)}
-          </Badge>
+          <AnimatedBadge swapKey={senderGroup} className="mb-0.5">
+            <Badge className={`${badgeColor} border-0 text-sm`}>
+              {t(senderGroup)}
+            </Badge>
+          </AnimatedBadge>
         )}
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm text-muted-foreground">

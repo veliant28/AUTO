@@ -82,6 +82,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getAvatarUrl, getInitials } from '@/lib/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import {
@@ -1860,11 +1861,13 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           <NotificationBell />
           <div className="flex items-center gap-1">
             {userRole && (
-              <Badge
-                className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
-              >
-                {t(userRole) || userRole}
-              </Badge>
+              <AnimatedBadge swapKey={userRole}>
+                <Badge
+                  className={`${roleBadgeColors[userRole] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {t(userRole) || userRole}
+                </Badge>
+              </AnimatedBadge>
             )}
             <Button
               variant="ghost"

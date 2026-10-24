@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/lib/toast'
@@ -140,11 +141,13 @@ export default function AttendancePage() {
       columnHelper.accessor('role', {
         header: t('attendance_col_role'),
         cell: (info) => (
-          <Badge
-            className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
-          >
-            {t(info.getValue()) || info.getValue()}
-          </Badge>
+          <AnimatedBadge swapKey={info.getValue()}>
+            <Badge
+              className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
+            >
+              {t(info.getValue()) || info.getValue()}
+            </Badge>
+          </AnimatedBadge>
         ),
       }),
       columnHelper.accessor('email', {

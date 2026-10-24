@@ -427,11 +427,13 @@ export default function TimesheetPage() {
           const u = row.original
           return (
             <div className="min-w-[180px]">
-              <Badge
-                className={`${roleBadgeColors[u.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-              >
-                {t(u.role) || u.role}
-              </Badge>
+              <AnimatedBadge swapKey={u.role}>
+                <Badge
+                  className={`${roleBadgeColors[u.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {t(u.role) || u.role}
+                </Badge>
+              </AnimatedBadge>
               <div className="font-medium mt-0.5">{displayName(u)}</div>
             </div>
           )
@@ -629,11 +631,13 @@ export default function TimesheetPage() {
           const role = info.getValue()
           return role ? (
             <span className="whitespace-nowrap">
-              <Badge
-                className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-              >
-                {t(role) || role}
-              </Badge>
+              <AnimatedBadge swapKey={role}>
+                <Badge
+                  className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {t(role) || role}
+                </Badge>
+              </AnimatedBadge>
             </span>
           ) : (
             <span className="text-muted-foreground">—</span>
@@ -671,11 +675,13 @@ export default function TimesheetPage() {
           const role = info.getValue()
           return role ? (
             <span className="whitespace-nowrap">
-              <Badge
-                className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-              >
-                {t(role) || role}
-              </Badge>
+              <AnimatedBadge swapKey={role}>
+                <Badge
+                  className={`${roleBadgeColors[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {t(role) || role}
+                </Badge>
+              </AnimatedBadge>
             </span>
           ) : (
             <span className="text-muted-foreground">—</span>

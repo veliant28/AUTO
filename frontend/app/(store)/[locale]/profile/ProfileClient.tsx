@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   Tooltip,
@@ -395,11 +396,16 @@ export default function ProfilePage() {
           {/* Avatar header */}
           <Card className="relative">
             <CardContent className="p-4">
-              <Badge
-                className={`absolute top-3 right-3 ${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}
+              <AnimatedBadge
+                swapKey={profile?.role || user?.role || 'retail'}
+                className="absolute top-3 right-3"
               >
-                {ta(profile?.role || user?.role || 'retail')}
-              </Badge>
+                <Badge
+                  className={`${roleBadgeColors[profile?.role || user?.role || 'retail'] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {ta(profile?.role || user?.role || 'retail')}
+                </Badge>
+              </AnimatedBadge>
               <div className="flex items-center gap-4">
                 <Avatar className="w-[120px] h-[120px] ring-4 ring-border shrink-0">
                   <AvatarImage

@@ -26,6 +26,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -276,11 +277,13 @@ export default function AdminUsersPage() {
     columnHelper.accessor('role', {
       header: t('role_label'),
       cell: (info) => (
-        <Badge
-          className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
-        >
-          {t(info.getValue())}
-        </Badge>
+        <AnimatedBadge swapKey={info.getValue()}>
+          <Badge
+            className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
+          >
+            {t(info.getValue())}
+          </Badge>
+        </AnimatedBadge>
       ),
     }),
     columnHelper.accessor('is_active', {
@@ -680,11 +683,13 @@ export default function AdminUsersPage() {
                 <span className="font-medium truncate min-w-0">
                   {deleteTarget.email}
                 </span>
-                <Badge
-                  className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-                >
-                  {t(deleteTarget.role)}
-                </Badge>
+                <AnimatedBadge swapKey={deleteTarget.role} className="shrink-0">
+                  <Badge
+                    className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                  >
+                    {t(deleteTarget.role)}
+                  </Badge>
+                </AnimatedBadge>
               </div>
               <p className="text-muted-foreground truncate">
                 {deleteTarget.full_name || '—'}

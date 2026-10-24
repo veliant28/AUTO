@@ -1048,11 +1048,15 @@ export default function OrderDetailModal({
                         orderDetail.updated_by_group === 'system') && (
                         <div className="flex flex-col items-end gap-0.5">
                           {orderDetail.updated_by_group && (
-                            <Badge
-                              className={`${ROLE_BADGE_COLORS[orderDetail.updated_by_group] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
+                            <AnimatedBadge
+                              swapKey={orderDetail.updated_by_group}
                             >
-                              {t(orderDetail.updated_by_group)}
-                            </Badge>
+                              <Badge
+                                className={`${ROLE_BADGE_COLORS[orderDetail.updated_by_group] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
+                              >
+                                {t(orderDetail.updated_by_group)}
+                              </Badge>
+                            </AnimatedBadge>
                           )}
                           <span className="text-sm font-medium">
                             {orderDetail.updated_by_name || t('system_actor')}
@@ -1120,11 +1124,13 @@ export default function OrderDetailModal({
                             />
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {ev.user_group && (
-                                <Badge
-                                  className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
-                                >
-                                  {t(ev.user_group)}
-                                </Badge>
+                                <AnimatedBadge swapKey={ev.user_group}>
+                                  <Badge
+                                    className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
+                                  >
+                                    {t(ev.user_group)}
+                                  </Badge>
+                                </AnimatedBadge>
                               )}
                               <span className="font-medium">
                                 {ev.user_name || t('system_actor')}

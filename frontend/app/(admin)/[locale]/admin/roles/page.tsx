@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TablePagination } from '@/components/admin/TablePagination'
 import { PageSizeSelect } from '@/components/admin/PageSizeSelect'
@@ -238,11 +239,13 @@ export default function AdminRolesPage() {
       columnHelper.accessor('name', {
         header: t('roles_name'),
         cell: (info) => (
-          <Badge
-            className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
-          >
-            {t(info.getValue())}
-          </Badge>
+          <AnimatedBadge swapKey={info.getValue()}>
+            <Badge
+              className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
+            >
+              {t(info.getValue())}
+            </Badge>
+          </AnimatedBadge>
         ),
       }),
       columnHelper.accessor('is_system', {

@@ -21,6 +21,7 @@ import {
   Network,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { useTimezoneStore } from '@/store/timezoneStore'
 import { formatDateTime } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
@@ -338,11 +339,13 @@ export default function StatsModal({
                   {data.ban?.banned_by_name ? (
                     <div className="flex flex-col items-end gap-0.5">
                       {data.ban?.banned_by_role && (
-                        <Badge
-                          className={`${roleBadgeColors[data.ban.banned_by_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                        >
-                          {t(data.ban.banned_by_role)}
-                        </Badge>
+                        <AnimatedBadge swapKey={data.ban.banned_by_role}>
+                          <Badge
+                            className={`${roleBadgeColors[data.ban.banned_by_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                          >
+                            {t(data.ban.banned_by_role)}
+                          </Badge>
+                        </AnimatedBadge>
                       )}
                       <span className="text-sm font-medium">
                         {data.ban?.banned_by_last_name &&
@@ -372,11 +375,13 @@ export default function StatsModal({
                       <User className="w-5 h-5" /> Данные пользователя
                     </h4>
                     {data.ban?.user_role && (
-                      <Badge
-                        className={`${roleBadgeColors[data.ban.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                      >
-                        {t(data.ban.user_role)}
-                      </Badge>
+                      <AnimatedBadge swapKey={data.ban.user_role}>
+                        <Badge
+                          className={`${roleBadgeColors[data.ban.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                        >
+                          {t(data.ban.user_role)}
+                        </Badge>
+                      </AnimatedBadge>
                     )}
                   </div>
                   <div className="flex flex-col flex-1 space-y-3 text-sm">

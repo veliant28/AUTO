@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Users, Activity, ShoppingCart, UserCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { endOfMonth, endOfDay } from 'date-fns'
@@ -309,11 +310,14 @@ export function StaffPageContent() {
                           >
                             {m.name}
                           </span>
-                          <Badge
-                            className={`${rc} border-0 text-sm shrink-0 ml-2`}
+                          <AnimatedBadge
+                            swapKey={m.group}
+                            className="shrink-0 ml-2"
                           >
-                            {t(m.group)}
-                          </Badge>
+                            <Badge className={`${rc} border-0 text-sm`}>
+                              {t(m.group)}
+                            </Badge>
+                          </AnimatedBadge>
                         </div>
                         {m.phone && (
                           <p

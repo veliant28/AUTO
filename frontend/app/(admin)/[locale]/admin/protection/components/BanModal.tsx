@@ -7,6 +7,7 @@ import { Loader2, Search, Ban, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import {
   Dialog,
   DialogContent,
@@ -326,11 +327,13 @@ export default function BanModal({
                             </span>
                           )}
                         </div>
-                        <Badge
-                          className={`${roleBadgeColors[user.role] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-                        >
-                          {t(user.role)}
-                        </Badge>
+                        <AnimatedBadge swapKey={user.role} className="shrink-0">
+                          <Badge
+                            className={`${roleBadgeColors[user.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                          >
+                            {t(user.role)}
+                          </Badge>
+                        </AnimatedBadge>
                       </div>
                     ))
                   )}
@@ -355,11 +358,13 @@ export default function BanModal({
                   </p>
                 )}
               </div>
-              <Badge
-                className={`${roleBadgeColors[selectedUser.role] || 'bg-gray-500 text-white'} border-0 text-sm shrink-0`}
-              >
-                {t(selectedUser.role)}
-              </Badge>
+              <AnimatedBadge swapKey={selectedUser.role} className="shrink-0">
+                <Badge
+                  className={`${roleBadgeColors[selectedUser.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                >
+                  {t(selectedUser.role)}
+                </Badge>
+              </AnimatedBadge>
             </div>
           )}
           {selectedUser?.role === 'admin' && (

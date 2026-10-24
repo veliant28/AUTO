@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -1409,11 +1410,13 @@ export default function ClientDetailModal({
               {(c?.role || c?.email) && (
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
                   {c?.role && (
-                    <Badge
-                      className={`${ROLE_BADGE_COLORS[c.role] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
-                    >
-                      {t(c.role) || c.role}
-                    </Badge>
+                    <AnimatedBadge swapKey={c.role}>
+                      <Badge
+                        className={`${ROLE_BADGE_COLORS[c.role] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
+                      >
+                        {t(c.role) || c.role}
+                      </Badge>
+                    </AnimatedBadge>
                   )}
                   {c?.email && (
                     <span className="text-sm text-muted-foreground max-w-[220px] truncate">
@@ -1927,11 +1930,15 @@ export default function ClientDetailModal({
                                   <TooltipContent className="space-y-1.5">
                                     {/* Бейдж роли выдавшего */}
                                     <div>
-                                      <Badge
-                                        className={`${ROLE_BADGE_COLORS[p.issued_by_role || ''] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                      <AnimatedBadge
+                                        swapKey={p.issued_by_role || 'retail'}
                                       >
-                                        {t(p.issued_by_role || 'retail')}
-                                      </Badge>
+                                        <Badge
+                                          className={`${ROLE_BADGE_COLORS[p.issued_by_role || ''] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                        >
+                                          {t(p.issued_by_role || 'retail')}
+                                        </Badge>
+                                      </AnimatedBadge>
                                     </div>
                                     {/* Фамилия + Имя — крупнее */}
                                     <div className="text-base font-semibold whitespace-nowrap">

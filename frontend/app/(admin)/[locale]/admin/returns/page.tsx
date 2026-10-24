@@ -875,11 +875,15 @@ export default function AdminReturnsPage() {
                         {returnDetail.updated_by_name && (
                           <div className="flex flex-col items-end gap-0.5">
                             {returnDetail.updated_by_group && (
-                              <Badge
-                                className={`${ROLE_BADGE_COLORS[returnDetail.updated_by_group] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
+                              <AnimatedBadge
+                                swapKey={returnDetail.updated_by_group}
                               >
-                                {t(returnDetail.updated_by_group)}
-                              </Badge>
+                                <Badge
+                                  className={`${ROLE_BADGE_COLORS[returnDetail.updated_by_group] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
+                                >
+                                  {t(returnDetail.updated_by_group)}
+                                </Badge>
+                              </AnimatedBadge>
                             )}
                             <span className="text-sm font-medium">
                               {returnDetail.updated_by_name}
@@ -945,17 +949,21 @@ export default function AdminReturnsPage() {
                               />
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 {isSystemEvent ? (
-                                  <Badge
-                                    className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
-                                  >
-                                    {t('system')}
-                                  </Badge>
+                                  <AnimatedBadge swapKey="system">
+                                    <Badge
+                                      className={`${ROLE_BADGE_COLORS.system} border-0 text-sm`}
+                                    >
+                                      {t('system')}
+                                    </Badge>
+                                  </AnimatedBadge>
                                 ) : ev.user_group ? (
-                                  <Badge
-                                    className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
-                                  >
-                                    {t(ev.user_group)}
-                                  </Badge>
+                                  <AnimatedBadge swapKey={ev.user_group}>
+                                    <Badge
+                                      className={`${ROLE_BADGE_COLORS[ev.user_group] || 'bg-orange-500 text-white'} border-0 text-sm`}
+                                    >
+                                      {t(ev.user_group)}
+                                    </Badge>
+                                  </AnimatedBadge>
                                 ) : null}
                                 <span className="font-medium">
                                   {isSystemEvent

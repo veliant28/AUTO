@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -349,11 +350,13 @@ export default function ProtectionPage() {
                             </td>
                             <td className="p-3">
                               {item.user_role ? (
-                                <Badge
-                                  className={`${roleBadgeColors[item.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                                >
-                                  {t(item.user_role)}
-                                </Badge>
+                                <AnimatedBadge swapKey={item.user_role}>
+                                  <Badge
+                                    className={`${roleBadgeColors[item.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                  >
+                                    {t(item.user_role)}
+                                  </Badge>
+                                </AnimatedBadge>
                               ) : (
                                 '—'
                               )}
@@ -376,11 +379,15 @@ export default function ProtectionPage() {
                               {item.banned_by_name ? (
                                 <div className="flex flex-col gap-0.5">
                                   {item.banned_by_role && (
-                                    <Badge
-                                      className={`${roleBadgeColors[item.banned_by_role] || 'bg-gray-500 text-white'} border-0 text-sm w-fit`}
+                                    <AnimatedBadge
+                                      swapKey={item.banned_by_role}
                                     >
-                                      {t(item.banned_by_role)}
-                                    </Badge>
+                                      <Badge
+                                        className={`${roleBadgeColors[item.banned_by_role] || 'bg-gray-500 text-white'} border-0 text-sm w-fit`}
+                                      >
+                                        {t(item.banned_by_role)}
+                                      </Badge>
+                                    </AnimatedBadge>
                                   )}
                                   <span className="font-medium">
                                     {item.banned_by_last_name &&
@@ -493,11 +500,13 @@ export default function ProtectionPage() {
                             </td>
                             <td className="p-3">
                               {item.user_role ? (
-                                <Badge
-                                  className={`${roleBadgeColors[item.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
-                                >
-                                  {t(item.user_role)}
-                                </Badge>
+                                <AnimatedBadge swapKey={item.user_role}>
+                                  <Badge
+                                    className={`${roleBadgeColors[item.user_role] || 'bg-gray-500 text-white'} border-0 text-sm`}
+                                  >
+                                    {t(item.user_role)}
+                                  </Badge>
+                                </AnimatedBadge>
                               ) : (
                                 '—'
                               )}
@@ -509,11 +518,13 @@ export default function ProtectionPage() {
                               {item.added_by_name ? (
                                 <div className="flex flex-col gap-0.5">
                                   {item.added_by_role && (
-                                    <Badge
-                                      className={`${roleBadgeColors[item.added_by_role] || 'bg-gray-500 text-white'} border-0 text-sm w-fit`}
-                                    >
-                                      {t(item.added_by_role)}
-                                    </Badge>
+                                    <AnimatedBadge swapKey={item.added_by_role}>
+                                      <Badge
+                                        className={`${roleBadgeColors[item.added_by_role] || 'bg-gray-500 text-white'} border-0 text-sm w-fit`}
+                                      >
+                                        {t(item.added_by_role)}
+                                      </Badge>
+                                    </AnimatedBadge>
                                   )}
                                   <span className="font-medium">
                                     {item.added_by_last_name &&
