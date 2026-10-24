@@ -318,7 +318,10 @@ export default function MonitorTab() {
           const role = info.getValue()
           if (!role) return '—'
           return (
-            <AnimatedBadge swapKey={role}>
+            <AnimatedBadge
+              swapKey={role}
+              animationKey={`monitor-${info.row.original.client_id}-role`}
+            >
               <Badge
                 className={`${ROLE_BADGE_COLORS[role] || 'bg-gray-500 text-white'} border-0 text-sm`}
               >
@@ -333,7 +336,10 @@ export default function MonitorTab() {
         cell: (info) => {
           const online = info.getValue() === 'online'
           return (
-            <AnimatedBadge swapKey={String(online)}>
+            <AnimatedBadge
+              swapKey={String(online)}
+              animationKey={`monitor-${info.row.original.client_id}-online`}
+            >
               <Badge
                 className={`${online ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'} border-0 text-sm`}
               >

@@ -33,6 +33,13 @@ type AnimatedBadgeProps = HTMLMotionProps<'span'> & {
    * содержимое и появляется заново — без перезагрузки страницы.
    */
   swapKey?: string | number | null
+  /**
+   * Уникальный стабильный ключ бейджа для дедупликации входной анимации.
+   * Нужен, когда на странице несколько бейджей с одинаковым текстом
+   * (например, роли в таблице): без него второй такой бейдж пропустит
+   * анимацию появления.
+   */
+  animationKey?: string | number
 }
 
 /**
@@ -43,9 +50,13 @@ export default function AnimatedBadge({
   children,
   className,
   swapKey,
+  animationKey,
   ...props
 }: AnimatedBadgeProps) {
-  const id = textOf(children as React.ReactNode)
+  const id =
+    animationKey != null
+      ? String(animationKey)
+      : textOf(children as React.ReactNode)
   const skip = React.useMemo(() => {
     if (!id) return false
     const last = recentlyAnimated.get(id)

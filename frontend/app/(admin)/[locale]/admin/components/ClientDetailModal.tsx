@@ -1395,11 +1395,16 @@ export default function ClientDetailModal({
                     <DialogTitle className="text-2xl font-bold tracking-tight">
                       {c?.name || t('monitor_anonymous')}
                     </DialogTitle>
-                    <Badge
-                      className={`${online ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'} border-0 text-sm`}
+                    <AnimatedBadge
+                      swapKey={online ? 'online' : 'offline'}
+                      animationKey={`client-${c?.client_id}-online`}
                     >
-                      {online ? t('monitor_online') : t('monitor_offline')}
-                    </Badge>
+                      <Badge
+                        className={`${online ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'} border-0 text-sm`}
+                      >
+                        {online ? t('monitor_online') : t('monitor_offline')}
+                      </Badge>
+                    </AnimatedBadge>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {formatDateTime(c?.first_seen, tz)}
@@ -1410,7 +1415,10 @@ export default function ClientDetailModal({
               {(c?.role || c?.email) && (
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
                   {c?.role && (
-                    <AnimatedBadge swapKey={c.role}>
+                    <AnimatedBadge
+                      swapKey={c.role}
+                      animationKey={`client-${c?.client_id}-role`}
+                    >
                       <Badge
                         className={`${ROLE_BADGE_COLORS[c.role] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'} border-0 text-sm`}
                       >
@@ -1932,6 +1940,7 @@ export default function ClientDetailModal({
                                     <div>
                                       <AnimatedBadge
                                         swapKey={p.issued_by_role || 'retail'}
+                                        animationKey={`promo-${p.id}-role`}
                                       >
                                         <Badge
                                           className={`${ROLE_BADGE_COLORS[p.issued_by_role || ''] || 'bg-gray-500 text-white'} border-0 text-sm`}

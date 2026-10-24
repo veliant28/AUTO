@@ -277,7 +277,10 @@ export default function AdminUsersPage() {
     columnHelper.accessor('role', {
       header: t('role_label'),
       cell: (info) => (
-        <AnimatedBadge swapKey={info.getValue()}>
+        <AnimatedBadge
+          swapKey={info.getValue()}
+          animationKey={`user-${info.row.original.id}-role`}
+        >
           <Badge
             className={`${roleBadgeColors[info.getValue()] || 'bg-gray-500 text-white'} border-0 text-sm`}
           >
@@ -683,7 +686,11 @@ export default function AdminUsersPage() {
                 <span className="font-medium truncate min-w-0">
                   {deleteTarget.email}
                 </span>
-                <AnimatedBadge swapKey={deleteTarget.role} className="shrink-0">
+                <AnimatedBadge
+                  swapKey={deleteTarget.role}
+                  animationKey={`user-delete-${deleteTarget.id}-role`}
+                  className="shrink-0"
+                >
                   <Badge
                     className={`${roleBadgeColors[deleteTarget.role] || 'bg-gray-500 text-white'} border-0 text-sm`}
                   >
