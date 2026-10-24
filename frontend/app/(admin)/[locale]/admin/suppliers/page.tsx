@@ -188,9 +188,12 @@ function TokenBadge({
             type="button"
             onClick={onRefresh}
             aria-label={ta('settings_token_refresh')}
-            className="inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-500 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:bg-red-950/30 dark:hover:bg-red-950/50"
+            className="supplier-token-badge inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-orange-500 px-2.5 py-0.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <RefreshCw className="w-3 h-3" />
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="supplier-token-text">
+              {ta('settings_token_refresh')}
+            </span>
           </button>
         </TooltipTrigger>
         <TooltipContent>{ta('settings_token_refresh')}</TooltipContent>
