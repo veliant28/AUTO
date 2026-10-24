@@ -1179,13 +1179,18 @@ export default function OrderDetailModal({
                                   <IconComponent className="w-4 h-4 inline shrink-0" />
                                   <span>{t('waybill_' + ev.event_type)}</span>
                                   {ev.np_number && (
-                                    <Badge
-                                      className={`border-0 text-sm font-mono gap-1.5 cursor-pointer ${ev.event_type === 'delete' ? 'bg-red-500 text-white line-through' : ev.event_type === 'create' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}
-                                      onClick={() => copyTtn(ev.np_number)}
+                                    <AnimatedBadge
+                                      swapKey={`${ev.event_type}:${ev.np_number}`}
+                                      animationKey={`order-history-${ev.id}-ttn`}
                                     >
-                                      <ScanBarcode className="w-3.5 h-3.5" />
-                                      {ev.np_number}
-                                    </Badge>
+                                      <Badge
+                                        className={`border-0 text-sm font-mono gap-1.5 cursor-pointer ${ev.event_type === 'delete' ? 'bg-red-500 text-white line-through' : ev.event_type === 'create' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'}`}
+                                        onClick={() => copyTtn(ev.np_number)}
+                                      >
+                                        <ScanBarcode className="w-3.5 h-3.5" />
+                                        {ev.np_number}
+                                      </Badge>
+                                    </AnimatedBadge>
                                   )}
                                 </span>
                               ) : (

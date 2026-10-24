@@ -1295,6 +1295,7 @@ export default function OrderWaybillModal({
               npNumber={waybill?.np_number}
               exists={summary?.exists}
               isDeleted={waybill?.is_deleted}
+              animationKey={`waybill-modal-${waybill?.id ?? waybillId ?? orderId}-ttn`}
             />
           </div>
         </DialogHeader>

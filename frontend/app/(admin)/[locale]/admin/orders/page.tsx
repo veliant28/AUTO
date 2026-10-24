@@ -696,6 +696,7 @@ export default function AdminOrdersPage() {
               npNumber={summary.np_number}
               exists={summary.exists}
               isDeleted={summary.is_deleted}
+              animationKey={`order-${row.original.id}-ttn`}
             />
           ) : (
             <span className="text-muted-foreground text-sm">—</span>

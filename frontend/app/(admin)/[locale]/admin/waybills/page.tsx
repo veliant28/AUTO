@@ -112,6 +112,7 @@ export default function WaybillsPage() {
               npNumber={row.np_number}
               exists
               isDeleted={row.is_deleted}
+              animationKey={`waybill-${row.id}-ttn`}
             />
           )
         },

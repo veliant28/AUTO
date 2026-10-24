@@ -242,6 +242,7 @@ export default function OrdersPage() {
                           npNumber={summary.np_number}
                           exists={summary.exists}
                           isDeleted={summary.is_deleted}
+                          animationKey={`store-order-${order.id}-ttn`}
                         />
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>

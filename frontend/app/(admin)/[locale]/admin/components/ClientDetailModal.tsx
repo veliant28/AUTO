@@ -1639,6 +1639,7 @@ export default function ClientDetailModal({
                                     npNumber={o.ttn?.np_number ?? undefined}
                                     exists={o.ttn?.exists ?? false}
                                     isDeleted={o.ttn?.is_deleted ?? false}
+                                    animationKey={`client-order-${o.order_number}-ttn`}
                                   />
                                 </div>
                                 <div className="flex-1 flex justify-end">
@@ -1687,20 +1688,29 @@ export default function ClientDetailModal({
                               </div>
                               {/* ТТН — ровно по центру (обе стороны flex-1) */}
                               <div className="w-48 shrink-0 flex justify-center">
-                                {r.ttn_number ? (
-                                  <Badge className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 whitespace-nowrap">
-                                    <ScanBarcode className="w-3.5 h-3.5" />
-                                    {r.ttn_number.replace(
-                                      /(\d{2})(\d{4})(\d{4})(\d{4})/,
-                                      '$1 $2 $3 $4',
-                                    )}
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5 whitespace-nowrap">
-                                    <ScanLine className="w-3.5 h-3.5" />
-                                    59 0000 0000 0000
-                                  </Badge>
-                                )}
+                                <AnimatedBadge
+                                  swapKey={
+                                    r.ttn_number
+                                      ? `active:${r.ttn_number}`
+                                      : 'empty'
+                                  }
+                                  animationKey={`client-return-${r.return_number}-ttn`}
+                                >
+                                  {r.ttn_number ? (
+                                    <Badge className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 whitespace-nowrap">
+                                      <ScanBarcode className="w-3.5 h-3.5" />
+                                      {r.ttn_number.replace(
+                                        /(\d{2})(\d{4})(\d{4})(\d{4})/,
+                                        '$1 $2 $3 $4',
+                                      )}
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5 whitespace-nowrap">
+                                      <ScanLine className="w-3.5 h-3.5" />
+                                      59 0000 0000 0000
+                                    </Badge>
+                                  )}
+                                </AnimatedBadge>
                               </div>
                               <div className="flex-1 flex justify-end">
                                 <Badge

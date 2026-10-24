@@ -209,27 +209,32 @@ function formatPhone(phone: string | null | undefined): string {
 }
 
 /** Бейдж ТТН: реальный номер копируется по клику, маска — нет */
-function TtnCell({ ttn }: { ttn: string | null }) {
+function TtnCell({ ttn, returnId }: { ttn: string | null; returnId: number }) {
   const copyTtn = useCopyTtn()
-
-  if (ttn) {
-    const formatted = ttn.replace(/(\d{2})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4')
-    return (
-      <Badge
-        className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
-        onClick={() => copyTtn(ttn)}
-      >
-        <ScanBarcode className="w-3.5 h-3.5" />
-        {formatted}
-      </Badge>
-    )
-  }
+  const formatted = ttn
+    ? ttn.replace(/(\d{2})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4')
+    : null
 
   return (
-    <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
-      <ScanLine className="w-3.5 h-3.5" />
-      XX XXXX XXXX XXXX
-    </Badge>
+    <AnimatedBadge
+      swapKey={ttn ? `active:${ttn}` : 'empty'}
+      animationKey={`return-${returnId}-ttn`}
+    >
+      {formatted ? (
+        <Badge
+          className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
+          onClick={() => copyTtn(ttn!)}
+        >
+          <ScanBarcode className="w-3.5 h-3.5" />
+          {formatted}
+        </Badge>
+      ) : (
+        <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
+          <ScanLine className="w-3.5 h-3.5" />
+          XX XXXX XXXX XXXX
+        </Badge>
+      )}
+    </AnimatedBadge>
   )
 }
 
@@ -631,7 +636,12 @@ export default function AdminReturnsPage() {
       columnHelper.accessor('ttn_number', {
         header: 'ТТН',
         size: 180,
-        cell: (info) => <TtnCell ttn={info.getValue<string | null>()} />,
+        cell: (info) => (
+          <TtnCell
+            ttn={info.getValue<string | null>()}
+            returnId={info.row.original.id}
+          />
+        ),
       }),
       columnHelper.display({
         id: 'actions',
@@ -1620,22 +1630,31 @@ export default function AdminReturnsPage() {
                       </div>
                     ) : null}
                   </div>
-                  {returnDetail?.ttn_number ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
-                      <ScanBarcode className="w-4 h-4" />
-                      <span className="font-mono">
-                        {returnDetail.ttn_number.replace(
-                          /(\d{2})(\d{4})(\d{4})(\d{4})/,
-                          '$1 $2 $3 $4',
-                        )}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
-                      <ScanLine className="w-4 h-4" />
-                      <span className="font-mono">XX XXXX XXXX XXXX</span>
-                    </div>
-                  )}
+                  <AnimatedBadge
+                    swapKey={
+                      returnDetail?.ttn_number
+                        ? `active:${returnDetail.ttn_number}`
+                        : 'empty'
+                    }
+                    animationKey={`return-detail-${returnDetail?.id}-ttn`}
+                  >
+                    {returnDetail?.ttn_number ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
+                        <ScanBarcode className="w-4 h-4" />
+                        <span className="font-mono">
+                          {returnDetail.ttn_number.replace(
+                            /(\d{2})(\d{4})(\d{4})(\d{4})/,
+                            '$1 $2 $3 $4',
+                          )}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-md">
+                        <ScanLine className="w-4 h-4" />
+                        <span className="font-mono">XX XXXX XXXX XXXX</span>
+                      </div>
+                    )}
+                  </AnimatedBadge>
                 </div>
               </>
             )}

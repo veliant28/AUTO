@@ -221,21 +221,28 @@ export default function ReturnsPage() {
                       {fmt(Number(ret.total_refund))} ₴
                     </span>
                     <span>
-                      {ttnFormatted ? (
-                        <Badge
-                          className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
-                          // Реальная ТТН — по клику копируется без пробелов
-                          onClick={() => copyTtn(ret.ttn_number)}
-                        >
-                          <ScanBarcode className="w-3.5 h-3.5" />
-                          {ttnFormatted}
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
-                          <ScanLine className="w-3.5 h-3.5" />
-                          XX XXXX XXXX XXXX
-                        </Badge>
-                      )}
+                      <AnimatedBadge
+                        swapKey={
+                          ttnFormatted ? `active:${ret.ttn_number}` : 'empty'
+                        }
+                        animationKey={`store-return-${ret.id}-ttn`}
+                      >
+                        {ttnFormatted ? (
+                          <Badge
+                            className="bg-green-500 text-white border-0 text-sm font-mono gap-1.5 cursor-pointer"
+                            // Реальная ТТН — по клику копируется без пробелов
+                            onClick={() => copyTtn(ret.ttn_number)}
+                          >
+                            <ScanBarcode className="w-3.5 h-3.5" />
+                            {ttnFormatted}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-gray-500 text-white border-0 text-sm font-mono gap-1.5">
+                            <ScanLine className="w-3.5 h-3.5" />
+                            XX XXXX XXXX XXXX
+                          </Badge>
+                        )}
+                      </AnimatedBadge>
                     </span>
                     <div className="flex justify-end">
                       <Button

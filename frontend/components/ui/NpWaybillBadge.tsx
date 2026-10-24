@@ -2,6 +2,7 @@
 
 import { ScanBarcode, ScanLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import AnimatedBadge from '@/components/ui/AnimatedBadge'
 import { useCopyTtn } from '@/hooks/useCopyTtn'
 
 /** Format NP number from "20400048799000" → "204 000 4879 9000" */
@@ -15,9 +16,16 @@ interface Props {
   npNumber?: string
   isDeleted?: boolean
   exists?: boolean
+  /** Stable per-instance key for the entrance animation. */
+  animationKey?: string | number
 }
 
-export function NpWaybillBadge({ npNumber, isDeleted, exists }: Props) {
+export function NpWaybillBadge({
+  npNumber,
+  isDeleted,
+  exists,
+  animationKey,
+}: Props) {
   const copyTtn = useCopyTtn()
   const hasNumber = !!npNumber && exists
 
@@ -30,20 +38,26 @@ export function NpWaybillBadge({ npNumber, isDeleted, exists }: Props) {
     bgClass = 'bg-gray-500 text-white'
   }
 
+  const stateKey = `${
+    isDeleted ? 'deleted' : hasNumber ? 'active' : 'empty'
+  }:${npNumber || ''}`
+
   return (
-    <Badge
-      className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass} ${
-        npNumber ? 'cursor-pointer' : ''
-      }`}
-      // Реальная ТТН (не маска) — по клику копируем номер без пробелов
-      onClick={npNumber ? () => copyTtn(npNumber) : undefined}
-    >
-      {hasNumber || isDeleted ? (
-        <ScanBarcode className="w-3.5 h-3.5" />
-      ) : (
-        <ScanLine className="w-3.5 h-3.5" />
-      )}
-      {npNumber ? formatNpNumber(npNumber) : '204 000 0000 0000'}
-    </Badge>
+    <AnimatedBadge swapKey={stateKey} animationKey={animationKey}>
+      <Badge
+        className={`text-sm gap-1.5 border-0 w-fit ${isDeleted ? 'line-through' : ''} ${bgClass} ${
+          npNumber ? 'cursor-pointer' : ''
+        }`}
+        // Реальная ТТН (не маска) — по клику копируем номер без пробелов
+        onClick={npNumber ? () => copyTtn(npNumber) : undefined}
+      >
+        {hasNumber || isDeleted ? (
+          <ScanBarcode className="w-3.5 h-3.5" />
+        ) : (
+          <ScanLine className="w-3.5 h-3.5" />
+        )}
+        {npNumber ? formatNpNumber(npNumber) : '204 000 0000 0000'}
+      </Badge>
+    </AnimatedBadge>
   )
 }
