@@ -317,6 +317,40 @@ function SupplierCard({ supplier }: { supplier: string }) {
     refreshMutation.mutate()
   }
 
+  const revealPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.get(`/admin/suppliers/${supplier}/password`)
+      return data.password as string
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.detail || err?.message || ''
+      toast.error(msg || ta('settings_password_reveal_error'))
+    },
+  })
+
+  const handleTogglePassword = async () => {
+    if (!reqPerm('suppliers.edit')) return
+    if (showPassword) {
+      setShowPassword(false)
+      return
+    }
+    if (password) {
+      setShowPassword(true)
+      return
+    }
+    if (!config?.has_password) {
+      setShowPassword(true)
+      return
+    }
+    try {
+      const savedPassword = await revealPasswordMutation.mutateAsync()
+      setPassword(savedPassword)
+      setShowPassword(true)
+    } catch {
+      // The mutation already shows the error toast.
+    }
+  }
+
   const authMutation = useMutation({
     mutationFn: async () => {
       if (login) {
@@ -462,9 +496,16 @@ function SupplierCard({ supplier }: { supplier: string }) {
                 </div>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">
-                  {ta('settings_password')}
-                </label>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    {ta('settings_password')}
+                  </label>
+                  {config?.has_password && !password && (
+                    <span className="text-xs text-muted-foreground">
+                      {ta('settings_password_saved')}
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
@@ -477,10 +518,13 @@ function SupplierCard({ supplier }: { supplier: string }) {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={handleTogglePassword}
+                    disabled={revealPasswordMutation.isPending}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer disabled:cursor-wait"
                   >
-                    {showPassword ? (
+                    {revealPasswordMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : showPassword ? (
                       <EyeOff className="w-4 h-4" />
                     ) : (
                       <Eye className="w-4 h-4" />

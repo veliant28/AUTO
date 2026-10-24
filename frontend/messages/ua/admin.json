@@ -449,6 +449,8 @@
   "settings_supplier_placeholder": "Новий постачальник",
   "settings_login": "Логін",
   "settings_password": "Пароль",
+  "settings_password_reveal_error": "Не вдалося показати збережений пароль",
+  "settings_password_saved": "Збережено",
   "settings_login_placeholder_gpl": "123456 (числовий ID)",
   "settings_login_placeholder_username": "username",
   "settings_login_placeholder_email": "email@example.com",

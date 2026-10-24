@@ -449,6 +449,8 @@
   "settings_supplier_placeholder": "New supplier",
   "settings_login": "Login",
   "settings_password": "Password",
+  "settings_password_reveal_error": "Failed to reveal the saved password",
+  "settings_password_saved": "Saved",
   "settings_login_placeholder_gpl": "123456 (numeric ID)",
   "settings_login_placeholder_username": "username",
   "settings_login_placeholder_email": "email@example.com",
