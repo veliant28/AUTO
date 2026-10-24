@@ -51,4 +51,51 @@ const AnimatedProgress = React.forwardRef<
 })
 AnimatedProgress.displayName = 'AnimatedProgress'
 
+/** Count from 0 to the value once, then follow later values immediately. */
+function useEntranceCountUp(target: number, durationMs: number): number {
+  const [display, setDisplay] = React.useState(0)
+  const settledRef = React.useRef(false)
+  const targetRef = React.useRef(target)
+  targetRef.current = target
+
+  React.useEffect(() => {
+    let raf = 0
+    const started = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min(Math.max((now - started) / durationMs, 0), 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const next = Math.round(eased * targetRef.current)
+      setDisplay((prev) => (prev === next ? prev : next))
+      if (t < 1) {
+        raf = requestAnimationFrame(tick)
+      } else {
+        settledRef.current = true
+        setDisplay(targetRef.current)
+      }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [durationMs])
+
+  React.useEffect(() => {
+    if (settledRef.current) setDisplay(target)
+  }, [target])
+
+  return display
+}
+
+/** Percentage label that counts up on appearance and then stays live. */
+export function AnimatedPercent({
+  value,
+  durationMs = 700,
+  className,
+}: {
+  value: number
+  durationMs?: number
+  className?: string
+}) {
+  const display = useEntranceCountUp(value, durationMs)
+  return <span className={className}>{display}%</span>
+}
+
 export { Progress, AnimatedProgress }

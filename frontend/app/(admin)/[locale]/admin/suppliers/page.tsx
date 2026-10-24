@@ -40,7 +40,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card'
-import { AnimatedProgress } from '@/components/ui/progress'
+import { AnimatedPercent, AnimatedProgress } from '@/components/ui/progress'
 import {
   Tooltip,
   TooltipTrigger,
@@ -771,9 +771,10 @@ function ScheduleSection() {
                       : 'bg-blue-500'
                 }
               />
-              <span className="text-sm font-mono text-muted-foreground w-8 text-right">
-                {s.last_import_progress || 0}%
-              </span>
+              <AnimatedPercent
+                value={s.last_import_progress || 0}
+                className="text-sm font-mono text-muted-foreground w-8 text-right"
+              />
             </div>
           )
         },
