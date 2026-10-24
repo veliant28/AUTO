@@ -949,19 +949,27 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
 
   if (!nextRunUtc)
     return <span className="text-sm text-muted-foreground">—</span>
+
+  const isStarting = left !== null && left <= 0
+  const stateKey = isStarting ? 'starting' : `countdown:${nextRunUtc}`
+
   if (left === null)
     return (
-      <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500/20 text-blue-400 min-w-[85px] justify-center">
-        <Clock className="w-3.5 h-3.5" />
-        00:00:00
-      </Badge>
+      <AnimatedBadge swapKey={stateKey}>
+        <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500/20 text-blue-400 min-w-[85px] justify-center">
+          <Clock className="w-3.5 h-3.5" />
+          00:00:00
+        </Badge>
+      </AnimatedBadge>
     )
-  if (left <= 0)
+  if (isStarting)
     return (
-      <Badge className="text-sm font-mono bg-green-500 text-white border-0 gap-1.5">
-        <Clock className="w-3.5 h-3.5" />
-        Запуск...
-      </Badge>
+      <AnimatedBadge swapKey={stateKey}>
+        <Badge className="text-sm font-mono bg-green-500 text-white border-0 gap-1.5">
+          <Clock className="w-3.5 h-3.5" />
+          Запуск...
+        </Badge>
+      </AnimatedBadge>
     )
 
   const h = Math.floor(left / 3600)
@@ -969,10 +977,12 @@ function ScheduleTimer({ nextRunUtc }: { nextRunUtc: string | null }) {
   const s = left % 60
 
   return (
-    <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500 text-white min-w-[85px] justify-center">
-      <Clock className="w-3.5 h-3.5" />
-      {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:
-      {String(s).padStart(2, '0')}
-    </Badge>
+    <AnimatedBadge swapKey={stateKey}>
+      <Badge className="text-sm font-mono border-0 gap-1.5 bg-blue-500 text-white min-w-[85px] justify-center">
+        <Clock className="w-3.5 h-3.5" />
+        {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}:
+        {String(s).padStart(2, '0')}
+      </Badge>
+    </AnimatedBadge>
   )
 }
