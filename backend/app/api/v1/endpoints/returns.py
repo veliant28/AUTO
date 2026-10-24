@@ -58,6 +58,7 @@ def _return_to_dict(r: ReturnRequest, max_qty_map: Optional[dict[int, int]] = No
     }
 
 
+@router.get("", response_model=ReturnListResponse)
 @router.get("/", response_model=ReturnListResponse)
 async def list_returns(
     page: int = Query(1, ge=1),

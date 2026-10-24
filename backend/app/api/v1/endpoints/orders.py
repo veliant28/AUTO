@@ -91,6 +91,7 @@ def _order_to_dict(order, db):
         "items": _items_with_brand(order, db),
     }
 
+@router.get("", response_model=OrderListResponse)
 @router.get("/", response_model=OrderListResponse)
 async def get_orders(
     user_id: int = Depends(get_optional_user),

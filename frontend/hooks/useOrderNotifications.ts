@@ -13,7 +13,7 @@ export function useOrderNotifications() {
         const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
         if (!token) return
 
-        const { data } = await api.get('/orders')
+        const { data } = await api.get('/orders/')
         const orders = data?.items ?? []
 
         const lastCheck = localStorage.getItem(STORAGE_KEYS.LAST_ORDER_CHECK)

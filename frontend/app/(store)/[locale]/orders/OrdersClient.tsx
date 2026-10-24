@@ -84,7 +84,7 @@ export default function OrdersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['orders', page],
     queryFn: async () => {
-      const { data } = await api.get('/orders', {
+      const { data } = await api.get('/orders/', {
         params: { page, page_size: PAGE_SIZE },
       })
       return data as {
@@ -100,7 +100,7 @@ export default function OrdersPage() {
   const { data: activeData } = useQuery({
     queryKey: ['orders-active'],
     queryFn: async () => {
-      const { data } = await api.get('/orders', {
+      const { data } = await api.get('/orders/', {
         params: {
           page: 1,
           page_size: 1,

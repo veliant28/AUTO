@@ -79,7 +79,7 @@ export default function ReturnsPage() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['returns', page],
     queryFn: async () => {
-      const { data } = await api.get('/returns', {
+      const { data } = await api.get('/returns/', {
         params: { page, page_size: PAGE_SIZE },
       })
       return data as {
