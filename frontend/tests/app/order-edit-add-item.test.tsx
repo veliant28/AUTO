@@ -172,7 +172,7 @@ describe('Добавление товаров в существующий зак
     fireEvent.click(screen.getByText('edit_order'))
 
     // Показали причину и не вошли в редактирование
-    expect(toast.info).toHaveBeenCalledWith('edit_locked')
+    expect(toast.warning).toHaveBeenCalledWith('edit_locked')
     expect(
       screen.queryByPlaceholderText('order_search_placeholder'),
     ).not.toBeInTheDocument()
@@ -189,7 +189,7 @@ describe('Добавление товаров в существующий зак
     expect(
       await screen.findByPlaceholderText('order_search_placeholder'),
     ).toBeInTheDocument()
-    expect(toast.info).not.toHaveBeenCalledWith('edit_locked')
+    expect(toast.warning).not.toHaveBeenCalledWith('edit_locked')
   })
 
   it('применяет промокод в режиме редактирования', async () => {
