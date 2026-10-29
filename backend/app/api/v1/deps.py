@@ -36,3 +36,24 @@ def require_permission(codename: str):
 
         return user
     return dependency
+
+
+def require_permissions(*codenames: str):
+    """Check that the current user's role has every listed permission."""
+    def dependency(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(404, "User not found")
+        if not user.is_active:
+            raise HTTPException(403, "Account is deactivated")
+
+        for codename in codenames:
+            has_perm = db.query(RolePermission).join(Permission).filter(
+                RolePermission.role_id == user.role_id,
+                Permission.codename == codename,
+            ).first()
+            if not has_perm:
+                raise HTTPException(403, "Insufficient permissions")
+
+        return user
+    return dependency

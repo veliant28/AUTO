@@ -103,6 +103,15 @@ def _headers(client, user: User) -> dict:
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}
 
 
+def _take(client, request_id: int, headers: dict) -> dict:
+    """Взять заявку в работу: решение доступно только в статусе in_progress."""
+    resp = client.post(
+        f"/api/v1/admin/requests/{request_id}/take", headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
 # ---------------------------------------------------------------------------
 # Публичная B2B-заявка
 # ---------------------------------------------------------------------------
@@ -190,6 +199,7 @@ def test_public_b2b_application_accepts_legacy_contact(
     assert request.payload["contact_name"] == "Сидоров Семён"
     assert contact_display_name(request.payload) == "Сидоров Семён"
 
+    _take(client, request.id, admin_headers)
     approved = client.post(
         f"/api/v1/admin/requests/{request.id}/approve",
         headers=admin_headers,
@@ -351,6 +361,7 @@ def test_approve_b2b_creates_user_with_credentials(
     )
     request = db.query(Request).order_by(Request.id.desc()).first()
 
+    _take(client, request.id, admin_headers)
     resp = client.post(
         f"/api/v1/admin/requests/{request.id}/approve",
         headers=admin_headers,
@@ -396,6 +407,7 @@ def test_approve_b2b_upgrades_existing_user(client, db, admin_headers, sent_emai
     )
     request = db.query(Request).order_by(Request.id.desc()).first()
 
+    _take(client, request.id, admin_headers)
     resp = client.post(
         f"/api/v1/admin/requests/{request.id}/approve",
         headers=admin_headers,
@@ -422,6 +434,7 @@ def test_reject_b2b_sends_rejection(client, db, admin_headers, sent_emails):
     )
     request = db.query(Request).order_by(Request.id.desc()).first()
 
+    _take(client, request.id, admin_headers)
     resp = client.post(
         f"/api/v1/admin/requests/{request.id}/reject",
         headers=admin_headers,
@@ -456,6 +469,7 @@ def test_approve_timesheet_applies_hours(client, db, admin_headers):
     )
     assert created.status_code == 200, created.text
 
+    _take(client, created.json()["id"], admin_headers)
     resp = client.post(
         f"/api/v1/admin/requests/{created.json()['id']}/approve",
         headers=admin_headers,
@@ -488,6 +502,7 @@ def test_approve_ban_creates_ban_record(client, db, admin_headers):
     )
     assert created.status_code == 200, created.text
 
+    _take(client, created.json()["id"], admin_headers)
     resp = client.post(
         f"/api/v1/admin/requests/{created.json()['id']}/approve",
         headers=admin_headers,
@@ -571,7 +586,7 @@ def test_assignee_must_match_category_take_roles(
     assert denied_actor.status_code == 403
 
 
-def test_only_admin_can_assign_even_if_take_roles_allow_manager(
+def test_assign_requires_permission_even_if_take_roles_allow_manager(
     client, db, admin_headers, admin_user, manager_role
 ):
     _category(db, "other", "Прочее", take_roles=["admin", "manager"])
@@ -659,6 +674,502 @@ def test_status_requires_assignee_and_take_role(
     )
     assert resolved.status_code == 200, resolved.text
     assert resolved.json()["status"] == "resolved"
+
+
+def test_category_take_roles_must_include_admin(client, db, admin_headers):
+    category = _category(db, "other", "Прочее")
+
+    denied = client.patch(
+        f"/api/v1/admin/requests/categories/{category.id}",
+        headers=admin_headers,
+        json={"take_roles": ["manager", "operator"]},
+    )
+    assert denied.status_code == 400
+
+    allowed = client.patch(
+        f"/api/v1/admin/requests/categories/{category.id}",
+        headers=admin_headers,
+        json={"take_roles": ["admin", "manager"]},
+    )
+    assert allowed.status_code == 200, allowed.text
+    assert allowed.json()["take_roles"] == ["admin", "manager"]
+
+    cleared = client.patch(
+        f"/api/v1/admin/requests/categories/{category.id}",
+        headers=admin_headers,
+        json={"take_roles": []},
+    )
+    assert cleared.status_code == 200, cleared.text
+    assert cleared.json()["take_roles"] is None
+
+
+@pytest.mark.parametrize("decision", ["resolved", "rejected"])
+def test_assign_after_decision_reopens_request(
+    client, db, admin_headers, admin_user, manager_role, decision
+):
+    _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    manager = _user(db, f"mg-reopen-{decision}@example.com", manager_role)
+
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    assigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": admin_user.id},
+    )
+    assert assigned.status_code == 200, assigned.text
+
+    # Сроки уже в прошлом — после переоткрытия они должны пересчитаться
+    request = db.query(Request).filter(Request.id == request_id).one()
+    old_due = datetime.utcnow() - timedelta(days=1)
+    request.response_due_at = old_due
+    request.due_at = old_due
+    request.overdue_notified_at = old_due
+    db.commit()
+
+    resolved = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": decision},
+    )
+    assert resolved.status_code == 200, resolved.text
+    assert resolved.json()["status"] == decision
+    assert resolved.json()["resolved_at"] is not None
+
+    # Назначение нового исполнителя возвращает заявку в работу
+    reassigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": manager.id},
+    )
+    assert reassigned.status_code == 200, reassigned.text
+    body = reassigned.json()
+    assert body["status"] == "in_progress"
+    assert body["assignee"]["user_id"] == manager.id
+    assert body["resolved_at"] is None
+    assert body["resolved_by"] is None
+    assert datetime.fromisoformat(body["due_at"]) > old_due
+    assert datetime.fromisoformat(body["response_due_at"]) > old_due
+    db.expire_all()
+    fresh = db.query(Request).filter(Request.id == request_id).one()
+    assert fresh.overdue_notified_at is None
+
+    # Снятие исполнителя решённую заявку не переоткрывает
+    resolved_again = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=_headers(client, manager),
+        json={"status": "resolved"},
+    )
+    assert resolved_again.status_code == 200, resolved_again.text
+    cleared = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": None},
+    )
+    assert cleared.status_code == 200, cleared.text
+    assert cleared.json()["status"] == "resolved"
+    assert cleared.json()["assignee"] is None
+
+
+def test_assign_after_decision_keeps_automated_category_status(
+    client, db, admin_headers, manager_role
+):
+    # Решение автоматизированной категории уже применено — не переоткрываем
+    _category(
+        db,
+        CATEGORY_B2B_REGISTRATION,
+        "Регистрация B2B-клиента",
+        take_roles=["admin", "manager"],
+    )
+    manager = _user(db, "mg-auto@example.com", manager_role)
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": CATEGORY_B2B_REGISTRATION},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    request = db.query(Request).filter(Request.id == request_id).one()
+    request.status = RequestStatus.RESOLVED
+    request.resolved_at = datetime.utcnow()
+    db.commit()
+
+    reassigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": manager.id},
+    )
+    assert reassigned.status_code == 200, reassigned.text
+    assert reassigned.json()["status"] == "resolved"
+    assert reassigned.json()["resolved_at"] is not None
+
+
+def test_assignees_list_matches_assignment_rules(
+    client, db, admin_headers, admin_user, manager_role, operator_role
+):
+    category = _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    manager = _user(db, "mg-list@example.com", manager_role)
+    operator = _user(db, "op-list@example.com", operator_role)
+    inactive = _user(db, "mg-inactive@example.com", manager_role)
+    inactive.is_active = False
+
+    no_view_role = Role(name="custom_no_view", description="no view")
+    db.add(no_view_role)
+    db.commit()
+    _grant(db, no_view_role, "requests.process")
+    no_view = _user(db, "custom-no-view@example.com", no_view_role)
+    db.commit()
+
+    full = client.get("/api/v1/admin/requests/assignees", headers=admin_headers)
+    assert full.status_code == 200, full.text
+    full_ids = {u["id"] for u in full.json()}
+    assert {admin_user.id, manager.id, operator.id} <= full_ids
+    assert inactive.id not in full_ids
+    assert no_view.id not in full_ids
+
+    by_category = client.get(
+        f"/api/v1/admin/requests/assignees?category_id={category.id}",
+        headers=admin_headers,
+    )
+    assert by_category.status_code == 200, by_category.text
+    cat_ids = {u["id"] for u in by_category.json()}
+    assert admin_user.id in cat_ids and manager.id in cat_ids
+    assert operator.id not in cat_ids
+
+    missing = client.get(
+        "/api/v1/admin/requests/assignees?category_id=999999",
+        headers=admin_headers,
+    )
+    assert missing.status_code == 404
+
+    # Деактивированного сотрудника нельзя назначить и напрямую через API
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    denied = client.post(
+        f"/api/v1/admin/requests/{created.json()['id']}/assign",
+        headers=admin_headers,
+        json={"assignee_id": inactive.id},
+    )
+    assert denied.status_code == 400
+
+
+def test_take_does_not_intercept_assigned_request(
+    client, db, admin_headers, manager_role
+):
+    _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    author = _user(db, "mg-author@example.com", manager_role)
+    assignee = _user(db, "mg-assignee@example.com", manager_role)
+
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=_headers(client, author),
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    assigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": assignee.id},
+    )
+    assert assigned.status_code == 200, assigned.text
+
+    # Автор видит заявку, но перехватить её у исполнителя не может
+    denied = client.post(
+        f"/api/v1/admin/requests/{request_id}/take",
+        headers=_headers(client, author),
+    )
+    assert denied.status_code == 403
+
+    # Назначенный исполнитель может взять свою заявку
+    taken = client.post(
+        f"/api/v1/admin/requests/{request_id}/take",
+        headers=_headers(client, assignee),
+    )
+    assert taken.status_code == 200, taken.text
+    assert taken.json()["assignee"]["user_id"] == assignee.id
+    assert taken.json()["status"] == "in_progress"
+
+
+def test_decision_requires_taken_and_assigned_request(
+    client, db, admin_headers, manager_role
+):
+    _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    _grant(db, manager_role, "requests.manage")
+    manager = _user(db, "mg-decide@example.com", manager_role)
+
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    # Новая заявка: решение недоступно
+    not_taken = client.post(
+        f"/api/v1/admin/requests/{request_id}/approve",
+        headers=admin_headers,
+        json={},
+    )
+    assert not_taken.status_code == 400
+
+    # Назначение без взятия в работу — тоже рано
+    assigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": manager.id},
+    )
+    assert assigned.status_code == 200, assigned.text
+    still_new = client.post(
+        f"/api/v1/admin/requests/{request_id}/approve",
+        headers=_headers(client, manager),
+        json={},
+    )
+    assert still_new.status_code == 400
+
+    # Взяли в работу: решение может принять только назначенный исполнитель
+    _take(client, request_id, _headers(client, manager))
+    denied = client.post(
+        f"/api/v1/admin/requests/{request_id}/approve",
+        headers=admin_headers,
+        json={},
+    )
+    assert denied.status_code == 403
+    allowed = client.post(
+        f"/api/v1/admin/requests/{request_id}/approve",
+        headers=_headers(client, manager),
+        json={},
+    )
+    assert allowed.status_code == 200, allowed.text
+    assert allowed.json()["status"] == "resolved"
+
+
+def test_comments_allowed_until_closed(client, db, admin_headers):
+    _category(db, "other", "Прочее", take_roles=["admin"])
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    _take(client, request_id, admin_headers)
+    resolved = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": "resolved"},
+    )
+    assert resolved.status_code == 200, resolved.text
+
+    commented = client.post(
+        f"/api/v1/admin/requests/{request_id}/comment",
+        headers=admin_headers,
+        json={"text": "Клиент перезвонил"},
+    )
+    assert commented.status_code == 200, commented.text
+    assert commented.json()["comments"][-1]["text"] == "Клиент перезвонил"
+
+    request = db.query(Request).filter(Request.id == request_id).one()
+    request.status = RequestStatus.CLOSED
+    db.commit()
+    denied = client.post(
+        f"/api/v1/admin/requests/{request_id}/comment",
+        headers=admin_headers,
+        json={"text": "Поздно"},
+    )
+    assert denied.status_code == 400
+
+
+def test_executor_reopens_request_and_deadlines_shift(
+    client, db, admin_headers
+):
+    _category(db, "other", "Прочее", take_roles=["admin"])
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+    _take(client, request_id, admin_headers)
+
+    request = db.query(Request).filter(Request.id == request_id).one()
+    old_due = datetime.utcnow() - timedelta(days=1)
+    request.response_due_at = old_due
+    request.due_at = old_due
+    request.overdue_notified_at = old_due
+    db.commit()
+
+    resolved = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": "resolved"},
+    )
+    assert resolved.status_code == 200, resolved.text
+
+    reopened = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": "in_progress"},
+    )
+    assert reopened.status_code == 200, reopened.text
+    body = reopened.json()
+    assert body["status"] == "in_progress"
+    assert body["resolved_at"] is None
+    assert datetime.fromisoformat(body["due_at"]) > old_due
+    assert datetime.fromisoformat(body["response_due_at"]) > old_due
+    db.expire_all()
+    fresh = db.query(Request).filter(Request.id == request_id).one()
+    assert fresh.overdue_notified_at is None
+
+
+def test_automated_decision_cannot_be_reopened(
+    client, db, admin_headers, admin_user
+):
+    _category(db, CATEGORY_B2B_REGISTRATION, "Регистрация B2B-клиента")
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": CATEGORY_B2B_REGISTRATION},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    request = db.query(Request).filter(Request.id == request_id).one()
+    request.status = RequestStatus.RESOLVED
+    request.resolved_at = datetime.utcnow()
+    request.assignee_id = admin_user.id
+    db.commit()
+
+    denied = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": "in_progress"},
+    )
+    assert denied.status_code == 400
+
+
+def test_categories_expose_is_automated(client, db, admin_headers):
+    _category(db, CATEGORY_B2B_REGISTRATION, "Регистрация B2B-клиента")
+    _category(db, "other", "Прочее")
+    cats = client.get(
+        "/api/v1/admin/requests/categories", headers=admin_headers
+    ).json()
+    by_code = {c["code"]: c for c in cats}
+    assert by_code[CATEGORY_B2B_REGISTRATION]["is_automated"] is True
+    assert by_code["other"]["is_automated"] is False
+
+
+def test_assign_permission_allows_non_admin(
+    client, db, admin_headers, admin_user, manager_role
+):
+    _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    manager = _user(db, "mg-assign-perm@example.com", manager_role)
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=_headers(client, manager),
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    denied = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=_headers(client, manager),
+        json={"assignee_id": admin_user.id},
+    )
+    assert denied.status_code == 403
+
+    _grant(db, manager_role, "requests.assign")
+    allowed = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=_headers(client, manager),
+        json={"assignee_id": admin_user.id},
+    )
+    assert allowed.status_code == 200, allowed.text
+
+
+def test_admin_can_edit_request_until_decision(client, db, admin_headers):
+    _category(db, "other", "Прочее", take_roles=["admin"])
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=admin_headers,
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+    _take(client, request_id, admin_headers)
+
+    updated = client.patch(
+        f"/api/v1/admin/requests/{request_id}",
+        headers=admin_headers,
+        json={"description": "Обновлено"},
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["description"] == "Обновлено"
+
+    resolved = client.post(
+        f"/api/v1/admin/requests/{request_id}/status",
+        headers=admin_headers,
+        json={"status": "resolved"},
+    )
+    assert resolved.status_code == 200, resolved.text
+    denied = client.patch(
+        f"/api/v1/admin/requests/{request_id}",
+        headers=admin_headers,
+        json={"description": "Ещё раз"},
+    )
+    assert denied.status_code == 400
+
+
+def test_manager_edits_only_new_unassigned_request(
+    client, db, admin_headers, admin_user, manager_role
+):
+    _category(db, "other", "Прочее", take_roles=["admin", "manager"])
+    _grant(db, manager_role, "requests.edit")
+    manager = _user(db, "mg-edit@example.com", manager_role)
+
+    created = client.post(
+        "/api/v1/admin/requests",
+        headers=_headers(client, manager),
+        json={"category_code": "other", "description": "Заявка"},
+    )
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+
+    updated = client.patch(
+        f"/api/v1/admin/requests/{request_id}",
+        headers=_headers(client, manager),
+        json={"description": "Новое описание"},
+    )
+    assert updated.status_code == 200, updated.text
+
+    assigned = client.post(
+        f"/api/v1/admin/requests/{request_id}/assign",
+        headers=admin_headers,
+        json={"assignee_id": admin_user.id},
+    )
+    assert assigned.status_code == 200, assigned.text
+    denied = client.patch(
+        f"/api/v1/admin/requests/{request_id}",
+        headers=_headers(client, manager),
+        json={"description": "Поздно"},
+    )
+    assert denied.status_code == 400
 
 
 # ---------------------------------------------------------------------------

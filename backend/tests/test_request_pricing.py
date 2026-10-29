@@ -63,6 +63,14 @@ def _create_request(client, headers, category_id: int, payload: dict):
     )
 
 
+def _take(client, headers, request_id: int) -> None:
+    """Решение принимается только по заявке, взятой в работу."""
+    resp = client.post(
+        f"/api/v1/admin/requests/{request_id}/take", headers=headers
+    )
+    assert resp.status_code == 200, resp.text
+
+
 def test_category_margin_applied_on_approval(
     client, db, admin_headers, pricing_category, part_category
 ):
@@ -81,6 +89,7 @@ def test_category_margin_applied_on_approval(
     assert resp.status_code == 200, resp.text
     request_id = resp.json()["id"]
 
+    _take(client, admin_headers, request_id)
     approved = client.post(
         f"/api/v1/admin/requests/{request_id}/approve",
         headers=admin_headers,
@@ -148,6 +157,7 @@ def test_general_margin_applied_on_approval(
     assert resp.status_code == 200, resp.text
     request_id = resp.json()["id"]
 
+    _take(client, admin_headers, request_id)
     approved = client.post(
         f"/api/v1/admin/requests/{request_id}/approve",
         headers=admin_headers,
@@ -187,6 +197,7 @@ def test_zero_category_margin_removes_override(
         },
     )
     assert resp.status_code == 200, resp.text
+    _take(client, admin_headers, resp.json()["id"])
     approved = client.post(
         f"/api/v1/admin/requests/{resp.json()['id']}/approve",
         headers=admin_headers,

@@ -38,6 +38,16 @@ CATEGORY_OTHER = "other"
 # Статусы, в которых заявка считается открытой (срок ещё тикает)
 OPEN_STATUSES = ("new", "in_progress")
 
+# Категории с автоматизацией: закрываются только через одобрение/отклонение
+AUTOMATED_CATEGORY_CODES = (
+    CATEGORY_B2B_REGISTRATION,
+    CATEGORY_TIMESHEET_MANUAL,
+    CATEGORY_BAN_UNBAN,
+    CATEGORY_ORDER_FINAL_STATUS,
+    CATEGORY_ORDER_DELETE,
+    CATEGORY_PRICING_CHANGE,
+)
+
 
 class RequestStatus(enum.Enum):
     NEW = "new"
@@ -67,6 +77,11 @@ class RequestCategory(Base):
     is_active = Column(Boolean, nullable=False, default=True, server_default="true")
     sort_order = Column(Integer, nullable=False, default=100, server_default="100")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    @property
+    def is_automated(self) -> bool:
+        """Категория закрывается только через одобрение/отклонение."""
+        return self.code in AUTOMATED_CATEGORY_CODES
 
 
 class Request(Base):

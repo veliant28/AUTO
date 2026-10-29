@@ -9,11 +9,12 @@ from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.db import get_db
-from app.api.v1.deps import require_permission
-from app.models import Permission, RolePermission, User
+from app.api.v1.deps import require_permission, require_permissions
+from app.models import Permission, Role, RolePermission, User
 from app.models.parts import PartCategory
 from app.models.pricing import PriceRule
 from app.models.requests import (
+    AUTOMATED_CATEGORY_CODES,
     CATEGORY_B2B_REGISTRATION,
     CATEGORY_BAN_UNBAN,
     CATEGORY_ORDER_DELETE,
@@ -56,16 +57,6 @@ from app.services.request_automations import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-# Категории с автоматизацией: закрываются только через одобрение/отклонение
-AUTOMATED_CATEGORY_CODES = (
-    CATEGORY_B2B_REGISTRATION,
-    CATEGORY_TIMESHEET_MANUAL,
-    CATEGORY_BAN_UNBAN,
-    CATEGORY_ORDER_FINAL_STATUS,
-    CATEGORY_ORDER_DELETE,
-    CATEGORY_PRICING_CHANGE,
-)
 
 
 def _status_value(value) -> str:
@@ -174,6 +165,19 @@ def _user_can_view_requests(db: Session, user_id: int) -> bool:
         .filter(
             RolePermission.role_id == user.role_id,
             Permission.codename == "requests.view",
+        )
+        .first()
+    )
+
+
+def _user_has_permission(db: Session, user: User, codename: str) -> bool:
+    """Есть ли у роли пользователя указанное право."""
+    return bool(
+        db.query(RolePermission)
+        .join(Permission)
+        .filter(
+            RolePermission.role_id == user.role_id,
+            Permission.codename == codename,
         )
         .first()
     )
@@ -344,6 +348,12 @@ def update_request_category(
         category.allowed_roles = roles or None
     if data.take_roles is not None:
         take_roles = [r for r in data.take_roles if r]
+        # Назначать исполнителя может только admin, и его роль должна быть
+        # в списке — иначе категорию нельзя будет назначить никому.
+        if take_roles and "admin" not in take_roles:
+            raise HTTPException(
+                400, "В списке «Кто может брать в работу» должен быть администратор"
+            )
         category.take_roles = take_roles or None
     if data.sort_order is not None:
         category.sort_order = data.sort_order
@@ -466,22 +476,41 @@ def list_requests(
 
 @router.get("/requests/assignees")
 def list_request_assignees(
+    category_id: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("requests.view")),
 ):
-    """Сотрудники, которым можно назначить заявку (staff с доступом к журналу)."""
-    from app.models import Role
+    """Сотрудники, которых можно назначить исполнителем заявки.
+
+    Правила те же, что и в assign_request: пользователь активен, у его роли
+    есть право requests.view, а если у категории задан take_roles — роль
+    должна быть в этом списке. Без category_id возвращаются все, кто вообще
+    может быть исполнителем (для выбора сотрудника в полях заявки).
+    """
+    take_roles = None
+    if category_id:
+        category = (
+            db.query(RequestCategory)
+            .filter(RequestCategory.id == category_id)
+            .first()
+        )
+        if not category:
+            raise HTTPException(404, "Категория не найдена")
+        take_roles = category.take_roles
 
     rows = (
         db.query(User)
         .join(Role, User.role_id == Role.id)
+        .join(RolePermission, RolePermission.role_id == Role.id)
+        .join(Permission, Permission.id == RolePermission.permission_id)
         .filter(
-            Role.name.in_(["admin", "manager", "operator"]),
             User.is_active == True,  # noqa: E712
+            Permission.codename == "requests.view",
         )
-        .order_by(User.id)
-        .all()
     )
+    if take_roles:
+        rows = rows.filter(Role.name.in_(take_roles))
+    rows = rows.order_by(User.id).distinct().all()
     return [
         {
             "id": u.id,
@@ -520,13 +549,18 @@ async def create_request(
     assignee = None
     if data.assignee_id:
         assignee = db.query(User).filter(User.id == data.assignee_id).first()
-        if not assignee or not _user_can_view_requests(db, assignee.id):
+        if not assignee:
+            raise HTTPException(400, "Исполнитель не имеет доступа к журналу")
+        if not assignee.is_active:
+            raise HTTPException(400, "Сотрудник деактивирован")
+        if not _user_can_view_requests(db, assignee.id):
             raise HTTPException(400, "Исполнитель не имеет доступа к журналу")
         take_roles = category.take_roles
         actor_role = current_user.role.name if current_user.role else None
-        if actor_role != "admin":
+        if not _user_has_permission(db, current_user, "requests.assign"):
             raise HTTPException(
-                403, "Назначать исполнителя может только администратор"
+                403,
+                "Назначать исполнителя может только сотрудник с правом requests.assign",
             )
         if take_roles and actor_role not in take_roles:
             raise HTTPException(
@@ -688,6 +722,10 @@ async def take_request(
         RequestStatus.CLOSED,
     ):
         raise HTTPException(400, "Заявка уже закрыта")
+    # Чужую назначенную заявку перехватить нельзя: переназначить её
+    # может только сотрудник с правом requests.assign через /assign.
+    if request.assignee_id and request.assignee_id != current_user.id:
+        raise HTTPException(403, "Заявка уже назначена другому исполнителю")
     # Доступ по категории: брать заявку могут только роли из её настроек
     # (пустой список — любой сотрудник с правом requests.process)
     take_roles = request.category.take_roles if request.category else None
@@ -715,7 +753,9 @@ async def assign_request(
     request_id: int,
     data: RequestAssignIn,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("requests.process")),
+    current_user: User = Depends(
+        require_permissions("requests.process", "requests.assign")
+    ),
 ):
     """Назначить исполнителя заявки (или снять, assignee_id=null)."""
     request = _visible_or_404(db, current_user, request_id)
@@ -723,10 +763,6 @@ async def assign_request(
 
     take_roles = request.category.take_roles if request.category else None
     actor_role = current_user.role.name if current_user.role else None
-    if actor_role != "admin":
-        raise HTTPException(
-            403, "Назначать исполнителя может только администратор"
-        )
     if take_roles and actor_role not in take_roles:
         raise HTTPException(
             403, "Настройки категории не разрешают назначать исполнителя"
@@ -739,6 +775,8 @@ async def assign_request(
         assignee = db.query(User).filter(User.id == data.assignee_id).first()
         if not assignee:
             raise HTTPException(404, "Сотрудник не найден")
+        if not assignee.is_active:
+            raise HTTPException(400, "Сотрудник деактивирован")
         if not _user_can_view_requests(db, assignee.id):
             raise HTTPException(400, "Сотрудник не имеет доступа к журналу")
         assignee_role = assignee.role.name if assignee.role else None
@@ -747,13 +785,36 @@ async def assign_request(
                 403, "Роль исполнителя не может брать заявки этой категории"
             )
         request.assignee_id = assignee.id
+        assignee_name = assignee.full_name or assignee.email
         rs.log_event(
             db,
             request,
             current_user,
             "assigned",
-            f"исполнитель: {assignee.full_name or assignee.email}",
+            f"исполнитель: {assignee_name}",
         )
+        category_code = request.category.code if request.category else None
+        # Назначение после решения возвращает заявку в работу: resolved_at
+        # сбрасывается, сроки считаются заново, поэтому таймер автозакрытия
+        # начнёт отсчёт только после следующего решения. Автоматизированные
+        # категории не переоткрываем — их решение уже применено, повторное
+        # одобрение повторило бы автоматизацию.
+        if (
+            request.status in (RequestStatus.RESOLVED, RequestStatus.REJECTED)
+            and category_code not in AUTOMATED_CATEGORY_CODES
+        ):
+            was_status = _status_value(request.status)
+            request.status = RequestStatus.IN_PROGRESS
+            request.resolved_at = None
+            request.resolved_by_id = None
+            rs.reset_request_deadlines(request)
+            rs.log_event(
+                db,
+                request,
+                current_user,
+                "status_changed",
+                f"статус: {was_status} → in_progress (назначение после решения)",
+            )
     request.updated_at = rs.now_utc()
     db.commit()
     rs.notify_request_event(request, "request_updated", db, current_user.id)
@@ -784,6 +845,14 @@ async def change_request_status(
         raise HTTPException(
             400, "Эту заявку закрывает только одобрение или отклонение администратором"
         )
+    if (
+        request.status in (RequestStatus.RESOLVED, RequestStatus.REJECTED)
+        and new_status in (RequestStatus.NEW, RequestStatus.IN_PROGRESS)
+        and category_code in AUTOMATED_CATEGORY_CODES
+    ):
+        raise HTTPException(
+            400, "Решение автоматизированной категории нельзя отменить"
+        )
 
     take_roles = request.category.take_roles if request.category else None
     role_name = current_user.role.name if current_user.role else None
@@ -797,6 +866,10 @@ async def change_request_status(
         )
 
     was_status = _status_value(request.status)
+    reopened = request.status in (
+        RequestStatus.RESOLVED,
+        RequestStatus.REJECTED,
+    ) and new_status in (RequestStatus.NEW, RequestStatus.IN_PROGRESS)
     request.status = new_status
     request.updated_at = rs.now_utc()
     if new_status in (RequestStatus.RESOLVED, RequestStatus.REJECTED):
@@ -805,6 +878,9 @@ async def change_request_status(
     else:
         request.resolved_at = None
         request.resolved_by_id = None
+        # Возврат в работу начинает новый рабочий цикл: сроки — заново
+        if reopened:
+            rs.reset_request_deadlines(request)
     rs.log_event(
         db, request, current_user, "status_changed", f"статус: {was_status} → {new_status.value}"
     )
@@ -836,6 +912,18 @@ async def _decide(
         RequestStatus.CLOSED,
     ):
         raise HTTPException(400, "Заявка уже закрыта")
+    if request.status != RequestStatus.IN_PROGRESS:
+        raise HTTPException(400, "Решение можно принять только по заявке в работе")
+    if request.assignee_id != current_user.id:
+        raise HTTPException(
+            403, "Решение может принять только назначенный исполнитель"
+        )
+    take_roles = request.category.take_roles if request.category else None
+    role_name = current_user.role.name if current_user.role else None
+    if take_roles and role_name not in take_roles:
+        raise HTTPException(
+            403, "Ваша роль не может обрабатывать заявки этой категории"
+        )
 
     note = (data.note or "").strip()
     result = None

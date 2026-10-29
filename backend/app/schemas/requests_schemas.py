@@ -15,6 +15,7 @@ class RequestCategorySchema(BaseModel):
     response_minutes: Optional[int] = None
     resolve_minutes: Optional[int] = None
     is_active: bool = True
+    is_automated: bool = False
     sort_order: int = 100
 
     class Config:

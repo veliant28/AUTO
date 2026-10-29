@@ -125,6 +125,17 @@ def category_due_snapshot(
     return response_due, due
 
 
+def reset_request_deadlines(request: Request, now: Optional[datetime] = None) -> None:
+    """Новый рабочий цикл: сроки и уведомление о просрочке считаются заново."""
+    if not request.category:
+        return
+    now = now or now_utc()
+    request.response_due_at, request.due_at = category_due_snapshot(
+        request.category, now
+    )
+    request.overdue_notified_at = None
+
+
 def log_event(
     db: Session,
     request: Request,

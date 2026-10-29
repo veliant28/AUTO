@@ -88,7 +88,8 @@ def admin_role(db):
         "attendance.view", "attendance.edit",
         "monitor.view",
         "requests.view", "requests.create", "requests.comment",
-        "requests.process", "requests.manage", "requests.delete",
+        "requests.edit", "requests.process", "requests.assign",
+        "requests.manage", "requests.delete",
     ]
     existing = {p.codename: p for p in db.query(Permission).all()}
     for codename in all_perms:
