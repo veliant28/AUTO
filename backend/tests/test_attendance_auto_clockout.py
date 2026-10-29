@@ -1,5 +1,5 @@
 """Автофиксация выхода: настройка времени + закрытие сессий и попадание часов в табель."""
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
@@ -136,8 +136,12 @@ def test_open_session_is_auto_closed_and_hours_land_in_timesheet(
               work_auto_clockout_time="23:59")
 
     y, m, d = (int(x) for x in yest.split("-"))
-    # вход 10:00 местного = 07:00 UTC; выхода нет
-    clock_in = datetime(y, m, d, 7, 0)
+    # вход 10:00 местного (в любой сезон), переводим в naive UTC
+    clock_in = (
+        datetime.combine(date(y, m, d), time(10, 0), tzinfo=KYIV)
+        .astimezone(timezone.utc)
+        .replace(tzinfo=None)
+    )
     sess = AttendanceSession(
         user_id=admin_user.id,
         work_date=yest,
