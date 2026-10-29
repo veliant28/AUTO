@@ -1,14 +1,5 @@
 /** Общие типы и хелперы журнала заявок (страница, модалка, диалоги). */
 
-export const AUTOMATED_CATEGORY_CODES = [
-  'b2b_registration',
-  'timesheet_manual',
-  'ban_unban',
-  'order_final_status',
-  'order_delete',
-  'pricing_change',
-]
-
 export const STATUSES = [
   'new',
   'in_progress',
@@ -52,6 +43,7 @@ export interface RequestCategory {
   response_minutes: number | null
   resolve_minutes: number | null
   is_active: boolean
+  is_automated: boolean
   sort_order: number
 }
 

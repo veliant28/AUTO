@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { HelpCircle, Loader2, Save, Settings2 } from 'lucide-react'
@@ -25,9 +25,9 @@ import {
 import { toast } from '@/lib/toast'
 import api from '@/lib/api'
 import { categoryName } from '@/lib/requestCategories'
-import { AUTOMATED_CATEGORY_CODES, type RequestCategory } from './shared'
+import type { RequestCategory } from './shared'
 
-const STAFF_ROLES = ['admin', 'manager', 'operator'] as const
+const FALLBACK_STAFF_ROLES = ['admin', 'manager', 'operator']
 
 /** Названия категорий фиксированы переводами и не редактируются из UI */
 interface Draft {
@@ -36,6 +36,23 @@ interface Draft {
   is_active: boolean
   allowed_roles: string[]
   take_roles: string[]
+}
+
+interface RoleOption {
+  id: number
+  name: string
+  permissions?: { codename: string }[]
+}
+
+function rolesWithPermission(
+  roles: RoleOption[],
+  names: string[],
+  codename: string,
+): string[] {
+  if (roles.length === 0) return names
+  return roles
+    .filter((r) => r.permissions?.some((p) => p.codename === codename))
+    .map((r) => r.name)
 }
 
 export default function CategoriesDialog({
@@ -58,6 +75,17 @@ export default function CategoriesDialog({
     enabled: open,
   })
 
+  // Реальные роли системы: в списках могут быть кастомные роли, не только staff
+  const { data: roles = [] } = useQuery<RoleOption[]>({
+    queryKey: ['roles', 'requests-categories'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/roles')
+      return data || []
+    },
+    enabled: open,
+    retry: false,
+  })
+
   useEffect(() => {
     if (!open || categories.length === 0) return
     const next: Record<number, Draft> = {}
@@ -74,6 +102,52 @@ export default function CategoriesDialog({
     }
     setDrafts(next)
   }, [open, categories])
+
+  const selectedRoleNames = useMemo(() => {
+    const names = new Set<string>()
+    categories.forEach((c) => {
+      ;(drafts[c.id]?.allowed_roles || []).forEach((r) => names.add(r))
+      ;(drafts[c.id]?.take_roles || []).forEach((r) => names.add(r))
+    })
+    return names
+  }, [categories, drafts])
+
+  const roleNames = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          // admin обязан быть в списке «Кто может брать» — оставляем всегда
+          'admin',
+          ...(roles.length > 0
+            ? roles.map((r) => r.name)
+            : FALLBACK_STAFF_ROLES),
+          ...selectedRoleNames,
+        ]),
+      ),
+    [roles, selectedRoleNames],
+  )
+
+  const createRoleOptions = useMemo(() => {
+    const eligible = new Set(
+      rolesWithPermission(roles, roleNames, 'requests.create'),
+    )
+    categories.forEach((c) => {
+      ;(drafts[c.id]?.allowed_roles || []).forEach((r) => eligible.add(r))
+    })
+    return roleNames.filter((r) => eligible.has(r))
+  }, [roles, roleNames, categories, drafts])
+
+  const takeRoleOptions = useMemo(() => {
+    const eligible = new Set(
+      rolesWithPermission(roles, roleNames, 'requests.view'),
+    )
+    // Категорию нельзя сохранить без admin в списке — показываем его всегда
+    eligible.add('admin')
+    categories.forEach((c) => {
+      ;(drafts[c.id]?.take_roles || []).forEach((r) => eligible.add(r))
+    })
+    return roleNames.filter((r) => eligible.has(r))
+  }, [roles, roleNames, categories, drafts])
 
   // Одна кнопка в футере сохраняет все категории разом
   const saveMutation = useMutation({
@@ -125,9 +199,13 @@ export default function CategoriesDialog({
   }
 
   /** Чекбоксы ролей для полей «Кто создаёт» и «Кто может брать в работу» */
-  const roleChecks = (selected: string[], onToggle: (role: string) => void) => (
+  const roleChecks = (
+    selected: string[],
+    options: string[],
+    onToggle: (role: string) => void,
+  ) => (
     <div className="flex flex-wrap items-center gap-3 min-h-10">
-      {STAFF_ROLES.map((role) => (
+      {options.map((role) => (
         <label
           key={role}
           className="flex items-center gap-1.5 text-sm cursor-pointer"
@@ -141,6 +219,19 @@ export default function CategoriesDialog({
         </label>
       ))}
     </div>
+  )
+
+  const invalidTakeRoles = useMemo(
+    () =>
+      categories.some((c) => {
+        const draft = drafts[c.id]
+        return (
+          !!draft &&
+          draft.take_roles.length > 0 &&
+          !draft.take_roles.includes('admin')
+        )
+      }),
+    [categories, drafts],
   )
 
   return (
@@ -173,13 +264,18 @@ export default function CategoriesDialog({
               {categories.map((c) => {
                 const draft = drafts[c.id]
                 if (!draft) return null
+                const takeRolesInvalid =
+                  draft.take_roles.length > 0 &&
+                  !draft.take_roles.includes('admin')
                 return (
                   <div
                     key={c.id}
-                    className="border rounded-lg p-4 flex flex-col gap-3"
+                    className={`border rounded-lg p-4 flex flex-col gap-3 ${
+                      takeRolesInvalid ? 'border-destructive' : ''
+                    }`}
                   >
                     <div className="flex items-center gap-2">
-                      {AUTOMATED_CATEGORY_CODES.includes(c.code) ? (
+                      {c.is_automated ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge
@@ -258,14 +354,17 @@ export default function CategoriesDialog({
                       <span className="text-sm text-muted-foreground">
                         {t('requests_cat_roles')}
                       </span>
-                      {roleChecks(draft.allowed_roles, (role) =>
-                        setDrafts((prev) => ({
-                          ...prev,
-                          [c.id]: {
-                            ...draft,
-                            allowed_roles: toggleRole(draft, role),
-                          },
-                        })),
+                      {roleChecks(
+                        draft.allowed_roles,
+                        createRoleOptions,
+                        (role) =>
+                          setDrafts((prev) => ({
+                            ...prev,
+                            [c.id]: {
+                              ...draft,
+                              allowed_roles: toggleRole(draft, role),
+                            },
+                          })),
                       )}
                     </div>
 
@@ -273,7 +372,7 @@ export default function CategoriesDialog({
                       <span className="text-sm text-muted-foreground">
                         {t('requests_cat_take_roles')}
                       </span>
-                      {roleChecks(draft.take_roles, (role) =>
+                      {roleChecks(draft.take_roles, takeRoleOptions, (role) =>
                         setDrafts((prev) => ({
                           ...prev,
                           [c.id]: {
@@ -281,6 +380,11 @@ export default function CategoriesDialog({
                             take_roles: toggleTakeRole(draft, role),
                           },
                         })),
+                      )}
+                      {takeRolesInvalid && (
+                        <span className="text-xs text-destructive">
+                          {t('requests_cat_take_roles_requires_admin')}
+                        </span>
                       )}
                     </div>
 
@@ -310,13 +414,21 @@ export default function CategoriesDialog({
         <Separator className="flex-shrink-0" />
         <div className="flex-shrink-0 p-4 pt-3">
           <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-            <span className="text-sm text-muted-foreground">
-              {t('requests_cat_sla_hint')}
+            <span
+              className={
+                invalidTakeRoles
+                  ? 'text-sm text-destructive'
+                  : 'text-sm text-muted-foreground'
+              }
+            >
+              {invalidTakeRoles
+                ? t('requests_cat_take_roles_requires_admin')
+                : t('requests_cat_sla_hint')}
             </span>
             <Button
               className="gap-2 h-10"
               onClick={() => saveMutation.mutate()}
-              disabled={isLoading || saveMutation.isPending}
+              disabled={isLoading || saveMutation.isPending || invalidTakeRoles}
             >
               {saveMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

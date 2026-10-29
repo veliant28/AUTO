@@ -15,6 +15,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  RotateCcw,
   Send,
   ShieldBan,
   Timer,
@@ -52,11 +53,7 @@ import { formatMinutes, parseHoursToMinutes } from '@/lib/timesheetTime'
 import { formatPhone } from '@/lib/phone'
 import { ORDER_STATUS_LABELS, RETURN_STATUS_LABELS } from '@/lib/constants'
 import { DeadlineCell, RequestsStatusCell } from './RequestsStatusBadge'
-import {
-  actorLabel,
-  AUTOMATED_CATEGORY_CODES,
-  type RequestCategory,
-} from './shared'
+import { actorLabel, type RequestCategory } from './shared'
 import { categoryName } from '@/lib/requestCategories'
 import { useRequestDate } from './useRequestDate'
 import RequestFormFields, {
@@ -603,12 +600,31 @@ export default function RequestDetailModal({
       ? ['new', 'in_progress'].includes(detail.status)
       : detail.status === 'new' && !detail.assignee)
 
-  const { data: assignees = [] } = useQuery<
+  const { data: staffList = [] } = useQuery<
     { id: number; name: string; email: string; role: string | null }[]
   >({
     queryKey: ['requests', 'assignees'],
     queryFn: async () => {
       const { data } = await api.get('/admin/requests/assignees')
+      return data || []
+    },
+  })
+
+  // Кандидаты в исполнители — по тем же правилам, что на бэкенде:
+  // активные сотрудники с requests.view и ролью из take_roles категории.
+  const assigneesCategoryId = isCreate
+    ? createCategory?.id
+    : detail?.category?.id
+  const { data: assigneeCandidates = [] } = useQuery<
+    { id: number; name: string; email: string; role: string | null }[]
+  >({
+    queryKey: ['requests', 'assignees', assigneesCategoryId ?? 0],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/requests/assignees', {
+        params: assigneesCategoryId
+          ? { category_id: assigneesCategoryId }
+          : undefined,
+      })
       return data || []
     },
   })
@@ -842,10 +858,10 @@ export default function RequestDetailModal({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }, [comment])
 
-  const automated = useMemo(() => {
-    const code = detail?.category?.code
-    return !!code && AUTOMATED_CATEGORY_CODES.includes(code)
-  }, [detail?.category?.code])
+  const automated = useMemo(
+    () => !!detail?.category?.is_automated,
+    [detail?.category?.is_automated],
+  )
 
   const isAssignedToMe = detail?.assignee?.user_id === user?.id
 
@@ -894,25 +910,27 @@ export default function RequestDetailModal({
     categoryTakeRoles.length === 0 ||
     categoryTakeRoles.includes(user?.role || '')
   const canManage = can(user, 'requests.manage')
-  // Назначать исполнителя вручную может только admin, и только если
+  // Назначать исполнителя может сотрудник с правом requests.assign, если
   // настройки категории разрешают его роль и роль исполнителя.
   const assigneeRoles =
     (isCreate ? createCategory?.take_roles : detail?.category?.take_roles) || []
-  const assigneeOptions = assignees.filter(
+  const assigneeOptions = assigneeCandidates.filter(
     (a) =>
       assigneeRoles.length === 0 ||
       (a.role != null && assigneeRoles.includes(a.role)),
   )
   const canAssignInCategory =
-    user?.role === 'admin' &&
-    (assigneeRoles.length === 0 || assigneeRoles.includes('admin'))
+    can(user, 'requests.assign') &&
+    (assigneeRoles.length === 0 ||
+      (!!user?.role && assigneeRoles.includes(user.role)))
   const openStatuses = ['new', 'in_progress']
   const isOpen = !!detail && openStatuses.includes(detail.status)
   const isClosed = detail?.status === 'closed'
 
   const renderComments = (data: RequestDetail | null) => {
     const closed = data?.status === 'closed'
-    const open = !!data && openStatuses.includes(data.status)
+    // Комментировать можно всё, что ещё не ушло в архив
+    const commentable = !!data && !closed
     return (
       <div className="border rounded-lg flex flex-col min-h-0 overflow-hidden">
         <h4 className="font-semibold text-lg flex items-center gap-2 flex-shrink-0 px-4 pt-4">
@@ -963,7 +981,7 @@ export default function RequestDetailModal({
             {t('requests_closed_readonly')}
           </div>
         )}
-        {data && open && canComment && (
+        {data && commentable && canComment && (
           <div className="flex items-end gap-2 border-t p-4 flex-shrink-0">
             <textarea
               ref={commentRef}
@@ -1193,12 +1211,18 @@ export default function RequestDetailModal({
                         }
                         onValueChange={(v) => {
                           if (!reqPerm('requests.process')) return
+                          const decided =
+                            detail.status === 'resolved' ||
+                            detail.status === 'rejected'
                           actionMutation.mutate({
                             url: `/admin/requests/${activeId}/assign`,
                             body: {
                               assignee_id: v === 'none' ? null : Number(v),
                             },
-                            okKey: 'requests_assigned_ok',
+                            okKey:
+                              v !== 'none' && decided && !automated
+                                ? 'requests_assigned_reopened_ok'
+                                : 'requests_assigned_ok',
                           })
                         }}
                       >
@@ -1304,7 +1328,7 @@ export default function RequestDetailModal({
                     onChange={(patch) =>
                       setForm((prev) => ({ ...prev, ...patch }))
                     }
-                    staff={assignees}
+                    staff={staffList}
                   />
                 </div>
               </div>
@@ -1372,7 +1396,7 @@ export default function RequestDetailModal({
                     onChange={(patch) =>
                       setForm((prev) => ({ ...prev, ...patch }))
                     }
-                    staff={assignees}
+                    staff={staffList}
                   />
                 </div>
               </div>
@@ -1531,7 +1555,7 @@ export default function RequestDetailModal({
                         payload: detail.payload || {},
                       }}
                       onChange={() => {}}
-                      staff={assignees}
+                      staff={staffList}
                     />
                   ) : (
                     <PayloadCard
@@ -1635,6 +1659,32 @@ export default function RequestDetailModal({
                       <UserCheck className="w-4 h-4" />
                     )}
                     {t('requests_take')}
+                  </Button>
+                )}
+
+              {/* Вернуть — назначенному исполнителю ручной категории */}
+              {detail &&
+                canProcess &&
+                isAssignedToMe &&
+                canTakeInCategory &&
+                !automated &&
+                (detail.status === 'resolved' ||
+                  detail.status === 'rejected') && (
+                  <Button
+                    variant="outline"
+                    className="gap-1.5"
+                    disabled={actionMutation.isPending}
+                    onClick={() =>
+                      reqPerm('requests.process') &&
+                      actionMutation.mutate({
+                        url: `/admin/requests/${activeId}/status`,
+                        body: { status: 'in_progress' },
+                        okKey: 'requests_reopened_ok',
+                      })
+                    }
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    {t('requests_reopen_short')}
                   </Button>
                 )}
 
