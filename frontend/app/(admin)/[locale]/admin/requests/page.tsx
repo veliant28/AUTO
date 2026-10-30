@@ -477,11 +477,7 @@ export default function RequestsPage() {
                   table.getRowModel().rows.map((row) => (
                     <tr
                       key={row.id}
-                      className={`border-b last:border-0 hover:bg-muted/30 ${
-                        row.original.deadline_state === 'overdue'
-                          ? 'bg-red-500/5'
-                          : ''
-                      }`}
+                      className="border-b last:border-0 hover:bg-muted/30"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="p-3">
